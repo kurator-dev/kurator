@@ -1,0 +1,11 @@
+components:
+  - name: istio
+    version: 1.13.3
+  - name: karmarda
+    version: 1.0.0
+  - name: kubeedge
+    version: 1.6.0
+  - name: volcano
+    version: 1.0.0
+  - name: prometheus
+    version: 1.0.0
