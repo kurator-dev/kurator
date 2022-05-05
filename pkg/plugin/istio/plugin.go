@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/zirain/ubrain/pkg/cli"
+	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/util"
 )
 
@@ -24,14 +24,14 @@ type InstallArgs struct {
 type IstioPluginHandler struct {
 	client *util.Client
 
-	settings *cli.Settings
+	settings *generic.Options
 	args     *InstallArgs
 	getter   *util.BinaryGetter
 
 	istioctl string
 }
 
-func NewIstioPluginHandler(s *cli.Settings, args *InstallArgs) (*IstioPluginHandler, error) {
+func NewIstioPluginHandler(s *generic.Options, args *InstallArgs) (*IstioPluginHandler, error) {
 	plugin := &IstioPluginHandler{
 		settings: s,
 		args:     args,

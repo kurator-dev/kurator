@@ -3,13 +3,14 @@ package command
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/zirain/ubrain/pkg/generic"
 	"strings"
 
 	"github.com/zirain/ubrain/pkg/version"
 )
 
 type VersionCommand struct {
-	Base
+	*generic.Options
 }
 
 func (c *VersionCommand) Run(args []string) int {
@@ -17,11 +18,11 @@ func (c *VersionCommand) Run(args []string) int {
 
 	y, err := json.MarshalIndent(&v, "", "  ")
 	if err != nil {
-		c.Settings.Ui.Error(fmt.Sprintf("Error unmarshall version: %s\n", err.Error()))
+		c.Ui.Error(fmt.Sprintf("Error unmarshall version: %s\n", err.Error()))
 		return 1
 	}
 
-	c.Settings.Ui.Output(string(y))
+	c.Ui.Output(string(y))
 
 	return 0
 }

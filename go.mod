@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/ghodss/yaml v1.0.0
+	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
 	github.com/mitchellh/cli v1.1.3
 	github.com/spf13/pflag v1.0.5
@@ -79,7 +80,6 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-version v1.4.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect

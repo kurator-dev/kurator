@@ -12,7 +12,9 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
-# Contains the built artifacts
+vendor/
+
+.idea/
+
 out/
 bin/

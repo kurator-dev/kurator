@@ -6,38 +6,42 @@ import (
 	flag "github.com/spf13/pflag"
 	"istio.io/istio/pkg/url"
 
-	"github.com/zirain/ubrain/pkg/cli"
+	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/plugin/istio"
 )
 
-type IstioInstallCommad struct {
-	Base
+type IstioInstallCommand struct {
+	*generic.Options
 }
 
-func (c *IstioInstallCommad) Run(args []string) int {
-	if _, ok := c.Settings.Components["istio"]; !ok {
-		c.Settings.Ui.Error("Failed to load istio component")
+func (c *IstioInstallCommand) Run(args []string) int {
+	istioCfg, ok := c.Components["istio"]
+	if !ok {
+		c.Ui.Error("Failed to load istio component")
 		return 1
 	}
 
 	istioArgs := &istio.InstallArgs{
-		Hub: "docker.io/istio", //TODO: make this configurable
-		Tag: c.Settings.Components["istio"].Version,
+		Hub: istioCfg.Hub,
+		Tag: istioCfg.Version,
 	}
-	cmdFlags := c.istioFlagSet(c.Settings, istioArgs)
-	cmdFlags.Usage = func() { c.Settings.Ui.Error(c.Help()) }
+	cmdFlags := c.istioFlagSet(c.Options, istioArgs)
+	cmdFlags.Usage = func() {
+		c.Errorf(c.Help())
+		c.Errorf(cmdFlags.FlagUsages())
+	}
 	if err := cmdFlags.Parse(args); err != nil {
 		c.Errorf("Error parsing command-line flags: %s\n", err.Error())
 		return 1
 	}
 
-	plugin, err := istio.NewIstioPluginHandler(c.Settings, istioArgs)
+	plugin, err := istio.NewIstioPluginHandler(c.Options, istioArgs)
 	if err != nil {
-		c.Infof("istio init error: %v", err)
+		c.Errorf("istio init error: %v", err)
 		return 1
 	}
 
-	c.Infof("start install istio Global: %+v ", c.Base.Settings)
+	c.Infof("start install istio Global: %+v ", c.Options)
 	if err := plugin.Execute(args, nil); err != nil {
 		c.Infof("istio execute error: %v", err)
 		return 1
@@ -46,23 +50,24 @@ func (c *IstioInstallCommad) Run(args []string) int {
 	return 0
 }
 
-func (c *IstioInstallCommad) Help() string {
+func (c *IstioInstallCommand) Help() string {
 	helpText := `
-Usage: ubrain install istio [options]
+Usage: ubrain install istio [Options]
 `
 	return strings.TrimSpace(helpText)
 }
 
-func (c *IstioInstallCommad) Synopsis() string {
+func (c *IstioInstallCommand) Synopsis() string {
 	return "Install istio component"
 }
 
-func (c *IstioInstallCommad) istioFlagSet(s *cli.Settings, args *istio.InstallArgs) *flag.FlagSet {
-	f := c.Base.FlagSet("istio")
+func (c *IstioInstallCommand) istioFlagSet(s *generic.Options, args *istio.InstallArgs) *flag.FlagSet {
+	f := c.FlagSet("istio")
 
 	s.AddFlags(f)
 
-	f.StringSliceVarP(&args.IopFiles, "filename", "f", nil, `Path to file containing IstioOperator custom resource
+	// TODO: add comments about the flag usage link
+	f.StringSliceVarP(&args.IopFiles, "filename", "f", nil, `Path to file containing IstioOperator custom resource 
 	This flag can be specified multiple times to overlay multiple files. Multiple files are overlaid in left to right order.`)
 	f.StringArrayVarP(&args.SetFlags, "set", "s", nil, `Override an IstioOperator value, e.g. to choose a profile
 	(--set profile=demo), enable or disable components (--set components.cni.enabled=true), or override Istio

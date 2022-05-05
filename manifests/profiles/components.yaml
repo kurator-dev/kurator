@@ -1,11 +1,16 @@
 components:
   - name: istio
     version: 1.13.3
+    hub: docker.io/istio
   - name: karmarda
     version: 1.0.0
+    hub:
   - name: kubeedge
     version: 1.6.0
+    hub:
   - name: volcano
     version: 1.0.0
+    hub:
   - name: prometheus
     version: 1.0.0
+    hub:

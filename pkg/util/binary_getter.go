@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/zirain/ubrain/pkg/cli"
+	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/moreos"
 )
 
@@ -20,12 +20,12 @@ const (
 )
 
 type BinaryGetter struct {
-	settings *cli.Settings
+	settings *generic.Options
 }
 
-func NewBinaryGetter(s *cli.Settings) *BinaryGetter {
+func NewBinaryGetter(o *generic.Options) *BinaryGetter {
 	return &BinaryGetter{
-		settings: s,
+		settings: o,
 	}
 }
 
