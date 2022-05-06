@@ -19,7 +19,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/tools/clientcmd/api/latest"
 
 	"github.com/zirain/ubrain/pkg/util"
@@ -32,9 +32,9 @@ const (
 	karmadaClusterNamespace       = "karmada-cluster"
 	primaryCluster                = "primary"
 	cacertsSecretName             = "cacerts"
-)
 
-var (
+	crdKind = "CustomResourceDefinition"
+
 	checkInterval = 10 * time.Second
 	checkTimeout  = 2 * time.Minute
 )
@@ -180,7 +180,12 @@ func (plugin *IstioPluginHandler) installCrds() error {
 		return err
 	}
 
-	if err := plugin.apply(out); err != nil {
+	crdFilter := func(r *resource.Info) bool {
+		// only install crds here
+		return r.Mapping.GroupVersionKind.Kind == crdKind
+	}
+
+	if err := plugin.applyWithFilter(out, crdFilter); err != nil {
 		return err
 	}
 
@@ -321,7 +326,11 @@ func (plugin *IstioPluginHandler) createIstioOperatorDeployment() error {
 		return err
 	}
 
-	if err := plugin.apply(out); err != nil {
+	excludeCrdFilter := func(r *resource.Info) bool {
+		return r.Mapping.GroupVersionKind.Kind != crdKind
+	}
+
+	if err := plugin.applyWithFilter(out, excludeCrdFilter); err != nil {
 		return err
 	}
 
@@ -338,31 +347,8 @@ func (plugin *IstioPluginHandler) installControlPlane() error {
 		return err
 	}
 
-	primaryCluster, err := karmadautil.NewClusterClientSet(plugin.args.Primary, plugin.client.GlobalClient, nil)
-	if err != nil {
-		return err
-	}
-	err = wait.PollImmediate(checkInterval, checkTimeout, func() (done bool, err error) {
-		ingressgatewayPods, err := primaryCluster.KubeClient.CoreV1().Pods(istioSystemNamespace).List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "app=istio-ingressgateway",
-		})
-		if err != nil {
-			return false, nil
-		}
-
-		if len(ingressgatewayPods.Items) == 0 {
-			return false, nil
-		}
-
-		for _, p := range ingressgatewayPods.Items {
-			if p.Status.Phase != v1.PodRunning {
-				return false, nil
-			}
-		}
-
-		return true, nil
-	})
-	if err != nil {
+	if err := waitIngressgatewayReady(plugin.client.GlobalClient, plugin.args.Primary,
+		checkInterval, checkTimeout); err != nil {
 		return fmt.Errorf("istio control plane in cluster %s not ready, err: %w", plugin.args.Primary, err)
 	}
 
@@ -431,12 +417,12 @@ func (plugin *IstioPluginHandler) createIstioElb() error {
 }
 
 func (plugin *IstioPluginHandler) createPrimaryIstioOperator() error {
-	setFlags := make([]string, 0, len(plugin.args.SetFlags)+2)
+	setFlags := make([]string, 0, len(plugin.args.SetFlags)+3)
+	setFlags = append(setFlags, fmt.Sprintf("hub=%s", plugin.args.Hub))
+	setFlags = append(setFlags, fmt.Sprintf("tag=%s", plugin.args.Tag))
 	setFlags = append(setFlags, plugin.args.SetFlags...)
 	// override clusterName to primary
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", primaryCluster))
-	setFlags = append(setFlags, fmt.Sprintf("hub=%s", plugin.args.Hub))
-	setFlags = append(setFlags, fmt.Sprintf("tag=%s", plugin.args.Tag))
 
 	_, iop, err := manifest.GenerateConfig(plugin.args.IopFiles, setFlags, false, nil, nil)
 	if err != nil {
@@ -453,38 +439,6 @@ func (plugin *IstioPluginHandler) createPrimaryIstioOperator() error {
 
 	if err := plugin.apply(b); err != nil {
 		return fmt.Errorf("failed to create iop in primary cluster, %w", err)
-	}
-
-	return nil
-}
-
-func (plugin *IstioPluginHandler) waitIngressgatewayReady(cluster string) error {
-	primaryCluster, err := karmadautil.NewClusterClientSet(cluster, plugin.client.GlobalClient, nil)
-	if err != nil {
-		return err
-	}
-	err = wait.PollImmediate(checkInterval, checkTimeout, func() (done bool, err error) {
-		ingressgatewayPods, err := primaryCluster.KubeClient.CoreV1().Pods(istioSystemNamespace).List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "app=istio-ingressgateway",
-		})
-		if err != nil {
-			return false, nil
-		}
-
-		if len(ingressgatewayPods.Items) == 0 {
-			return false, nil
-		}
-
-		for _, p := range ingressgatewayPods.Items {
-			if p.Status.Phase != v1.PodRunning {
-				return false, nil
-			}
-		}
-
-		return true, nil
-	})
-	if err != nil {
-		return fmt.Errorf("ingressgateway in cluster %s not ready, err: %w", cluster, err)
 	}
 
 	return nil
@@ -509,7 +463,7 @@ func (plugin *IstioPluginHandler) installRemotes(remotePilotAddress string) erro
 		}
 
 		go func(cluster string) {
-			err := plugin.waitIngressgatewayReady(cluster)
+			err := waitIngressgatewayReady(plugin.client.GlobalClient, cluster, checkInterval, checkTimeout)
 			if err != nil {
 				multierror.Append(multiErr, err)
 			}
@@ -562,11 +516,11 @@ func (plugin *IstioPluginHandler) createIstioRemoteSecret(remote string) error {
 
 func (plugin *IstioPluginHandler) createRemoteIstioOperator(remote string, remotePilotAddress string) error {
 	setFlags := make([]string, 0, len(plugin.args.SetFlags)+2)
+	setFlags = append(setFlags, fmt.Sprintf("hub=%s", plugin.args.Hub))
+	setFlags = append(setFlags, fmt.Sprintf("tag=%s", plugin.args.Tag))
 	setFlags = append(setFlags, plugin.args.SetFlags...)
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", remote))
 	setFlags = append(setFlags, fmt.Sprintf("values.global.remotePilotAddress=%s", remotePilotAddress))
-	setFlags = append(setFlags, fmt.Sprintf("hub=%s", plugin.args.Hub)) // override hub values(gcr.io/istio-testing)
-	setFlags = append(setFlags, fmt.Sprintf("tag=%s", plugin.args.Tag)) // override tag values(latest)
 
 	// use manifest merge IOP file with set flag, this should be safe for different version
 	_, iop, err := manifest.GenerateConfig(plugin.args.IopFiles, setFlags, false, nil, nil)
@@ -631,12 +585,20 @@ func (plugin *IstioPluginHandler) remotePilotAddress() (string, error) {
 }
 
 func (plugin *IstioPluginHandler) apply(manifest []byte) error {
+	return plugin.applyWithFilter(manifest, nil)
+}
+
+func (plugin *IstioPluginHandler) applyWithFilter(manifest []byte, fn func(*resource.Info) bool) error {
 	resource, err := plugin.client.Helm.Build(bytes.NewBuffer(manifest), false)
 	if err != nil {
 		return err
 	}
 
-	if _, err := plugin.client.Helm.Create(resource); err != nil && !apierrors.IsAlreadyExists(err) {
+	if fn != nil {
+		resource = resource.Filter(fn)
+	}
+
+	if _, err := plugin.client.Helm.Create(resource); err != nil {
 		return err
 	}
 
