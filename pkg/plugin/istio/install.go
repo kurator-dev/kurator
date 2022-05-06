@@ -39,57 +39,57 @@ const (
 	checkTimeout  = 2 * time.Minute
 )
 
-func (plugin *IstioPluginHandler) runInstall() error {
-	if err := plugin.ensureNamespaces(); err != nil {
+func (p *IstioPlugin) runInstall() error {
+	if err := p.ensureNamespaces(); err != nil {
 		return err
 	}
 
-	if err := plugin.installCrds(); err != nil {
+	if err := p.installCrds(); err != nil {
 		return err
 	}
 
-	if err := plugin.createIstioCacerts(); err != nil {
+	if err := p.createIstioCacerts(); err != nil {
 		return err
 	}
 
-	if err := plugin.createIstioOperator(); err != nil {
+	if err := p.createIstioOperator(); err != nil {
 		return err
 	}
 
-	if err := plugin.installControlPlane(); err != nil {
+	if err := p.installControlPlane(); err != nil {
 		return err
 	}
 
-	pilotAddress, err := plugin.remotePilotAddress()
+	pilotAddress, err := p.remotePilotAddress()
 	if err != nil {
 		return err
 	}
 
-	if err := plugin.installRemotes(pilotAddress); err != nil {
+	if err := p.installRemotes(pilotAddress); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) ensureNamespaces() error {
-	plugin.Infof("Begin to ensure namespaces")
-	if _, err := karmadautil.EnsureNamespaceExist(plugin.client.Kube, istioSystemNamespace, false); err != nil {
+func (p *IstioPlugin) ensureNamespaces() error {
+	p.Infof("Begin to ensure namespaces")
+	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), istioSystemNamespace, false); err != nil {
 		return fmt.Errorf("failed to ersure namespace %s, %w", istioSystemNamespace, err)
 	}
 
-	if _, err := karmadautil.EnsureNamespaceExist(plugin.client.Kube, istioOperatorNamespace, false); err != nil {
+	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), istioOperatorNamespace, false); err != nil {
 		return fmt.Errorf("failed to ersure namespace %s, %w", istioOperatorNamespace, err)
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) createIstioCacerts() error {
-	_, err := plugin.client.Kube.CoreV1().Secrets(istioSystemNamespace).Get(context.TODO(), cacertsSecretName, metav1.GetOptions{})
+func (p *IstioPlugin) createIstioCacerts() error {
+	_, err := p.KubeClient().CoreV1().Secrets(istioSystemNamespace).Get(context.TODO(), cacertsSecretName, metav1.GetOptions{})
 	if err == nil {
 		// skip create cacerts if exists
-		plugin.Infof("%s secret already exists, skipping create", cacertsSecretName)
+		p.Infof("%s secret already exists, skipping create", cacertsSecretName)
 		return nil
 	}
 
@@ -98,11 +98,11 @@ func (plugin *IstioPluginHandler) createIstioCacerts() error {
 	}
 
 	// cacert not exists, begin to create
-	plugin.Infof("Begin to create %s secret", cacertsSecretName)
-	caCert, _ := os.ReadFile(path.Join(plugin.args.Cacerts, "ca-cert.pem"))
-	caKey, _ := os.ReadFile(path.Join(plugin.args.Cacerts, "ca-key.pem"))
-	rootCert, _ := os.ReadFile(path.Join(plugin.args.Cacerts, "root-cert.pem"))
-	certChain, _ := os.ReadFile(path.Join(plugin.args.Cacerts, "cert-chain.pem"))
+	p.Infof("Begin to create %s secret", cacertsSecretName)
+	caCert, _ := os.ReadFile(path.Join(p.args.Cacerts, "ca-cert.pem"))
+	caKey, _ := os.ReadFile(path.Join(p.args.Cacerts, "ca-key.pem"))
+	rootCert, _ := os.ReadFile(path.Join(p.args.Cacerts, "root-cert.pem"))
+	certChain, _ := os.ReadFile(path.Join(p.args.Cacerts, "cert-chain.pem"))
 
 	cacert := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -117,7 +117,7 @@ func (plugin *IstioPluginHandler) createIstioCacerts() error {
 		},
 	}
 
-	if _, err := plugin.client.Kube.CoreV1().Secrets(istioSystemNamespace).
+	if _, err := p.KubeClient().CoreV1().Secrets(istioSystemNamespace).
 		Create(context.TODO(), cacert, metav1.CreateOptions{}); err != nil {
 		return fmt.Errorf("failed to create secret %s, %w", cacertsSecretName, err)
 	}
@@ -138,21 +138,21 @@ func (plugin *IstioPluginHandler) createIstioCacerts() error {
 			},
 			Placement: policyv1alpha1.Placement{
 				ClusterAffinity: &policyv1alpha1.ClusterAffinity{
-					ClusterNames: plugin.allClusters(),
+					ClusterNames: p.allClusters(),
 				},
 			},
 		},
 	}
 
-	_, err = plugin.client.Karmada.PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{})
+	_, err = p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{})
 	if err != nil && !apierrors.IsAlreadyExists(err) {
 		return fmt.Errorf("failed to create cluster propagation policy for secret %s, %w", cacertsSecretName, err)
 	}
 	return nil
 }
 
-func (plugin *IstioPluginHandler) installCrds() error {
-	plugin.Infof("Begin to install crds in karmada-apiserver")
+func (p *IstioPlugin) installCrds() error {
+	p.Infof("Begin to install crds in karmada-apiserver")
 	// install crds in karmada-apiserver
 	args := []string{
 		"profile=external",
@@ -168,14 +168,14 @@ func (plugin *IstioPluginHandler) installCrds() error {
 		istioctlArgs = append(istioctlArgs, arg)
 	}
 
-	cmd := exec.Command(plugin.istioctl, istioctlArgs...)
+	cmd := exec.Command(p.istioctl, istioctlArgs...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		plugin.Infof("%s", string(out))
+		p.Infof("%s", string(out))
 		return err
 	}
 
-	tmpYamlFile := path.Join(plugin.settings.TempDir, "manifest.yaml")
+	tmpYamlFile := path.Join(p.settings.TempDir, "manifest.yaml")
 	if err = os.WriteFile(tmpYamlFile, out, 0644); err != nil {
 		return err
 	}
@@ -185,19 +185,19 @@ func (plugin *IstioPluginHandler) installCrds() error {
 		return r.Mapping.GroupVersionKind.Kind == crdKind
 	}
 
-	if err := plugin.applyWithFilter(out, crdFilter); err != nil {
+	if err := p.applyWithFilter(out, crdFilter); err != nil {
 		return err
 	}
 
-	if err := plugin.createIstioConfigClusterPropagationPolicy(); err != nil {
+	if err := p.createIstioConfigClusterPropagationPolicy(); err != nil {
 		return nil
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) createIstioConfigClusterPropagationPolicy() error {
-	crds, err := plugin.client.Crd.ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
+func (p *IstioPlugin) createIstioConfigClusterPropagationPolicy() error {
+	crds, err := p.CrdClient().ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to list crds, %w", err)
 	}
@@ -227,24 +227,24 @@ func (plugin *IstioPluginHandler) createIstioConfigClusterPropagationPolicy() er
 			ResourceSelectors: resourceSelectors,
 			Placement: policyv1alpha1.Placement{
 				ClusterAffinity: &policyv1alpha1.ClusterAffinity{
-					ClusterNames: []string{plugin.args.Primary},
+					ClusterNames: []string{p.args.Primary},
 				},
 			},
 		},
 	}
 
-	_, err = plugin.client.Karmada.PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{})
+	_, err = p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{})
 
 	return err
 }
 
-func (plugin *IstioPluginHandler) createIstioOperator() error {
-	plugin.Infof("Begin to create istio operator deployment")
-	if err := plugin.createIstioOperatorDeployment(); err != nil {
+func (p *IstioPlugin) createIstioOperator() error {
+	p.Infof("Begin to create istio operator deployment")
+	if err := p.createIstioOperatorDeployment(); err != nil {
 		return err
 	}
 
-	clusters := plugin.allClusters()
+	clusters := p.allClusters()
 	// create ClusterPropagationPolicy for istio-operator's ClusterRole/ClusterRoleBinding/CustomResourceDefinition
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
@@ -275,7 +275,7 @@ func (plugin *IstioPluginHandler) createIstioOperator() error {
 			},
 		},
 	}
-	if _, err := plugin.client.Karmada.PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{}); err != nil {
+	if _, err := p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 
@@ -305,7 +305,7 @@ func (plugin *IstioPluginHandler) createIstioOperator() error {
 			},
 		},
 	}
-	if _, err := plugin.client.Karmada.PolicyV1alpha1().
+	if _, err := p.KarmadaClient().PolicyV1alpha1().
 		PropagationPolicies(cp.Namespace).Create(context.TODO(), cp, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -313,15 +313,15 @@ func (plugin *IstioPluginHandler) createIstioOperator() error {
 	return nil
 }
 
-func (plugin *IstioPluginHandler) createIstioOperatorDeployment() error {
-	cmd := exec.Command(plugin.istioctl, "operator", "dump")
+func (p *IstioPlugin) createIstioOperatorDeployment() error {
+	cmd := exec.Command(p.istioctl, "operator", "dump")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		plugin.Infof("%s", string(out))
+		p.Infof("%s", string(out))
 		return err
 	}
 
-	tmpYamlFile := path.Join(plugin.settings.TempDir, "istio-operator.yaml")
+	tmpYamlFile := path.Join(p.settings.TempDir, "istio-operator.yaml")
 	if err = os.WriteFile(tmpYamlFile, out, 0644); err != nil {
 		return err
 	}
@@ -330,32 +330,31 @@ func (plugin *IstioPluginHandler) createIstioOperatorDeployment() error {
 		return r.Mapping.GroupVersionKind.Kind != crdKind
 	}
 
-	if err := plugin.applyWithFilter(out, excludeCrdFilter); err != nil {
+	if err := p.applyWithFilter(out, excludeCrdFilter); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) installControlPlane() error {
-	plugin.Infof("Begin to install istio control-plane on %s", plugin.args.Primary)
-	if err := plugin.createIstioElb(); err != nil {
+func (p *IstioPlugin) installControlPlane() error {
+	p.Infof("Begin to install istio control-plane on %s", p.args.Primary)
+	if err := p.createIstioElb(); err != nil {
 		return err
 	}
 
-	if err := plugin.createPrimaryIstioOperator(); err != nil {
+	if err := p.createPrimaryIstioOperator(); err != nil {
 		return err
 	}
-
-	if err := waitIngressgatewayReady(plugin.client.GlobalClient, plugin.args.Primary,
+	if err := waitIngressgatewayReady(p.Client, p.args.Primary,
 		checkInterval, checkTimeout); err != nil {
-		return fmt.Errorf("istio control plane in cluster %s not ready, err: %w", plugin.args.Primary, err)
+		return fmt.Errorf("istio control plane in cluster %s not ready, err: %w", p.args.Primary, err)
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) createIstioElb() error {
+func (p *IstioPlugin) createIstioElb() error {
 	istioElbSvc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "istiod-elb",
@@ -377,7 +376,7 @@ func (plugin *IstioPluginHandler) createIstioElb() error {
 			Type:            v1.ServiceTypeLoadBalancer,
 		},
 	}
-	if _, err := plugin.client.Kube.CoreV1().
+	if _, err := p.KubeClient().CoreV1().
 		Services(istioSystemNamespace).Create(context.TODO(), istioElbSvc, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -403,12 +402,12 @@ func (plugin *IstioPluginHandler) createIstioElb() error {
 			},
 			Placement: policyv1alpha1.Placement{
 				ClusterAffinity: &policyv1alpha1.ClusterAffinity{
-					ClusterNames: []string{plugin.args.Primary},
+					ClusterNames: []string{p.args.Primary},
 				},
 			},
 		},
 	}
-	if _, err := plugin.client.Karmada.PolicyV1alpha1().
+	if _, err := p.KarmadaClient().PolicyV1alpha1().
 		PropagationPolicies(cp.Namespace).Create(context.TODO(), cp, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -416,54 +415,48 @@ func (plugin *IstioPluginHandler) createIstioElb() error {
 	return nil
 }
 
-func (plugin *IstioPluginHandler) createPrimaryIstioOperator() error {
-	setFlags := make([]string, 0, len(plugin.args.SetFlags)+3)
-	setFlags = append(setFlags, fmt.Sprintf("hub=%s", plugin.args.Hub))
-	setFlags = append(setFlags, fmt.Sprintf("tag=%s", plugin.args.Tag))
-	setFlags = append(setFlags, plugin.args.SetFlags...)
+func (p *IstioPlugin) createPrimaryIstioOperator() error {
+	setFlags := make([]string, 0, len(p.args.SetFlags)+3)
+	setFlags = append(setFlags, fmt.Sprintf("hub=%s", p.args.Hub))
+	setFlags = append(setFlags, fmt.Sprintf("tag=%s", p.args.Tag))
+	setFlags = append(setFlags, p.args.SetFlags...)
 	// override clusterName to primary
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", primaryCluster))
 
-	_, iop, err := manifest.GenerateConfig(plugin.args.IopFiles, setFlags, false, nil, nil)
+	data, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to generate config: %w", err)
 	}
 	iop.Name = primaryCluster
 	iop.Namespace = istioSystemNamespace
 
-	// TODO: replace with istio client-go to avoid marshal/unmarshal
-	b, err := yaml.Marshal(iop)
-	if err != nil {
-		return fmt.Errorf("failed to marshal iop: %w", err)
-	}
-
-	if err := plugin.apply(b); err != nil {
+	if err := p.apply([]byte(data)); err != nil {
 		return fmt.Errorf("failed to create iop in primary cluster, %w", err)
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) installRemotes(remotePilotAddress string) error {
+func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 	var (
 		wg       = sync.WaitGroup{}
 		multiErr *multierror.Error
 	)
 
-	for _, remote := range plugin.args.Remotes {
+	for _, remote := range p.args.Remotes {
 		wg.Add(1)
-		plugin.Infof("Begin to install istio in cluster %s", remote)
+		p.Infof("Begin to install istio in cluster %s", remote)
 
-		if err := plugin.createIstioRemoteSecret(remote); err != nil {
+		if err := p.createIstioRemoteSecret(remote); err != nil {
 			return nil
 		}
 
-		if err := plugin.createRemoteIstioOperator(remote, remotePilotAddress); err != nil {
+		if err := p.createRemoteIstioOperator(remote, remotePilotAddress); err != nil {
 			return err
 		}
 
 		go func(cluster string) {
-			err := waitIngressgatewayReady(plugin.client.GlobalClient, cluster, checkInterval, checkTimeout)
+			err := waitIngressgatewayReady(p.Client, cluster, checkInterval, checkTimeout)
 			if err != nil {
 				multierror.Append(multiErr, err)
 			}
@@ -475,13 +468,13 @@ func (plugin *IstioPluginHandler) installRemotes(remotePilotAddress string) erro
 	return multiErr.ErrorOrNil()
 }
 
-func (plugin *IstioPluginHandler) createIstioRemoteSecret(remote string) error {
+func (p *IstioPlugin) createIstioRemoteSecret(remote string) error {
 	// create istio-remote-secret for remote cluster, it will be propagate to primary cluste
-	istioRemoteSecret, err := plugin.generatrRemoteSecret(remote)
+	istioRemoteSecret, err := p.generatrRemoteSecret(remote)
 	if err != nil {
 		return err
 	}
-	if _, err := plugin.client.Kube.CoreV1().Secrets(istioSystemNamespace).Create(context.TODO(), istioRemoteSecret, metav1.CreateOptions{}); err != nil {
+	if _, err := p.KubeClient().CoreV1().Secrets(istioSystemNamespace).Create(context.TODO(), istioRemoteSecret, metav1.CreateOptions{}); err != nil {
 		return fmt.Errorf("failed to create secret %s/%s, %w", istioOperatorNamespace, istioRemoteSecret.Name, err)
 	}
 
@@ -501,12 +494,12 @@ func (plugin *IstioPluginHandler) createIstioRemoteSecret(remote string) error {
 			},
 			Placement: policyv1alpha1.Placement{
 				ClusterAffinity: &policyv1alpha1.ClusterAffinity{
-					ClusterNames: []string{plugin.args.Primary},
+					ClusterNames: []string{p.args.Primary},
 				},
 			},
 		},
 	}
-	if _, err := plugin.client.Karmada.PolicyV1alpha1().PropagationPolicies(secretPolicy.Namespace).
+	if _, err := p.KarmadaClient().PolicyV1alpha1().PropagationPolicies(secretPolicy.Namespace).
 		Create(context.TODO(), secretPolicy, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -514,16 +507,16 @@ func (plugin *IstioPluginHandler) createIstioRemoteSecret(remote string) error {
 	return nil
 }
 
-func (plugin *IstioPluginHandler) createRemoteIstioOperator(remote string, remotePilotAddress string) error {
-	setFlags := make([]string, 0, len(plugin.args.SetFlags)+2)
-	setFlags = append(setFlags, fmt.Sprintf("hub=%s", plugin.args.Hub))
-	setFlags = append(setFlags, fmt.Sprintf("tag=%s", plugin.args.Tag))
-	setFlags = append(setFlags, plugin.args.SetFlags...)
+func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddress string) error {
+	setFlags := make([]string, 0, len(p.args.SetFlags)+2)
+	setFlags = append(setFlags, fmt.Sprintf("hub=%s", p.args.Hub))
+	setFlags = append(setFlags, fmt.Sprintf("tag=%s", p.args.Tag))
+	setFlags = append(setFlags, p.args.SetFlags...)
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", remote))
 	setFlags = append(setFlags, fmt.Sprintf("values.global.remotePilotAddress=%s", remotePilotAddress))
 
 	// use manifest merge IOP file with set flag, this should be safe for different version
-	_, iop, err := manifest.GenerateConfig(plugin.args.IopFiles, setFlags, false, nil, nil)
+	_, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to generate config: %w", err)
 	}
@@ -536,7 +529,7 @@ func (plugin *IstioPluginHandler) createRemoteIstioOperator(remote string, remot
 		return fmt.Errorf("failed to marshal istio operator, %w", err)
 	}
 
-	if err := plugin.apply(b); err != nil {
+	if err := p.apply(b); err != nil {
 		return fmt.Errorf("failed to create iop in cluster %s, %w", remote, err)
 	}
 
@@ -561,7 +554,7 @@ func (plugin *IstioPluginHandler) createRemoteIstioOperator(remote string, remot
 			},
 		},
 	}
-	if _, err := plugin.client.Karmada.PolicyV1alpha1().
+	if _, err := p.KarmadaClient().PolicyV1alpha1().
 		PropagationPolicies(cp.Namespace).Create(context.TODO(), cp, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -569,14 +562,14 @@ func (plugin *IstioPluginHandler) createRemoteIstioOperator(remote string, remot
 	return nil
 }
 
-func (plugin *IstioPluginHandler) remotePilotAddress() (string, error) {
-	svc, err := plugin.client.Kube.CoreV1().Services(istioSystemNamespace).Get(context.TODO(), remotePilotAddressServiceName, metav1.GetOptions{})
+func (p *IstioPlugin) remotePilotAddress() (string, error) {
+	svc, err := p.KubeClient().CoreV1().Services(istioSystemNamespace).Get(context.TODO(), remotePilotAddressServiceName, metav1.GetOptions{})
 	if err != nil {
 		return "", err
 	}
 
 	for _, ingress := range svc.Status.LoadBalancer.Ingress {
-		if ingress.Hostname == plugin.args.Primary {
+		if ingress.Hostname == p.args.Primary {
 			return ingress.IP, nil
 		}
 	}
@@ -584,12 +577,12 @@ func (plugin *IstioPluginHandler) remotePilotAddress() (string, error) {
 	return "", fmt.Errorf("service istiod-elb not found")
 }
 
-func (plugin *IstioPluginHandler) apply(manifest []byte) error {
-	return plugin.applyWithFilter(manifest, nil)
+func (p *IstioPlugin) apply(manifest []byte) error {
+	return p.applyWithFilter(manifest, nil)
 }
 
-func (plugin *IstioPluginHandler) applyWithFilter(manifest []byte, fn func(*resource.Info) bool) error {
-	resource, err := plugin.client.Helm.Build(bytes.NewBuffer(manifest), false)
+func (p *IstioPlugin) applyWithFilter(manifest []byte, fn func(*resource.Info) bool) error {
+	resource, err := p.HelmClient().Build(bytes.NewBuffer(manifest), false)
 	if err != nil {
 		return err
 	}
@@ -598,20 +591,20 @@ func (plugin *IstioPluginHandler) applyWithFilter(manifest []byte, fn func(*reso
 		resource = resource.Filter(fn)
 	}
 
-	if _, err := plugin.client.Helm.Create(resource); err != nil {
+	if _, err := p.HelmClient().Create(resource); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) generatrRemoteSecret(remote string) (*v1.Secret, error) {
-	secret, err := plugin.client.Kube.CoreV1().Secrets(karmadaClusterNamespace).Get(context.TODO(), remote, metav1.GetOptions{})
+func (p *IstioPlugin) generatrRemoteSecret(remote string) (*v1.Secret, error) {
+	secret, err := p.KubeClient().CoreV1().Secrets(karmadaClusterNamespace).Get(context.TODO(), remote, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret %s, err: %w", remote, err)
 	}
 
-	cluster, err := plugin.client.Karmada.ClusterV1alpha1().Clusters().Get(context.TODO(), remote, metav1.GetOptions{})
+	cluster, err := p.KarmadaClient().ClusterV1alpha1().Clusters().Get(context.TODO(), remote, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cluster %s, err: %w", remote, err)
 	}
@@ -653,9 +646,9 @@ func (plugin *IstioPluginHandler) generatrRemoteSecret(remote string) (*v1.Secre
 	}, nil
 }
 
-func (plugin *IstioPluginHandler) allClusters() []string {
-	allClusters := make([]string, 0, len(plugin.args.Remotes)+1)
-	allClusters = append(allClusters, plugin.args.Primary)
-	allClusters = append(allClusters, plugin.args.Remotes...)
+func (p *IstioPlugin) allClusters() []string {
+	allClusters := make([]string, 0, len(p.args.Remotes)+1)
+	allClusters = append(allClusters, p.args.Primary)
+	allClusters = append(allClusters, p.args.Remotes...)
 	return allClusters
 }

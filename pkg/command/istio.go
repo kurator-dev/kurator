@@ -35,7 +35,7 @@ func (c *IstioInstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	plugin, err := istio.NewIstioPluginHandler(c.Options, istioArgs)
+	plugin, err := istio.NewIstioPlugin(c.Options, istioArgs)
 	if err != nil {
 		c.Errorf("istio init error: %v", err)
 		return 1

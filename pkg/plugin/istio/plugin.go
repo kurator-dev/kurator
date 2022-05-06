@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/zirain/ubrain/pkg/client"
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/util"
 )
@@ -21,8 +22,8 @@ type InstallArgs struct {
 	Tag string
 }
 
-type IstioPluginHandler struct {
-	client *util.Client
+type IstioPlugin struct {
+	*client.Client
 
 	settings *generic.Options
 	args     *InstallArgs
@@ -31,29 +32,29 @@ type IstioPluginHandler struct {
 	istioctl string
 }
 
-func NewIstioPluginHandler(s *generic.Options, args *InstallArgs) (*IstioPluginHandler, error) {
-	plugin := &IstioPluginHandler{
+func NewIstioPlugin(s *generic.Options, args *InstallArgs) (*IstioPlugin, error) {
+	plugin := &IstioPlugin{
 		settings: s,
 		args:     args,
 		getter:   util.NewBinaryGetter(s),
 		istioctl: "/usr/local/bin/istioctl",
 	}
 	rest := s.RESTClientGetter()
-	c, err := util.NewClient(rest)
+	c, err := client.NewClient(rest)
 	if err != nil {
 		return nil, err
 	}
-	plugin.client = c
+	plugin.Client = c
 
 	return plugin, nil
 }
 
-func (plugin *IstioPluginHandler) init() error {
-	binaryPath, err := plugin.getter.Istioctl()
+func (p *IstioPlugin) init() error {
+	binaryPath, err := p.getter.Istioctl()
 	if err != nil {
 		return err
 	}
-	plugin.istioctl = binaryPath
+	p.istioctl = binaryPath
 
 	return nil
 }
@@ -61,22 +62,22 @@ func (plugin *IstioPluginHandler) init() error {
 // Execute receives an executable's filepath, a slice
 // of arguments, and a slice of environment variables
 // to relay to the executable.
-func (plugin *IstioPluginHandler) Execute(cmdArgs, environment []string) error {
-	if err := plugin.init(); err != nil {
+func (p *IstioPlugin) Execute(cmdArgs, environment []string) error {
+	if err := p.init(); err != nil {
 		return err
 	}
 
-	if err := plugin.runInstall(); err != nil {
-		plugin.Infof("failed to install istio, %s", err)
+	if err := p.runInstall(); err != nil {
+		p.Infof("failed to install istio, %s", err)
 		return err
 	}
 
 	return nil
 }
 
-func (plugin *IstioPluginHandler) Infof(format string, a ...interface{}) {
-	if plugin.settings.Ui == nil {
+func (p *IstioPlugin) Infof(format string, a ...interface{}) {
+	if p.settings.Ui == nil {
 		return
 	}
-	plugin.settings.Ui.Output(fmt.Sprintf("%s\t%s\t", time.Now().Format("2006-01-02 15:04:05"), "[Istio]") + fmt.Sprintf(format, a...))
+	p.settings.Ui.Output(fmt.Sprintf("%s\t%s\t", time.Now().Format("2006-01-02 15:04:05"), "[Istio]") + fmt.Sprintf(format, a...))
 }
