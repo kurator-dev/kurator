@@ -74,6 +74,6 @@ func (c *IstioInstallCommand) istioFlagSet(s *generic.Options, args *istio.Insta
 	settings (--set meshConfig.enableTracing=true). See documentation for more info:`+url.IstioOperatorSpec)
 	f.StringVar(&args.Primary, "primary", "member1", "The cluster name of the istio control plane.")
 	f.StringSliceVar(&args.Remotes, "remote", []string{"member2"}, "The name of the istio remote cluster.")
-	f.StringVar(&args.Cacerts, "cacert", "/root/istio-certs/primary", "The root cacerts of the istio.")
+	f.StringVar(&args.Cacerts, "cacert", "", "The root cacerts of the istio, self-signed certs will be used if empty.")
 	return f
 }

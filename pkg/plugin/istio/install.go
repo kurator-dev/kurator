@@ -22,6 +22,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/tools/clientcmd/api/latest"
 
+	"github.com/zirain/ubrain/pkg/cert"
 	"github.com/zirain/ubrain/pkg/util"
 )
 
@@ -31,7 +32,6 @@ const (
 	istioOperatorNamespace        = "istio-operator"
 	karmadaClusterNamespace       = "karmada-cluster"
 	primaryCluster                = "primary"
-	cacertsSecretName             = "cacerts"
 
 	crdKind = "CustomResourceDefinition"
 
@@ -86,55 +86,47 @@ func (p *IstioPlugin) ensureNamespaces() error {
 }
 
 func (p *IstioPlugin) createIstioCacerts() error {
-	_, err := p.KubeClient().CoreV1().Secrets(istioSystemNamespace).Get(context.TODO(), cacertsSecretName, metav1.GetOptions{})
+	p.Infof("Begin to create istio cacerts")
+	var gen cert.Generator
+	if len(p.args.Cacerts) != 0 {
+		gen = cert.NewPluggedCert(p.args.Cacerts)
+	} else {
+		gen = cert.NewSelfSignedCert("cluster.local")
+	}
+	cacert, err := gen.Secret(istioSystemNamespace)
+	if err != nil {
+		return fmt.Errorf("failed to gen secret, %w", err)
+	}
+
+	_, err = p.KubeClient().CoreV1().Secrets(cacert.Namespace).Get(context.TODO(), cacert.Name, metav1.GetOptions{})
 	if err == nil {
 		// skip create cacerts if exists
-		p.Infof("%s secret already exists, skipping create", cacertsSecretName)
+		p.Infof("secret %s/%s already exists, skipping create", cacert.Namespace, cacert.Name)
 		return nil
 	}
 
-	if err != nil && !apierrors.IsNotFound(err) {
-		return fmt.Errorf("unexpect error when get %s secret, %w", cacertsSecretName, err)
+	if !apierrors.IsNotFound(err) {
+		return fmt.Errorf("unexpect error when get secret %s/%s, %w", cacert.Namespace, cacert.Name, err)
 	}
 
-	// cacert not exists, begin to create
-	p.Infof("Begin to create %s secret", cacertsSecretName)
-	caCert, _ := os.ReadFile(path.Join(p.args.Cacerts, "ca-cert.pem"))
-	caKey, _ := os.ReadFile(path.Join(p.args.Cacerts, "ca-key.pem"))
-	rootCert, _ := os.ReadFile(path.Join(p.args.Cacerts, "root-cert.pem"))
-	certChain, _ := os.ReadFile(path.Join(p.args.Cacerts, "cert-chain.pem"))
-
-	cacert := &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cacertsSecretName,
-			Namespace: istioSystemNamespace,
-		},
-		StringData: map[string]string{
-			"ca-cert.pem":    string(caCert),
-			"ca-key.pem":     string(caKey),
-			"root-cert.pem":  string(rootCert),
-			"cert-chain.pem": string(certChain),
-		},
-	}
-
-	if _, err := p.KubeClient().CoreV1().Secrets(istioSystemNamespace).
+	if _, err := p.KubeClient().CoreV1().Secrets(cacert.Namespace).
 		Create(context.TODO(), cacert, metav1.CreateOptions{}); err != nil {
-		return fmt.Errorf("failed to create secret %s, %w", cacertsSecretName, err)
+		return fmt.Errorf("failed to create secret %s/%s, %w", cacert.Namespace, cacert.Name, err)
 	}
 
 	// TODO: abstract PP and CPP creation
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cacertsSecretName,
-			Namespace: istioSystemNamespace,
+			Name:      cacert.Name,
+			Namespace: cacert.Namespace,
 		},
 		Spec: policyv1alpha1.PropagationSpec{
 			ResourceSelectors: []policyv1alpha1.ResourceSelector{
 				{
 					APIVersion: "v1",
 					Kind:       "Secret",
-					Namespace:  istioSystemNamespace,
-					Name:       cacertsSecretName,
+					Namespace:  cacert.Namespace,
+					Name:       cacert.Name,
 				},
 			},
 			Placement: policyv1alpha1.Placement{
@@ -147,8 +139,9 @@ func (p *IstioPlugin) createIstioCacerts() error {
 
 	_, err = p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{})
 	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return fmt.Errorf("failed to create cluster propagation policy for secret %s, %w", cacertsSecretName, err)
+		return fmt.Errorf("failed to create cluster propagation policy for secret %s/%s, %w", cacert.Namespace, cacert.Name, err)
 	}
+
 	return nil
 }
 
@@ -424,14 +417,20 @@ func (p *IstioPlugin) createPrimaryIstioOperator() error {
 	// override clusterName to primary, control plane cluster always named `primary`
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", primaryCluster))
 
-	data, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
+	_, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to generate config: %w", err)
 	}
 	iop.Name = primaryCluster
 	iop.Namespace = istioSystemNamespace
 
-	if err := p.apply([]byte(data)); err != nil {
+	// TODO: replace this to avoid marshal/unmarshal once IstioOperator add to istio client-go
+	b, err := yaml.Marshal(iop)
+	if err != nil {
+		return fmt.Errorf("failed to marshal istio operator, %w", err)
+	}
+
+	if err := p.apply(b); err != nil {
 		return fmt.Errorf("failed to create iop in primary cluster, %w", err)
 	}
 
@@ -524,7 +523,7 @@ func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddres
 	iop.Name = remote
 	iop.Namespace = istioSystemNamespace
 
-	// TODO: replace with istio client-go to avoid marshal/unmarshal
+	// TODO: replace this to avoid marshal/unmarshal once IstioOperator add to istio client-go
 	b, err := yaml.Marshal(iop)
 	if err != nil {
 		return fmt.Errorf("failed to marshal istio operator, %w", err)
