@@ -14,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	kubeclient "k8s.io/client-go/kubernetes"
-	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -33,7 +32,7 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 		return nil, err
 	}
 
-	kubeClient := kubeclientset.NewForConfigOrDie(c)
+	kubeClient := kubeclient.NewForConfigOrDie(c)
 	helmClient := helmclient.New(rest)
 	crdClientSet := crdclientset.NewForConfigOrDie(c)
 	karmadaClient := karmadaclientset.NewForConfigOrDie(c)
@@ -118,5 +117,5 @@ func (c *Client) NewClusterClientSet(clusterName string) (kubeclient.Interface, 
 	if err != nil {
 		return nil, err
 	}
-	return kubeclientset.NewForConfig(clusterConfig)
+	return kubeclient.NewForConfig(clusterConfig)
 }

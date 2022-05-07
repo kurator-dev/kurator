@@ -122,6 +122,7 @@ func (p *IstioPlugin) createIstioCacerts() error {
 		return fmt.Errorf("failed to create secret %s, %w", cacertsSecretName, err)
 	}
 
+	// TODO: abstract PP and CPP creation
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cacertsSecretName,
@@ -152,8 +153,7 @@ func (p *IstioPlugin) createIstioCacerts() error {
 }
 
 func (p *IstioPlugin) installCrds() error {
-	p.Infof("Begin to install crds in karmada-apiserver")
-	// install crds in karmada-apiserver
+	p.Infof("Begin to install istio crds in karmada-apiserver and primary cluster")
 	args := []string{
 		"profile=external",
 		"values.global.configCluster=true",
@@ -357,7 +357,7 @@ func (p *IstioPlugin) installControlPlane() error {
 func (p *IstioPlugin) createIstioElb() error {
 	istioElbSvc := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "istiod-elb",
+			Name:      remotePilotAddressServiceName,
 			Namespace: istioSystemNamespace,
 		},
 		Spec: v1.ServiceSpec{
@@ -392,7 +392,7 @@ func (p *IstioPlugin) createIstioElb() error {
 				{
 					APIVersion: "v1",
 					Kind:       "Service",
-					Name:       "istiod-elb",
+					Name:       remotePilotAddressServiceName,
 				},
 				{
 					APIVersion: "install.istio.io/v1alpha1",
@@ -417,10 +417,11 @@ func (p *IstioPlugin) createIstioElb() error {
 
 func (p *IstioPlugin) createPrimaryIstioOperator() error {
 	setFlags := make([]string, 0, len(p.args.SetFlags)+3)
+	// override hub and tag before user's flags
 	setFlags = append(setFlags, fmt.Sprintf("hub=%s", p.args.Hub))
 	setFlags = append(setFlags, fmt.Sprintf("tag=%s", p.args.Tag))
 	setFlags = append(setFlags, p.args.SetFlags...)
-	// override clusterName to primary
+	// override clusterName to primary, control plane cluster always named `primary`
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", primaryCluster))
 
 	data, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
@@ -444,7 +445,6 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 	)
 
 	for _, remote := range p.args.Remotes {
-		wg.Add(1)
 		p.Infof("Begin to install istio in cluster %s", remote)
 
 		if err := p.createIstioRemoteSecret(remote); err != nil {
@@ -454,13 +454,13 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 		if err := p.createRemoteIstioOperator(remote, remotePilotAddress); err != nil {
 			return err
 		}
-
+		wg.Add(1)
 		go func(cluster string) {
+			defer wg.Done()
 			err := waitIngressgatewayReady(p.Client, cluster, checkInterval, checkTimeout)
 			if err != nil {
 				multierror.Append(multiErr, err)
 			}
-			wg.Done()
 		}(remote)
 	}
 	wg.Wait()
@@ -469,8 +469,8 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 }
 
 func (p *IstioPlugin) createIstioRemoteSecret(remote string) error {
-	// create istio-remote-secret for remote cluster, it will be propagate to primary cluste
-	istioRemoteSecret, err := p.generatrRemoteSecret(remote)
+	// create istio-remote-secret for remote cluster, it will be propagated to remote cluster
+	istioRemoteSecret, err := p.generateRemoteSecret(remote)
 	if err != nil {
 		return err
 	}
@@ -508,7 +508,8 @@ func (p *IstioPlugin) createIstioRemoteSecret(remote string) error {
 }
 
 func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddress string) error {
-	setFlags := make([]string, 0, len(p.args.SetFlags)+2)
+	setFlags := make([]string, 0, len(p.args.SetFlags)+4)
+	// override hub and tag before user's flags
 	setFlags = append(setFlags, fmt.Sprintf("hub=%s", p.args.Hub))
 	setFlags = append(setFlags, fmt.Sprintf("tag=%s", p.args.Tag))
 	setFlags = append(setFlags, p.args.SetFlags...)
@@ -598,7 +599,7 @@ func (p *IstioPlugin) applyWithFilter(manifest []byte, fn func(*resource.Info) b
 	return nil
 }
 
-func (p *IstioPlugin) generatrRemoteSecret(remote string) (*v1.Secret, error) {
+func (p *IstioPlugin) generateRemoteSecret(remote string) (*v1.Secret, error) {
 	secret, err := p.KubeClient().CoreV1().Secrets(karmadaClusterNamespace).Get(context.TODO(), remote, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get secret %s, err: %w", remote, err)
