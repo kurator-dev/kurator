@@ -2,6 +2,7 @@ components:
   - name: istio
     version: 1.13.3
     hub: docker.io/istio
+    releaseURLPrefix: "https://github.com/istio/istio/releases/download"
   - name: karmarda
     version: 1.0.0
     hub:

@@ -8,7 +8,6 @@ require (
 	github.com/karmada-io/karmada v1.1.1
 	github.com/mitchellh/cli v1.1.3
 	github.com/spf13/pflag v1.0.5
-	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.8.2
 	istio.io/istio v0.0.0-20220502201105-dadeb9b81922
 	k8s.io/api v0.23.6
@@ -145,6 +144,7 @@ require (
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	istio.io/api v0.0.0-20220426030804-14e12fe188cf // indirect
 	istio.io/client-go v1.12.0-alpha.5.0.20220426031304-d6188ec78b20 // indirect

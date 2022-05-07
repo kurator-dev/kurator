@@ -319,6 +319,8 @@ func (p *IstioPlugin) createIstioOperatorDeployment() error {
 		return err
 	}
 
+	// IstioOperator's CRD has installed in previous step(installCrds),
+	// exclude it to avoid error when helm creating
 	excludeCrdFilter := func(r *resource.Info) bool {
 		return r.Mapping.GroupVersionKind.Kind != crdKind
 	}

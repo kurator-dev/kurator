@@ -7,9 +7,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/ghodss/yaml"
 	"github.com/mitchellh/cli"
 	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v2"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/zirain/ubrain/manifests"
@@ -79,9 +79,10 @@ type cfg struct {
 }
 
 type Component struct {
-	Name    string
-	Version string
-	Hub     string
+	Name             string
+	Version          string
+	Hub              string
+	ReleaseURLPrefix string
 }
 
 func loadComponents() map[string]Component {

@@ -14,11 +14,6 @@ import (
 
 var istioctlBinary = filepath.Join("istioctl" + moreos.Exe)
 
-const (
-	// TODO: make download URL configurable
-	downloadURLPrefix = "https://github.com/istio/istio/releases/download"
-)
-
 type BinaryGetter struct {
 	settings *generic.Options
 }
@@ -43,8 +38,10 @@ func (g *BinaryGetter) Istioctl() (string, error) {
 		if err = os.MkdirAll(installPath, 0o750); err != nil {
 			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
 		}
-
-		if err = downloadIstioctl(installPath, istioComponent.Version); err != nil {
+		src := fmt.Sprintf("%s/%s/istioctl-%s-%s-%s.tar.gz",
+			istioComponent.ReleaseURLPrefix, istioComponent.Version, istioComponent.Version,
+			OSExt(), runtime.GOARCH)
+		if err = downloadBinary(src, installPath); err != nil {
 			return "", fmt.Errorf("unable to get istioctl binary %q: %w", installPath, err)
 		}
 	}
@@ -52,9 +49,7 @@ func (g *BinaryGetter) Istioctl() (string, error) {
 	return verifyExecutableBinary(istioctlPath)
 }
 
-func downloadIstioctl(dst string, ver string) error {
-	url := fmt.Sprintf(downloadURLPrefix+"/%s/istioctl-%s-%s-%s.tar.gz",
-		ver, ver, OSExt(), runtime.GOARCH)
+func downloadBinary(url, path string) error {
 	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -71,7 +66,7 @@ func downloadIstioctl(dst string, ver string) error {
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("received %v status code from %s", res.StatusCode, url)
 	}
-	if err = Untar(dst, res.Body); err != nil {
+	if err = Untar(path, res.Body); err != nil {
 		return fmt.Errorf("error untarring %s: %w", url, err)
 	}
 	return nil
