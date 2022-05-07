@@ -36,6 +36,11 @@ func initCommandFactory() map[string]cli.CommandFactory {
 				Options: o,
 			}, nil
 		},
+		"install karmada": func() (cli.Command, error) {
+			return &command.KarmadaInstallCommand{
+				Options: o,
+			}, nil
+		},
 	}
 }
 

@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
 	github.com/mitchellh/cli v1.1.3
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
 	helm.sh/helm/v3 v3.8.2
 	istio.io/istio v0.0.0-20220502201105-dadeb9b81922

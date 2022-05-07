@@ -4,8 +4,9 @@ components:
     hub: docker.io/istio
     releaseURLPrefix: "https://github.com/istio/istio/releases/download"
   - name: karmarda
-    version: 1.0.0
+    version: v1.1.1
     hub:
+    releaseURLPrefix: "https://github.com/karmada-io/karmada/releases/download"
   - name: kubeedge
     version: 1.6.0
     hub:

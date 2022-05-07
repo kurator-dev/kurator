@@ -12,7 +12,10 @@ import (
 	"github.com/zirain/ubrain/pkg/moreos"
 )
 
-var istioctlBinary = filepath.Join("istioctl" + moreos.Exe)
+var (
+	istioctlBinary   = filepath.Join("istioctl" + moreos.Exe)
+	karmadactlBinary = filepath.Join("kubectl-karmada" + moreos.Exe)
+)
 
 type BinaryGetter struct {
 	settings *generic.Options
@@ -47,6 +50,30 @@ func (g *BinaryGetter) Istioctl() (string, error) {
 	}
 
 	return verifyExecutableBinary(istioctlPath)
+}
+
+func (g *BinaryGetter) Karmadactl() (string, error) {
+	karmadaComponent := g.settings.Components["karmada"]
+
+	installPath := filepath.Join(g.settings.HomeDir, karmadaComponent.Name, karmadaComponent.Version)
+	karmadactlPath := filepath.Join(installPath, karmadactlBinary)
+	_, err := os.Stat(karmadactlPath)
+	if err == nil {
+		return karmadactlPath, nil
+	}
+
+	if os.IsNotExist(err) {
+		if err = os.MkdirAll(installPath, 0o750); err != nil {
+			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
+		}
+		src := fmt.Sprintf("%s/%s/kubectl-karmada-%s-%s.tgz",
+			karmadaComponent.ReleaseURLPrefix, karmadaComponent.Version, OSExt(), runtime.GOARCH)
+		if err = downloadBinary(src, installPath); err != nil {
+			return "", fmt.Errorf("unable to get istioctl binary %q: %w", installPath, err)
+		}
+	}
+
+	return verifyExecutableBinary(karmadactlPath)
 }
 
 func downloadBinary(url, path string) error {
