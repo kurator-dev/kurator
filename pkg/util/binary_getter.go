@@ -3,10 +3,12 @@ package util
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/moreos"
@@ -74,6 +76,62 @@ func (g *BinaryGetter) Karmadactl() (string, error) {
 	}
 
 	return verifyExecutableBinary(karmadactlPath)
+}
+
+func (g *BinaryGetter) Valcano() (string, error) {
+	volcano := g.settings.Components["volcano"]
+
+	// x84_64 https://raw.githubusercontent.com/volcano-sh/volcano/master/installer/volcano-development.yaml
+	// arm64 https://raw.githubusercontent.com/volcano-sh/volcano/v1.5.1/installer/volcano-development.yaml
+	ver := volcano.Version
+	if ver != "master" && !strings.HasPrefix(ver, "v") {
+		ver = "v" + ver
+	}
+
+	var url string
+	switch runtime.GOARCH {
+	case "amd64":
+		url = fmt.Sprintf("%s%s/installer/volcano-development.yaml", volcano.ReleaseURLPrefix, ver)
+	case "arm64":
+		url = fmt.Sprintf("%s%s/installer/volcano-development-arm64.yaml", volcano.ReleaseURLPrefix, ver)
+	default:
+		return "", fmt.Errorf("os arch %s is not supportted", runtime.GOARCH)
+	}
+
+	yaml, err := wget(url)
+	if err != nil {
+		return "", err
+	}
+
+	return yaml, nil
+
+}
+
+// TODO: find a way merge with downloadBinary
+func wget(url string) (string, error) {
+	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("User-Agent", "ubrain")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = res.Body.Close()
+	}()
+
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("received %v status code from %s", res.StatusCode, url)
+	}
+
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", fmt.Errorf("read response body error %s", url)
+	}
+
+	return string(bodyBytes), nil
 }
 
 func downloadBinary(url, path string) error {

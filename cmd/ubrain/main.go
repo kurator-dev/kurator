@@ -41,6 +41,11 @@ func initCommandFactory() map[string]cli.CommandFactory {
 				Options: o,
 			}, nil
 		},
+		"install volcano": func() (cli.Command, error) {
+			return &command.VolcanoInstallCommand{
+				Options: o,
+			}, nil
+		},
 	}
 }
 

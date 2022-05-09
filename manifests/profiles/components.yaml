@@ -11,8 +11,9 @@ components:
     version: 1.6.0
     hub:
   - name: volcano
-    version: 1.0.0
-    hub:
+    version: 1.5.1
+    hub: docker.io/volcanosh
+    releaseURLPrefix: "https://raw.githubusercontent.com/volcano-sh/volcano/"
   - name: prometheus
     version: 1.0.0
     hub:
