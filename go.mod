@@ -3,7 +3,6 @@ module github.com/zirain/ubrain
 go 1.17
 
 require (
-	github.com/ghodss/yaml v1.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
 	github.com/mitchellh/cli v1.1.3
@@ -15,6 +14,7 @@ require (
 	k8s.io/apimachinery v0.23.6
 	k8s.io/cli-runtime v0.23.6
 	k8s.io/client-go v0.23.6
+	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
@@ -161,5 +161,4 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.0 // indirect
 	sigs.k8s.io/mcs-api v0.1.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
 )

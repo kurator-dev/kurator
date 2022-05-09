@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/hashicorp/go-multierror"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
@@ -21,6 +20,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/tools/clientcmd/api/latest"
+	"sigs.k8s.io/yaml"
 
 	"github.com/zirain/ubrain/pkg/cert"
 	"github.com/zirain/ubrain/pkg/util"

@@ -7,10 +7,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/ghodss/yaml"
 	"github.com/mitchellh/cli"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/yaml"
 
 	"github.com/zirain/ubrain/manifests"
 )
@@ -79,10 +79,10 @@ type cfg struct {
 }
 
 type Component struct {
-	Name             string
-	Version          string
-	Hub              string
-	ReleaseURLPrefix string
+	Name             string `yaml:"name"`
+	Version          string `yaml:"version"`
+	Hub              string `yaml:"hub"`
+	ReleaseURLPrefix string `yaml:"releaseURLPrefix"`
 }
 
 func loadComponents() map[string]Component {
