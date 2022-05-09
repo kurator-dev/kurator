@@ -18,12 +18,12 @@ LDFLAGS := "-X github.com/zirain/ubrain/pkg/version.gitVersion=$(GIT_VERSION) \
 			-X github.com/zirain/ubrain/pkg/version.gitTreeState=$(GIT_TREESTATE) \
 			-X github.com/zirain/ubrain/pkg/version.buildDate=$(BUILD_DATE)"
 
-.PHONY: ubrainctl
-ubrainctl: clean
+.PHONY: ubrain
+ubrain: clean
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
 		-o $(OUT_PATH)/ubrainctl \
-		cmd/ubrainctl/main.go
+		cmd/ubrain/main.go
 
 .PHONY: clean
 clean:
