@@ -72,7 +72,5 @@ func (p *JoinPlugin) runJoin() error {
 	}
 	logrus.Debugf("run cmd: %s %v", p.karmadactl, joinArgs)
 	cmd := exec.Command(p.karmadactl, joinArgs...)
-	out, err := cmd.CombinedOutput()
-	logrus.Infof("%s", string(out))
-	return err
+	return util.RunCommand(cmd)
 }

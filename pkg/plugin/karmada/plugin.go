@@ -33,7 +33,7 @@ func (p *KarmadaPlugin) Execute(cmdArgs, environment []string) error {
 	}
 
 	if err := p.runInstall(); err != nil {
-		logrus.Errorf("failed to install istio, %s", err)
+		logrus.Errorf("failed to install karmada: %v", err)
 		return err
 	}
 
@@ -59,7 +59,6 @@ func (p *KarmadaPlugin) runInstall() error {
 	}
 	logrus.Debugf("run cmd: %s %v", p.karmadactl, installArgs)
 	cmd := exec.Command(p.karmadactl, installArgs...)
-	out, err := cmd.CombinedOutput()
-	logrus.Infof("%s", string(out))
+	err := util.RunCommand(cmd)
 	return err
 }
