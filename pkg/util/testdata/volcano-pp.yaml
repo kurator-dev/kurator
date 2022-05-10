@@ -1,0 +1,55 @@
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: volcano
+  namespace: volcano-system
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: ServiceAccount
+      name: volcano-admission
+      namespace: volcano-system
+    - apiVersion: v1
+      kind: ConfigMap
+      name: volcano-admission-configmap
+      namespace: volcano-system
+    - apiVersion: v1
+      kind: Service
+      name: volcano-admission-service
+      namespace: volcano-system
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: volcano-admission
+      namespace: volcano-system
+    - apiVersion: batch/v1
+      kind: Job
+      name: volcano-admission-init
+      namespace: volcano-system
+    - apiVersion: v1
+      kind: ServiceAccount
+      name: volcano-controllers
+      namespace: volcano-system
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: volcano-controllers
+      namespace: volcano-system
+    - apiVersion: v1
+      kind: ServiceAccount
+      name: volcano-scheduler
+      namespace: volcano-system
+    - apiVersion: v1
+      kind: ConfigMap
+      name: volcano-scheduler-configmap
+      namespace: volcano-system
+    - apiVersion: v1
+      kind: Service
+      name: volcano-scheduler-service
+      namespace: volcano-system
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: volcano-scheduler
+      namespace: volcano-system
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - fake-cluster

@@ -84,7 +84,9 @@ func (p *Plugin) Execute(cmdArgs, environment []string) error {
 	return nil
 }
 
-func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (*policyv1alpha1.ClusterPropagationPolicy, *policyv1alpha1.PropagationPolicy) {
+func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
+	*policyv1alpha1.ClusterPropagationPolicy,
+	*policyv1alpha1.PropagationPolicy) {
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "volcano",
@@ -114,19 +116,7 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (*policyv1alpha1
 		},
 	}
 
-	for _, r := range resourceList {
-		switch r.Mapping.GroupVersionKind.Kind {
-		case "CustomResourceDefinition", "ServiceAccount",
-			"ClusterRole", "ClusterRoleBinding":
-			util.AppendClusterPropagationPolicy(cpp, r)
-		case "ConfigMap", "Deployment",
-			"Job", "Service":
-			util.AppendPropagationPolicy(pp, r)
-
-		case "Namespace":
-			// do nothing
-		}
-	}
+	_ = util.AppendResourceSelector(p.KubeClient(), cpp, pp, resourceList)
 
 	return cpp, pp
 }

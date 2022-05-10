@@ -1,0 +1,23 @@
+apiVersion: policy.karmada.io/v1alpha1
+kind: PropagationPolicy
+metadata:
+  name: istio-operator
+  namespace: istio-operator
+spec:
+  resourceSelectors:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: istio-operator
+      namespace: istio-operator
+    - apiVersion: v1
+      kind: Service
+      name: istio-operator
+      namespace: istio-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      name: istio-operator
+      namespace: istio-operator
+  placement:
+    clusterAffinity:
+      clusterNames:
+        - fake-cluster

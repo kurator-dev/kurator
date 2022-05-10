@@ -45,6 +45,11 @@ func (cert *PluggedCert) Secret(namespace string) (*v1.Secret, error) {
 	}
 
 	return &v1.Secret{
+		// we need TypeMeta to create PropagationPolicy
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cacertsSecretName,
 			Namespace: namespace,
