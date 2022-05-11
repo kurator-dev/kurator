@@ -1,9 +1,7 @@
 package istio
 
 import (
-	"fmt"
-	"time"
-
+	"github.com/sirupsen/logrus"
 	"github.com/zirain/ubrain/pkg/client"
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/util"
@@ -68,16 +66,9 @@ func (p *IstioPlugin) Execute(cmdArgs, environment []string) error {
 	}
 
 	if err := p.runInstall(); err != nil {
-		p.Infof("failed to install istio, %s", err)
+		logrus.Infof("failed to install istio, %s", err)
 		return err
 	}
 
 	return nil
-}
-
-func (p *IstioPlugin) Infof(format string, a ...interface{}) {
-	if p.settings.Ui == nil {
-		return
-	}
-	p.settings.Ui.Output(fmt.Sprintf("%s\t%s\t", time.Now().Format("2006-01-02 15:04:05"), "[Istio]") + fmt.Sprintf(format, a...))
 }

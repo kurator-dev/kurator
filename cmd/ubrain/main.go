@@ -1,25 +1,43 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mitchellh/cli"
+	"github.com/sirupsen/logrus"
+	"istio.io/pkg/env"
 
 	"github.com/zirain/ubrain/pkg/command"
 	"github.com/zirain/ubrain/pkg/generic"
 )
 
 func main() {
+	initLogging()
 	commands := initCommandFactory()
 	runner := initRunner(commands)
 
 	code, err := runner.Run()
 	if err != nil {
-		log.Printf("[Error] CLI executing error: %s", err.Error())
+		logrus.Errorf("CLI executing error: %s", err.Error())
 	}
 	os.Exit(code)
+}
+
+func initLogging() {
+	levelEnv := env.RegisterStringVar("LOGGING_LEVEL", "info", "output logging level, Possible values: panic, fatal, error, warn, info, debug, trace").Get()
+	level, err := logrus.ParseLevel(strings.ToLower(levelEnv))
+	if err != nil {
+		logrus.Errorf("parse logging level, use info level")
+		level = logrus.InfoLevel
+	}
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+		FullTimestamp:   true,
+	})
+	logrus.SetLevel(level)
 }
 
 func initCommandFactory() map[string]cli.CommandFactory {
@@ -59,7 +77,7 @@ func initRunner(f map[string]cli.CommandFactory) *cli.CLI {
 	args := os.Args[1:]
 
 	// Rebuild the CLI with any modified args.
-	log.Printf("CLI command args: %#v\n", args)
+	logrus.Debugf("CLI command args: %#v", args)
 	return &cli.CLI{
 		Name:       binName,
 		Args:       args,

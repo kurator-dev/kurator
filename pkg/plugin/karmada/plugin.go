@@ -5,6 +5,7 @@ import (
 	"os/exec"
 
 	"github.com/sirupsen/logrus"
+
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/util"
 )
@@ -33,7 +34,7 @@ func (p *KarmadaPlugin) Execute(cmdArgs, environment []string) error {
 	}
 
 	if err := p.runInstall(); err != nil {
-		logrus.Errorf("failed to install karmada: %v", err)
+		logrus.Errorf("failed to install karmada, %s", err)
 		return err
 	}
 

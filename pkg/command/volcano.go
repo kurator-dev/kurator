@@ -3,6 +3,7 @@ package command
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 
 	"github.com/zirain/ubrain/pkg/generic"
@@ -16,7 +17,7 @@ type VolcanoInstallCommand struct {
 func (c *VolcanoInstallCommand) Run(args []string) int {
 	_, ok := c.Components["volcano"]
 	if !ok {
-		c.Errorf("Failed to load volcano component")
+		logrus.Errorf("Failed to load volcano component")
 		return 1
 	}
 
@@ -27,23 +28,23 @@ func (c *VolcanoInstallCommand) Run(args []string) int {
 		c.Errorf(cmdFlags.FlagUsages())
 	}
 	if err := cmdFlags.Parse(args); err != nil {
-		c.Errorf("Error parsing command-line flags: %s\n", err.Error())
+		logrus.Errorf("Error parsing command-line flags: %s", err.Error())
 		return 1
 	}
 
 	if len(volcanoArgs.Clusters) == 0 {
-		c.Errorf("Please provider at least 1 cluster")
+		logrus.Errorf("Please provider at least 1 cluster")
 		return 1
 	}
 
 	plugin, err := volcano.NewPlugin(c.Options, volcanoArgs)
 	if err != nil {
-		c.Errorf("volcano init error: %v", err)
+		logrus.Errorf("volcano init error: %v", err)
 		return 1
 	}
 
 	if err := plugin.Execute(args, nil); err != nil {
-		c.Infof("volcano execute error: %v", err)
+		logrus.Infof("volcano execute error: %v", err)
 		return 1
 	}
 

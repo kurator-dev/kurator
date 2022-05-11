@@ -3,6 +3,7 @@ package command
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/plugin/join"
@@ -20,24 +21,24 @@ func (c *JoinCommand) Run(args []string) int {
 		c.Errorf(cmdFlags.FlagUsages())
 	}
 	if len(args) == 0 {
-		c.Errorf("cluster name is required")
+		logrus.Errorf("cluster name is required")
 		return 1
 	}
 	joinArgs.ClusterName = args[0]
 	if err := cmdFlags.Parse(args); err != nil {
-		c.Errorf("Error parsing command-line flags: %s\n", err.Error())
+		logrus.Errorf("Error parsing command-line flags: %s", err.Error())
 		return 1
 	}
 
 	plugin, err := join.NewJoinPlugin(c.Options, joinArgs)
 	if err != nil {
-		c.Errorf("join init error: %v", err)
+		logrus.Errorf("join init error: %v", err)
 		return 1
 	}
 
-	c.Infof("start join cluster %s", joinArgs.ClusterName)
+	logrus.Infof("start join cluster %s", joinArgs.ClusterName)
 	if err := plugin.Execute(args, nil); err != nil {
-		c.Infof("join execute error: %v", err)
+		logrus.Infof("join execute error: %v", err)
 		return 1
 	}
 

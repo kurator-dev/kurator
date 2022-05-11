@@ -3,6 +3,7 @@ package command
 import (
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 	"istio.io/istio/pkg/url"
 
@@ -17,7 +18,7 @@ type IstioInstallCommand struct {
 func (c *IstioInstallCommand) Run(args []string) int {
 	istioCfg, ok := c.Components["istio"]
 	if !ok {
-		c.Ui.Error("Failed to load istio component")
+		logrus.Errorf("Failed to load istio component")
 		return 1
 	}
 
@@ -31,19 +32,19 @@ func (c *IstioInstallCommand) Run(args []string) int {
 		c.Errorf(cmdFlags.FlagUsages())
 	}
 	if err := cmdFlags.Parse(args); err != nil {
-		c.Errorf("Error parsing command-line flags: %s\n", err.Error())
+		logrus.Errorf("Error parsing command-line flags: %s", err.Error())
 		return 1
 	}
 
 	plugin, err := istio.NewIstioPlugin(c.Options, istioArgs)
 	if err != nil {
-		c.Errorf("istio init error: %v", err)
+		logrus.Errorf("istio init error: %v", err)
 		return 1
 	}
 
-	c.Infof("start install istio Global: %+v ", c.Options)
+	logrus.Debugf("start install istio Global: %+v ", c.Options)
 	if err := plugin.Execute(args, nil); err != nil {
-		c.Infof("istio execute error: %v", err)
+		logrus.Errorf("istio execute error: %v", err)
 		return 1
 	}
 

@@ -1,13 +1,14 @@
 package generic
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 
 	"github.com/mitchellh/cli"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/yaml"
@@ -89,11 +90,11 @@ func loadComponents() map[string]Component {
 	fsys := manifests.BuiltinOrDir("")
 	b, err := fs.ReadFile(fsys, "profiles/components.yaml")
 	if err != nil {
-		log.Printf("failed ummarshal components: %v\n", err)
+		logrus.Fatalf("failed ummarshal components: %v", err)
 	}
 	var c cfg
 	if err := yaml.Unmarshal(b, &c); err != nil {
-		log.Printf("failed ummarshal components: %v\n", err)
+		logrus.Fatalf("failed ummarshal components: %v", err)
 	}
 
 	components := make(map[string]Component, len(c.Components))
@@ -102,4 +103,11 @@ func loadComponents() map[string]Component {
 	}
 
 	return components
+}
+
+func (g *Options) Errorf(format string, a ...interface{}) {
+	if g.Ui == nil {
+		return
+	}
+	g.Ui.Error(fmt.Sprintf(format, a...))
 }

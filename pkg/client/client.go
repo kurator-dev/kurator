@@ -3,12 +3,12 @@ package client
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
 	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
+	"github.com/sirupsen/logrus"
 	helmclient "helm.sh/helm/v3/pkg/kube"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -103,7 +103,7 @@ func (c *Client) memberClusterConfig(clusterName string) (*rest.Config, error) {
 	if cluster.Spec.ProxyURL != "" {
 		proxy, err := url.Parse(cluster.Spec.ProxyURL)
 		if err != nil {
-			log.Printf("parse proxy error. %v\n", err)
+			logrus.Errorf("parse proxy error. %v", err)
 			return nil, err
 		}
 		clusterConfig.Proxy = http.ProxyURL(proxy)

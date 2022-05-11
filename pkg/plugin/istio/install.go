@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
+	"github.com/sirupsen/logrus"
 	"helm.sh/helm/v3/pkg/kube"
 	"istio.io/istio/operator/pkg/manifest"
 	v1 "k8s.io/api/core/v1"
@@ -75,7 +76,7 @@ func (p *IstioPlugin) runInstall() error {
 }
 
 func (p *IstioPlugin) ensureNamespaces() error {
-	p.Infof("Begin to ensure namespaces")
+	logrus.Infof("Begin to ensure namespaces")
 	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), istioSystemNamespace, false); err != nil {
 		return fmt.Errorf("failed to ersure namespace %s, %w", istioSystemNamespace, err)
 	}
@@ -88,7 +89,7 @@ func (p *IstioPlugin) ensureNamespaces() error {
 }
 
 func (p *IstioPlugin) createIstioCacerts() error {
-	p.Infof("Begin to create istio cacerts")
+	logrus.Infof("Begin to create istio cacerts")
 	var gen cert.Generator
 	if len(p.args.Cacerts) != 0 {
 		gen = cert.NewPluggedCert(p.args.Cacerts)
@@ -103,7 +104,7 @@ func (p *IstioPlugin) createIstioCacerts() error {
 	_, err = p.KubeClient().CoreV1().Secrets(cacert.Namespace).Get(context.TODO(), cacert.Name, metav1.GetOptions{})
 	if err == nil {
 		// skip create cacerts if exists
-		p.Infof("secret %s/%s already exists, skipping create", cacert.Namespace, cacert.Name)
+		logrus.Infof("secret %s/%s already exists, skipping create", cacert.Namespace, cacert.Name)
 		return nil
 	}
 
@@ -120,7 +121,7 @@ func (p *IstioPlugin) createIstioCacerts() error {
 }
 
 func (p *IstioPlugin) installCrds() error {
-	p.Infof("Begin to install istio crds in karmada-apiserver and primary cluster")
+	logrus.Infof("Begin to install istio crds in karmada-apiserver and primary cluster")
 	args := []string{
 		"profile=external",
 		"values.global.configCluster=true",
@@ -138,7 +139,7 @@ func (p *IstioPlugin) installCrds() error {
 	cmd := exec.Command(p.istioctl, istioctlArgs...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		p.Infof("%s", string(out))
+		logrus.Infof("%s", string(out))
 		return err
 	}
 
@@ -208,7 +209,7 @@ func (p *IstioPlugin) createIstioCustomResourceClusterPropagationPolicy() error 
 }
 
 func (p *IstioPlugin) createIstioOperator() error {
-	p.Infof("Begin to create istio operator deployment")
+	logrus.Infof("Begin to create istio operator deployment")
 	resources, err := p.createIstioOperatorDeployment()
 	if err != nil {
 		return err
@@ -268,7 +269,7 @@ func (p *IstioPlugin) createIstioOperatorDeployment() (kube.ResourceList, error)
 	cmd := exec.Command(p.istioctl, "operator", "dump")
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		p.Infof("%s", string(out))
+		logrus.Infof("%s", string(out))
 		return nil, err
 	}
 
@@ -286,7 +287,7 @@ func (p *IstioPlugin) createIstioOperatorDeployment() (kube.ResourceList, error)
 }
 
 func (p *IstioPlugin) installControlPlane() error {
-	p.Infof("Begin to install istio control-plane on %s", p.args.Primary)
+	logrus.Infof("Begin to install istio control-plane on %s", p.args.Primary)
 	if err := p.createIstioElb(); err != nil {
 		return err
 	}
@@ -372,7 +373,7 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 	)
 
 	for _, remote := range p.args.Remotes {
-		p.Infof("Begin to install istio in cluster %s", remote)
+		logrus.Infof("Begin to install istio in cluster %s", remote)
 
 		if err := p.createIstioRemoteSecret(remote); err != nil {
 			return nil

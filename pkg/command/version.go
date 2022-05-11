@@ -2,9 +2,10 @@ package command
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/zirain/ubrain/pkg/generic"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"github.com/zirain/ubrain/pkg/generic"
 
 	"github.com/zirain/ubrain/pkg/version"
 )
@@ -18,7 +19,7 @@ func (c *VersionCommand) Run(args []string) int {
 
 	y, err := json.MarshalIndent(&v, "", "  ")
 	if err != nil {
-		c.Ui.Error(fmt.Sprintf("Error unmarshall version: %s\n", err.Error()))
+		logrus.Errorf("Error marshal version: %s", err.Error())
 		return 1
 	}
 
