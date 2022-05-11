@@ -34,7 +34,8 @@ const (
 	karmadaClusterNamespace       = "karmada-cluster"
 	primaryCluster                = "primary"
 
-	crdKind = "CustomResourceDefinition"
+	iopCRDName = "istiooperators.install.istio.io"
+	crdKind    = "CustomResourceDefinition"
 
 	checkInterval = 10 * time.Second
 	checkTimeout  = 2 * time.Minute
@@ -148,21 +149,22 @@ func (p *IstioPlugin) installCrds() error {
 
 	crdFilter := func(r *resource.Info) bool {
 		// only install crds here
-		return r.Mapping.GroupVersionKind.Kind == crdKind
+		// istiooperators will be install in createIstioOperator, exclude it to avoid AlreadyExists error.
+		return r.Mapping.GroupVersionKind.Kind == crdKind && r.Name != iopCRDName
 	}
 
 	if _, err := p.applyWithFilter(out, crdFilter); err != nil {
 		return err
 	}
 
-	if err := p.createIstioConfigClusterPropagationPolicy(); err != nil {
+	if err := p.createIstioCustomResourceClusterPropagationPolicy(); err != nil {
 		return nil
 	}
 
 	return nil
 }
 
-func (p *IstioPlugin) createIstioConfigClusterPropagationPolicy() error {
+func (p *IstioPlugin) createIstioCustomResourceClusterPropagationPolicy() error {
 	crds, err := p.CrdClient().ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to list crds, %w", err)
@@ -187,7 +189,7 @@ func (p *IstioPlugin) createIstioConfigClusterPropagationPolicy() error {
 
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "istio-config",
+			Name: "istio-customresource-to-primary",
 		},
 		Spec: policyv1alpha1.PropagationSpec{
 			ResourceSelectors: resourceSelectors,
@@ -275,13 +277,7 @@ func (p *IstioPlugin) createIstioOperatorDeployment() (kube.ResourceList, error)
 		return nil, err
 	}
 
-	// IstioOperator's CRD has installed in previous step(installCrds),
-	// exclude it to avoid error when helm creating
-	excludeCrdFilter := func(r *resource.Info) bool {
-		return r.Mapping.GroupVersionKind.Kind != crdKind
-	}
-
-	resources, err := p.applyWithFilter(out, excludeCrdFilter)
+	resources, err := p.apply(out)
 	if err != nil {
 		return resources, err
 	}
