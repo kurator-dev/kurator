@@ -247,7 +247,7 @@ func (p *IstioPlugin) createIstioOperator() error {
 		},
 	}
 
-	if err := util.AppendResourceSelector(p.KubeClient(), cpp, pp, resources); err != nil {
+	if err := util.AppendResourceSelector(p.KubeClient().Discovery(), cpp, pp, resources); err != nil {
 		return err
 	}
 

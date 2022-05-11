@@ -8,6 +8,7 @@ require (
 	github.com/mitchellh/cli v1.1.3
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
+	github.com/stretchr/testify v1.7.1
 	helm.sh/helm/v3 v3.8.2
 	istio.io/istio v0.0.0-20220502201105-dadeb9b81922
 	k8s.io/api v0.23.6
@@ -15,6 +16,7 @@ require (
 	k8s.io/apimachinery v0.23.6
 	k8s.io/cli-runtime v0.23.6
 	k8s.io/client-go v0.23.6
+	k8s.io/kubectl v0.23.6
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -118,7 +120,6 @@ require (
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
-	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
@@ -137,7 +138,6 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306 // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/api v0.75.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -154,7 +154,6 @@ require (
 	k8s.io/component-base v0.23.6 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
-	k8s.io/kubectl v0.23.6 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	sigs.k8s.io/controller-runtime v0.11.2 // indirect
 	sigs.k8s.io/gateway-api v0.4.1-0.20220419214231-03f50b47814e // indirect

@@ -116,7 +116,7 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 		},
 	}
 
-	_ = util.AppendResourceSelector(p.KubeClient(), cpp, pp, resourceList)
+	_ = util.AppendResourceSelector(p.KubeClient().Discovery(), cpp, pp, resourceList)
 
 	return cpp, pp
 }

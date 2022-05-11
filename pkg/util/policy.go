@@ -11,7 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	kubeclient "k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/discovery"
 )
 
 // resource like Namespace will be propagated by default, do not apply in ResourceSelector
@@ -23,11 +23,11 @@ var ignoredResources = map[schema.GroupVersionKind]struct{}{
 	}: {},
 }
 
-func AppendResourceSelector(kubeclient kubeclient.Interface,
+func AppendResourceSelector(discoveryClient discovery.DiscoveryInterface,
 	cpp *policyv1alpha1.ClusterPropagationPolicy,
 	pp *policyv1alpha1.PropagationPolicy,
 	resourceList kube.ResourceList) error {
-	lists, err := kubeclient.Discovery().ServerPreferredResources()
+	_, lists, err := discoveryClient.ServerGroupsAndResources()
 	if err != nil {
 		return err
 	}
