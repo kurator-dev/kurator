@@ -30,9 +30,9 @@ func (c *KarmadaInstallCommand) Run(args []string) int {
 		return 1
 	}
 
-	logrus.Infof("start install karmada: %+v ", c.Options)
+	logrus.Debugf("start install karmada: %+v ", c.Options)
 	if err := plugin.Execute(args, nil); err != nil {
-		logrus.Infof("karmada execute error: %v", err)
+		logrus.Errorf("karmada execute error: %v", err)
 		return 1
 	}
 

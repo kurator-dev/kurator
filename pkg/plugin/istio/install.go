@@ -9,7 +9,6 @@ import (
 	"path"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -37,9 +36,6 @@ const (
 
 	iopCRDName = "istiooperators.install.istio.io"
 	crdKind    = "CustomResourceDefinition"
-
-	checkInterval = 10 * time.Second
-	checkTimeout  = 2 * time.Minute
 )
 
 func (p *IstioPlugin) runInstall() error {
@@ -248,9 +244,7 @@ func (p *IstioPlugin) createIstioOperator() error {
 		},
 	}
 
-	if err := util.AppendResourceSelector(p.KubeClient().Discovery(), cpp, pp, resources); err != nil {
-		return err
-	}
+	util.AppendResourceSelector(cpp, pp, resources)
 
 	if _, err := p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().
 		Create(context.TODO(), cpp, metav1.CreateOptions{}); err != nil {
@@ -295,8 +289,7 @@ func (p *IstioPlugin) installControlPlane() error {
 	if err := p.createPrimaryIstioOperator(); err != nil {
 		return err
 	}
-	if err := waitIngressgatewayReady(p.Client, p.args.Primary,
-		checkInterval, checkTimeout); err != nil {
+	if err := waitIngressgatewayReady(p.Client, p.options, p.args.Primary); err != nil {
 		return fmt.Errorf("istio control plane in cluster %s not ready, err: %w", p.args.Primary, err)
 	}
 
@@ -385,7 +378,7 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 		wg.Add(1)
 		go func(cluster string) {
 			defer wg.Done()
-			err := waitIngressgatewayReady(p.Client, cluster, checkInterval, checkTimeout)
+			err := waitIngressgatewayReady(p.Client, p.options, cluster)
 			if err != nil {
 				multierror.Append(multiErr, err)
 			}

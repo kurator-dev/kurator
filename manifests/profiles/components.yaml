@@ -8,8 +8,9 @@ components:
     hub:
     releaseURLPrefix: "https://github.com/karmada-io/karmada/releases/download"
   - name: kubeedge
-    version: 1.6.0
-    hub:
+    version: 1.10.0
+    hub: docker.io/kebeedge
+    releaseURLPrefix: "https://github.com/kubeedge/kubeedge/releases/download"
   - name: volcano
     version: 1.5.1
     hub: docker.io/volcanosh

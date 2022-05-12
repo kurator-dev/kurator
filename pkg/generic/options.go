@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"time"
 
 	"github.com/mitchellh/cli"
 	"github.com/sirupsen/logrus"
@@ -25,6 +26,10 @@ type Options struct {
 	// HomeDir is an absolute path which most importantly contains "versions" installed from binary. Defaults to DefaultHomeDir
 	HomeDir string
 	TempDir string
+
+	// The interval and timeout used to check installation status.
+	WaitInterval time.Duration
+	WaitTimeout  time.Duration
 
 	KubeConfig  string
 	KubeContext string
@@ -68,6 +73,9 @@ func (g *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&g.KubeContext, "context", "karmada-apiserver", "name of the kubeconfig context to use")
 
 	fs.BoolVar(&g.DryRun, "dry-run", false, "console/log output only, make no changes.")
+
+	fs.DurationVar(&g.WaitInterval, "wait-interval", 1*time.Second, "interval used for checking pod ready, default value is 1s.")
+	fs.DurationVar(&g.WaitTimeout, "wait-timeout", 2*time.Minute, "timeout used for checking pod ready, default value is 2m.")
 }
 
 // RESTClientGetter gets the kubeconfig from EnvSettings

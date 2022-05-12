@@ -11,7 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/discovery"
 )
 
 // resource like Namespace will be propagated by default, do not apply in ResourceSelector
@@ -23,37 +22,9 @@ var ignoredResources = map[schema.GroupVersionKind]struct{}{
 	}: {},
 }
 
-func AppendResourceSelector(discoveryClient discovery.DiscoveryInterface,
-	cpp *policyv1alpha1.ClusterPropagationPolicy,
+func AppendResourceSelector(cpp *policyv1alpha1.ClusterPropagationPolicy,
 	pp *policyv1alpha1.PropagationPolicy,
-	resourceList kube.ResourceList) error {
-	_, lists, err := discoveryClient.ServerGroupsAndResources()
-	if err != nil {
-		return err
-	}
-
-	namespacedResources := map[schema.GroupVersionKind]struct{}{}
-	for _, list := range lists {
-		if len(list.APIResources) == 0 {
-			continue
-		}
-		gv, err := schema.ParseGroupVersion(list.GroupVersion)
-		if err != nil {
-			continue
-		}
-		for _, resource := range list.APIResources {
-			if resource.Namespaced {
-				gvk := schema.GroupVersionKind{
-					Group:   gv.Group,
-					Version: gv.Version,
-					Kind:    resource.Kind,
-				}
-				namespacedResources[gvk] = struct{}{}
-				continue
-			}
-		}
-	}
-
+	resourceList kube.ResourceList) {
 	for _, r := range resourceList {
 		gvk := r.Mapping.GroupVersionKind
 		if _, ok := ignoredResources[gvk]; ok {
@@ -63,7 +34,7 @@ func AppendResourceSelector(discoveryClient discovery.DiscoveryInterface,
 		gv := r.Mapping.GroupVersionKind.GroupVersion()
 		gk := r.Mapping.GroupVersionKind.GroupKind()
 
-		if _, ok := namespacedResources[gvk]; ok {
+		if r.Namespaced() {
 			s := policyv1alpha1.ResourceSelector{
 				APIVersion: gv.String(),
 				Kind:       gk.Kind,
@@ -80,8 +51,6 @@ func AppendResourceSelector(discoveryClient discovery.DiscoveryInterface,
 			cpp.Spec.ResourceSelectors = append(cpp.Spec.ResourceSelectors, s)
 		}
 	}
-
-	return nil
 }
 
 func generatePropagationPolicy(clusters []string, obj runtime.Object) (*policyv1alpha1.PropagationPolicy, error) {

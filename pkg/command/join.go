@@ -36,9 +36,9 @@ func (c *JoinCommand) Run(args []string) int {
 		return 1
 	}
 
-	logrus.Infof("start join cluster %s", joinArgs.ClusterName)
+	logrus.Debugf("start join cluster %s", joinArgs.ClusterName)
 	if err := plugin.Execute(args, nil); err != nil {
-		logrus.Infof("join execute error: %v", err)
+		logrus.Errorf("join execute error: %v", err)
 		return 1
 	}
 

@@ -64,6 +64,11 @@ func initCommandFactory() map[string]cli.CommandFactory {
 				Options: o,
 			}, nil
 		},
+		"install kubeedge": func() (cli.Command, error) {
+			return &command.KubeEdgeInstallCommand{
+				Options: o,
+			}, nil
+		},
 		"join": func() (cli.Command, error) {
 			return &command.JoinCommand{
 				Options: o,

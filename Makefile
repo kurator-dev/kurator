@@ -22,7 +22,7 @@ LDFLAGS := "-X github.com/zirain/ubrain/pkg/version.gitVersion=$(GIT_VERSION) \
 ubrain: clean
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
-		-o $(OUT_PATH)/ubrainctl \
+		-o $(OUT_PATH)/ubrain \
 		cmd/ubrain/main.go
 
 .PHONY: test

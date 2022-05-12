@@ -44,7 +44,7 @@ func (c *VolcanoInstallCommand) Run(args []string) int {
 	}
 
 	if err := plugin.Execute(args, nil); err != nil {
-		logrus.Infof("volcano execute error: %v", err)
+		logrus.Errorf("volcano execute error: %v", err)
 		return 1
 	}
 

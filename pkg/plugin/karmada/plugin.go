@@ -82,7 +82,6 @@ func (p *KarmadaPlugin) InstallKarmadactl() (string, error) {
 		if err = os.MkdirAll(installPath, 0o750); err != nil {
 			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
 		}
-		fmt.Println(karmadaComponent)
 		url, _ := util.JoinUrlPath(karmadaComponent.ReleaseURLPrefix, karmadaComponent.Version,
 			fmt.Sprintf("kubectl-karmada-%s-%s.tgz", util.OSExt(), runtime.GOARCH))
 		if _, err = util.DownloadResource(url, installPath); err != nil {
