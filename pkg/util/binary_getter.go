@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/moreos"
@@ -43,10 +44,10 @@ func (g *BinaryGetter) Istioctl() (string, error) {
 		if err = os.MkdirAll(installPath, 0o750); err != nil {
 			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
 		}
-		src := fmt.Sprintf("%s/%s/istioctl-%s-%s-%s.tar.gz",
+		url := fmt.Sprintf("%s/%s/istioctl-%s-%s-%s.tar.gz",
 			istioComponent.ReleaseURLPrefix, istioComponent.Version, istioComponent.Version,
 			OSExt(), runtime.GOARCH)
-		if err = downloadBinary(src, installPath); err != nil {
+		if _, err := downloadResource(url, installPath); err != nil {
 			return "", fmt.Errorf("unable to get istioctl binary %q: %w", installPath, err)
 		}
 	}
@@ -68,9 +69,9 @@ func (g *BinaryGetter) Karmadactl() (string, error) {
 		if err = os.MkdirAll(installPath, 0o750); err != nil {
 			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
 		}
-		src := fmt.Sprintf("%s/%s/kubectl-karmada-%s-%s.tgz",
+		url := fmt.Sprintf("%s/%s/kubectl-karmada-%s-%s.tgz",
 			karmadaComponent.ReleaseURLPrefix, karmadaComponent.Version, OSExt(), runtime.GOARCH)
-		if err = downloadBinary(src, installPath); err != nil {
+		if _, err = downloadResource(url, installPath); err != nil {
 			return "", fmt.Errorf("unable to get istioctl binary %q: %w", installPath, err)
 		}
 	}
@@ -89,6 +90,7 @@ func (g *BinaryGetter) Valcano() (string, error) {
 	}
 
 	var url string
+	// TODO: change it, the machine used to install volcano can be different from the destination cluster arch
 	switch runtime.GOARCH {
 	case "amd64":
 		url = fmt.Sprintf("%s%s/installer/volcano-development.yaml", volcano.ReleaseURLPrefix, ver)
@@ -98,18 +100,22 @@ func (g *BinaryGetter) Valcano() (string, error) {
 		return "", fmt.Errorf("os arch %s is not supportted", runtime.GOARCH)
 	}
 
-	yaml, err := wget(url)
+	yaml, err := downloadResource(url, "")
 	if err != nil {
 		return "", err
 	}
 
 	return yaml, nil
-
 }
 
-// TODO: find a way merge with downloadBinary
-func wget(url string) (string, error) {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
+// downloadResource retrieves resources from remote url.
+// If path is provided, it will also write it to the dir.
+// If the resource is a tar file, it will first untar it.
+func downloadResource(url, path string) (raw string, err error) {
+	// TODO: make it configurable
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
@@ -126,35 +132,32 @@ func wget(url string) (string, error) {
 		return "", fmt.Errorf("received %v status code from %s", res.StatusCode, url)
 	}
 
-	bodyBytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return "", fmt.Errorf("read response body error %s", url)
+	// 1. no path provided, maybe this is raw content from github yaml
+	if path == "" {
+		rawBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", fmt.Errorf("read response body error %s", url)
+		}
+		return string(rawBytes), nil
 	}
 
-	return string(bodyBytes), nil
-}
+	// 2. untar the zip package in to the path
+	if strings.HasSuffix(url, ".tgz") || strings.HasSuffix(url, ".tar.gz") {
+		if err = Untar(path, res.Body); err != nil {
+			return "", fmt.Errorf("error untarring %s: %w", url, err)
+		}
+		return "", nil
+	}
 
-func downloadBinary(url, path string) error {
-	req, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, url, nil)
+	// 3. write the response file to the path
+	strings.Split(url, "/")
+	fileName := ""
+	out, err := os.Create(fileName)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("create file %s failed: %v", fileName, err)
 	}
-	req.Header.Add("User-Agent", "ubrain")
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = res.Body.Close()
-	}()
-
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("received %v status code from %s", res.StatusCode, url)
-	}
-	if err = Untar(path, res.Body); err != nil {
-		return fmt.Errorf("error untarring %s: %w", url, err)
-	}
-	return nil
+	_, err = io.Copy(out, res.Body)
+	return "", err
 }
 
 func verifyExecutableBinary(binaryPath string) (string, error) {
