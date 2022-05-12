@@ -93,7 +93,7 @@ func (p *IstioPlugin) installIstioctl() (string, error) {
 		if err = os.MkdirAll(installPath, 0o750); err != nil {
 			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
 		}
-		url := filepath.Join(istioComponent.ReleaseURLPrefix, istioComponent.Version,
+		url, _ := util.JoinUrlPath(istioComponent.ReleaseURLPrefix, istioComponent.Version,
 			fmt.Sprintf("istioctl-%s-%s-%s.tar.gz", istioComponent.Version, util.OSExt(), runtime.GOARCH))
 		if _, err := util.DownloadResource(url, installPath); err != nil {
 			return "", fmt.Errorf("unable to get istioctl binary %q: %w", installPath, err)

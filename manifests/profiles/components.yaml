@@ -3,7 +3,7 @@ components:
     version: 1.13.3
     hub: docker.io/istio
     releaseURLPrefix: "https://github.com/istio/istio/releases/download"
-  - name: karmarda
+  - name: karmada
     version: v1.1.1
     hub:
     releaseURLPrefix: "https://github.com/karmada-io/karmada/releases/download"

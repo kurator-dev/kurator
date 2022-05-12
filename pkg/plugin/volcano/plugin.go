@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -143,7 +142,7 @@ func (p *Plugin) volcanoManifest() (string, error) {
 	default:
 		return "", fmt.Errorf("os arch %s is not supportted", runtime.GOARCH)
 	}
-	url := filepath.Join(volcano.ReleaseURLPrefix, ver, manifestName)
+	url, _ := util.JoinUrlPath(volcano.ReleaseURLPrefix, ver, manifestName)
 	yaml, err := util.DownloadResource(url, "")
 	if err != nil {
 		return "", err

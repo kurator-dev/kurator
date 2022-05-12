@@ -48,7 +48,7 @@ func DownloadResource(url, path string) (raw string, err error) {
 
 	// 2. untar the zip package in to the path
 	if strings.HasSuffix(url, ".tgz") || strings.HasSuffix(url, ".tar.gz") {
-		if err = Untar(path, res.Body); err != nil {
+		if err = Untar(res.Body, path); err != nil {
 			return "", fmt.Errorf("error untarring %s: %w", url, err)
 		}
 		return "", nil

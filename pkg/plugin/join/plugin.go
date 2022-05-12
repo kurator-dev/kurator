@@ -54,6 +54,8 @@ func (p *JoinPlugin) preJoin() error {
 	karmadactlPath, err := karmadaPlugin.InstallKarmadactl()
 	if err == nil {
 		p.karmadactl = karmadactlPath
+	} else {
+		logrus.Warnf("install karmadactl failed: %v", err)
 	}
 
 	return nil

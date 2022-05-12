@@ -49,6 +49,8 @@ func (p *KarmadaPlugin) preInstall() error {
 	karmadactlPath, err := p.InstallKarmadactl()
 	if err == nil {
 		p.karmadactl = karmadactlPath
+	} else {
+		logrus.Warnf("install karmadactl failed: %v", err)
 	}
 
 	return nil
@@ -80,10 +82,11 @@ func (p *KarmadaPlugin) InstallKarmadactl() (string, error) {
 		if err = os.MkdirAll(installPath, 0o750); err != nil {
 			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
 		}
-		url := filepath.Join(karmadaComponent.ReleaseURLPrefix, karmadaComponent.Version,
+		fmt.Println(karmadaComponent)
+		url, _ := util.JoinUrlPath(karmadaComponent.ReleaseURLPrefix, karmadaComponent.Version,
 			fmt.Sprintf("kubectl-karmada-%s-%s.tgz", util.OSExt(), runtime.GOARCH))
 		if _, err = util.DownloadResource(url, installPath); err != nil {
-			return "", fmt.Errorf("unable to get karmadactl binary %q: %w", installPath, err)
+			return "", fmt.Errorf("unable to get karmadactl binary %q: %w", url, err)
 		}
 	}
 	return util.VerifyExecutableBinary(karmadactlPath)
