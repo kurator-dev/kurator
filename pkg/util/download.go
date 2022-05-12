@@ -1,0 +1,90 @@
+package util
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"runtime"
+	"strings"
+	"time"
+
+	"github.com/zirain/ubrain/pkg/moreos"
+)
+
+// DownloadResource retrieves resources from remote url.
+// If path is provided, it will also write it to the dir.
+// If the resource is a tar file, it will first untar it.
+func DownloadResource(url, path string) (raw string, err error) {
+	// TODO: make it configurable
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("User-Agent", "ubrain")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		_ = res.Body.Close()
+	}()
+
+	if res.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("received %v status code from %s", res.StatusCode, url)
+	}
+
+	// 1. no path provided, maybe this is raw content from github yaml
+	if path == "" {
+		rawBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			return "", fmt.Errorf("read response body error %s", url)
+		}
+		return string(rawBytes), nil
+	}
+
+	// 2. untar the zip package in to the path
+	if strings.HasSuffix(url, ".tgz") || strings.HasSuffix(url, ".tar.gz") {
+		if err = Untar(path, res.Body); err != nil {
+			return "", fmt.Errorf("error untarring %s: %w", url, err)
+		}
+		return "", nil
+	}
+
+	// 3. write the response file to the path
+	strings.Split(url, "/")
+	fileName := ""
+	out, err := os.Create(fileName)
+	if err != nil {
+		return "", fmt.Errorf("create file %s failed: %v", fileName, err)
+	}
+	_, err = io.Copy(out, res.Body)
+	return "", err
+}
+
+func VerifyExecutableBinary(binaryPath string) (string, error) {
+	stat, err := os.Stat(binaryPath)
+	if err != nil {
+		return "", err
+	}
+	if !moreos.IsExecutable(stat) {
+		return "", fmt.Errorf("binary not executable at %q", binaryPath)
+	}
+	return binaryPath, nil
+}
+
+func OSExt() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "osx"
+	case "linux":
+		return "linux"
+	case "windows":
+		return "win"
+	}
+
+	return ""
+}

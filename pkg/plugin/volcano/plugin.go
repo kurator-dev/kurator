@@ -3,6 +3,10 @@ package volcano
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
 	"github.com/sirupsen/logrus"
@@ -26,16 +30,14 @@ type InstallArgs struct {
 type Plugin struct {
 	*client.Client
 
-	args     *InstallArgs
-	settings *generic.Options
-	getter   *util.BinaryGetter
+	args    *InstallArgs
+	options *generic.Options
 }
 
 func NewPlugin(s *generic.Options, args *InstallArgs) (*Plugin, error) {
 	plugin := &Plugin{
-		settings: s,
-		args:     args,
-		getter:   util.NewBinaryGetter(s),
+		options: s,
+		args:    args,
 	}
 	rest := s.RESTClientGetter()
 	c, err := client.NewClient(rest)
@@ -48,7 +50,7 @@ func NewPlugin(s *generic.Options, args *InstallArgs) (*Plugin, error) {
 }
 
 func (p *Plugin) Execute(cmdArgs, environment []string) error {
-	valcanoYaml, err := p.getter.Valcano()
+	valcanoYaml, err := p.volcanoManifest()
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,7 @@ func (p *Plugin) Execute(cmdArgs, environment []string) error {
 
 	cpp, pp := p.generatePolicy(resourceList)
 
-	if p.settings.DryRun {
+	if p.options.DryRun {
 		logrus.Infof("apply resoucrs: %s", valcanoYaml)
 		out, _ := yaml.Marshal(cpp)
 		logrus.Infof("apply ClusterPropagationPolicy: %s", out)
@@ -119,4 +121,33 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 	_ = util.AppendResourceSelector(p.KubeClient().Discovery(), cpp, pp, resourceList)
 
 	return cpp, pp
+}
+
+func (p *Plugin) volcanoManifest() (string, error) {
+	volcano := p.options.Components["volcano"]
+
+	// x84_64 https://raw.githubusercontent.com/volcano-sh/volcano/master/installer/volcano-development.yaml
+	// arm64 https://raw.githubusercontent.com/volcano-sh/volcano/v1.5.1/installer/volcano-development.yaml
+	ver := volcano.Version
+	if ver != "master" && !strings.HasPrefix(ver, "v") {
+		ver = "v" + ver
+	}
+
+	var manifestName string
+	// TODO: change it, the machine used to install volcano can be different from the destination cluster arch
+	switch runtime.GOARCH {
+	case "amd64":
+		manifestName = "volcano-development.yaml"
+	case "arm64":
+		manifestName = "volcano-development-arm64.yaml"
+	default:
+		return "", fmt.Errorf("os arch %s is not supportted", runtime.GOARCH)
+	}
+	url := filepath.Join(volcano.ReleaseURLPrefix, ver, manifestName)
+	yaml, err := util.DownloadResource(url, "")
+	if err != nil {
+		return "", err
+	}
+
+	return yaml, nil
 }

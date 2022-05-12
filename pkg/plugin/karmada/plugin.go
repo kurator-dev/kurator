@@ -2,25 +2,28 @@ package karmada
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/zirain/ubrain/pkg/generic"
+	"github.com/zirain/ubrain/pkg/moreos"
 	"github.com/zirain/ubrain/pkg/util"
 )
 
-type KarmadaPlugin struct {
-	options *generic.Options
-	getter  *util.BinaryGetter
+var karmadactlBinary = filepath.Join("kubectl-karmada" + moreos.Exe)
 
+type KarmadaPlugin struct {
+	options    *generic.Options
 	karmadactl string
 }
 
 func NewKarmadaPlugin(o *generic.Options) (*KarmadaPlugin, error) {
 	return &KarmadaPlugin{
 		options:    o,
-		getter:     util.NewBinaryGetter(o),
 		karmadactl: "/usr/local/bin/kubectl-karmada",
 	}, nil
 }
@@ -42,8 +45,8 @@ func (p *KarmadaPlugin) Execute(cmdArgs, environment []string) error {
 }
 
 func (p *KarmadaPlugin) preInstall() error {
-	// download karmadactl
-	karmadactlPath, err := p.getter.Karmadactl()
+	// install karmadactl
+	karmadactlPath, err := p.InstallKarmadactl()
 	if err == nil {
 		p.karmadactl = karmadactlPath
 	}
@@ -62,4 +65,26 @@ func (p *KarmadaPlugin) runInstall() error {
 	cmd := exec.Command(p.karmadactl, installArgs...)
 	err := util.RunCommand(cmd)
 	return err
+}
+
+func (p *KarmadaPlugin) InstallKarmadactl() (string, error) {
+	karmadaComponent := p.options.Components["karmada"]
+	installPath := filepath.Join(p.options.HomeDir, karmadaComponent.Name, karmadaComponent.Version)
+	karmadactlPath := filepath.Join(installPath, karmadactlBinary)
+	_, err := os.Stat(karmadactlPath)
+	if err == nil {
+		return karmadactlPath, nil
+	}
+
+	if os.IsNotExist(err) {
+		if err = os.MkdirAll(installPath, 0o750); err != nil {
+			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
+		}
+		url := filepath.Join(karmadaComponent.ReleaseURLPrefix, karmadaComponent.Version,
+			fmt.Sprintf("kubectl-karmada-%s-%s.tgz", util.OSExt(), runtime.GOARCH))
+		if _, err = util.DownloadResource(url, installPath); err != nil {
+			return "", fmt.Errorf("unable to get karmadactl binary %q: %w", installPath, err)
+		}
+	}
+	return util.VerifyExecutableBinary(karmadactlPath)
 }

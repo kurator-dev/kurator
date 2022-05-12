@@ -1,11 +1,20 @@
 package istio
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+
 	"github.com/sirupsen/logrus"
+
 	"github.com/zirain/ubrain/pkg/client"
 	"github.com/zirain/ubrain/pkg/generic"
+	"github.com/zirain/ubrain/pkg/moreos"
 	"github.com/zirain/ubrain/pkg/util"
 )
+
+var istioctlBinary = filepath.Join("istioctl" + moreos.Exe)
 
 type InstallArgs struct {
 	Primary string
@@ -23,18 +32,15 @@ type InstallArgs struct {
 type IstioPlugin struct {
 	*client.Client
 
-	settings *generic.Options
+	options  *generic.Options
 	args     *InstallArgs
-	getter   *util.BinaryGetter
-
 	istioctl string
 }
 
 func NewIstioPlugin(s *generic.Options, args *InstallArgs) (*IstioPlugin, error) {
 	plugin := &IstioPlugin{
-		settings: s,
+		options:  s,
 		args:     args,
-		getter:   util.NewBinaryGetter(s),
 		istioctl: "/usr/local/bin/istioctl",
 	}
 	rest := s.RESTClientGetter()
@@ -48,11 +54,11 @@ func NewIstioPlugin(s *generic.Options, args *InstallArgs) (*IstioPlugin, error)
 }
 
 func (p *IstioPlugin) init() error {
-	binaryPath, err := p.getter.Istioctl()
+	istioctl, err := p.installIstioctl()
 	if err != nil {
 		return err
 	}
-	p.istioctl = binaryPath
+	p.istioctl = istioctl
 
 	return nil
 }
@@ -71,4 +77,28 @@ func (p *IstioPlugin) Execute(cmdArgs, environment []string) error {
 	}
 
 	return nil
+}
+
+func (p *IstioPlugin) installIstioctl() (string, error) {
+	istioComponent := p.options.Components["istio"]
+
+	installPath := filepath.Join(p.options.HomeDir, istioComponent.Name, istioComponent.Version)
+	istioctlPath := filepath.Join(installPath, istioctlBinary)
+	_, err := os.Stat(istioctlPath)
+	if err == nil {
+		return istioctlPath, nil
+	}
+
+	if os.IsNotExist(err) {
+		if err = os.MkdirAll(installPath, 0o750); err != nil {
+			return "", fmt.Errorf("unable to create directory %q: %w", installPath, err)
+		}
+		url := filepath.Join(istioComponent.ReleaseURLPrefix, istioComponent.Version,
+			fmt.Sprintf("istioctl-%s-%s-%s.tar.gz", istioComponent.Version, util.OSExt(), runtime.GOARCH))
+		if _, err := util.DownloadResource(url, installPath); err != nil {
+			return "", fmt.Errorf("unable to get istioctl binary %q: %w", installPath, err)
+		}
+	}
+
+	return util.VerifyExecutableBinary(istioctlPath)
 }

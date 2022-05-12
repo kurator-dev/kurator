@@ -143,7 +143,7 @@ func (p *IstioPlugin) installCrds() error {
 		return err
 	}
 
-	tmpYamlFile := path.Join(p.settings.TempDir, "manifest.yaml")
+	tmpYamlFile := path.Join(p.options.TempDir, "manifest.yaml")
 	if err = os.WriteFile(tmpYamlFile, out, 0644); err != nil {
 		return err
 	}
@@ -273,7 +273,7 @@ func (p *IstioPlugin) createIstioOperatorDeployment() (kube.ResourceList, error)
 		return nil, err
 	}
 
-	tmpYamlFile := path.Join(p.settings.TempDir, "istio-operator.yaml")
+	tmpYamlFile := path.Join(p.options.TempDir, "istio-operator.yaml")
 	if err = os.WriteFile(tmpYamlFile, out, 0644); err != nil {
 		return nil, err
 	}

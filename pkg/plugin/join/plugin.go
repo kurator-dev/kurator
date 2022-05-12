@@ -5,7 +5,9 @@ import (
 	"os/exec"
 
 	"github.com/sirupsen/logrus"
+
 	"github.com/zirain/ubrain/pkg/generic"
+	"github.com/zirain/ubrain/pkg/plugin/karmada"
 	"github.com/zirain/ubrain/pkg/util"
 )
 
@@ -18,7 +20,6 @@ type Args struct {
 type JoinPlugin struct {
 	options *generic.Options
 	args    *Args
-	getter  *util.BinaryGetter
 
 	karmadactl string
 }
@@ -27,7 +28,6 @@ func NewJoinPlugin(o *generic.Options, args *Args) (*JoinPlugin, error) {
 	return &JoinPlugin{
 		options:    o,
 		args:       args,
-		getter:     util.NewBinaryGetter(o),
 		karmadactl: "/usr/local/bin/kubectl-karmada",
 	}, nil
 }
@@ -49,8 +49,9 @@ func (p *JoinPlugin) Execute(cmdArgs, environment []string) error {
 }
 
 func (p *JoinPlugin) preJoin() error {
+	karmadaPlugin, _ := karmada.NewKarmadaPlugin(p.options)
 	// download karmadactl
-	karmadactlPath, err := p.getter.Karmadactl()
+	karmadactlPath, err := karmadaPlugin.InstallKarmadactl()
 	if err == nil {
 		p.karmadactl = karmadactlPath
 	}

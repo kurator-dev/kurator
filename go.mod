@@ -11,6 +11,7 @@ require (
 	github.com/stretchr/testify v1.7.1
 	helm.sh/helm/v3 v3.8.2
 	istio.io/istio v0.0.0-20220502201105-dadeb9b81922
+	istio.io/pkg v0.0.0-20220418200614-813ce651e422
 	k8s.io/api v0.23.6
 	k8s.io/apiextensions-apiserver v0.23.5
 	k8s.io/apimachinery v0.23.6
@@ -150,7 +151,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	istio.io/api v0.0.0-20220426030804-14e12fe188cf // indirect
 	istio.io/client-go v1.12.0-alpha.5.0.20220426031304-d6188ec78b20 // indirect
-	istio.io/pkg v0.0.0-20220418200614-813ce651e422 // indirect
 	k8s.io/component-base v0.23.6 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
