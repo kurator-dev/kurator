@@ -68,8 +68,8 @@ func (g *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&g.HomeDir, "home-dir", path.Join(homeDir, ".ubrain"), "install path, default to $HOME/.ubrain")
 	fs.StringVar(&g.TempDir, "temp-dir", tempDir, "file path including temporary generated files")
 
-	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", path.Join(homeDir, "/etc/karmada/karmada-apiserver.config"), "path to the kubeconfig file, default to karmada apiserver config")
-	fs.StringVar(&g.KubeContext, "context", "karmada", "name of the kubeconfig context to use")
+	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", path.Join(homeDir, ""), "path to the kubeconfig file, default to karmada apiserver config")
+	fs.StringVar(&g.KubeContext, "context", "", "name of the kubeconfig context to use")
 
 	fs.BoolVar(&g.DryRun, "dry-run", false, "console/log output only, make no changes.")
 
