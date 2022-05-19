@@ -71,6 +71,11 @@ func (p *IstioPlugin) Execute(cmdArgs, environment []string) error {
 		return err
 	}
 
+	if err := p.precheck(); err != nil {
+		logrus.Infof("istio precheck fail, %s", err)
+		return err
+	}
+
 	if err := p.runInstall(); err != nil {
 		logrus.Infof("failed to install istio, %s", err)
 		return err
