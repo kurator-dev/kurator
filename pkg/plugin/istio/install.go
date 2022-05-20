@@ -228,7 +228,7 @@ func (p *IstioPlugin) createIstioOperator() error {
 		},
 	}
 
-	// create PropagationPolicy for istio-operator's Deployment/ServcieAccount
+	// create PropagationPolicy for istio-operator's Deployment/ServiceAccount
 	pp := &policyv1alpha1.PropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "istio-operator",

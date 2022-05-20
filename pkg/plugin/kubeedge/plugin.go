@@ -99,7 +99,7 @@ func (p *KubeEdgePlugin) runInstall() error {
 		return err
 	}
 
-	// create ClusterPropagationPolicy for istio-operator's ClusterRole/ClusterRoleBinding
+	// create ClusterPropagationPolicy for kubeedge's cluster scoped resources
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: defaultPolicyName,
@@ -114,7 +114,7 @@ func (p *KubeEdgePlugin) runInstall() error {
 		},
 	}
 
-	// create PropagationPolicy for istio-operator's Deployment/ServcieAccount
+	// create PropagationPolicy for kubeedge's namespace scoped resources
 	pp := &policyv1alpha1.PropagationPolicy{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      defaultPolicyName,
