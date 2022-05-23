@@ -47,6 +47,19 @@ kubectl  --kubeconfig /etc/karmada/karmada-apiserver.config get clusters
 out/linux-amd64/ubrain install istio --kubeconfig=/etc/karmada/karmada-apiserver.config --primary member1 --remote member2
 ```
 
+### Install KubeEdge
+
+```
+out/linux-amd64/ubrain install kubeedge --kubeconfig=/etc/karmada/karmada-apiserver.config --cluster member1 --advertise-address="159.138.154.244"
+```
+
+```
+out/linux-amd64/ubrain join edge --kubeconfig=/etc/karmada/karmada-apiserver.config --cluster member1 \
+    --cloudcore-address="159.138.154.244:10000" \
+    --node-ip="159.138.129.168" \
+    -p="${NODE_PWD}"
+```
+
 ## clean
 
 ```console

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/zirain/ubrain/cmd/ubrain/app/join/karmada"
+	"github.com/zirain/ubrain/cmd/ubrain/app/join/kubeedge"
 	"github.com/zirain/ubrain/pkg/generic"
 )
 
@@ -18,6 +19,7 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	}
 
 	joinCmd.AddCommand(karmada.NewCmd(opts))
+	joinCmd.AddCommand(kubeedge.NewCmd(opts))
 
 	return joinCmd
 }

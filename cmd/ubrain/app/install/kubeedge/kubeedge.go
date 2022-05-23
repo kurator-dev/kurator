@@ -18,8 +18,8 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 		Short: "Install kubeedge component",
 		RunE: func(c *cobra.Command, args []string) error {
 			if len(pluginArgs.Clusters) == 0 {
-				logrus.Errorf("Please provider at least 1 cluster")
-				return fmt.Errorf("must provider at least 1 cluster")
+				logrus.Errorf("Please provide at least 1 cluster")
+				return fmt.Errorf("must provide at least 1 cluster")
 			}
 
 			plugin, err := plugin.NewKubeEdgePlugin(opts, &pluginArgs)
@@ -40,6 +40,7 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 
 	kubeedgeCmd.PersistentFlags().StringSliceVar(&pluginArgs.Clusters, "cluster", nil, "Comma separated list of clusters to install KubeEdge.")
 	kubeedgeCmd.PersistentFlags().StringVarP(&pluginArgs.Namespace, "namespace", "n", "kubeedge", "The Namespace to install KubeEdge, default value is 'kubeedge'.")
+	kubeedgeCmd.PersistentFlags().StringVar(&pluginArgs.AdvertiseAddress, "advertise-address", "", "Use this key to set IPs in cloudcore's certificate SubAltNames field. eg: 10.10.102.78,10.10.102.79")
 
 	return kubeedgeCmd
 }

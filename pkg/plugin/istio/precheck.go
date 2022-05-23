@@ -8,8 +8,8 @@ import (
 
 func (p *IstioPlugin) precheck() error {
 	if len(p.args.Primary) == 0 {
-		return errors.New("must provider a cluster to install istio primary")
+		return errors.New("must provide a cluster to install istio primary")
 	}
 
-	return util.IsClustersReady(p.KarmadaClient(), p.allClusters())
+	return util.IsClustersReady(p.KarmadaClient(), p.allClusters()...)
 }

@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func IsClustersReady(karmada karmadaclientset.Interface, clusterNames []string) error {
+func IsClustersReady(karmada karmadaclientset.Interface, clusterNames ...string) error {
 	allClusters, err := karmada.ClusterV1alpha1().Clusters().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("list karmada clusters fail, %w", err)

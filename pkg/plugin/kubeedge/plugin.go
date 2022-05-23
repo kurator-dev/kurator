@@ -16,6 +16,7 @@ import (
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
 	"github.com/sirupsen/logrus"
 	"helm.sh/helm/v3/pkg/kube"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,7 +27,8 @@ import (
 )
 
 const (
-	defaultPolicyName = "kubeedge"
+	defaultPolicyName       = "kubeedge"
+	cloudcoreELBServiceName = "cloudcore-elb"
 )
 
 var (
@@ -37,6 +39,8 @@ var (
 type InstallArgs struct {
 	Clusters  []string
 	Namespace string
+
+	AdvertiseAddress string
 }
 
 type KubeEdgePlugin struct {
@@ -82,6 +86,10 @@ func (p *KubeEdgePlugin) Execute(cmdArgs, environment []string) error {
 
 	if err := p.runInstall(); err != nil {
 		logrus.Errorf("failed to install KubeEdge, %s", err)
+		return err
+	}
+
+	if err := p.exposeCloudcore(); err != nil {
 		return err
 	}
 
@@ -164,6 +172,10 @@ func (p *KubeEdgePlugin) generateKubeResources() (kube.ResourceList, error) {
 		"manifest",
 		"generate",
 	}
+	if len(p.installArgs.AdvertiseAddress) != 0 {
+		installArgs = append(installArgs, fmt.Sprintf("--advertise-address=%s", p.installArgs.AdvertiseAddress))
+	}
+
 	logrus.Debugf("run cmd: %s %v", p.keadm, installArgs)
 	cmd := exec.Command(p.keadm, installArgs...)
 	out, err := cmd.CombinedOutput()
@@ -237,4 +249,64 @@ func (p *KubeEdgePlugin) checkReady() error {
 	wg.Wait()
 
 	return multiErr.ErrorOrNil()
+}
+
+func (p *KubeEdgePlugin) exposeCloudcore() error {
+	cloudcoreService := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: cloudcoreELBServiceName,
+		},
+		Spec: corev1.ServiceSpec{
+			Selector: map[string]string{
+				"k8s-app":  "kubeedge",
+				"kubeedge": "cloudcore",
+			},
+			Type: corev1.ServiceTypeLoadBalancer,
+			Ports: []corev1.ServicePort{
+				{
+					Name:     "cloudhub",
+					Port:     10000,
+					Protocol: "TCP",
+				},
+				{
+					Name:     "cloudhub-https",
+					Port:     10002,
+					Protocol: "TCP",
+				},
+			},
+		},
+	}
+
+	if _, err := p.Client.KubeClient().CoreV1().Services(p.installArgs.Namespace).Create(context.TODO(), cloudcoreService, metav1.CreateOptions{}); err != nil {
+		return fmt.Errorf("expose cloudcore fail, %w", err)
+	}
+
+	pp := &policyv1alpha1.PropagationPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cloudcoreELBServiceName,
+			Namespace: p.installArgs.Namespace,
+		},
+		Spec: policyv1alpha1.PropagationSpec{
+			ResourceSelectors: []policyv1alpha1.ResourceSelector{
+				{
+					APIVersion: "v1",
+					Kind:       "Service",
+					Name:       cloudcoreELBServiceName,
+					Namespace:  p.installArgs.Namespace,
+				},
+			},
+			Placement: policyv1alpha1.Placement{
+				ClusterAffinity: &policyv1alpha1.ClusterAffinity{
+					ClusterNames: p.installArgs.Clusters,
+				},
+			},
+		},
+	}
+
+	if _, err := p.KarmadaClient().PolicyV1alpha1().PropagationPolicies(pp.Namespace).
+		Create(context.TODO(), pp, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	return nil
 }

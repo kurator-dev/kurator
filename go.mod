@@ -3,6 +3,7 @@ module github.com/zirain/ubrain
 go 1.17
 
 require (
+	github.com/bramvdbogaerde/go-scp v1.2.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
 	github.com/mitchellh/cli v1.1.3
@@ -10,6 +11,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.1
+	golang.org/x/crypto v0.0.0-20220518034528-6f7dac969898
 	helm.sh/helm/v3 v3.8.2
 	istio.io/istio v0.0.0-20220502201105-dadeb9b81922
 	istio.io/pkg v0.0.0-20220418200614-813ce651e422
@@ -131,7 +133,6 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220421235706-1d1ef9303861 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
