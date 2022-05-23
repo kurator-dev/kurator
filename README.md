@@ -24,14 +24,14 @@ out/linux-amd64/ubrain install karmada --kubeconfig=/root/.kube/ubrain-host.conf
 
 Join cluster member1:
 ```
-out/linux-amd64/ubrain join member1 --kubeconfig=/etc/karmada/karmada-apiserver.config \
+out/linux-amd64/ubrain join karmada member1 --kubeconfig=/etc/karmada/karmada-apiserver.config \
     --cluster-kubeconfig=/root/.kube/ubrain-members.config \
     --cluster-context=ubrain-member1
 ```
 
 Join cluster member2:
 ```
-out/linux-amd64/ubrain join member2 --kubeconfig=/etc/karmada/karmada-apiserver.config \
+out/linux-amd64/ubrain join karmada member2 --kubeconfig=/etc/karmada/karmada-apiserver.config \
     --cluster-kubeconfig=/root/.kube/ubrain-members.config \
     --cluster-context=ubrain-member2
 ```
