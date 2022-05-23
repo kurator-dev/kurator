@@ -4,11 +4,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/zirain/ubrain/pkg/client"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd/api"
+
+	"github.com/zirain/ubrain/pkg/client"
 )
 
 func CreateBearerTokenKubeconfig(caData, token []byte, clusterName, server string) *api.Config {
@@ -35,14 +37,21 @@ func CreateBearerTokenKubeconfig(caData, token []byte, clusterName, server strin
 	return c
 }
 
-func WaitPodReady(client *client.Client, cluster string, namespace, selector string, interval, timeout time.Duration) error {
+// WaitKarmadaClusterPodReady tries member cluster's pods is ready from karmada apiserver until it returns true, an error, or the timeout
+// is reached.
+// WARNING: you shpuld put karmada apiserver in client, cluster should be a valid cluster name.
+func WaitKarmadaClusterPodReady(client *client.Client, cluster string, namespace, selector string, interval, timeout time.Duration) error {
 	kubeClient, err := client.NewClusterClientSet(cluster)
 	if err != nil {
 		return err
 	}
 
-	err = wait.PollImmediate(interval, timeout, func() (done bool, err error) {
-		pods, err := kubeClient.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
+	return WaitPodReady(kubeClient, namespace, selector, interval, timeout)
+}
+
+func WaitPodReady(client kubeclient.Interface, namespace, selector string, interval, timeout time.Duration) error {
+	err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+		pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: selector,
 		})
 		if err != nil {
@@ -53,13 +62,16 @@ func WaitPodReady(client *client.Client, cluster string, namespace, selector str
 			return false, nil
 		}
 
+		readyCount := 0
 		for _, p := range pods.Items {
-			if p.Status.Phase != v1.PodRunning {
-				return false, nil
+			for _, cond := range p.Status.Conditions {
+				if cond.Type == v1.PodReady && cond.Status == v1.ConditionTrue {
+					readyCount++
+				}
 			}
 		}
 
-		return true, nil
+		return readyCount == len(pods.Items), nil
 	})
 
 	return err

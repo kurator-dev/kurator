@@ -9,7 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CheckClusters(karmada karmadaclientset.Interface, clusterNames []string) error {
+func IsClustersReady(karmada karmadaclientset.Interface, clusterNames []string) error {
 	allClusters, err := karmada.ClusterV1alpha1().Clusters().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("list karmada cluster fail, %w", err)
@@ -17,18 +17,18 @@ func CheckClusters(karmada karmadaclientset.Interface, clusterNames []string) er
 
 	clusters := map[string]*v1alpha1.Cluster{}
 	for _, c := range allClusters.Items {
-		clusters[c.Name] = &c
+		cluster := c
+		clusters[c.Name] = &cluster
 	}
 
 	for _, c := range clusterNames {
-		clusterName := c
-		cluster, ok := clusters[clusterName]
+		cluster, ok := clusters[c]
 		if !ok {
-			return fmt.Errorf("%s is not a valid cluster in karmada", clusterName)
+			return fmt.Errorf("%s is not a valid cluster in karmada", c)
 		}
 
 		if !isReady(cluster) {
-			return fmt.Errorf("status of %s is not valid", clusterName)
+			return fmt.Errorf("status of %s is not valid", c)
 		}
 	}
 
@@ -37,7 +37,8 @@ func CheckClusters(karmada karmadaclientset.Interface, clusterNames []string) er
 
 func isReady(cluster *v1alpha1.Cluster) bool {
 	for _, cond := range cluster.Status.Conditions {
-		if cond.Type == v1alpha1.ClusterConditionReady && cond.Status == metav1.ConditionTrue {
+		if cond.Type == v1alpha1.ClusterConditionReady &&
+			cond.Status == metav1.ConditionTrue {
 			return true
 		}
 	}

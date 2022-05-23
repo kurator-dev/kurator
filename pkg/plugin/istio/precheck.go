@@ -11,5 +11,5 @@ func (p *IstioPlugin) precheck() error {
 		return errors.New("must provider a cluster to install istio primary")
 	}
 
-	return util.CheckClusters(p.KarmadaClient(), p.allClusters())
+	return util.IsClustersReady(p.KarmadaClient(), p.allClusters())
 }

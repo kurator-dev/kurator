@@ -9,6 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/zirain/ubrain/pkg/client"
 	"github.com/zirain/ubrain/pkg/generic"
 	"github.com/zirain/ubrain/pkg/moreos"
 	"github.com/zirain/ubrain/pkg/util"
@@ -16,16 +17,32 @@ import (
 
 var karmadactlBinary = filepath.Join("kubectl-karmada" + moreos.Exe)
 
+const (
+	karmadaSystemNamespace      = "karmada-system"
+	aggregatedApiserverSelector = "app=karmada-aggregated-apiserver"
+)
+
 type KarmadaPlugin struct {
+	*client.Client
+
 	options    *generic.Options
 	karmadactl string
 }
 
 func NewKarmadaPlugin(o *generic.Options) (*KarmadaPlugin, error) {
-	return &KarmadaPlugin{
+	p := &KarmadaPlugin{
 		options:    o,
 		karmadactl: "/usr/local/bin/kubectl-karmada",
-	}, nil
+	}
+
+	rest := o.RESTClientGetter()
+	c, err := client.NewClient(rest)
+	if err != nil {
+		return nil, err
+	}
+	p.Client = c
+
+	return p, nil
 }
 
 // Execute receives an executable's filepath, a slice
@@ -41,7 +58,8 @@ func (p *KarmadaPlugin) Execute(cmdArgs, environment []string) error {
 		return err
 	}
 
-	return nil
+	// make sure karmada-aggregated-apiserver is ready, https://github.com/karmada-io/karmada/issues/1836
+	return util.WaitPodReady(p.KubeClient(), karmadaSystemNamespace, aggregatedApiserverSelector, p.options.WaitInterval, p.options.WaitTimeout)
 }
 
 func (p *KarmadaPlugin) preInstall() error {

@@ -7,5 +7,5 @@ import (
 )
 
 func waitCloudcoreReady(client *client.Client, opts *generic.Options, cluster, namespace string) error {
-	return util.WaitPodReady(client, cluster, namespace, "kubeedge=cloudcore", opts.WaitInterval, opts.WaitTimeout)
+	return util.WaitKarmadaClusterPodReady(client, cluster, namespace, "kubeedge=cloudcore", opts.WaitInterval, opts.WaitTimeout)
 }
