@@ -19,7 +19,7 @@ func Run() error {
 	return c.Execute()
 }
 
-// NewKubeedgeCommand returns cobra.Command to run keadm commands
+// NewUbarinCommand returns a cobra.Command to run ubrain commands
 func NewUbarinCommand() *cobra.Command {
 	o := generic.New()
 	ctl := &cobra.Command{

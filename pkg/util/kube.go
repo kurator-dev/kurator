@@ -37,10 +37,9 @@ func CreateBearerTokenKubeconfig(caData, token []byte, clusterName, server strin
 	return c
 }
 
-// WaitKarmadaClusterPodReady tries member cluster's pods is ready from karmada apiserver until it returns true, an error, or the timeout
-// is reached.
-// WARNING: you shpuld put karmada apiserver in client, cluster should be a valid cluster name.
-func WaitKarmadaClusterPodReady(client *client.Client, cluster string, namespace, selector string, interval, timeout time.Duration) error {
+// WaitMemberClusterPodReady return until the member cluster's pod is ready or an error occurs.
+// Note: client is the karmada apiserver client, cluster should be a valid member cluster name.
+func WaitMemberClusterPodReady(client *client.Client, cluster, namespace, selector string, interval, timeout time.Duration) error {
 	kubeClient, err := client.NewClusterClientSet(cluster)
 	if err != nil {
 		return err
@@ -50,7 +49,7 @@ func WaitKarmadaClusterPodReady(client *client.Client, cluster string, namespace
 }
 
 func WaitPodReady(client kubeclient.Interface, namespace, selector string, interval, timeout time.Duration) error {
-	err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
 		pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: selector,
 		})
@@ -73,6 +72,4 @@ func WaitPodReady(client kubeclient.Interface, namespace, selector string, inter
 
 		return readyCount == len(pods.Items), nil
 	})
-
-	return err
 }

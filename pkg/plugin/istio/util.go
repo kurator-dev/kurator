@@ -7,5 +7,5 @@ import (
 )
 
 func waitIngressgatewayReady(client *client.Client, opts *generic.Options, cluster string) error {
-	return util.WaitKarmadaClusterPodReady(client, cluster, istioSystemNamespace, "app=istio-ingressgateway", opts.WaitInterval, opts.WaitTimeout)
+	return util.WaitMemberClusterPodReady(client, cluster, istioSystemNamespace, "app=istio-ingressgateway", opts.WaitInterval, opts.WaitTimeout)
 }

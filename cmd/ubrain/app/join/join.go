@@ -9,9 +9,9 @@ import (
 
 func NewCmd(opts *generic.Options) *cobra.Command {
 	joinCmd := &cobra.Command{
-		Use:                   "join [cluster]",
+		Use:                   "join",
+		Short:                 "Register a cluster or node",
 		DisableFlagsInUseLine: true,
-
 		FParseErrWhitelist: cobra.FParseErrWhitelist{
 			UnknownFlags: true,
 		},

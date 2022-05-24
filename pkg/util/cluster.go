@@ -12,19 +12,18 @@ import (
 func IsClustersReady(karmada karmadaclientset.Interface, clusterNames []string) error {
 	allClusters, err := karmada.ClusterV1alpha1().Clusters().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("list karmada cluster fail, %w", err)
+		return fmt.Errorf("list karmada clusters fail, %w", err)
 	}
 
-	clusters := map[string]*v1alpha1.Cluster{}
+	clusters := map[string]v1alpha1.Cluster{}
 	for _, c := range allClusters.Items {
-		cluster := c
-		clusters[c.Name] = &cluster
+		clusters[c.Name] = c
 	}
 
 	for _, c := range clusterNames {
 		cluster, ok := clusters[c]
 		if !ok {
-			return fmt.Errorf("%s is not a valid cluster in karmada", c)
+			return fmt.Errorf("cluster %s is not found in karmada", c)
 		}
 
 		if !isReady(cluster) {
@@ -35,7 +34,7 @@ func IsClustersReady(karmada karmadaclientset.Interface, clusterNames []string) 
 	return nil
 }
 
-func isReady(cluster *v1alpha1.Cluster) bool {
+func isReady(cluster v1alpha1.Cluster) bool {
 	for _, cond := range cluster.Status.Conditions {
 		if cond.Type == v1alpha1.ClusterConditionReady &&
 			cond.Status == metav1.ConditionTrue {
