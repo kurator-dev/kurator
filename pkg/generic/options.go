@@ -14,7 +14,7 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/yaml"
 
-	"github.com/zirain/ubrain/manifests"
+	"kurator.dev/kurator/manifests"
 )
 
 type Options struct {
@@ -61,11 +61,11 @@ func (g *Options) AddFlags(fs *pflag.FlagSet) {
 		homeDir = os.TempDir()
 	}
 
-	tempDir, err := ioutil.TempDir(os.TempDir(), "ubrain")
+	tempDir, err := ioutil.TempDir(os.TempDir(), "kurator")
 	if err != nil {
 		tempDir = os.TempDir()
 	}
-	fs.StringVar(&g.HomeDir, "home-dir", path.Join(homeDir, ".ubrain"), "install path, default to $HOME/.ubrain")
+	fs.StringVar(&g.HomeDir, "home-dir", path.Join(homeDir, ".kurator"), "install path, default to $HOME/.kurator")
 	fs.StringVar(&g.TempDir, "temp-dir", tempDir, "file path including temporary generated files")
 
 	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", "/etc/karmada/karmada-apiserver.config", "path to the kubeconfig file, default to karmada apiserver config")

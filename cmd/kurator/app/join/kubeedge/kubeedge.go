@@ -6,8 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/zirain/ubrain/pkg/generic"
-	"github.com/zirain/ubrain/pkg/plugin/join/kubeedge"
+	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/plugin/join/kubeedge"
 )
 
 var pluginArgs = &kubeedge.JoinArgs{}

@@ -6,8 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/zirain/ubrain/pkg/generic"
-	plugin "github.com/zirain/ubrain/pkg/plugin/volcano"
+	"kurator.dev/kurator/pkg/generic"
+	plugin "kurator.dev/kurator/pkg/plugin/volcano"
 )
 
 var pluginArgs = plugin.InstallArgs{}

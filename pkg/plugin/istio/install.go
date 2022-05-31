@@ -23,8 +23,8 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api/latest"
 	"sigs.k8s.io/yaml"
 
-	"github.com/zirain/ubrain/pkg/cert"
-	"github.com/zirain/ubrain/pkg/util"
+	"kurator.dev/kurator/pkg/cert"
+	"kurator.dev/kurator/pkg/util"
 )
 
 const (

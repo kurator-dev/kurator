@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/zirain/ubrain/pkg/version"
+
+	"kurator.dev/kurator/pkg/version"
 )
 
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Print the version of ubrain",
+		Short: "Print the version of kurator",
 		Run: func(cmd *cobra.Command, args []string) {
 			_ = RunVersion(cmd)
 		},

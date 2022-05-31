@@ -6,10 +6,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/zirain/ubrain/cmd/ubrain/app/install"
-	"github.com/zirain/ubrain/cmd/ubrain/app/join"
-	"github.com/zirain/ubrain/cmd/ubrain/app/version"
-	"github.com/zirain/ubrain/pkg/generic"
+	"kurator.dev/kurator/cmd/kurator/app/install"
+	"kurator.dev/kurator/cmd/kurator/app/join"
+	"kurator.dev/kurator/cmd/kurator/app/version"
+	"kurator.dev/kurator/pkg/generic"
 )
 
 func Run() error {
@@ -19,11 +19,11 @@ func Run() error {
 	return c.Execute()
 }
 
-// NewUbarinCommand returns a cobra.Command to run ubrain commands
+// NewUbarinCommand returns a cobra.Command to run kurator commands
 func NewUbarinCommand() *cobra.Command {
 	o := generic.New()
 	ctl := &cobra.Command{
-		Use: "ubrain", // TODO: rename and add project description?
+		Use: "kurator", // TODO: rename and add project description?
 	}
 
 	ctl.ResetFlags()

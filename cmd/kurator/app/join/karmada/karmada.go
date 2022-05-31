@@ -7,8 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/zirain/ubrain/pkg/generic"
-	"github.com/zirain/ubrain/pkg/plugin/join"
+	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/plugin/join"
 )
 
 var pluginArgs = join.Args{}

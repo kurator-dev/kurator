@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"istio.io/istio/pkg/url"
 
-	"github.com/zirain/ubrain/pkg/generic"
-	plugin "github.com/zirain/ubrain/pkg/plugin/istio"
+	"kurator.dev/kurator/pkg/generic"
+	plugin "kurator.dev/kurator/pkg/plugin/istio"
 )
 
 var pluginArgs = plugin.InstallArgs{}

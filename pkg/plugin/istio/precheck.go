@@ -3,7 +3,7 @@ package istio
 import (
 	"errors"
 
-	"github.com/zirain/ubrain/pkg/util"
+	"kurator.dev/kurator/pkg/util"
 )
 
 func (p *IstioPlugin) precheck() error {

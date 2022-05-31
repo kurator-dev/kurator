@@ -10,7 +10,7 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd/api"
 
-	"github.com/zirain/ubrain/pkg/client"
+	"kurator.dev/kurator/pkg/client"
 )
 
 func CreateBearerTokenKubeconfig(caData, token []byte, clusterName, server string) *api.Config {

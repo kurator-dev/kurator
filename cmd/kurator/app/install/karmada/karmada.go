@@ -6,8 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/zirain/ubrain/pkg/generic"
-	plugin "github.com/zirain/ubrain/pkg/plugin/karmada"
+	"kurator.dev/kurator/pkg/generic"
+	plugin "kurator.dev/kurator/pkg/plugin/karmada"
 )
 
 func NewCmd(opts *generic.Options) *cobra.Command {

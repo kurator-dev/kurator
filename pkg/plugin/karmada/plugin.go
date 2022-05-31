@@ -9,10 +9,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/zirain/ubrain/pkg/client"
-	"github.com/zirain/ubrain/pkg/generic"
-	"github.com/zirain/ubrain/pkg/moreos"
-	"github.com/zirain/ubrain/pkg/util"
+	"kurator.dev/kurator/pkg/client"
+	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/moreos"
+	"kurator.dev/kurator/pkg/util"
 )
 
 var karmadactlBinary = filepath.Join("kubectl-karmada" + moreos.Exe)

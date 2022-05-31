@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zirain/ubrain/pkg/moreos"
+	"kurator.dev/kurator/pkg/moreos"
 )
 
 // DownloadResource retrieves resources from remote url.
@@ -24,7 +24,7 @@ func DownloadResource(url, path string) (raw string, err error) {
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("User-Agent", "ubrain")
+	req.Header.Add("User-Agent", "kurator")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err

@@ -13,20 +13,20 @@ endif
 BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 OUT_PATH = out/$(GOOS)-$(GOARCH)
 
-LDFLAGS := "-X github.com/zirain/ubrain/pkg/version.gitVersion=$(GIT_VERSION) \
-			-X github.com/zirain/ubrain/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
-			-X github.com/zirain/ubrain/pkg/version.gitTreeState=$(GIT_TREESTATE) \
-			-X github.com/zirain/ubrain/pkg/version.buildDate=$(BUILD_DATE)"
+LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
+			-X kurator.dev/kurator/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
+			-X kurator.dev/kurator/pkg/version.gitTreeState=$(GIT_TREESTATE) \
+			-X kurator.dev/kurator/pkg/version.buildDate=$(BUILD_DATE)"
 
 .PHONY: build
-build: ubrainctl
+build: kurator
 
-.PHONY: ubrainctl
-ubrainctl: clean
+.PHONY: kurator
+kurator: clean
 	CGO_ENABLED=0 GOOS=$(GOOS) go build \
 		-ldflags $(LDFLAGS) \
-		-o $(OUT_PATH)/ubrain \
-		cmd/ubrain/main.go
+		-o $(OUT_PATH)/kurator \
+		cmd/kurator/main.go
 
 .PHONY: test
 test: 

@@ -3,11 +3,11 @@ package install
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/zirain/ubrain/cmd/ubrain/app/install/istio"
-	"github.com/zirain/ubrain/cmd/ubrain/app/install/karmada"
-	"github.com/zirain/ubrain/cmd/ubrain/app/install/kubeedge"
-	"github.com/zirain/ubrain/cmd/ubrain/app/install/volcano"
-	"github.com/zirain/ubrain/pkg/generic"
+	"kurator.dev/kurator/cmd/kurator/app/install/istio"
+	"kurator.dev/kurator/cmd/kurator/app/install/karmada"
+	"kurator.dev/kurator/cmd/kurator/app/install/kubeedge"
+	"kurator.dev/kurator/cmd/kurator/app/install/volcano"
+	"kurator.dev/kurator/pkg/generic"
 )
 
 func NewCmd(opts *generic.Options) *cobra.Command {

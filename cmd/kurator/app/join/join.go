@@ -3,9 +3,9 @@ package join
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/zirain/ubrain/cmd/ubrain/app/join/karmada"
-	"github.com/zirain/ubrain/cmd/ubrain/app/join/kubeedge"
-	"github.com/zirain/ubrain/pkg/generic"
+	"kurator.dev/kurator/cmd/kurator/app/join/karmada"
+	"kurator.dev/kurator/cmd/kurator/app/join/kubeedge"
+	"kurator.dev/kurator/pkg/generic"
 )
 
 func NewCmd(opts *generic.Options) *cobra.Command {

@@ -1,9 +1,9 @@
 package kubeedge
 
 import (
-	"github.com/zirain/ubrain/pkg/client"
-	"github.com/zirain/ubrain/pkg/generic"
-	"github.com/zirain/ubrain/pkg/util"
+	"kurator.dev/kurator/pkg/client"
+	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/util"
 )
 
 func waitCloudcoreReady(client *client.Client, opts *generic.Options, cluster, namespace string) error {

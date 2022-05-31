@@ -9,14 +9,14 @@ import (
 
 	"istio.io/pkg/env"
 
-	"github.com/zirain/ubrain/cmd/ubrain/app"
+	"kurator.dev/kurator/cmd/kurator/app"
 )
 
 func main() {
 	initLogging()
 
 	if err := app.Run(); err != nil {
-		fmt.Println("execute ubrainctl command failed: ", err)
+		fmt.Println("execute kurator command failed: ", err)
 		os.Exit(1)
 	}
 }

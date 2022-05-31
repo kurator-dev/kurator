@@ -1,4 +1,4 @@
-module github.com/zirain/ubrain
+module kurator.dev/kurator
 
 go 1.17
 

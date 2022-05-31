@@ -4,6 +4,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-UBRAIN_CLUSTERS=`docker ps -a --format '{{.Names}}' | grep ubrain`
+KURATOR_CLUSTERS=`docker ps -a --format '{{.Names}}' | grep kurator`
 
-docker rm -f ${UBRAIN_CLUSTERS}
+docker rm -f ${KURATOR_CLUSTERS}

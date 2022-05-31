@@ -6,9 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/zirain/ubrain/pkg/generic"
-	"github.com/zirain/ubrain/pkg/plugin/karmada"
-	"github.com/zirain/ubrain/pkg/util"
+	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/plugin/karmada"
+	"kurator.dev/kurator/pkg/util"
 )
 
 type Args struct {

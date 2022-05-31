@@ -13,9 +13,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
-	"github.com/zirain/ubrain/pkg/client"
-	"github.com/zirain/ubrain/pkg/generic"
-	"github.com/zirain/ubrain/pkg/util"
+	"kurator.dev/kurator/pkg/client"
+	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/util"
 )
 
 const (
