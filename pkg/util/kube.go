@@ -20,8 +20,13 @@ import (
 	"context"
 	"time"
 
+	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -87,5 +92,49 @@ func WaitPodReady(client kubeclient.Interface, namespace, selector string, inter
 		}
 
 		return readyCount == len(pods.Items), nil
+	})
+}
+
+func WaitCRDReady(crdClient crdclientset.Interface, crdName string, interval, timeout time.Duration) error {
+	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+		crd, err := crdClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), crdName, metav1.GetOptions{})
+		if err != nil {
+			return false, nil
+		}
+
+		for _, cond := range crd.Status.Conditions {
+			if cond.Type == apiextv1.Established && cond.Status == "True" {
+				return true, nil
+			}
+		}
+
+		return false, nil
+	})
+}
+
+func WaitAPIEnableInClusters(karmadaClient karmadaclientset.Interface, gvk schema.GroupVersionKind, clusters []string, interval, timeout time.Duration) error {
+	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+		clusterList, err := karmadaClient.ClusterV1alpha1().Clusters().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			return false, nil
+		}
+
+		requiredClusters := sets.NewString(clusters...)
+		for _, c := range clusterList.Items {
+			for _, api := range c.Status.APIEnablements {
+				if api.GroupVersion != gvk.GroupVersion().String() {
+					continue
+				}
+
+				for _, r := range api.Resources {
+					if r.Kind == gvk.Kind {
+						requiredClusters.Delete(c.Name)
+						break
+					}
+				}
+			}
+		}
+
+		return len(requiredClusters) == 0, nil
 	})
 }

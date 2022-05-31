@@ -1,0 +1,26 @@
+- job_name: remote1
+  honor_timestamps: false
+  params:
+    match[]:
+        - '{__name__=~".+"}'
+  metrics_path: /federate
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - remote1.cluster:9090
+      labels:
+        cluster: remote1
+- job_name: remote2
+  honor_timestamps: false
+  params:
+    match[]:
+        - '{__name__=~".+"}'
+  metrics_path: /federate
+  follow_redirects: true
+  enable_http2: true
+  static_configs:
+    - targets:
+        - remote2.cluster:9090
+      labels:
+        cluster: remote2

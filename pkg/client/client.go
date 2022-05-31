@@ -24,6 +24,7 @@ import (
 
 	clusterv1alpha1 "github.com/karmada-io/karmada/pkg/apis/cluster/v1alpha1"
 	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
+	promclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/sirupsen/logrus"
 	helmclient "helm.sh/helm/v3/pkg/kube"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -40,6 +41,7 @@ type Client struct {
 	helm helmclient.Interface
 
 	karmada karmadaclientset.Interface
+	prom    promclient.Interface
 }
 
 func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
@@ -52,12 +54,14 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 	helmClient := helmclient.New(rest)
 	crdClientSet := crdclientset.NewForConfigOrDie(c)
 	karmadaClient := karmadaclientset.NewForConfigOrDie(c)
+	promClient := promclient.NewForConfigOrDie(c)
 
 	return &Client{
 		kube:    kubeClient,
 		helm:    helmClient,
 		crd:     crdClientSet,
 		karmada: karmadaClient,
+		prom:    promClient,
 	}, nil
 }
 
@@ -75,6 +79,10 @@ func (c *Client) CrdClient() crdclientset.Interface {
 
 func (c *Client) HelmClient() helmclient.Interface {
 	return c.helm
+}
+
+func (c *Client) PromClient() promclient.Interface {
+	return c.prom
 }
 
 // Copied from karmada, because we donot want to build the controller-runtime client.

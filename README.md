@@ -60,6 +60,15 @@ out/linux-amd64/kurator join edge --kubeconfig=/etc/karmada/karmada-apiserver.co
     -p="${NODE_PWD}"
 ```
 
+## Install Prometheus
+
+```
+out/linux-amd64/kurator install prometheus --kubeconfig=/etc/karmada/karmada-apiserver.config
+
+# install prometheus with federation
+LOGGING_LEVEL=debug out/linux-amd64/kurator install prometheus --kubeconfig=/etc/karmada/karmada-apiserver.config --primary member1
+```
+
 ## clean
 
 ```console

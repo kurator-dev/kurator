@@ -12,6 +12,10 @@ endif
 
 BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 OUT_PATH = out/$(GOOS)-$(GOARCH)
+PROM_OUT_PATH=out/prom
+KUBE_PROM_VER=v0.10.0
+KUBE_PROM_CFG_FILE=kube-prometheus.jsonnet
+PROM_MANIFESTS_PATH=manifests/profiles/prom/
 
 LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
 			-X kurator.dev/kurator/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
@@ -23,7 +27,11 @@ FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -pat
 XARGS = xargs -0 -r
 
 .PHONY: build
-build: kurator
+build: tidy kurator
+
+.PHONY: tidy
+tidy:
+	go mod tidy -compat=1.17
 
 .PHONY: kurator
 kurator: clean
@@ -41,10 +49,26 @@ fix-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
 		${XARGS} hack/fix_copyright_banner.sh
 
+.PHONY: install-tools
+install-tools: 
+	go install -a github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
+	go install -a github.com/brancz/gojsontoyaml@latest
+	go install -a github.com/google/go-jsonnet/cmd/jsonnet@latest
+
+.PHONY: gen-prom
+gen-prom: clean install-tools
+	rm -rf ${PROM_MANIFESTS_PATH}
+	mkdir -p ${PROM_MANIFESTS_PATH}
+	mkdir -p ${PROM_OUT_PATH}
+	cp manifests/jsonnet/kube-prometheus.jsonnet ${PROM_OUT_PATH}
+	hack/gen-prom.sh ${PROM_OUT_PATH} ${KUBE_PROM_VER} ${KUBE_PROM_CFG_FILE}
+	cp -r ${PROM_OUT_PATH}/manifests/* ${PROM_MANIFESTS_PATH}
+
 .PHONY: test
-test: 
+test: tidy
 	go test ./...
 
 .PHONY: clean
 clean:
 	rm -rf $(OUT_PATH)
+	rm -rf $(PROM_OUT_PATH)
