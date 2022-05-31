@@ -18,6 +18,10 @@ LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
 			-X kurator.dev/kurator/pkg/version.gitTreeState=$(GIT_TREESTATE) \
 			-X kurator.dev/kurator/pkg/version.buildDate=$(BUILD_DATE)"
 
+
+FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor \) -prune -o -type f
+XARGS = xargs -0 -r
+
 .PHONY: build
 build: kurator
 
@@ -27,6 +31,15 @@ kurator: clean
 		-ldflags $(LDFLAGS) \
 		-o $(OUT_PATH)/kurator \
 		cmd/kurator/main.go
+
+
+lint-copyright:
+	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
+		${XARGS} hack/lint_copyright_banner.sh
+
+fix-copyright:
+	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
+		${XARGS} hack/fix_copyright_banner.sh
 
 .PHONY: test
 test: 
