@@ -1,76 +1,88 @@
-# UCS-D
+## Kurator
 
-# Quick start
+Kurator is an open source distributed cloud native platform that helps users to build their own distributed cloud native infrustucter and facilitates enterprise digital transformation.
 
-## Local setup
+Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](), etc. 
+It provides powerful capabilities to multi-cloud and multi-cluster, including:
+
+- Multi-cloud, Edge-cloud, Edge-edge Synergy
+- Unified Resource Orchestration
+- Unified Scheduling
+- Unified Traffic Management
+- Unified Telemetry
+
+## Quick start
+
+This guide will cover:
+- Install Karmada and join a Kubernetes member cluster
+- Install Istio
+- Install KubeEdge and join an edge node
+- Install Volcano
+- Install Prometheus
+
+### Local env setup
 
 ```console
-hack/local-dev-setup.sh
+$ hack/local-dev-setup.sh
 ```
 
-## Build
+This script will create three clusters for you, one is used to host Karmada control plane and the other two will be joined as member clusters.
+
+
+### Install Karmada
+
+**Install Karmada control plane:**
 
 ```console
-make
+$ kurator install Karmada --kubeconfig=/root/.kube/kurator-host.config
 ```
 
-## Install karmada
-
-Install karmada control plane:
+**Join cluster `member1`:**
 
 ```console
-out/linux-amd64/kurator install karmada --kubeconfig=/root/.kube/kurator-host.config
-```
-
-Join cluster member1:
-```
-out/linux-amd64/kurator join karmada member1 --kubeconfig=/etc/karmada/karmada-apiserver.config \
+$ kurator join Karmada member1 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member1
 ```
 
-Join cluster member2:
-```
-out/linux-amd64/kurator join karmada member2 --kubeconfig=/etc/karmada/karmada-apiserver.config \
+**Join cluster `member2`:**
+
+```console
+$ kurator join Karmada member2 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member2
 ```
 
-Verify:
+### Install Istio
+
 ```console
-kubectl  --kubeconfig /etc/karmada/karmada-apiserver.config get clusters
-```
-
-## Install istio
-
-```
-out/linux-amd64/kurator install istio --kubeconfig=/etc/karmada/karmada-apiserver.config --primary member1 --remote member2
+$ kurator install istio --primary member1 --remote member2
 ```
 
 ### Install KubeEdge
 
-```
-out/linux-amd64/kurator install kubeedge --kubeconfig=/etc/karmada/karmada-apiserver.config --cluster member1 --advertise-address="159.138.154.244"
+**Install KubeEdge control plane**
+
+```console
+$ kurator install kubeedge --cluster member1 --advertise-address=<ip>
 ```
 
-```
-out/linux-amd64/kurator join edge --kubeconfig=/etc/karmada/karmada-apiserver.config --cluster member1 \
-    --cloudcore-address="159.138.154.244:10000" \
-    --node-ip="159.138.129.168" \
+**Join edge node**
+```console
+$ kurator join edge  --cluster member1 \
+    --cloudcore-address=<ip:port> \
+    --node-ip= <node ip>\
     -p="${NODE_PWD}"
 ```
 
-## Install Prometheus
-
-```
-out/linux-amd64/kurator install prometheus --kubeconfig=/etc/karmada/karmada-apiserver.config
-
-# install prometheus with federation
-LOGGING_LEVEL=debug out/linux-amd64/kurator install prometheus --kubeconfig=/etc/karmada/karmada-apiserver.config --primary member1
-```
-
-## clean
+### Install Volcano
 
 ```console
-hack/local-dev-down.sh
+$ kurator install volcano
+```
+
+### Install Prometheus
+
+```console
+$ kurator install prometheus --primary member1
 ```
