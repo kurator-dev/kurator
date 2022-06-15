@@ -1,8 +1,8 @@
 ## Kurator
 
-Kurator is an open source distributed cloud native platform that helps users to build their own distributed cloud native infrustucter and facilitates enterprise digital transformation.
+Kurator is an open source distributed cloud native platform that helps users to build their own distributed cloud native infrastructure and facilitates enterprise digital transformation.
 
-Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](), etc. 
+Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](), etc.
 It provides powerful capabilities to multi-cloud and multi-cluster, including:
 
 - Multi-cloud, Edge-cloud, Edge-edge Synergy
@@ -86,3 +86,14 @@ $ kurator install volcano
 ```console
 $ kurator install prometheus --primary member1
 ```
+
+
+## Contributing
+
+If you're interested in being a contributor and want to get involved in
+developing the Kurator code, please see [CONTRIBUTING](CONTRIBUTING.md) for
+details on submitting patches and the contribution workflow.
+
+## License
+
+Kurator is under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.

@@ -1,6 +1,6 @@
 # Contributing
 
-Welcome to Karmada!
+Welcome to Kurator!
 
 -   [Before you get started](#before-you-get-started)
     -   [Code of Conduct](#code-of-conduct)
@@ -24,8 +24,11 @@ Please make sure to read and observe our [Code of Conduct](/CODE_OF_CONDUCT.md).
 
 ## Community Expectations
 
-Karmada is a community project driven by its community which strives to promote a healthy, friendly and productive environment.
-Karmada aims to provide turnkey automation for multi-cluster application management in multi-cloud and hybrid cloud scenarios,
+Kurator is a community project driven by its community which strives to promote a healthy, friendly and productive environment.
+
+Kurator aims to help users to build their own distributed cloud native infrastructure and facilitates enterprise digital transformation.
+
+Kurator aims to provide turnkey automation for multi-cluster application management in multi-cloud and hybrid cloud scenarios,
 and intended to realize multi-cloud centralized management, high availability, failure recovery and traffic scheduling.
 
 # Getting started
@@ -51,7 +54,7 @@ Here is how you get started.
 
 ### Find a good first topic
 
-There are [multiple repositories](https://github.com/karmada-io/) within the Karmada organization.
+There are [multiple repositories](https://github.com/kurator-dev/) within the Kurator organization.
 Each repository has beginner-friendly issues that provide a good first issue.
 For example, [kurator-dev/kurator](https://github.com/kurator-dev/kurator) has
 [help wanted](https://github.com/kurator-dev/kurator/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22) and
@@ -69,9 +72,9 @@ When you are willing to take on an issue, just reply on the issue. The maintaine
 ### File an Issue
 
 While we encourage everyone to contribute code, it is also appreciated when someone reports an issue.
-Issues should be filed under the appropriate Karmada sub-repository.
+Issues should be filed under the appropriate Kurator sub-repository.
 
-*Example:* a Karmada issue should be opened to [kurator-dev/kurator](https://github.com/kurator-dev/kurator/issues).
+*Example:* a Kurator issue should be opened to [kurator-dev/kurator](https://github.com/kurator-dev/kurator/issues).
 
 Please follow the prompted submission guidelines while opening an issue.
 
@@ -89,7 +92,7 @@ This is a rough outline of what a contributor's workflow looks like:
 ## Creating Pull Requests
 
 Pull requests are often called simply "PR".
-Karmada generally follows the standard [github pull request](https://help.github.com/articles/about-pull-requests/) process.
+Kurator generally follows the standard [github pull request](https://help.github.com/articles/about-pull-requests/) process.
 To submit a proposed change, please develop the code/fix and add new test cases.
 After that, run these local verifications before submitting pull request to predict the pass or
 fail of continuous integration.
