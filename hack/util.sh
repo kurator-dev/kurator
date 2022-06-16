@@ -6,6 +6,20 @@ set -o pipefail
 
 # This script is copied from karmada project
 
+# This function installs a Go tools by 'go install' command.
+# Parameters:
+#  - $1: package name, such as "sigs.k8s.io/controller-tools/cmd/controller-gen"
+#  - $2: package version, such as "v0.4.1"
+function util::install_tools() {
+	local package="$1"
+	local version="$2"
+	echo "go install ${package}@${version}"
+	GO111MODULE=on go install "${package}"@"${version}"
+	GOPATH=$(go env GOPATH | awk -F ':' '{print $1}')
+	export PATH=$PATH:$GOPATH/bin
+}
+
+
 # util::install_kubectl will install the given version kubectl
 function util::install_kubectl {
     local KUBECTL_VERSION=${1}
