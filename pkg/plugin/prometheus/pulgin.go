@@ -57,18 +57,11 @@ const (
 	promCRFile = promDir + "/prometheus-prometheus.yaml"
 )
 
-var (
-	prometheusGVK = schema.GroupVersionKind{
-		Group:   "monitoring.coreos.com",
-		Version: "v1",
-		Kind:    "Prometheus",
-	}
-	serviceGVK = schema.GroupVersionKind{
-		Group:   "",
-		Version: "v1",
-		Kind:    "Service",
-	}
-)
+var prometheusGVK = schema.GroupVersionKind{
+	Group:   "monitoring.coreos.com",
+	Version: "v1",
+	Kind:    "Prometheus",
+}
 
 type InstallArgs struct {
 	Primary string

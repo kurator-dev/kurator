@@ -115,14 +115,15 @@ func TestVolcano(t *testing.T) {
 	expectedCPP := &policyv1alpha1.ClusterPropagationPolicy{}
 	b, err = os.ReadFile(path.Join("testdata", "volcano-cpp.yaml"))
 	assert.NoError(t, err)
-	yaml.Unmarshal(b, expectedCPP)
-
+	err = yaml.Unmarshal(b, expectedCPP)
+	assert.NoError(t, err)
 	assert.Equal(t, expectedCPP, cpp)
 
 	expectPP := &policyv1alpha1.PropagationPolicy{}
 	b, err = os.ReadFile(path.Join("testdata", "volcano-pp.yaml"))
 	assert.NoError(t, err)
-	yaml.Unmarshal(b, expectPP)
+	err = yaml.Unmarshal(b, expectPP)
+	assert.NoError(t, err)
 	assert.Equal(t, expectPP, pp)
 }
 
@@ -178,14 +179,16 @@ func TestIstioOperator(t *testing.T) {
 	expectedCPP := &policyv1alpha1.ClusterPropagationPolicy{}
 	b, err = os.ReadFile(path.Join("testdata", "istio-operator-cpp.yaml"))
 	assert.NoError(t, err)
-	yaml.Unmarshal(b, expectedCPP)
+	err = yaml.Unmarshal(b, expectedCPP)
+	assert.NoError(t, err)
 
 	assert.Equal(t, expectedCPP, cpp)
 
 	expectPP := &policyv1alpha1.PropagationPolicy{}
 	b, err = os.ReadFile(path.Join("testdata", "istio-operator-pp.yaml"))
 	assert.NoError(t, err)
-	yaml.Unmarshal(b, expectPP)
+	err = yaml.Unmarshal(b, expectPP)
+	assert.NoError(t, err)
 	assert.Equal(t, expectPP, pp)
 }
 
