@@ -1,0 +1,53 @@
+name: CI Lint
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-18.04
+    name: Verify codes
+    timeout-minutes: 40
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run lint
+        run: |
+          make lint
+  build:
+    name: compile
+    runs-on: ubuntu-18.04
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+        with:
+          # Number of commits to fetch. 0 indicates all history for all branches and tags.
+          # We need to guess version via git tags.
+          fetch-depth: 0
+      - name: install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - name: compile
+        run: make build
+  test:
+    name: unit test
+    needs: build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+      - name: install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17.x
+      - name: make test
+        run: make test

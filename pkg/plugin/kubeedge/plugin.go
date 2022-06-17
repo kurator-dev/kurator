@@ -211,7 +211,7 @@ func (p *KubeEdgePlugin) generateKubeResources() (kube.ResourceList, error) {
 	for _, r := range resources {
 		if r.Namespaced() {
 			r.Namespace = p.installArgs.Namespace
-			metadataAccessor.SetNamespace(r.Object, p.installArgs.Namespace)
+			_ = metadataAccessor.SetNamespace(r.Object, p.installArgs.Namespace)
 		}
 	}
 
@@ -258,7 +258,7 @@ func (p *KubeEdgePlugin) checkReady() error {
 		go func(cluster string) {
 			defer wg.Done()
 			if err := waitCloudcoreReady(p.Client, p.options, cluster, p.installArgs.Namespace); err != nil {
-				multierror.Append(multiErr, err)
+				_ = multierror.Append(multiErr, err)
 			}
 		}(c)
 	}

@@ -40,6 +40,8 @@ kurator: clean
 		-o $(OUT_PATH)/kurator \
 		cmd/kurator/main.go
 
+.PHONY: lint
+lint: lint lint-copyright
 
 lint-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
@@ -48,6 +50,9 @@ lint-copyright:
 fix-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
 		${XARGS} hack/fix_copyright_banner.sh
+
+golangci-lint:
+	hack/golangci-lint.sh
 
 .PHONY: install-tools
 install-tools: 
