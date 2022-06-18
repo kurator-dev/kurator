@@ -166,7 +166,6 @@ func (p *JoinPlugin) ensureCloudcoreAddress(clusterClient kubeclient.Interface) 
 
 			p.joinArgs.CloudCoreAddress = fmt.Sprintf("%s:1000", ingress.IP)
 		}
-
 	}
 
 	return fmt.Errorf("failed to get cloudcore address")
