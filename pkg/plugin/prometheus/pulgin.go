@@ -255,8 +255,8 @@ func (p *Plugin) exposePrometheus() error {
 	return nil
 }
 
-func (p *Plugin) getFederalEndpoints() (map[string]string, error) {
-	endpoints := map[string]string{}
+func (p *Plugin) getFederalEndpoints() ([]endpoint, error) {
+	endpoints := make([]endpoint, 0)
 	err := wait.PollImmediate(p.options.WaitInterval, p.options.WaitTimeout, func() (done bool, err error) {
 		svc, err := p.KubeClient().CoreV1().Services(monitoringNamespace).Get(context.TODO(), promELBSvc, metav1.GetOptions{})
 		if err != nil {
@@ -271,7 +271,10 @@ func (p *Plugin) getFederalEndpoints() (map[string]string, error) {
 
 			// kamada make sure `ingress.Hostname` exist
 			if clusterNames.Has(ingress.Hostname) {
-				endpoints[ingress.Hostname] = ingress.IP
+				endpoints = append(endpoints, endpoint{
+					name:    ingress.Hostname,
+					address: ingress.IP,
+				})
 			}
 		}
 
