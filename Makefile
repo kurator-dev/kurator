@@ -70,10 +70,12 @@ gen-prom: clean install-tools
 	cp -r ${PROM_OUT_PATH}/manifests/* ${PROM_MANIFESTS_PATH}
 
 .PHONY: test
-test: tidy
+test: clean tidy
 	go test ./...
 
 .PHONY: clean
 clean:
+	go clean -testcache
+	go clean -cache
 	rm -rf $(OUT_PATH)
 	rm -rf $(PROM_OUT_PATH)
