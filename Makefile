@@ -41,7 +41,7 @@ kurator: clean
 		cmd/kurator/main.go
 
 .PHONY: lint
-lint: lint lint-copyright
+lint: golangci-lint lint-copyright
 
 lint-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
