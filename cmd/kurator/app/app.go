@@ -31,12 +31,12 @@ import (
 func Run() error {
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 
-	c := NewUbarinCommand()
+	c := NewKuratorCommand()
 	return c.Execute()
 }
 
-// NewUbarinCommand returns a cobra.Command to run kurator commands
-func NewUbarinCommand() *cobra.Command {
+// NewKuratorCommand returns a cobra.Command to run kurator commands
+func NewKuratorCommand() *cobra.Command {
 	o := generic.New()
 	ctl := &cobra.Command{
 		Use: "kurator", // TODO: rename and add project description?
