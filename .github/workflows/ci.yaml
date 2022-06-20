@@ -1,16 +1,14 @@
-name: CI Lint
-
+name: CI Workflow
 on:
   push:
     branches:
       - main
     tags:
   pull_request:
-
 jobs:
   lint:
     runs-on: ubuntu-18.04
-    name: Verify codes
+    name: Lint
     timeout-minutes: 40
     steps:
       - name: Install Go
@@ -23,7 +21,7 @@ jobs:
         run: |
           make lint
   build:
-    name: compile
+    name: Compile
     runs-on: ubuntu-18.04
     steps:
       - name: checkout code
@@ -39,8 +37,7 @@ jobs:
       - name: compile
         run: make build
   test:
-    name: unit test
-    needs: build
+    name: Unit test
     runs-on: ubuntu-18.04
     steps:
       - name: checkout code
