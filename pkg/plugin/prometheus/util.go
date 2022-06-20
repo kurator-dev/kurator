@@ -27,11 +27,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func genAdditionalScrapeConfigs(endpoints map[string]string) (string, error) {
+type endpoint struct {
+	name    string
+	address string
+}
+
+func genAdditionalScrapeConfigs(endpoints []endpoint) (string, error) {
 	federalScrapeConfigs := make([]*promcfg.ScrapeConfig, 0, len(endpoints))
-	for c, ep := range endpoints {
+	for _, ep := range endpoints {
 		sc := &promcfg.ScrapeConfig{
-			JobName:          c,
+			JobName:          ep.name,
 			MetricsPath:      "/federate",
 			HTTPClientConfig: config.DefaultHTTPClientConfig,
 			Params: url.Values{
@@ -44,10 +49,10 @@ func genAdditionalScrapeConfigs(endpoints map[string]string) (string, error) {
 			discovery.StaticConfig{
 				{
 					Targets: []model.LabelSet{
-						{model.AddressLabel: model.LabelValue(fmt.Sprintf("%s:9090", ep))},
+						{model.AddressLabel: model.LabelValue(fmt.Sprintf("%s:9090", ep.address))},
 					},
 					Labels: model.LabelSet{
-						"cluster": model.LabelValue(c),
+						"cluster": model.LabelValue(ep.name),
 					},
 				},
 			},

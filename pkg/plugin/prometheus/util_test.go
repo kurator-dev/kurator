@@ -25,9 +25,9 @@ import (
 )
 
 func TestGenAdditionalScrapeConfigs(t *testing.T) {
-	endpoints := map[string]string{
-		"remote1": "remote1.cluster",
-		"remote2": "remote2.cluster",
+	endpoints := []endpoint{
+		{"remote1", "remote1.cluster"},
+		{"remote2", "remote2.cluster"},
 	}
 
 	got, err := genAdditionalScrapeConfigs(endpoints)
