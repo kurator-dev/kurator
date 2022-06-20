@@ -30,7 +30,7 @@ import (
 func NewCmd(opts *generic.Options) *cobra.Command {
 	installCmd := &cobra.Command{
 		Use:                   "install",
-		Short:                 "install target component",
+		Short:                 "Install a target component",
 		DisableFlagsInUseLine: true,
 		FParseErrWhitelist: cobra.FParseErrWhitelist{
 			UnknownFlags: true,

@@ -38,16 +38,18 @@ func Run() error {
 // NewKuratorCommand returns a cobra.Command to run kurator commands
 func NewKuratorCommand() *cobra.Command {
 	o := generic.New()
-	ctl := &cobra.Command{
-		Use: "kurator", // TODO: rename and add project description?
+	cmd := &cobra.Command{
+		Use:          "kurator",
+		Short:        "Kurator builds distributed cloud-native stacks.",
+		SilenceUsage: true,
 	}
 
-	ctl.ResetFlags()
-	o.AddFlags(ctl.PersistentFlags())
+	cmd.ResetFlags()
+	o.AddFlags(cmd.PersistentFlags())
 
-	ctl.AddCommand(version.NewCmd())
-	ctl.AddCommand(install.NewCmd(o))
-	ctl.AddCommand(join.NewCmd(o))
+	cmd.AddCommand(version.NewCmd())
+	cmd.AddCommand(install.NewCmd(o))
+	cmd.AddCommand(join.NewCmd(o))
 
-	return ctl
+	return cmd
 }
