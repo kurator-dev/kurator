@@ -79,3 +79,13 @@ clean:
 	go clean -cache
 	rm -rf $(OUT_PATH)
 	rm -rf $(PROM_OUT_PATH)
+
+.PHONY: gen
+gen: \
+	tidy \
+	fix-copyright \
+	gen-prom
+
+.PHONY: gen-check
+gen-check: gen
+	hack/gen-check.sh
