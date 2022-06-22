@@ -44,6 +44,8 @@ linters:
     # other linters supported by golangci-lint.
     #- gocyclo
     #- gosec
+    - gci
+    - misspell
     - whitespace
     #- revive
 
@@ -53,6 +55,11 @@ linters-settings:
   gocyclo:
     # minimal cyclomatic complexity to report
     min-complexity: 15
+  gci:
+    sections:
+      - standard # Captures all standard packages if they do not match another section.
+      - default # Contains all imports that could not be matched to another section type.
+      - prefix(kurator.dev) # Groups all imports with the specified Prefix.
 
 issues:
   # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
