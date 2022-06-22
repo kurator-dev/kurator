@@ -54,14 +54,8 @@ fix-copyright:
 golangci-lint:
 	hack/golangci-lint.sh
 
-.PHONY: install-tools
-install-tools: 
-	go install -a github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@latest
-	go install -a github.com/brancz/gojsontoyaml@latest
-	go install -a github.com/google/go-jsonnet/cmd/jsonnet@latest
-
 .PHONY: gen-prom
-gen-prom: clean install-tools
+gen-prom: clean
 	rm -rf ${PROM_MANIFESTS_PATH}
 	mkdir -p ${PROM_MANIFESTS_PATH}
 	mkdir -p ${PROM_OUT_PATH}
