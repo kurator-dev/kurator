@@ -18,3 +18,6 @@ vendor/
 
 out/
 bin/
+
+# OSX trash
+.DS_Store
