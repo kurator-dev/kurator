@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-
 	"istio.io/pkg/env"
 
 	"kurator.dev/kurator/cmd/kurator/app"
