@@ -22,12 +22,14 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/mitchellh/cli"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
 
 	"kurator.dev/kurator/manifests"
@@ -84,7 +86,7 @@ func (g *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&g.HomeDir, "home-dir", path.Join(homeDir, ".kurator"), "install path, default to $HOME/.kurator")
 	fs.StringVar(&g.TempDir, "temp-dir", tempDir, "file path including temporary generated files")
 
-	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", "/etc/karmada/karmada-apiserver.config", "path to the kubeconfig file, default to karmada apiserver config")
+	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", defaultKubeConfig(), "path to the kubeconfig file.")
 	fs.StringVar(&g.KubeContext, "context", "", "name of the kubeconfig context to use")
 
 	fs.BoolVar(&g.DryRun, "dry-run", false, "console/log output only, make no changes.")
@@ -133,4 +135,13 @@ func (g *Options) Errorf(format string, a ...interface{}) {
 		return
 	}
 	g.Ui.Error(fmt.Sprintf(format, a...))
+}
+
+func defaultKubeConfig() string {
+	env := os.Getenv("KUBECONFIG")
+	if env != "" {
+		return env
+	} else {
+		return filepath.Join(homedir.HomeDir(), ".kube", "config")
+	}
 }
