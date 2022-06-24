@@ -19,7 +19,6 @@ package generic
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 	"time"
@@ -41,7 +40,6 @@ type Options struct {
 	Ui cli.Ui
 	// HomeDir is an absolute path which most importantly contains "versions" installed from binary. Defaults to DefaultHomeDir
 	HomeDir string
-	TempDir string
 
 	// The interval and timeout used to check installation status.
 	WaitInterval time.Duration
@@ -77,12 +75,7 @@ func (g *Options) AddFlags(fs *pflag.FlagSet) {
 		homeDir = os.TempDir()
 	}
 
-	tempDir, err := ioutil.TempDir(os.TempDir(), "kurator")
-	if err != nil {
-		tempDir = os.TempDir()
-	}
 	fs.StringVar(&g.HomeDir, "home-dir", path.Join(homeDir, ".kurator"), "install path, default to $HOME/.kurator")
-	fs.StringVar(&g.TempDir, "temp-dir", tempDir, "file path including temporary generated files")
 
 	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", "/etc/karmada/karmada-apiserver.config", "path to the kubeconfig file, default to karmada apiserver config")
 	fs.StringVar(&g.KubeContext, "context", "", "name of the kubeconfig context to use")
