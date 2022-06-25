@@ -34,13 +34,13 @@ This script will create three clusters for you, one is used to host Karmada cont
 **Install Karmada control plane:**
 
 ```console
-$ kurator install Karmada --kubeconfig=/root/.kube/kurator-host.config
+$ kurator install karmada --kubeconfig=/root/.kube/kurator-host.config
 ```
 
 **Join cluster `member1`:**
 
 ```console
-$ kurator join Karmada member1 \
+$ kurator join karmada member1 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member1
 ```
@@ -48,7 +48,7 @@ $ kurator join Karmada member1 \
 **Join cluster `member2`:**
 
 ```console
-$ kurator join Karmada member2 \
+$ kurator join karmada member2 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member2
 ```
