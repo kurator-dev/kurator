@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"kurator.dev/kurator/pkg/moreos"
 )
 
@@ -33,6 +35,7 @@ import (
 // If path is provided, it will also write it to the dir.
 // If the resource is a tar file, it will first untar it.
 func DownloadResource(url, path string) (raw string, err error) {
+	logrus.Infof("begin to download resource %s -> %s", url, path)
 	// TODO: make it configurable
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
