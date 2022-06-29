@@ -26,12 +26,14 @@ import (
 	plugin "kurator.dev/kurator/pkg/plugin/karmada"
 )
 
+var pluginArgs = plugin.InstallArgs{}
+
 func NewCmd(opts *generic.Options) *cobra.Command {
 	karmadaCmd := &cobra.Command{
 		Use:   "karmada",
 		Short: "Install karmada component",
 		RunE: func(c *cobra.Command, args []string) error {
-			plugin, err := plugin.NewKarmadaPlugin(opts)
+			plugin, err := plugin.NewKarmadaPlugin(opts, &pluginArgs)
 			if err != nil {
 				logrus.Errorf("karmada init error: %v", err)
 				return fmt.Errorf("karmada init error: %v", err)
@@ -46,6 +48,9 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 			return nil
 		},
 	}
+
+	f := karmadaCmd.PersistentFlags()
+	f.StringArrayVar(&pluginArgs.SetFlags, "set", nil, "set karmada install parameters, e.g. --set karmada-data=/etc/karmada")
 
 	return karmadaCmd
 }
