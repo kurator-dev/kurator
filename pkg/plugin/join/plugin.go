@@ -65,7 +65,7 @@ func (p *JoinPlugin) Execute(cmdArgs, environment []string) error {
 }
 
 func (p *JoinPlugin) preJoin() error {
-	karmadaPlugin, _ := karmada.NewKarmadaPlugin(p.options)
+	karmadaPlugin, _ := karmada.NewKarmadaPlugin(p.options, nil)
 	// download karmadactl
 	karmadactlPath, err := karmadaPlugin.InstallKarmadactl()
 	if err == nil {

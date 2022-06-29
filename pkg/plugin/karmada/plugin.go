@@ -38,16 +38,22 @@ const (
 	aggregatedApiserverSelector = "app=karmada-aggregated-apiserver"
 )
 
+type InstallArgs struct {
+	SetFlags []string
+}
+
 type KarmadaPlugin struct {
 	*client.Client
 
 	options    *generic.Options
+	args       *InstallArgs
 	karmadactl string
 }
 
-func NewKarmadaPlugin(o *generic.Options) (*KarmadaPlugin, error) {
+func NewKarmadaPlugin(o *generic.Options, args *InstallArgs) (*KarmadaPlugin, error) {
 	p := &KarmadaPlugin{
 		options:    o,
+		args:       args,
 		karmadactl: "/usr/local/bin/kubectl-karmada",
 	}
 
@@ -94,6 +100,11 @@ func (p *KarmadaPlugin) runInstall() error {
 	installArgs := []string{
 		"init",
 	}
+
+	for _, flag := range p.args.SetFlags {
+		installArgs = append(installArgs, fmt.Sprintf("--%s", flag))
+	}
+
 	if p.options.KubeConfig != "" {
 		installArgs = append(installArgs, fmt.Sprintf("--kubeconfig=%s", p.options.KubeConfig))
 	}
