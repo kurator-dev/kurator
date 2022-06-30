@@ -59,7 +59,7 @@ func New() *Options {
 			Reader:      os.Stdin,
 		},
 	}
-	g.Components = loadComponents()
+	g.Components = loadComponents(g.HomeDir)
 	// bind to kubernetes config flags
 	g.config = &genericclioptions.ConfigFlags{
 		Context:    &g.KubeContext,
@@ -102,12 +102,13 @@ type Component struct {
 	ReleaseURLPrefix string `yaml:"releaseURLPrefix"`
 }
 
-func loadComponents() map[string]Component {
-	fsys := manifests.BuiltinOrDir("")
-	b, err := fs.ReadFile(fsys, "profiles/components.yaml")
-	if err != nil {
-		logrus.Fatalf("failed ummarshal components: %v", err)
-	}
+const (
+	componentsYaml        = "components.yaml"
+	builtinComponentsYaml = "profiles/" + componentsYaml
+)
+
+func loadComponents(homeDir string) map[string]Component {
+	b := loadComponentsYaml(homeDir)
 	var c cfg
 	if err := yaml.Unmarshal(b, &c); err != nil {
 		logrus.Fatalf("failed ummarshal components: %v", err)
@@ -118,7 +119,36 @@ func loadComponents() map[string]Component {
 		components[com.Name] = com
 	}
 
+	logrus.Debugf("components: %+v", components)
 	return components
+}
+
+func loadComponentsYaml(homeDir string) []byte {
+	var (
+		b   []byte
+		err error
+	)
+
+	if _, err = os.Stat(path.Join(homeDir, componentsYaml)); err == nil {
+		logrus.Debugf("load components from %s", path.Join(homeDir, componentsYaml))
+		fsys := manifests.BuiltinOrDir(homeDir)
+		b, err = fs.ReadFile(fsys, "components.yaml")
+	}
+
+	if err != nil {
+		// fail back to built-in configuration
+		fsys := manifests.BuiltinOrDir("")
+		b, err = fs.ReadFile(fsys, builtinComponentsYaml)
+		if err != nil {
+			logrus.Fatalf("failed ummarshal components: %v", err)
+		}
+	}
+
+	return b
+}
+
+func (g *Options) ReloadComponents() {
+	g.Components = loadComponents(g.HomeDir)
 }
 
 func (g *Options) Errorf(format string, a ...interface{}) {

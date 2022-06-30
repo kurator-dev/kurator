@@ -46,6 +46,7 @@ func NewKuratorCommand() *cobra.Command {
 
 	cmd.ResetFlags()
 	o.AddFlags(cmd.PersistentFlags())
+	o.ReloadComponents()
 
 	cmd.AddCommand(version.NewCmd())
 	cmd.AddCommand(install.NewCmd(o))
