@@ -1,4 +1,4 @@
-baseURL = 'http://docs.kurator.dev/'
+baseURL = 'https://kurator.dev/'
 languageCode = 'en-us'
 title = 'Kurator'
 

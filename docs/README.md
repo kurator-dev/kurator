@@ -1,6 +1,6 @@
 # Kurator
 
-Kurator doc is build by [Hugo](https://gohugo.io/) and [Docsy](https://www.docsy.dev/)
+Kurator doc is built by [Hugo](https://gohugo.io/) and [Docsy](https://www.docsy.dev/)
 
 for local dev please run the following command:
 ```cosole
