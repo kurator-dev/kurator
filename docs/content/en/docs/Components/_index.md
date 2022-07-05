@@ -6,7 +6,7 @@ description: >
   Install components by Kurator?
 ---
 
-# Install components by Kurator
+## Install components by Kurator
 
 TODO
 
