@@ -21,3 +21,8 @@ bin/
 
 # OSX trash
 .DS_Store
+
+
+# docs
+docs/resources/_gen
+docs/.hugo_build.lock
