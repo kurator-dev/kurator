@@ -452,6 +452,9 @@ func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddres
 func (p *IstioPlugin) remotePilotAddress() (string, error) {
 	svc, err := p.KubeClient().CoreV1().Services(istioSystemNamespace).Get(context.TODO(), remotePilotAddressServiceName, metav1.GetOptions{})
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return "", fmt.Errorf("service istiod-elb not found")
+		}
 		return "", err
 	}
 
@@ -461,7 +464,7 @@ func (p *IstioPlugin) remotePilotAddress() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("service istiod-elb not found")
+	return "", fmt.Errorf("service istiod-elb status is pending")
 }
 
 func (p *IstioPlugin) apply(manifest []byte) (kube.ResourceList, error) {
