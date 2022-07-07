@@ -45,8 +45,8 @@ lint: golangci-lint lint-copyright lint-markdown
 
 .PHONY: lint-markdown
 lint-markdown:
-	markdownlint docs --ignore docs/install-components -c mdl.json
-	markdownlint ./README.md -c mdl.json
+	markdownlint docs --ignore docs/install-components -c common/config/mdl.json
+	markdownlint ./README.md -c common/config/mdl.json
 
 lint-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
