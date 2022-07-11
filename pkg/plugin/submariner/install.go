@@ -99,19 +99,19 @@ func (p *SubmarinerPlugin) generateKubeConfiguration() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		clusters["default-cluster"] = &clientcmdapi.Cluster{
+		clusters[cluster.Name] = &clientcmdapi.Cluster{
 			Server:                   cluster.Spec.APIEndpoint,
 			CertificateAuthorityData: secret.Data["caBundle"],
 		}
 
 		contexts := make(map[string]*clientcmdapi.Context)
-		contexts["default-context"] = &clientcmdapi.Context{
-			Cluster:  "default-cluster",
-			AuthInfo: "default-context",
+		contexts[cluster.Name] = &clientcmdapi.Context{
+			Cluster:  cluster.Name,
+			AuthInfo: cluster.Name,
 		}
 
 		authinfos := make(map[string]*clientcmdapi.AuthInfo)
-		authinfos["default-context"] = &clientcmdapi.AuthInfo{
+		authinfos[cluster.Name] = &clientcmdapi.AuthInfo{
 			Token: string(secret.Data["token"]),
 		}
 
@@ -120,7 +120,7 @@ func (p *SubmarinerPlugin) generateKubeConfiguration() ([]string, error) {
 			APIVersion:     "v1",
 			Clusters:       clusters,
 			Contexts:       contexts,
-			CurrentContext: "default-context",
+			CurrentContext: cluster.Name,
 			AuthInfos:      authinfos,
 		}
 		kubeconfig := path.Join(p.installPath, cluster.Name+".kubeconfig")
