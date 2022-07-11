@@ -62,6 +62,7 @@ func (p *SubmarinerPlugin) installBroker(kubeconfig string) error {
 
 	logrus.Debugf("run cmd: %s %v", p.subctl, installArgs)
 	cmd := exec.Command(p.subctl, installArgs...)
+	cmd.Dir = p.installPath
 	err := util.RunCommand(cmd)
 	return err
 }
@@ -77,6 +78,7 @@ func (p *SubmarinerPlugin) connectBroker(kubeconfigs []string) error {
 		args := append(installArgs, "--kubeconfig", kubeconfig)
 		logrus.Debugf("run cmd: %s %v", p.subctl, args)
 		cmd := exec.Command(p.subctl, args...)
+		cmd.Dir = p.installPath
 		if err := util.RunCommand(cmd); err != nil {
 			return err
 		}
