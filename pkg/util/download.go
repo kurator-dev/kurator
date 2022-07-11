@@ -74,11 +74,9 @@ func DownloadResource(url, path string) (raw string, err error) {
 	}
 
 	// 3. write the response file to the path
-	strings.Split(url, "/")
-	fileName := ""
-	out, err := os.Create(fileName)
+	out, err := os.Create(path)
 	if err != nil {
-		return "", fmt.Errorf("create file %s failed: %v", fileName, err)
+		return "", fmt.Errorf("create file %s failed: %v", path, err)
 	}
 	_, err = io.Copy(out, res.Body)
 	return "", err
