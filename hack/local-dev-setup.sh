@@ -29,7 +29,7 @@ TEMP_PATH=$(mktemp -d)
 echo -e "Preparing kind config in path: ${TEMP_PATH}"
 cp -rf "${KIND_CONFIGS_ROOT}"/*.yaml "${TEMP_PATH}"/
 
-util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}"
+util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/host.yaml
 util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1.yaml
 util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member2.yaml
 

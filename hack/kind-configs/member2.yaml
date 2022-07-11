@@ -7,3 +7,4 @@ featureGates:
   EndpointSliceProxying: true
 nodes:
   - role: control-plane
+  - role: worker
