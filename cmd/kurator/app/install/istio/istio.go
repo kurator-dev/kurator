@@ -30,10 +30,21 @@ import (
 
 var pluginArgs = plugin.InstallArgs{}
 
+var supportedNetworkModes = map[string]struct{}{
+	"flat":     {},
+	"non-flat": {},
+}
+
 func NewCmd(opts *generic.Options) *cobra.Command {
 	istioCmd := &cobra.Command{
 		Use:   "istio",
 		Short: "Install istio component",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if _, ok := supportedNetworkModes[pluginArgs.NetworkMode]; !ok {
+				return fmt.Errorf("%s network mode is not supported", pluginArgs.NetworkMode)
+			}
+			return nil
+		},
 		RunE: func(c *cobra.Command, args []string) error {
 			istioCfg, ok := opts.Components["istio"]
 			if !ok {
@@ -63,6 +74,7 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	f := istioCmd.PersistentFlags()
 	f.StringVar(&pluginArgs.Primary, "primary", "", "The cluster name of the istio control plane.")
 	f.StringSliceVar(&pluginArgs.Remotes, "remote", nil, "The name of the istio remote cluster.")
+	f.StringVar(&pluginArgs.NetworkMode, "network-mode", "flat", "The network of the istio remote cluster, support flat/non-flat mode, default value is falt.")
 
 	f.StringSliceVarP(&pluginArgs.IopFiles, "filename", "f", nil, `Path to file containing IstioOperator custom resource 
 	This flag can be specified multiple times to overlay multiple files. Multiple files are overlaid in left to right order.`)

@@ -33,8 +33,9 @@ import (
 var istioctlBinary = filepath.Join("istioctl" + moreos.Exe)
 
 type InstallArgs struct {
-	Primary string
-	Remotes []string
+	NetworkMode string
+	Primary     string
+	Remotes     []string
 
 	Cacerts string
 
@@ -122,4 +123,8 @@ func (p *IstioPlugin) installIstioctl() (string, error) {
 	}
 
 	return util.VerifyExecutableBinary(istioctlPath)
+}
+
+func (p *IstioPlugin) IsFlat() bool {
+	return p.args.NetworkMode == "flat"
 }
