@@ -31,7 +31,7 @@ import (
 )
 
 func (p *SubmarinerPlugin) runInstall() error {
-	// 1.generate kubeconfig for each cluster
+	// 1.generate kubeconfig for each member cluster
 	memClusters, err := p.generateKubeConfiguration()
 	if err != nil {
 		return err

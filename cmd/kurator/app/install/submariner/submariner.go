@@ -21,6 +21,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
 	"kurator.dev/kurator/pkg/generic"
 	plugin "kurator.dev/kurator/pkg/plugin/submariner"
 )
