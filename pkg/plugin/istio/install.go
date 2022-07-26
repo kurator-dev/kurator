@@ -574,7 +574,7 @@ func (p *IstioPlugin) eastwestgatewayAddress() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("failed to get service %s status", eastwestgatewayServiceName)
+	return "", fmt.Errorf("failed to get discovery address from %s service", eastwestgatewayServiceName)
 }
 
 func (p *IstioPlugin) apply(manifest []byte) (kube.ResourceList, error) {

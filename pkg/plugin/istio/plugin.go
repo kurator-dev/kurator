@@ -54,6 +54,11 @@ type IstioPlugin struct {
 	istioctl string
 }
 
+const (
+	NetworkModeFlat    = "flat"
+	NetworkModeNonFlat = "non-flat"
+)
+
 func NewIstioPlugin(s *generic.Options, args *InstallArgs) (*IstioPlugin, error) {
 	plugin := &IstioPlugin{
 		options:  s,
