@@ -45,10 +45,10 @@ import (
 
 const (
 	remotePilotAddressServiceName = "istiod-elb"
+	eastwestgatewayServiceName    = "istio-eastwestgateway"
 	istioSystemNamespace          = "istio-system"
 	istioOperatorNamespace        = "istio-operator"
 	karmadaClusterNamespace       = "karmada-cluster"
-	primaryCluster                = "primary"
 
 	iopCRDName = "istiooperators.install.istio.io"
 	crdKind    = "CustomResourceDefinition"
@@ -309,10 +309,42 @@ func (p *IstioPlugin) installControlPlane() error {
 		return fmt.Errorf("istio control plane in cluster %s not ready, err: %w", p.args.Primary, err)
 	}
 
+	if err := p.exposeServices(); err != nil {
+		return fmt.Errorf("expose service on %s fail, err: %w", p.args.Primary, err)
+	}
+
+	return nil
+}
+
+func (p *IstioPlugin) exposeServices() error {
+	if p.IsFlat() {
+		logrus.Debugf("skipping expose services in flat network")
+		return nil
+	}
+
+	if err := waitEastwestgatewayReady(p.Client, p.options, p.args.Primary); err != nil {
+		return fmt.Errorf("istio-eastwestgateway in cluster %s not ready, err: %w", p.args.Primary, err)
+	}
+
+	m, err := exposeServicesFiles()
+	if err != nil {
+		return err
+	}
+
+	_, err = p.apply([]byte(m))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (p *IstioPlugin) createIstioElb() error {
+	// in non-flat network mesh, we use eastwestgateway to export istiod
+	if !p.IsFlat() {
+		return nil
+	}
+
 	istioElbSvc := &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
@@ -353,13 +385,18 @@ func (p *IstioPlugin) createPrimaryIstioOperator() error {
 	setFlags = append(setFlags, fmt.Sprintf("tag=%s", p.args.Tag))
 	setFlags = append(setFlags, p.args.SetFlags...)
 	// override clusterName to primary, control plane cluster always named `primary`
-	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", primaryCluster))
+	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", p.args.Primary))
 
-	_, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
+	// TODO: always use eastwest-gateway on Primary?
+	iopFiles, err := p.iopFiles(p.args.Primary)
+	if err != nil {
+		return fmt.Errorf("failed to get iop files: %w", err)
+	}
+	_, iop, err := manifest.GenerateConfig(iopFiles, setFlags, false, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to generate config: %w", err)
 	}
-	iop.Name = primaryCluster
+	iop.Name = p.args.Primary
 	iop.Namespace = istioSystemNamespace
 
 	// TODO: replace this to avoid marshal/unmarshal once IstioOperator add to istio client-go
@@ -391,6 +428,7 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 		if err := p.createRemoteIstioOperator(remote, remotePilotAddress); err != nil {
 			return err
 		}
+
 		wg.Add(1)
 		go func(cluster string) {
 			defer wg.Done()
@@ -403,6 +441,47 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 	wg.Wait()
 
 	return multiErr.ErrorOrNil()
+}
+
+func (p *IstioPlugin) networks() map[string][]string {
+	m := map[string][]string{}
+	for _, r := range p.allClusters() {
+		k := networkName(r)
+		m[k] = []string{r}
+	}
+
+	return m
+}
+
+func networkName(cluster string) string {
+	return fmt.Sprintf("%s-network", cluster)
+}
+
+func (p *IstioPlugin) iopFiles(cluster string) ([]string, error) {
+	iopFiles := make([]string, 0, len(p.args.IopFiles)+1)
+	iopFiles = append(iopFiles, p.args.IopFiles...)
+	if !p.IsFlat() {
+		mesh := meshOptions{
+			Network:     networkName(cluster), // TODO: support custom network, e.g. primary and remote1 in network1, remote2 in network2
+			MeshID:      "mesh1",              // TODO: make this configurable
+			ClusterName: cluster,
+			Networks:    p.networks(),
+		}
+
+		logrus.Debugf("mesh options: %+v", mesh)
+		b, err := templateEastWest(mesh)
+		if err != nil {
+			return nil, err
+		}
+		additionalIopFile := path.Join(p.options.HomeDir, fmt.Sprintf("eastwest-%s.yaml", cluster))
+		if err := os.WriteFile(additionalIopFile, b, 0o644); err != nil {
+			return nil, err
+		}
+
+		iopFiles = append(iopFiles, additionalIopFile)
+	}
+
+	return iopFiles, nil
 }
 
 func (p *IstioPlugin) createIstioRemoteSecret(remote string) error {
@@ -428,8 +507,13 @@ func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddres
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", remote))
 	setFlags = append(setFlags, fmt.Sprintf("values.global.remotePilotAddress=%s", remotePilotAddress))
 
+	iopFiles, err := p.iopFiles(remote)
+	if err != nil {
+		return fmt.Errorf("failed to get iop files: %w", err)
+	}
+
 	// use manifest merge IOP file with set flag, this should be safe for different version
-	_, iop, err := manifest.GenerateConfig(p.args.IopFiles, setFlags, false, nil, nil)
+	_, iop, err := manifest.GenerateConfig(iopFiles, setFlags, false, nil, nil)
 	if err != nil {
 		return fmt.Errorf("failed to generate config: %w", err)
 	}
@@ -450,10 +534,14 @@ func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddres
 }
 
 func (p *IstioPlugin) remotePilotAddress() (string, error) {
+	if !p.IsFlat() {
+		return p.eastwestgatewayAddress()
+	}
+
 	svc, err := p.KubeClient().CoreV1().Services(istioSystemNamespace).Get(context.TODO(), remotePilotAddressServiceName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			return "", fmt.Errorf("service istiod-elb not found")
+			return "", fmt.Errorf("service %s not found", remotePilotAddressServiceName)
 		}
 		return "", err
 	}
@@ -464,7 +552,29 @@ func (p *IstioPlugin) remotePilotAddress() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("service istiod-elb status is pending")
+	return "", fmt.Errorf("service %s status is pending", remotePilotAddressServiceName)
+}
+
+func (p *IstioPlugin) eastwestgatewayAddress() (string, error) {
+	c, err := p.NewClusterClientSet(p.args.Primary)
+	if err != nil {
+		return "", err
+	}
+	svc, err := c.CoreV1().Services(istioSystemNamespace).Get(context.TODO(), eastwestgatewayServiceName, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return "", fmt.Errorf("service %s not found", eastwestgatewayServiceName)
+		}
+		return "", err
+	}
+
+	for _, ingress := range svc.Status.LoadBalancer.Ingress {
+		if ingress.IP != "" {
+			return ingress.IP, nil
+		}
+	}
+
+	return "", fmt.Errorf("failed to get discovery address from %s service", eastwestgatewayServiceName)
 }
 
 func (p *IstioPlugin) apply(manifest []byte) (kube.ResourceList, error) {

@@ -3,6 +3,7 @@ module kurator.dev/kurator
 go 1.17
 
 require (
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/bramvdbogaerde/go-scp v1.2.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
@@ -44,7 +45,6 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
-	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
