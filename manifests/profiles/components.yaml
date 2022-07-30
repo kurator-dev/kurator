@@ -7,6 +7,10 @@ components:
     version: v1.1.1
     hub:
     releaseURLPrefix: "https://github.com/karmada-io/karmada/releases/download"
+  - name: submariner
+    version: v0.12.2
+    hub:
+    releaseURLPrefix: "https://github.com/submariner-io/releases/releases/download"
   - name: kubeedge
     version: 1.10.0
     hub: docker.io/kebeedge
