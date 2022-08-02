@@ -4,7 +4,7 @@ components:
     hub: docker.io/istio
     releaseURLPrefix: "https://github.com/istio/istio/releases/download"
   - name: karmada
-    version: v1.1.1
+    version: v1.2.1
     hub:
     releaseURLPrefix: "https://github.com/karmada-io/karmada/releases/download"
   - name: submariner
@@ -20,4 +20,4 @@ components:
     hub: docker.io/volcanosh
     releaseURLPrefix: "https://raw.githubusercontent.com/volcano-sh/volcano/"
   - name: prometheus
-    version: 
+    version:
