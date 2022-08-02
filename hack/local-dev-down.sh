@@ -4,6 +4,6 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-KURATOR_CLUSTERS=`docker ps -a --format '{{.Names}}' | grep kurator`
+KURATOR_CLUSTERS=`kind get clusters | grep kurator`
 
-docker rm -f ${KURATOR_CLUSTERS}
+kind delete clusters ${KURATOR_CLUSTERS}
