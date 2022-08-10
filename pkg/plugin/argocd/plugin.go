@@ -27,13 +27,11 @@ import (
 	"runtime"
 	"strconv"
 
+	karmadautil "github.com/karmada-io/karmada/pkg/util"
+	"github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	karmadautil "github.com/karmada-io/karmada/pkg/util"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/sirupsen/logrus"
 	"kurator.dev/kurator/pkg/client"
 	"kurator.dev/kurator/pkg/generic"
 	"kurator.dev/kurator/pkg/moreos"
@@ -41,6 +39,12 @@ import (
 )
 
 var argocd = filepath.Join("argocd" + moreos.Exe)
+
+const (
+	namespace     = "argocd"
+	argocdService = "argocd-server"
+	passwdSecret  = "argocd-initial-admin-secret"
+)
 
 type InstallArgs struct {
 	// basically specify the karmada apiserver kubeconfig, where argocd deploy apps to.
@@ -144,7 +148,7 @@ func (p *ArgoCDPlugin) argocdManifest() (string, error) {
 }
 
 func (p *ArgoCDPlugin) installArgoCD() error {
-	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), "argocd", false); err != nil {
+	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), namespace, false); err != nil {
 		return fmt.Errorf("failed to ersure namespace %s, %w", "argocd", err)
 	}
 
@@ -154,7 +158,7 @@ func (p *ArgoCDPlugin) installArgoCD() error {
 	}
 
 	helmClient := p.HelmClient()
-	helmClient.Namespace = "argocd"
+	helmClient.Namespace = namespace
 	resourceList, err := helmClient.Build(bytes.NewBufferString(argocdYaml), false)
 	if err != nil {
 		return err
@@ -165,36 +169,32 @@ func (p *ArgoCDPlugin) installArgoCD() error {
 		return nil
 	}
 
+	logrus.Debugf("apply resoucrs: %s", argocdYaml)
 	if _, err := helmClient.Create(resourceList); err != nil {
 		return err
 	}
 
 	// kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 	patch := fmt.Sprintf(`[{"op": "replace", "path": "/spec/type", "value":"LoadBalancer"}]`)
-	_, err = p.KubeClient().CoreV1().Services("argocd").Patch(context.TODO(), "argocd-server", types.JSONPatchType,
+	_, err = p.KubeClient().CoreV1().Services(namespace).Patch(context.TODO(), argocdService, types.JSONPatchType,
 		[]byte(patch), metav1.PatchOptions{})
 	return err
 }
 
 // addCluster add karmada apiserver to deploy apps to
 func (p *ArgoCDPlugin) addCluster() error {
-
-	// TODO: wait
 	// 1. get argocd server address lb ip
-	svc, err := p.KubeClient().CoreV1().Services("argocd").Get(context.TODO(), "argocd-server", metav1.GetOptions{})
+	svc, err := util.WaitServiceReady(p.KubeClient(), namespace, argocdService, p.options.WaitInterval, p.options.WaitTimeout)
 	if err != nil {
+		logrus.Debugf("argocd-server service not ready: %s", err)
 		return err
 	}
-
-	if len(svc.Status.LoadBalancer.Ingress) == 0 {
-		return fmt.Errorf("loadbalancer service is pending")
-	}
-
 	serverAddress := net.JoinHostPort(svc.Status.LoadBalancer.Ingress[0].IP, strconv.Itoa(int(svc.Spec.Ports[0].Port)))
+	logrus.Debugf("argocd-server address: %s", serverAddress)
 
 	// 2. get password
 	// kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
-	secret, err := p.KubeClient().CoreV1().Secrets("argocd").Get(context.TODO(), "argocd-initial-admin-secret", metav1.GetOptions{})
+	secret, err := p.KubeClient().CoreV1().Secrets(namespace).Get(context.TODO(), passwdSecret, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("get passwd secret argocd-initial-admin-secret err: %v", err)
 	}
@@ -216,7 +216,7 @@ func (p *ArgoCDPlugin) addCluster() error {
 	cmd := exec.Command(p.argocdCli, args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		logrus.Infof("%s", string(out))
+		logrus.Infof("%s %v: %s", p.argocdCli, args, string(out))
 		return err
 	}
 
@@ -232,7 +232,7 @@ func (p *ArgoCDPlugin) addCluster() error {
 	cmd = exec.Command(p.argocdCli, args...)
 	out, err = cmd.CombinedOutput()
 	if err != nil {
-		logrus.Infof("%s", string(out))
+		logrus.Infof("%s %v: %s", p.argocdCli, args, string(out))
 		return err
 	}
 

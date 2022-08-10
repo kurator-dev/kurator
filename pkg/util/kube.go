@@ -138,3 +138,22 @@ func WaitAPIEnableInClusters(karmadaClient karmadaclientset.Interface, gvk schem
 		return len(requiredClusters) == 0, nil
 	})
 }
+
+// WaitServiceReady will wait until loadbalancer type service allocated an IP.
+func WaitServiceReady(client kubeclient.Interface, namespace, name string, interval, timeout time.Duration) (*v1.Service, error) {
+	var svc *v1.Service
+	err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+		svc, err := client.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		if err != nil {
+			return false, nil
+		}
+		if svc.Spec.Type != v1.ServiceTypeLoadBalancer {
+			return true, nil
+		}
+		if len(svc.Status.LoadBalancer.Ingress) == 0 {
+			return false, nil
+		}
+		return
+	})
+	return svc, err
+}
