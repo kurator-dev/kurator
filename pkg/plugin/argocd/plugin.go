@@ -95,7 +95,7 @@ func (p *ArgoCDPlugin) Execute(cmdArgs, environment []string) error {
 	}
 
 	if err := p.installArgoCD(); err != nil {
-		logrus.Infof("failed to install argocd, %s", err)
+		logrus.Errorf("failed to install argocd, %s", err)
 		return err
 	}
 
@@ -148,8 +148,11 @@ func (p *ArgoCDPlugin) argocdManifest() (string, error) {
 }
 
 func (p *ArgoCDPlugin) installArgoCD() error {
+	// TODO: delete namespace in order to delete previous intermediate output resource created.
+	// Like admin secret, which will influence idempotent.
+
 	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), namespace, false); err != nil {
-		return fmt.Errorf("failed to ersure namespace %s, %w", "argocd", err)
+		return fmt.Errorf("failed to ensure namespace %s, %w", namespace, err)
 	}
 
 	argocdYaml, err := p.argocdManifest()
@@ -169,8 +172,9 @@ func (p *ArgoCDPlugin) installArgoCD() error {
 		return nil
 	}
 
-	logrus.Debugf("apply resoucrs: %s", argocdYaml)
-	if _, err := helmClient.Create(resourceList); err != nil {
+	logrus.Debugf("apply argocd manifests")
+	// first delete existing resources to make install idempotent
+	if _, err := helmClient.Update(resourceList, resourceList, true); err != nil {
 		return err
 	}
 
@@ -178,7 +182,9 @@ func (p *ArgoCDPlugin) installArgoCD() error {
 	patch := fmt.Sprintf(`[{"op": "replace", "path": "/spec/type", "value":"LoadBalancer"}]`)
 	_, err = p.KubeClient().CoreV1().Services(namespace).Patch(context.TODO(), argocdService, types.JSONPatchType,
 		[]byte(patch), metav1.PatchOptions{})
-	return err
+
+	logrus.Debugf("wait for resources ready")
+	return helmClient.Wait(resourceList, p.options.WaitTimeout)
 }
 
 // addCluster add karmada apiserver to deploy apps to
@@ -208,7 +214,7 @@ func (p *ArgoCDPlugin) addCluster() error {
 	args := []string{
 		"login",
 		serverAddress,
-		"--user=admin",
+		"--username=admin",
 		fmt.Sprintf("--password=%s", passwd),
 		"--insecure",
 	}

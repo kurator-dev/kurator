@@ -28,8 +28,8 @@ var pluginArgs = plugin.InstallArgs{}
 
 func NewCmd(opts *generic.Options) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submariner",
-		Short: "Install submariner component",
+		Use:   "argocd",
+		Short: "Install argocd component",
 		RunE: func(c *cobra.Command, args []string) error {
 			plugin, err := plugin.NewArgoCDPlugin(opts, &pluginArgs)
 			if err != nil {
