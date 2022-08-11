@@ -52,6 +52,10 @@ util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBE
 
 echo "cluster networks connected"
 
+echo "install metallb in host cluster"
+kubectl create ns metallb-system --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
+util::install_metallb ${MAIN_KUBECONFIG} ${HOST_CLUSTER_NAME}
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/manifests/metallb.yaml --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
 
 echo "starting install metallb in member clusters"
 MEMBER_CLUSTERS=(${MEMBER_CLUSTER_1_NAME} ${MEMBER_CLUSTER_2_NAME})
