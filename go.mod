@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/bramvdbogaerde/go-scp v1.2.0
+	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
 	github.com/mitchellh/cli v1.1.3
@@ -113,6 +114,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
@@ -132,6 +134,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common/sigv4 v0.1.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
