@@ -119,7 +119,6 @@ func loadComponents(homeDir string) map[string]Component {
 		components[com.Name] = com
 	}
 
-	logrus.Debugf("components: %+v", components)
 	return components
 }
 
