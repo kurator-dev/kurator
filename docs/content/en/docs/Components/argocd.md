@@ -29,7 +29,7 @@ Kurator provides a very simple command to install ArgoCD and add karmada-apiserv
 - `--cluster-kubeconfig` and `--cluster-context` specifies the cluster which will be registered to argoCD to deploy application to. 
 
 ```bash
-$ kurator install argocd --kubeconfig=/root/.kube/kurator-host.config --cluster-kubeconfig=/etc/karmada/karmada-apiserver.config --cluster-context=karmada-apiserver
+kurator install argocd --kubeconfig=/root/.kube/kurator-host.config --cluster-kubeconfig=/etc/karmada/karmada-apiserver.config --cluster-context=karmada-apiserver
 ```
 
 ### Verify clusters registered to argoCD
@@ -40,7 +40,7 @@ Suppose you are running the installation in an external VM, you need to expose a
 kubectl port-forward --address 0.0.0.0 svc/argocd-server -n argocd 30080:80
 ```
 
-And then access ArgoCD server https://<your vm address>:30080 from your browser.
+And then access ArgoCD server `https://<your vm address>:30080` from your browser.
 
 ![login](./image/login.PNG)
 
@@ -88,11 +88,9 @@ After logging in, click the **+ New App** button as shown below:
 
 Give your app the name `guestbook`, use the project `default`, and leave the sync policy as `Manual`:
 
-<img src="./image/new-app.PNG" alt="new-app" style="zoom: 80%;" />
+![new-app](./image/new-app.PNG)
 
-
-
-Connect the https://github.com/argoproj/argocd-example-apps.git repo to Argo CD by setting repository url to the github repo url, set revision as `kurator-argo-demo`, and set the path to `guestbook`, set destination cluster to `karmada-apiserver`
+Connect the [argocd-example-apps](https://github.com/hzxuzhonghu/argocd-example-apps.git) repo to Argo CD by setting repository url to the github repo url, set revision as `kurator-argo-demo`, and set the path to `guestbook`, set destination cluster to `karmada-apiserver`
 
 ![app-source](./image/app-source.PNG)
 
