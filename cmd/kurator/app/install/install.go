@@ -18,8 +18,8 @@ package install
 
 import (
 	"github.com/spf13/cobra"
-	"kurator.dev/kurator/cmd/kurator/app/install/argocd"
 
+	"kurator.dev/kurator/cmd/kurator/app/install/argocd"
 	"kurator.dev/kurator/cmd/kurator/app/install/istio"
 	"kurator.dev/kurator/cmd/kurator/app/install/karmada"
 	"kurator.dev/kurator/cmd/kurator/app/install/kubeedge"

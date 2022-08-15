@@ -29,18 +29,17 @@ import (
 
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
 	"github.com/sirupsen/logrus"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"kurator.dev/kurator/pkg/client"
 	"kurator.dev/kurator/pkg/generic"
-	"kurator.dev/kurator/pkg/moreos"
 	"kurator.dev/kurator/pkg/util"
 )
 
-var argocd = filepath.Join("argocd" + moreos.Exe)
-
 const (
+	component     = "argocd"
 	namespace     = "argocd"
 	argocdService = "argocd-server"
 	passwdSecret  = "argocd-initial-admin-secret"
@@ -109,9 +108,9 @@ func (p *ArgoCDPlugin) Execute(cmdArgs, environment []string) error {
 }
 
 func (p *ArgoCDPlugin) installCli() (string, error) {
-	istioComponent := p.options.Components["argocd"]
+	istioComponent := p.options.Components[component]
 	p.installPath = filepath.Join(p.options.HomeDir, istioComponent.Name, istioComponent.Version)
-	argocdBinaryPath := filepath.Join(p.installPath, "argocd")
+	argocdBinaryPath := filepath.Join(p.installPath, component)
 	_, err := os.Stat(argocdBinaryPath)
 	if err == nil {
 		return argocdBinaryPath, nil
@@ -131,14 +130,17 @@ func (p *ArgoCDPlugin) installCli() (string, error) {
 	}
 
 	// chmod +x
-	os.Chmod(argocdBinaryPath, 0777)
+	if err := os.Chmod(argocdBinaryPath, 0750); err != nil {
+		return "", err
+	}
 	return util.VerifyExecutableBinary(argocdBinaryPath)
 }
 
 func (p *ArgoCDPlugin) argocdManifest() (string, error) {
 	// TODO: refactor component to support both cli and manifest url
 	// https://raw.githubusercontent.com/argoproj/argo-cd/v2.4.8/manifests/install.yaml
-	url := "https://raw.githubusercontent.com/argoproj/argo-cd/v2.4.8/manifests/install.yaml"
+	istioComponent := p.options.Components[component]
+	url := fmt.Sprintf("https://raw.githubusercontent.com/argoproj/argo-cd/%s/manifests/install.yaml", istioComponent.Version)
 	yaml, err := util.DownloadResource(url, "")
 	if err != nil {
 		return "", err
@@ -148,8 +150,15 @@ func (p *ArgoCDPlugin) argocdManifest() (string, error) {
 }
 
 func (p *ArgoCDPlugin) installArgoCD() error {
-	// TODO: delete namespace in order to delete previous intermediate output resource created.
+	// Delete namespace in order to delete previous intermediate output resource created.
 	// Like admin secret, which will influence idempotent.
+	policy := metav1.DeletePropagationForeground
+	if err := p.KubeClient().CoreV1().Namespaces().Delete(context.TODO(), namespace,
+		metav1.DeleteOptions{PropagationPolicy: &policy}); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete namespace %s, %w", namespace, err)
+		}
+	}
 
 	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), namespace, false); err != nil {
 		return fmt.Errorf("failed to ensure namespace %s, %w", namespace, err)
@@ -179,9 +188,11 @@ func (p *ArgoCDPlugin) installArgoCD() error {
 	}
 
 	// kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-	patch := fmt.Sprintf(`[{"op": "replace", "path": "/spec/type", "value":"LoadBalancer"}]`)
-	_, err = p.KubeClient().CoreV1().Services(namespace).Patch(context.TODO(), argocdService, types.JSONPatchType,
-		[]byte(patch), metav1.PatchOptions{})
+	patch := `[{"op": "replace", "path": "/spec/type", "value":"LoadBalancer"}]`
+	if _, err = p.KubeClient().CoreV1().Services(namespace).Patch(context.TODO(), argocdService, types.JSONPatchType,
+		[]byte(patch), metav1.PatchOptions{}); err != nil {
+		return fmt.Errorf("patching service %s: %v", argocdService, err)
+	}
 
 	logrus.Debugf("wait for resources ready")
 	return helmClient.Wait(resourceList, p.options.WaitTimeout)
@@ -219,10 +230,10 @@ func (p *ArgoCDPlugin) addCluster() error {
 		"--insecure",
 	}
 
+	logrus.Debugf("%s %v", p.argocdCli, args)
 	cmd := exec.Command(p.argocdCli, args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		logrus.Infof("%s %v: %s", p.argocdCli, args, string(out))
+	if err := util.RunCommand(cmd); err != nil {
+		logrus.Errorf("%s %v: %s", p.argocdCli, args, err)
 		return err
 	}
 
@@ -235,10 +246,10 @@ func (p *ArgoCDPlugin) addCluster() error {
 		fmt.Sprintf("--kubeconfig=%s", p.args.ClusterKubeconfig),
 		"-y",
 	}
+	logrus.Debugf("%s %v", p.argocdCli, args)
 	cmd = exec.Command(p.argocdCli, args...)
-	out, err = cmd.CombinedOutput()
-	if err != nil {
-		logrus.Infof("%s %v: %s", p.argocdCli, args, string(out))
+	if err := util.RunCommand(cmd); err != nil {
+		logrus.Errorf("%s %v: %s", p.argocdCli, args, err)
 		return err
 	}
 

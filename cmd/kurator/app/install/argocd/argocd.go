@@ -37,9 +37,9 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 				return err
 			}
 
-			logrus.Debugf("start install argoCD: %+v ", opts)
+			logrus.Debugf("start install argocd: %+v ", opts)
 			if err := plugin.Execute(args, nil); err != nil {
-				logrus.Errorf("argoCD execute error: %v", err)
+				logrus.Errorf("argocd execute error: %v", err)
 				return err
 			}
 
