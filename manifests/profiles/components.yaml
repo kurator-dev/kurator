@@ -19,8 +19,14 @@ components:
     version: 1.5.1
     hub: docker.io/volcanosh
     releaseURLPrefix: "https://raw.githubusercontent.com/volcano-sh/volcano/"
+  - name: pixie
+    version: 0.0.30
   - name: prometheus
     version:
   - name: argocd
     version: v2.4.8
     releaseURLPrefix: "https://github.com/argoproj/argo-cd/releases/download/"
+  # FIXME: https://github.com/kurator-dev/kurator/issues/61
+  - name: helm
+    version: v3.9.3
+    releaseURLPrefix: "https://get.helm.sh/"

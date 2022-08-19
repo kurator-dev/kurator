@@ -23,6 +23,7 @@ import (
 	"kurator.dev/kurator/cmd/kurator/app/install/istio"
 	"kurator.dev/kurator/cmd/kurator/app/install/karmada"
 	"kurator.dev/kurator/cmd/kurator/app/install/kubeedge"
+	"kurator.dev/kurator/cmd/kurator/app/install/pixie"
 	"kurator.dev/kurator/cmd/kurator/app/install/prometheus"
 	"kurator.dev/kurator/cmd/kurator/app/install/submariner"
 	"kurator.dev/kurator/cmd/kurator/app/install/volcano"
@@ -46,5 +47,6 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	installCmd.AddCommand(prometheus.NewCmd(opts))
 	installCmd.AddCommand(submariner.NewCmd(opts))
 	installCmd.AddCommand(argocd.NewCmd(opts))
+	installCmd.AddCommand(pixie.NewCmd(opts))
 	return installCmd
 }
