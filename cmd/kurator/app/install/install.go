@@ -19,6 +19,7 @@ package install
 import (
 	"github.com/spf13/cobra"
 
+	"kurator.dev/kurator/cmd/kurator/app/install/argocd"
 	"kurator.dev/kurator/cmd/kurator/app/install/istio"
 	"kurator.dev/kurator/cmd/kurator/app/install/karmada"
 	"kurator.dev/kurator/cmd/kurator/app/install/kubeedge"
@@ -44,5 +45,6 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	installCmd.AddCommand(volcano.NewCmd(opts))
 	installCmd.AddCommand(prometheus.NewCmd(opts))
 	installCmd.AddCommand(submariner.NewCmd(opts))
+	installCmd.AddCommand(argocd.NewCmd(opts))
 	return installCmd
 }

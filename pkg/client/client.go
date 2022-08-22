@@ -38,7 +38,7 @@ import (
 type Client struct {
 	kube kubeclient.Interface
 	crd  crdclientset.Interface
-	helm helmclient.Interface
+	helm *helmclient.Client
 
 	karmada karmadaclientset.Interface
 	prom    promclient.Interface
@@ -77,7 +77,7 @@ func (c *Client) CrdClient() crdclientset.Interface {
 	return c.crd
 }
 
-func (c *Client) HelmClient() helmclient.Interface {
+func (c *Client) HelmClient() *helmclient.Client {
 	return c.helm
 }
 

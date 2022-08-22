@@ -21,3 +21,6 @@ components:
     releaseURLPrefix: "https://raw.githubusercontent.com/volcano-sh/volcano/"
   - name: prometheus
     version:
+  - name: argocd
+    version: v2.4.8
+    releaseURLPrefix: "https://github.com/argoproj/argo-cd/releases/download/"
