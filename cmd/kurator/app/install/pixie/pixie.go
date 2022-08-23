@@ -26,7 +26,7 @@ import (
 func NewCmd(opts *generic.Options) *cobra.Command {
 	pixieCmd := &cobra.Command{
 		Use:                   "pixie",
-		Short:                 "Install pixie  component",
+		Short:                 "Install pixie component",
 		DisableFlagsInUseLine: true,
 		FParseErrWhitelist: cobra.FParseErrWhitelist{
 			UnknownFlags: true,

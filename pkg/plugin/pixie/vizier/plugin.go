@@ -25,7 +25,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sync"
 
+	"github.com/hashicorp/go-multierror"
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
 	"github.com/sirupsen/logrus"
 	helmclient "helm.sh/helm/v3/pkg/kube"
@@ -39,8 +41,7 @@ import (
 )
 
 const (
-	crdKind       = "CustomResourceDefinition"
-	vizierCRDName = "viziers.px.dev"
+	crdKind = "CustomResourceDefinition"
 
 	repoName    = "pixie-operator"
 	repoAddress = "https://pixie-operator-charts.storage.googleapis.com"
@@ -109,17 +110,13 @@ func (p *Plugin) Execute(cmdArgs, environment []string) error {
 			return err
 		}
 
-		_, err = p.applyCrds(clusterHelmClient)
+		crds, err := p.applyCRDs(clusterHelmClient)
 		if err != nil {
 			return err
 		}
 
-		clusterCRDClient, err := p.Client.NewClusterCRDClientset(c)
-		if err != nil {
+		if err := p.waitCRDReady(c, crds); err != nil {
 			return err
-		}
-		if err := util.WaitCRDReady(clusterCRDClient, vizierCRDName, p.options.WaitInterval, p.options.WaitTimeout); err != nil {
-			return fmt.Errorf("wait cluster %s CRD %s ready fail, %w", c, vizierCRDName, err)
 		}
 
 		_, err = p.applyTemplates(clusterHelmClient, c)
@@ -148,7 +145,7 @@ func (p *Plugin) addRepo() error {
 	return util.RunCommand(cmd)
 }
 
-func (p *Plugin) applyCrds(helmClient helmclient.Interface) (helmclient.ResourceList, error) {
+func (p *Plugin) applyCRDs(helmClient helmclient.Interface) (helmclient.ResourceList, error) {
 	args := []string{
 		"show",
 		"crds",
@@ -174,6 +171,30 @@ func (p *Plugin) applyCrds(helmClient helmclient.Interface) (helmclient.Resource
 	return r, nil
 }
 
+func (p *Plugin) waitCRDReady(cluster string, crdList helmclient.ResourceList) error {
+	clusterCRDClient, err := p.Client.NewClusterCRDClientset(cluster)
+	if err != nil {
+		return err
+	}
+
+	var (
+		wg       = sync.WaitGroup{}
+		multiErr *multierror.Error
+	)
+	for _, r := range crdList {
+		wg.Add(1)
+		go func(crd *resource.Info) {
+			defer wg.Done()
+			if err := util.WaitCRDReady(clusterCRDClient, crd.Name, p.options.WaitInterval, p.options.WaitTimeout); err != nil {
+				multiErr = multierror.Append(multiErr, fmt.Errorf("wait cluster %s CRD %s ready fail, %w", cluster, crd.Name, err))
+			}
+		}(r)
+	}
+	wg.Wait()
+
+	return multiErr.ErrorOrNil()
+}
+
 func (p *Plugin) applyTemplates(helmClient helmclient.Interface, cluster string) (helmclient.ResourceList, error) {
 	args := []string{
 		"template",
@@ -197,7 +218,7 @@ func (p *Plugin) applyTemplates(helmClient helmclient.Interface, cluster string)
 	}
 
 	r = r.Filter(func(r *resource.Info) bool {
-		// crd created in prev steps
+		// should not happen in helm3, just in case
 		return r.Mapping.GroupVersionKind.Kind != crdKind
 	})
 
