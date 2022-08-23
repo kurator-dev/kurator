@@ -143,3 +143,21 @@ func (c *Client) NewClusterClientSet(clusterName string) (kubeclient.Interface, 
 	}
 	return kubeclient.NewForConfig(clusterConfig)
 }
+
+func (c *Client) NewClusterCRDClientset(clusterName string) (crdclientset.Interface, error) {
+	clusterConfig, err := c.memberClusterConfig(clusterName)
+	if err != nil {
+		return nil, err
+	}
+	return crdclientset.NewForConfig(clusterConfig)
+}
+
+func (c *Client) NewClusterHelmClient(clusterName string) (helmclient.Interface, error) {
+	clusterConfig, err := c.memberClusterConfig(clusterName)
+	if err != nil {
+		return nil, err
+	}
+
+	clusterGetter := NewRESTClientGetter(clusterConfig)
+	return helmclient.New(clusterGetter), nil
+}

@@ -434,7 +434,7 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 			defer wg.Done()
 			err := waitIngressgatewayReady(p.Client, p.options, cluster)
 			if err != nil {
-				_ = multierror.Append(multiErr, err)
+				multiErr = multierror.Append(multiErr, err)
 			}
 		}(remote)
 	}
