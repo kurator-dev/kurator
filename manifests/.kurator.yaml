@@ -2,24 +2,23 @@ plugins:
   - name: istio
     hub: docker.io/istio
     cli:
-      - name: istioctl
+      - istioctl
   - name: karmada
     hub:
     cli:
-      - name:karmadactl
+      - karmadactl
   - name: submariner
     cli:
-      - name: subctl
+      - subctl
   - name: kubeedge
     hub: docker.io/kebeedge
     cli:
-      - name: karmadactl
+      - karmadactl
   - name: volcano
     version: 1.5.1
     hub: docker.io/volcanosh
     manifest:
-      - version: 1.5.1
-        releaseURLPrefix: "https://raw.githubusercontent.com/volcano-sh/volcano/"
+      url: https://raw.githubusercontent.com/volcano-sh/volcano/v1.5.1/installer/volcano-development.yaml
   - name: pixie
     charts:
       - name: pixier-operator-chart
@@ -28,20 +27,21 @@ plugins:
 cli:
   - name: istioctl
     version: 1.13.3
-    releaseURLPrefix: "https://github.com/istio/istio/releases/download"
+    url: "https://github.com/istio/istio/releases/download"
   - name: karmadactl
     version: v1.2.1
-    releaseURLPrefix: "https://github.com/karmada-io/karmada/releases/download"
+    url: "https://github.com/karmada-io/karmada/releases/download"
   - name: subctl
     version: v0.12.2
-    releaseURLPrefix: "https://github.com/submariner-io/releases/releases/download"
+    url: "https://github.com/submariner-io/releases/releases/download"
   - name: keadm
     version: 1.10.0
-    releaseURLPrefix: "https://github.com/kubeedge/kubeedge/releases/download"
+    url: "https://github.com/kubeedge/kubeedge/releases/download"
 helm:
   repos:
     - name: pixie-operator
       url: https://pixie-operator-charts.storage.googleapis.com
   charts:
     - name: pixier-operator-chart
-      repo: pixier-operator
+      chartName: pixier-operator-chart
+      repoName: pixier-operator

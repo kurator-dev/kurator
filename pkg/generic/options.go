@@ -93,6 +93,10 @@ func (g *Options) RESTClientGetter() genericclioptions.RESTClientGetter {
 
 type cfg struct {
 	Components []Component `json:"components"`
+
+	Plugins []*PluginOption `json:"plugins"`
+	Cli     []*CliOption    `json:"cli"`
+	Helm    *HelmOption     `json:"helm"`
 }
 
 type Component struct {
@@ -155,4 +159,37 @@ func (g *Options) Errorf(format string, a ...interface{}) {
 		return
 	}
 	g.Ui.Error(fmt.Sprintf(format, a...))
+}
+
+type PluginOption struct {
+	Name     string          `yaml:"name"`
+	Hub      string          `yaml:"hub"`
+	Cli      []string        `yaml:"cli"`
+	Charts   []string        `yaml:"charts"`
+	Manifest *ManifestOption `yaml:"manifest"`
+}
+
+type ManifestOption struct {
+	// TODO: support different arch
+	URL string `yaml:"url"`
+}
+
+type CliOption struct {
+	Name       string `yaml:"name"`
+	Version    string `yaml:"version"`
+	ReleaseURL string `yaml:"releaseURL"`
+}
+
+type HelmOption struct {
+}
+
+type RepositoryOption struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+}
+
+type ChartOption struct {
+	Name      string `yaml:"name"`
+	ChartName string `yaml:"chartName"`
+	RepoName  string `yaml:"repoName"`
 }
