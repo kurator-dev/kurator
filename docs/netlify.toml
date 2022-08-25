@@ -1,0 +1,13 @@
+[build]
+    publish = "public"
+
+[build.environment]
+    HUGO_VERSION = "0.101.0"
+    NODE_VERSION = "16.17.0"
+    BUILD_WITH_CONTAINER = "0"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
