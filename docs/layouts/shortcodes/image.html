@@ -1,0 +1,78 @@
+{{- /*
+    come from https://github.com/istio/istio.io/blob/master/layouts/shortcodes/image.html 
+    Purpose:
+    Inserts a figure into a page. The user of this shortcode specifies the
+    relative width of the figure in percentage. Through CSS trickery, these two values let us
+    calculate the actual width and height of the image at render time in such
+    a way that it avoids the typical 'shifting text' problem as images are
+    loaded asynchronously.
+    
+    Usage:
+    
+    {{< image width="<NN>%"
+        link="<path to image file>"
+        alt="<text to display when the image is not available>"
+        title="<text to display when hovering over the image>"
+        caption="<text to display below the image>"
+    >}}
+    
+    If you omit the alt parameter, it will take on the value of the title parameter.
+    If you omit the title parameter, it will take on the value of the caption parameter.
+    In other words, if all three strings are the same, you can just supply the caption
+    parameter.
+    
+    The width value represents the percentage of the page that the image should occupy. If
+    width is not supplied, it defaults to 100%.
+
+    */ -}}
+
+    {{- $width := .Get "width" -}}
+    {{- $link := .Get "link" -}}
+    {{- $caption := .Get "caption" -}}
+    {{- $title := or (.Get "title") (.Get "caption") -}}
+    {{- $alt := or (.Get "alt") (.Get "title") (.Get "caption") -}}
+
+    {{- with $caption -}}
+        {{- if (strings.HasSuffix . ".") -}}
+            {{- errorf "Image caption ends with a period (%s)" .Position -}}
+        {{- end -}}
+    {{- end -}}
+
+    {{- if not $width -}}
+        {{- $width = "100%" -}}
+    {{- end -}}
+
+    {{- /* Turn relative values for $link into absolute values */ -}}
+
+    {{- if not (or (hasPrefix $link "/") (hasPrefix $link "https://") (strings.HasPrefix $link "http://")) -}}
+        {{ $pageDir := path.Dir .Page.File.Path }}
+        {{- if ne .Page.Language.Lang "en" -}}
+            {{- $pageDir = printf "%s/%s" .Page.Language.Lang $pageDir -}}
+        {{- end -}}
+
+        {{- if (hasPrefix $link "../") -}}
+            {{- $link = printf "/%s/%s" $pageDir (slicestr $link 3) -}}
+        {{- else if (hasPrefix $link "./") -}}
+            {{- $link = printf "/%s/%s" $pageDir (slicestr $link 2) -}}
+        {{- else -}}
+            {{- $link = printf "/%s/%s" $pageDir $link -}}
+        {{- end -}}
+    {{- end -}}
+    
+    
+    {{- $path := "" -}}
+    {{- if not (or (hasPrefix $link "https://") (strings.HasPrefix $link "http://")) -}}
+        {{- if eq .Page.Language.Lang "en" -}}
+            {{- $path = printf "content/en%s" $link -}}
+        {{- else -}}
+            {{- $path = printf "content%s" $link -}}
+        {{- end -}}
+    {{- end -}}
+
+    <figure style="width: {{- $width -}}">
+        <div class="wrapper-with-intrinsic-ratio">
+            <a data-skipendnotes="true" href="{{- $link -}}" title="{{- $title -}}">
+                <img class="element-to-stretch" src="{{- $link -}}" alt="{{- $alt -}}" />
+            </a>
+        </div>
+    </figure>
