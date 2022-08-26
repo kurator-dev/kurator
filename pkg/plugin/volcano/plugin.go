@@ -152,9 +152,9 @@ func (p *Plugin) volcanoManifest() (string, error) {
 	// TODO: change it, the machine used to install volcano can be different from the destination cluster arch
 	switch runtime.GOARCH {
 	case "amd64":
-		manifestName = "volcano-development.yaml"
+		manifestName = "installer/volcano-development.yaml"
 	case "arm64":
-		manifestName = "volcano-development-arm64.yaml"
+		manifestName = "installer/volcano-development-arm64.yaml"
 	default:
 		return "", fmt.Errorf("os arch %s is not supportted", runtime.GOARCH)
 	}
