@@ -2,7 +2,7 @@
 title: "Integrate ArgoCD with Kurator"
 linkTitle: "Integrate ArgoCD with Kurator"
 description: >
-Integrate ArgoCD with Kurator?
+    Integrate ArgoCD with Kurator?
 ---
 
 ### What is ArgoCD
@@ -42,7 +42,9 @@ kubectl port-forward --address 0.0.0.0 svc/argocd-server -n argocd 30080:80
 
 And then access ArgoCD server `https://<your vm address>:30080` from your browser.
 
-![login](./image/login.PNG)
+{{< image width="75%"
+    link="./image/login.PNG"
+    >}}
 
 
 
@@ -56,23 +58,23 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 
 After login successfully, you can see this page, and there is no application now.
 
-![application-page](./image/application-page.PNG)
-
-
+{{< image width="75%"
+    link="./image/application-page.PNG"
+    caption="application-page"
+    >}}
 
 And then click settings on the left,  you can see there is a cluster named `karmada-apiserver`, which is registered during install. `in-cluster`is automatically registered, we do not use it in this example.
 
-![application-page](./image/clusters.PNG)
-
-
+{{< image width="75%"
+    link="./image/clusters.PNG"
+    caption="clusters"
+    >}}
 
 ### Deploy application to karmada-spiserver
 
 ### Prepare application
 
 We have prepared a [app repo](https://github.com/hzxuzhonghu/argocd-example-apps/tree/kurator-argo-demo) by forking  [argocd-example-apps](https://github.com/argoproj/argocd-example-apps), you have to create [PropagationPolicy](https://pkg.go.dev/github.com/karmada-io/karmada@v1.2.1/pkg/apis/policy/v1alpha1#PropagationPolicy) for your own application accordingly.
-
-
 
 #### Create App via CLI
 
@@ -88,21 +90,23 @@ After logging in, click the **+ New App** button as shown below:
 
 Give your app the name `guestbook`, use the project `default`, and leave the sync policy as `Manual`:
 
-![new-app](./image/new-app.PNG)
+{{< image width="75%"
+    link="./image/new-app.PNG"
+    caption="new-app"
+    >}}
 
 Connect the [argocd-example-apps](https://github.com/hzxuzhonghu/argocd-example-apps.git) repo to Argo CD by setting repository url to the github repo url, set revision as `kurator-argo-demo`, and set the path to `guestbook`, set destination cluster to `karmada-apiserver`
 
-![app-source](./image/app-source.PNG)
+{{< image width="75%"
+    link="./image/app-source.PNG"
+    caption="app-source"
+    >}}
 
 After filling out the information above, click **Create** at the top of the UI to create the `guestbook` application.
-
-
 
 #### Sync App via CLI
 
 You can sync guest app via CLI with the below command:
-
-
 
 ```bash
 $ argocd app sync guestbook
@@ -145,28 +149,27 @@ policy.karmada.io  PropagationPolicy  default    guestbook     Synced           
 
 ```
 
-
-
 #### Sync App via UI
-
-
 
 You can click the **Sync** button to manually sync the guestbook App, which is equal to CLI.
 
-![sync](./image/sync.PNG)
-
- 
+{{< image width="75%"
+    link="./image/sync.PNG"
+    caption="sync"
+    >}}
 
 ### Verify app deployed to member clusters
 
 In the UI, click the **guestbook**, you can see the App sync ok, and with resourcebinding `guestbook-ui-service`and `guestbook-ui-deployment`created by karmada.
 
-
-
-![sync-output](./image/sync-output.PNG)
-
-
+{{< image width="75%"
+    link="./image/sync-output.PNG"
+    caption="sync-output"
+    >}}
 
 If you further click the `guestbook-ui-deployment`, you will see the below status if succeed. It indicates one instance is deployed  to `member1`cluster and one is deployed to `member2`cluster.
 
-![deployment-status](./image/deployment-status.PNG)
+{{< image width="75%"
+    link="./image/deployment-status.PNG"
+    caption="deployment-status"
+    >}}

@@ -88,3 +88,7 @@ gen: \
 .PHONY: gen-check
 gen-check: gen
 	hack/gen-check.sh
+
+.PHONY: serve
+serve:
+	hack/local-docsite-up.sh
