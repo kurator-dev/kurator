@@ -18,20 +18,24 @@ The Pixie platform consists of multiple components:
 - Pixie Cloud: Used for user management, authentication, and data proxying.
 
 
-In this task, we will first show you how to install Pixie vizier with kurator.
+In this task, we will show you how to install Pixie vizier(work with Community Cloud) with kurator.
 
 ## Prerequisites
 
 This task requires you have installed karmada and have joined at least one member cluster.
 Otherwise, setup karmada environment following [Install Karmada with Kurator](./karmada.md).
 
+## Get an account from Community Cloud for Pixie
+
+Visit [pixie product page](https://work.withpixie.ai/) and sign up.
+
 ## Create deployment key
 
-Create a deployment key following the directions [here](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-cli).
+Create a deployment key following the directions [here](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-live-ui).
 
-## Install Pixie
+## Install Pixie vizier
 
-Kurator provides a very simple command to install Pixie and add karmada-apiserver as the destination to deploy application to.
+Kurator provides a very simple command to install Pixie vizier to all clusters joined to karmada.
 
 - `--cloud-addr` sepcifies the address of the Pixie cloud instance that the vizier should be connected to.
 - `--deploy-key` sepcifies the deploy key is used to link the deployed vizier to a specific user/project.
