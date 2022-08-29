@@ -1,0 +1,51 @@
+---
+title: "Integrate Pixie vizier with Kurator"
+linkTitle: "Integrate Pixie vizier with Kurator"
+---
+
+## What is Pixie vizier
+
+[Pixie](https://pixielabs.ai/) is an open source observability tool for Kubernetes applications. Pixie uses eBPF to automatically capture telemetry data without the need for manual instrumentation.
+
+Developers can use Pixie to view the high-level state of their cluster (service maps, cluster resources, application traffic) and also drill-down into more detailed views (pod state, flame graphs, individual full body application requests).
+
+The Pixie platform consists of multiple components:
+
+- Pixie Edge Module (PEM): Pixie's agent, installed per node. PEMs use eBPF to collect data, which is stored locally on the node.
+
+- Vizier: Pixie’s collector, installed per cluster. Responsible for query execution and managing PEMs.
+
+- Pixie Cloud: Used for user management, authentication, and data proxying.
+
+
+In this task, we will first show you how to install Pixie vizier with kurator.
+
+## Prerequisites
+
+This task requires you have installed karmada and have joined at least one member cluster.
+Otherwise, setup karmada environment following [Install Karmada with Kurator](./karmada.md).
+
+## Create deployment key
+
+Create a deployment key following the directions [here](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-cli).
+
+## Install Pixie
+
+Kurator provides a very simple command to install Pixie and add karmada-apiserver as the destination to deploy application to.
+
+- `--cloud-addr` sepcifies the address of the Pixie cloud instance that the vizier should be connected to.
+- `--deploy-key` sepcifies the deploy key is used to link the deployed vizier to a specific user/project.
+
+```bash
+kurator install pixie vizier --deploy-key=<your_deploy_key>
+```
+
+Wait for cluster become `HEALTHY`:
+
+{{< image width="75%"
+    link="./image/pixie.png"
+    >}}
+
+## Tuorials
+
+Following the [tutorials](https://docs.pixielabs.ai/tutorials/) to experience with Pixie.
