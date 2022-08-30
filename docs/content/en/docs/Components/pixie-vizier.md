@@ -1,9 +1,9 @@
 ---
-title: "Integrate Pixie vizier with Kurator"
-linkTitle: "Integrate Pixie vizier with Kurator"
+title: "Integrate Pixie Vizier with Kurator"
+linkTitle: "Integrate Pixie Vizier with Kurator"
 ---
 
-## What is Pixie vizier
+## What is Pixie Vizier
 
 [Pixie](https://pixielabs.ai/) is an open source observability tool for Kubernetes applications. Pixie uses eBPF to automatically capture telemetry data without the need for manual instrumentation.
 
@@ -31,15 +31,13 @@ Visit [pixie product page](https://work.withpixie.ai/) and sign up.
 
 After sign in, visit [pixie admin page](https://work.withpixie.ai/admin) for next step.
 
-{{< image width="75%"
-    link="./image/pixie-admin-page.png"
-    >}}
+{{< image link="./image/pixie-admin-page.png" >}}
 
 ## Create deployment key
 
 Create a deployment key following the directions [here](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-live-ui).
 
-## Install Pixie vizier
+## Install Pixie Vizier
 
 Kurator provides a very simple command to install Pixie vizier to all clusters joined to karmada.
 
@@ -52,10 +50,8 @@ kurator install pixie vizier --deploy-key=<your_deploy_key>
 
 Wait for cluster become `HEALTHY`:
 
-{{< image width="75%"
-    link="./image/pixie.png"
-    >}}
+{{< image link="./image/pixie.png" >}}
 
-## Tuorials
+## Tutorials
 
 Following the [tutorials](https://docs.pixielabs.ai/tutorials/) to experience with Pixie.
