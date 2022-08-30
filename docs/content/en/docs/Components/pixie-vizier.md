@@ -29,6 +29,12 @@ Otherwise, setup karmada environment following [Install Karmada with Kurator](./
 
 Visit [pixie product page](https://work.withpixie.ai/) and sign up.
 
+After sign in, visit [pixie admin page](https://work.withpixie.ai/admin) for next step.
+
+{{< image width="75%"
+    link="./image/pixie-admin-page.png"
+    >}}
+
 ## Create deployment key
 
 Create a deployment key following the directions [here](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-live-ui).
