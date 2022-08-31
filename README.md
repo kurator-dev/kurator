@@ -2,7 +2,7 @@
 
 Kurator is an open source distributed cloud native platform that helps users to build their own distributed cloud native infrastructure and facilitates enterprise digital transformation.
 
-Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](https://github.com/prometheus/prometheus), etc.
+Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](https://github.com/prometheus/prometheus), [ArgoCD](https://github.com/argoproj/argo-cd), [Pixie](https://github.com/pixie-io/pixie), etc.
 It provides powerful capabilities to multi-cloud and multi-cluster, including:
 
 - Multi-cloud, Edge-cloud, Edge-edge Synergy
@@ -21,7 +21,7 @@ This guide will cover:
 - Install Volcano
 - Install Prometheus
 
-### Local env setup
+### 1. Local env setup
 
 ```console
 hack/local-dev-setup.sh
@@ -30,7 +30,7 @@ hack/local-dev-setup.sh
 This script will create three clusters for you, one is used to host Karmada control plane and the other two will be joined as member clusters.
 
 
-### Install Karmada
+### 2. Install Karmada
 
 **Install Karmada control plane:**
 
@@ -49,18 +49,18 @@ kurator join karmada member1 \
 **Join cluster `member2`:**
 
 ```console
-$ kurator join karmada member2 \
+kurator join karmada member2 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member2
 ```
 
-### Install Istio
+### 3. Install Istio
 
 ```console
 kurator install istio --primary member1 --remote member2
 ```
 
-### Install KubeEdge
+### 4. Install KubeEdge
 
 **Install KubeEdge control plane:**
 
@@ -77,13 +77,13 @@ kurator join edge  --cluster member1 \
     -p="${NODE_PWD}"
 ```
 
-### Install Volcano
+### 5. Install Volcano
 
 ```console
 kurator install volcano
 ```
 
-### Install Prometheus
+### 6. Install Prometheus
 
 ```console
 kurator install prometheus --primary member1
