@@ -10,6 +10,7 @@ set -o pipefail
 # 2. used by e2e testing to setup test environment automatically.
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
 KIND_CONFIGS_ROOT=${REPO_ROOT}/kind-configs
+KIND_CONFIGS_WITH_WORKER_ROOT=${REPO_ROOT}/kind-configs-with-worker
 source "${REPO_ROOT}"/util.sh
 
 METALLB_VERSION=${METALLB_VERSION:-"v0.10.2"}
@@ -23,24 +24,19 @@ HOST_CLUSTER_NAME=${HOST_CLUSTER_NAME:-"kurator-host"}
 MEMBER_CLUSTER_1_NAME=${MEMBER_CLUSTER_1_NAME:-"kurator-member1"}
 MEMBER_CLUSTER_2_NAME=${MEMBER_CLUSTER_2_NAME:-"kurator-member2"}
 HOST_IPADDRESS=${1:-}
+HOST_CONFIG=${HOST_CONFIG:-"host.yaml"}
+MEMBER1_CONFIG=${MEMBER1_CONFIG:-"member1.yaml"}
+MEMBER2_CONFIG=${MEMBER2_CONFIG:-"member2.yaml"}
 
 #prepare for kind cluster config
 TEMP_PATH=$(mktemp -d)
 echo -e "Preparing kind config in path: ${TEMP_PATH}"
 cp -rf "${KIND_CONFIGS_ROOT}"/*.yaml "${TEMP_PATH}"/
+cp -rf "${KIND_CONFIGS_WITH_WORKER_ROOT}"/*.yaml "${TEMP_PATH}"/
 
-#By default, the cluster created is a single-node cluster. If the command parameter “aw” or “add-worker” is added, the cluster to be created contains an additional worker node.
-if [ $# -gt 0 ] && [ $1 = "aw" -o $1 = "add-worker" ]; then
-    echo "Multi-node cluster will be created ."
-    util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/host-add-worker.yaml
-    util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1-add-worker.yaml
-    util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member2-add-worker.yaml
-else
-    echo "Single-node cluster will be created ."
-    util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/host.yaml
-    util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1.yaml
-    util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member2.yaml
-fi
+util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/${HOST_CONFIG}
+util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/${MEMBER1_CONFIG}
+util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/${MEMBER2_CONFIG}
 
 
 util::check_clusters_ready "${MAIN_KUBECONFIG}" "${HOST_CLUSTER_NAME}"
