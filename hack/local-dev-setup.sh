@@ -9,6 +9,7 @@ set -o pipefail
 # 1. used by developer to setup develop environment quickly.
 # 2. used by e2e testing to setup test environment automatically.
 REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
+KIND_CONFIGS_ROOT=${REPO_ROOT}/kind-configs
 source "${REPO_ROOT}"/util.sh
 
 METALLB_VERSION=${METALLB_VERSION:-"v0.10.2"}
@@ -22,13 +23,17 @@ HOST_CLUSTER_NAME=${HOST_CLUSTER_NAME:-"kurator-host"}
 MEMBER_CLUSTER_1_NAME=${MEMBER_CLUSTER_1_NAME:-"kurator-member1"}
 MEMBER_CLUSTER_2_NAME=${MEMBER_CLUSTER_2_NAME:-"kurator-member2"}
 HOST_IPADDRESS=${1:-}
-KIND_WITH_WORKER=${KIND_WITH_WORKER:-"kind-configs"}
-KIND_CONFIGS_ROOT=${REPO_ROOT}/${KIND_WITH_WORKER}
+ENABLE_KIND_WITH_WORKER=${ENABLE_KIND_WITH_WORKER:-"false"}
 
 #prepare for kind cluster config
 TEMP_PATH=$(mktemp -d)
 echo -e "Preparing kind config in path: ${TEMP_PATH}"
-cp -rf "${KIND_CONFIGS_ROOT}"/*.yaml "${TEMP_PATH}"/
+#When the Enable worker option is turned on, select to copy the configuration that contains the worker.
+if [ ${ENABLE_KIND_WITH_WORKER} = "true" ]; then
+    cp -rf ${REPO_ROOT}/kind-configs-with-worker/*.yaml "${TEMP_PATH}"/
+else
+    cp -rf "${KIND_CONFIGS_ROOT}"/*.yaml "${TEMP_PATH}"/
+fi
 
 util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/host.yaml
 util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1.yaml
