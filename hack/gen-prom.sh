@@ -9,9 +9,15 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 source "${REPO_ROOT}/hack/util.sh"
 
 # install prerequisite tools
-util::install_tools github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb latest
-util::install_tools github.com/brancz/gojsontoyaml latest
-util::install_tools github.com/google/go-jsonnet/cmd/jsonnet latest
+if ! [ -x "$(command -v jb)" ]; then
+    util::install_tools github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb v0.5.1
+fi
+if ! [ -x "$(command -v gojsontoyaml)" ]; then
+    util::install_tools github.com/brancz/gojsontoyaml v0.1.0
+fi
+if ! [ -x "$(command -v jsonnet)" ]; then
+util::install_tools github.com/google/go-jsonnet/cmd/jsonnet v0.18.0
+fi
 
 echo 'begin to generate prom manifests'
 echo "path: $1";
