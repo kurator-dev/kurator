@@ -1,0 +1,47 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/instance: thanos
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 2.32.1
+    prometheus: thanos
+    role: alert-rules
+  name: prometheus-thanos-thanos-sidecar-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: thanos-sidecar
+    rules:
+    - alert: ThanosSidecarPrometheusDown
+      annotations:
+        description: Thanos Sidecar {{$labels.instance}} in {{$labels.namespace}} cannot connect to Prometheus.
+        runbook_url: https://runbooks.prometheus-operator.dev/runbooks/prometheus/thanossidecarprometheusdown
+        summary: Thanos Sidecar cannot connect to Prometheus
+      expr: |
+        thanos_sidecar_prometheus_up{job="thanos-sidecar"} == 0
+      for: 5m
+      labels:
+        severity: critical
+    - alert: ThanosSidecarBucketOperationsFailed
+      annotations:
+        description: Thanos Sidecar {{$labels.instance}} in {{$labels.namespace}} bucket operations are failing
+        runbook_url: https://runbooks.prometheus-operator.dev/runbooks/prometheus/thanossidecarbucketoperationsfailed
+        summary: Thanos Sidecar bucket operations are failing
+      expr: |
+        sum by (namespace, job, instance) (rate(thanos_objstore_bucket_operation_failures_total{job="thanos-sidecar"}[5m])) > 0
+      for: 5m
+      labels:
+        severity: critical
+    - alert: ThanosSidecarUnhealthy
+      annotations:
+        description: Thanos Sidecar {{$labels.instance}} in {{$labels.namespace}} is unhealthy for more than {{$value}} seconds.
+        runbook_url: https://runbooks.prometheus-operator.dev/runbooks/prometheus/thanossidecarunhealthy
+        summary: Thanos Sidecar is unhealthy.
+      expr: |
+        time() - max by (namespace, job, instance) (thanos_sidecar_last_heartbeat_success_time_seconds{job="thanos-sidecar"}) >= 240
+      for: 5m
+      labels:
+        severity: critical

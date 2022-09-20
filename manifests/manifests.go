@@ -21,7 +21,7 @@ import (
 )
 
 // FS embeds the manifests
-//go:embed profiles/* profiles/prom/*
+//go:embed profiles/* profiles/prom/* profiles/prom-thanos/* profiles/thanos/*
 var FS embed.FS
 
 // BuiltinOrDir returns a FS for the provided directory. If no directory is passed, the compiled in
