@@ -50,10 +50,9 @@ const (
 	thanosSidecarELBSvcName = "thanos-sidecar-elb"
 	thanosQuerySvcName      = "thanos-query"
 
-	setupDir   = "profiles/prom-thanos/setup"
-	promDir    = "profiles/prom-thanos"
-	thanosDir  = "profiles/thanos"
-	promCRFile = promDir + "/prometheus-prometheus.yaml"
+	setupDir  = "profiles/prom-thanos/setup"
+	promDir   = "profiles/prom-thanos"
+	thanosDir = "profiles/thanos"
 )
 
 var (
@@ -306,7 +305,7 @@ func (p *Plugin) runInstallThanos(namespace string) error {
 		return fmt.Errorf("wait thanos resources timeout, %w", err)
 	}
 
-	logrus.Infof("Thanos resouce applied, start to discovery thanos sidecar remote")
+	logrus.Infof("Thanos resources applied, start to discovery thanos sidecar remote")
 	if err := host.UpdateResource(thanosSidecarRemoteService); err != nil {
 		return fmt.Errorf("create thanos sidecar remtoe service fail, %w", err)
 	}
