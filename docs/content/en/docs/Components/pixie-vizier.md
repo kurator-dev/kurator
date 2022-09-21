@@ -22,8 +22,7 @@ In this task, we will show you how to install Pixie vizier(work with Community C
 
 ## Prerequisites
 
-This task requires you have installed karmada and have joined at least one member cluster.
-Otherwise, setup karmada environment following [Install Karmada with Kurator](./karmada.md).
+{{% readfile "prerequisites-karmada.md" %}}
 
 ## Get an account from Community Cloud for Pixie
 
