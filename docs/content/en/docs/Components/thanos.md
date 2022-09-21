@@ -9,7 +9,7 @@ description: >
 
 [Thanos](https://thanos.io) provides a global query view, high availability, data backup with historical, cheap data access as its core features in a single binary.
 
-In this task, we will first show you how to install Thanos with kurator.
+In this task, we will show you how to install Thanos with kurator.
 
 ### Prerequisites
 
