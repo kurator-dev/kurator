@@ -59,6 +59,10 @@ func (p *IstioPlugin) runInstall() error {
 		return err
 	}
 
+	if err := p.overrideNamespaceIfNeeded(); err != nil {
+		return err
+	}
+
 	if err := p.installCrds(); err != nil {
 		return err
 	}
@@ -95,6 +99,36 @@ func (p *IstioPlugin) ensureNamespaces() error {
 
 	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), istioOperatorNamespace, false); err != nil {
 		return fmt.Errorf("failed to ersure namespace %s, %w", istioOperatorNamespace, err)
+	}
+
+	return nil
+}
+
+func (p *IstioPlugin) overrideNamespaceIfNeeded() error {
+	if p.IsFlat() {
+		return nil
+	}
+
+	for _, c := range p.allClusters() {
+		network := clusterNetwork{
+			IstioSystemNamespace: istioSystemNamespace,
+			ClusterName:          c,
+			Network:              networkName(c),
+		}
+
+		b, err := templateIstioSystemOverridePolicy(network)
+		if err != nil {
+			return fmt.Errorf("render istiosystem override policy fail, %w", err)
+		}
+
+		r, err := p.HelmClient().Build(bytes.NewBuffer(b), false)
+		if err != nil {
+			return fmt.Errorf("helm build istiosystem override policy fail, %w", err)
+		}
+
+		if _, err := p.HelmClient().Update(r, r, true); err != nil {
+			return fmt.Errorf("apply istiosystem override policy fail, %w", err)
+		}
 	}
 
 	return nil
@@ -443,16 +477,6 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 	return multiErr.ErrorOrNil()
 }
 
-func (p *IstioPlugin) networks() map[string][]string {
-	m := map[string][]string{}
-	for _, r := range p.allClusters() {
-		k := networkName(r)
-		m[k] = []string{r}
-	}
-
-	return m
-}
-
 func networkName(cluster string) string {
 	return fmt.Sprintf("%s-network", cluster)
 }
@@ -461,11 +485,10 @@ func (p *IstioPlugin) iopFiles(cluster string) ([]string, error) {
 	iopFiles := make([]string, 0, len(p.args.IopFiles)+1)
 	iopFiles = append(iopFiles, p.args.IopFiles...)
 	if !p.IsFlat() {
-		mesh := meshOptions{
+		mesh := clusterNetwork{
 			Network:     networkName(cluster), // TODO: support custom network, e.g. primary and remote1 in network1, remote2 in network2
 			MeshID:      "mesh1",              // TODO: make this configurable
 			ClusterName: cluster,
-			Networks:    p.networks(),
 		}
 
 		logrus.Debugf("mesh options: %+v", mesh)

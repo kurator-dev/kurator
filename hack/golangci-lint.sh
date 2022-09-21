@@ -11,7 +11,9 @@ GOLANGCI_LINT_VER="v1.42.1"
 cd "${REPO_ROOT}"
 source "hack/util.sh"
 
-util::install_tools ${GOLANGCI_LINT_PKG} ${GOLANGCI_LINT_VER}
+if ! [ -x "$(command -v golangci-lint)" ]; then
+  util::install_tools ${GOLANGCI_LINT_PKG} ${GOLANGCI_LINT_VER}
+fi
 
 if golangci-lint run -c $REPO_ROOT/common/config/.golangci.yml; then
   echo 'Congratulations!  All Go source files have passed staticcheck.'
