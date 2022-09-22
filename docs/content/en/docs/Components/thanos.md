@@ -20,7 +20,7 @@ In this task, we will show you how to install Thanos with kurator.
 Kurator provides a very simple command to install Thanos and add karmada-apiserver as the destination to deploy application to.
     
 - `--kubeconfig` and `--context` specifies the cluster where Karmada Apiserver, Kurator use Karmada to orchestrate Thanos application.
-- `--host-kubeconfig` and `--host-context` specifies the cluster where to deploy Thanos itself, it is the kurator host cluster that hold Thanos.
+- `--host-kubeconfig` and `--host-context` specifies the cluster where to deploy Thanos itself, it is the host cluster that hold Thanos.
 - `--object-store-config` specifies the object store configuration used by Thanos, more details can be found [here](https://prometheus-operator.dev/docs/operator/thanos/#configuring-thanos-object-storage).
 
 ```bash
