@@ -3,6 +3,7 @@
     "MD007": {
         "indent": 4
     },
+    "first-line-h1": false,
     "line-length": false,
     "no-hard-tabs": false,
     "whitespace": false
