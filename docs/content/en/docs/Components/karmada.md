@@ -11,7 +11,7 @@ The documentation uses `Ubuntu 20.04.4 LTS` as an example.
 
 ### Prerequisites
 
-Installing Karmada requires a kubernetes cluster. If you do not have a kubernetes cluster, you can choose any of the following methods to deploy the kubernetes cluster.
+Installing Karmada requires kubernetes clusters. setup clusters following [Setup kubernetes clusters](../../getting-started/quickstart/#setup-kubernetes-clusters)
 
 ### Deploy Karmada
 

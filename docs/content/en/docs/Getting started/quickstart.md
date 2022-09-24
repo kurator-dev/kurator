@@ -5,7 +5,7 @@ description: >
   The easest way to get start with Kurator.
 ---
 
-## Deploy kubernetes clusters using kurator's script
+## Setup kubernetes clusters
 
 Deploy a kubernetes cluster using kurator's scripts. This script will create three clusters for you, one is used to host Karmada control plane and the other two will be joined as member clusters.
 
