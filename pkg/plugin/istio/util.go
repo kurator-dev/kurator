@@ -30,8 +30,9 @@ import (
 )
 
 const (
-	eastEestTemplateFileName = "profiles/eastwest.tmpl.yaml"
-	exposeServicesFileName   = "profiles/expose-services.yaml"
+	eastEestTemplateFileName                           = "profiles/eastwest.tmpl.yaml"
+	istiosystemNamespaceOverridePolicyTemplateFileName = "profiles/istio-namespace-override.tmpl.yaml"
+	exposeServicesFileName                             = "profiles/expose-services.yaml"
 )
 
 func waitIngressgatewayReady(client *client.Client, opts *generic.Options, cluster string) error {
@@ -52,14 +53,7 @@ func exposeServicesFiles() (string, error) {
 	return string(out), nil
 }
 
-type meshOptions struct {
-	MeshID      string
-	ClusterName string
-	Network     string
-	Networks    map[string][]string
-}
-
-func templateEastWest(mesh meshOptions) ([]byte, error) {
+func templateEastWest(mesh clusterNetwork) ([]byte, error) {
 	fsys := manifests.BuiltinOrDir("")
 	gwTmpl, err := fs.ReadFile(fsys, eastEestTemplateFileName)
 	if err != nil {
@@ -82,4 +76,21 @@ func evaluate(text string, data interface{}) ([]byte, error) {
 	}
 
 	return b.Bytes(), nil
+}
+
+type clusterNetwork struct {
+	MeshID               string
+	IstioSystemNamespace string
+	ClusterName          string
+	Network              string
+}
+
+func templateIstioSystemOverridePolicy(network clusterNetwork) ([]byte, error) {
+	fsys := manifests.BuiltinOrDir("")
+	gwTmpl, err := fs.ReadFile(fsys, istiosystemNamespaceOverridePolicyTemplateFileName)
+	if err != nil {
+		return nil, err
+	}
+
+	return evaluate(string(gwTmpl), network)
 }

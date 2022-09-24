@@ -21,20 +21,17 @@ import (
 	"path"
 	"testing"
 
+	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	iopv1alpha1 "istio.io/istio/operator/pkg/apis/istio/v1alpha1"
 	"sigs.k8s.io/yaml"
 )
 
 func TestTemplateEastWest(t *testing.T) {
-	c := meshOptions{
+	c := clusterNetwork{
 		MeshID:      "mesh1",
 		ClusterName: "cluster1",
 		Network:     "network1",
-		Networks: map[string][]string{
-			"network1": {"cluster1"},
-			"network2": {"cluster2"},
-		},
 	}
 
 	out, err := templateEastWest(c)
@@ -46,6 +43,30 @@ func TestTemplateEastWest(t *testing.T) {
 	b, err := os.ReadFile(path.Join("testdata", "eastwest.yaml"))
 	assert.NoError(t, err)
 	expected := &iopv1alpha1.IstioOperator{}
+	err = yaml.Unmarshal(b, expected)
+	assert.NoError(t, err)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, got)
+}
+
+func TestTemplateNamespaceOverridePolicy(t *testing.T) {
+	c := clusterNetwork{
+		MeshID:               "mesh1",
+		ClusterName:          "cluster1",
+		IstioSystemNamespace: "istio-system",
+		Network:              "network1",
+	}
+
+	out, err := templateIstioSystemOverridePolicy(c)
+	assert.NoError(t, err)
+	got := &policyv1alpha1.ClusterOverridePolicy{}
+	err = yaml.Unmarshal(out, got)
+	assert.NoError(t, err)
+
+	b, err := os.ReadFile(path.Join("testdata", "istiosystem-overridepolicy.yaml"))
+	assert.NoError(t, err)
+	expected := &policyv1alpha1.ClusterOverridePolicy{}
 	err = yaml.Unmarshal(b, expected)
 	assert.NoError(t, err)
 

@@ -1,0 +1,19 @@
+apiVersion: policy.karmada.io/v1alpha1
+kind: ClusterOverridePolicy
+metadata:
+  name: {{.IstioSystemNamespace}}-{{.ClusterName}}
+spec:
+  resourceSelectors:
+    - apiVersion: v1
+      kind: Namespace
+      name: {{.IstioSystemNamespace}}
+  overrideRules:
+    - targetCluster:
+        clusterNames:
+          - {{.ClusterName}}
+      overriders:
+        plaintext:
+          - path: "/metadata/labels"
+            operator: add
+            value:
+              topology.istio.io/network: {{.Network}}

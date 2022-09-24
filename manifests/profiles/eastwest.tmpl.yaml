@@ -37,14 +37,3 @@ spec:
       multiCluster:
         clusterName: {{.ClusterName}}
       network: {{.Network}}
-      meshNetworks:
-        {{ range $key, $value := .Networks -}}
-        {{ $key }}:
-          endpoints:
-          {{ range slice $value -}}
-          - fromRegistry: {{ . }}
-          {{ end -}}
-          gateways:
-          - port: 15443
-            registryServiceName: istio-eastwestgateway.istio-system.svc.cluster.local
-        {{ end -}}
