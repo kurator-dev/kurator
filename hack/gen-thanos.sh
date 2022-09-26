@@ -3,31 +3,28 @@
 # This script uses arg $1 (name of *.jsonnet file to use) to generate the manifests/*.yaml files.
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+THANOS_OUT_PATH="${REPO_ROOT}/out/thanos"
+THANOS_MANIFESTS_PATH="${REPO_ROOT}/manifests/profiles/thanos"
+KUBE_THANOS_VER=${KUBE_THANOS_VER:-v0.26.0}
 
-source "${REPO_ROOT}/hack/util.sh"
-
-# install prerequisite tools
-if ! [ -x "$(command -v jb)" ]; then
-    util::install_tools github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb latest
-fi
-if ! [ -x "$(command -v gojsontoyaml)" ]; then
-    util::install_tools github.com/brancz/gojsontoyaml latest
-fi
-if ! [ -x "$(command -v jsonnet)" ]; then
-    util::install_tools github.com/google/go-jsonnet/cmd/jsonnet latest
-fi
+rm -rf ${THANOS_OUT_PATH}
+rm -rf ${THANOS_MANIFESTS_PATH}
+mkdir -p ${THANOS_MANIFESTS_PATH}
+mkdir -p ${THANOS_OUT_PATH}
+cp ${REPO_ROOT}/manifests/jsonnet/thanos/thanos.jsonnet ${THANOS_OUT_PATH}/thanos.jsonnet
 
 echo 'begin to generate prom manifests'
-echo "path: $1";
-echo "version: $2"
-echo "jsonnet file: $3"
+echo "path: ${THANOS_OUT_PATH}";
+echo "version: ${KUBE_THANOS_VER}"
 
-pushd $1
+pushd ${THANOS_OUT_PATH}
     jb init
-    jb install github.com/thanos-io/kube-thanos/jsonnet/kube-thanos@$2
+    jb install github.com/thanos-io/kube-thanos/jsonnet/kube-thanos@${KUBE_THANOS_VER}
     jb update
 
     cp ${REPO_ROOT}/hack/build-thanos.sh build.sh
 
-    bash build.sh $3
+    bash build.sh thanos.jsonnet
 popd
+
+cp -r ${THANOS_OUT_PATH}/manifests/* ${THANOS_MANIFESTS_PATH}
