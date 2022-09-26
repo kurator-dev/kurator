@@ -11,11 +11,16 @@ ifeq ($(GIT_DIFF), 1)
 endif
 
 BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
-OUT_PATH = out/$(GOOS)-$(GOARCH)
-PROM_OUT_PATH=out/prom
+OUT_BASE_PATH= out
+OUT_PATH = $(OUT_BASE_PATH)/$(GOOS)-$(GOARCH)
 KUBE_PROM_VER=v0.10.0
-KUBE_PROM_CFG_FILE=kube-prometheus.jsonnet
+KUBE_THANOS_VER=v0.26.0
+PROM_OUT_PATH=out/prom
+PROM_THANOS_OUT_PATH=out/prom-thanos
 PROM_MANIFESTS_PATH=manifests/profiles/prom/
+PROM_THANOS_MANIFESTS_PATH=manifests/profiles/prom-thanos/
+THANOS_OUT_PATH=out/thanos
+THANOS_MANIFESTS_PATH=manifests/profiles/thanos/
 
 LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
 			-X kurator.dev/kurator/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
@@ -61,12 +66,33 @@ golangci-lint:
 
 .PHONY: gen-prom
 gen-prom: clean
+	rm -rf ${PROM_OUT_PATH}
 	rm -rf ${PROM_MANIFESTS_PATH}
 	mkdir -p ${PROM_MANIFESTS_PATH}
 	mkdir -p ${PROM_OUT_PATH}
-	cp manifests/jsonnet/kube-prometheus.jsonnet ${PROM_OUT_PATH}
-	hack/gen-prom.sh ${PROM_OUT_PATH} ${KUBE_PROM_VER} ${KUBE_PROM_CFG_FILE}
+	cp manifests/jsonnet/prometheus/prometheus.jsonnet ${PROM_OUT_PATH}/kube-prometheus.jsonnet
+	hack/gen-prom.sh ${PROM_OUT_PATH} ${KUBE_PROM_VER} kube-prometheus.jsonnet
 	cp -r ${PROM_OUT_PATH}/manifests/* ${PROM_MANIFESTS_PATH}
+
+.PHONY: gen-prom-thanos
+gen-prom-thanos:
+	rm -rf ${PROM_THANOS_OUT_PATH}
+	rm -rf ${PROM_THANOS_MANIFESTS_PATH}
+	mkdir -p ${PROM_THANOS_MANIFESTS_PATH}
+	mkdir -p ${PROM_THANOS_OUT_PATH}
+	cp manifests/jsonnet/prometheus/thanos.jsonnet ${PROM_THANOS_OUT_PATH}/kube-prometheus.jsonnet
+	hack/gen-prom.sh ${PROM_THANOS_OUT_PATH} ${KUBE_PROM_VER} kube-prometheus.jsonnet
+	cp -r ${PROM_THANOS_OUT_PATH}/manifests/* ${PROM_THANOS_MANIFESTS_PATH}
+
+.PHONY: gen-thanos
+gen-thanos:
+	rm -rf ${THANOS_OUT_PATH}
+	rm -rf ${THANOS_MANIFESTS_PATH}
+	mkdir -p ${THANOS_MANIFESTS_PATH}
+	mkdir -p ${THANOS_OUT_PATH}
+	cp manifests/jsonnet/thanos/thanos.jsonnet ${THANOS_OUT_PATH}/thanos.jsonnet
+	hack/gen-thanos.sh ${THANOS_OUT_PATH} ${KUBE_THANOS_VER} thanos.jsonnet
+	cp -r ${THANOS_OUT_PATH}/manifests/* ${THANOS_MANIFESTS_PATH}
 
 .PHONY: test
 test: clean tidy
@@ -76,14 +102,16 @@ test: clean tidy
 clean:
 	go clean -testcache
 	go clean -cache
-	rm -rf $(OUT_PATH)
-	rm -rf $(PROM_OUT_PATH)
+	rm -rf $(OUT_BASE_PATH)
 
 .PHONY: gen
 gen: \
 	tidy \
 	fix-copyright \
-	gen-prom
+	gen-thanos \
+	gen-prom \
+	gen-prom-thanos \
+	gen-thanos
 
 .PHONY: gen-check
 gen-check: gen

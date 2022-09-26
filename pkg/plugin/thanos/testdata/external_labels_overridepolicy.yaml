@@ -1,0 +1,22 @@
+apiVersion: policy.karmada.io/v1alpha1
+kind: OverridePolicy
+metadata:
+  creationTimestamp: null
+  name: thanos-cluster1
+  namespace: monitoring
+spec:
+  overrideRules:
+  - overriders:
+      plaintext:
+      - operator: add
+        path: /spec/externalLabels
+        value:
+          cluster: cluster1
+    targetCluster:
+      clusterNames:
+      - cluster1
+  overriders: {}
+  resourceSelectors:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: Prometheus
+    name: thanos

@@ -17,6 +17,7 @@ limitations under the License.
 package client
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/yaml"
 )
 
 type Client struct {
@@ -83,6 +85,22 @@ func (c *Client) HelmClient() *helmclient.Client {
 
 func (c *Client) PromClient() promclient.Interface {
 	return c.prom
+}
+
+func (c *Client) UpdateResource(obj interface{}) error {
+	b, err := yaml.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	r, err := c.helm.Build(bytes.NewBuffer(b), false)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.helm.Update(r, r, true)
+
+	return err
 }
 
 // Copied from karmada, because we donot want to build the controller-runtime client.
