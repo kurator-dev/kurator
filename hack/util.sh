@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2154,SC2086,SC2016,SC2004
 set -o errexit
 set -o nounset
 set -o pipefail

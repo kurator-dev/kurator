@@ -21,8 +21,8 @@ find manifests -type f ! -name '*.yaml' -delete
 
 # The following script generates all components, mostly used for testing
 
-rm -rf ${MANIFESTS_PATH}
-mkdir -p ${MANIFESTS_PATH}
+rm -rf "${MANIFESTS_PATH}"
+mkdir -p "${MANIFESTS_PATH}"
 
-${JSONNET} -J vendor -m ${MANIFESTS_PATH} "${1-all.jsonnet}" | xargs -I{} sh -c "cat {} | ${GOJSONTOYAML} > {}.yaml; rm -f {}" -- {}
-find ${MANIFESTS_PATH} -type f ! -name '*.yaml' -delete
+${JSONNET} -J vendor -m "${MANIFESTS_PATH}" "${1-all.jsonnet}" | xargs -I{} sh -c "cat {} | ${GOJSONTOYAML} > {}.yaml; rm -f {}" -- {}
+find "${MANIFESTS_PATH}" -type f ! -name '*.yaml' -delete

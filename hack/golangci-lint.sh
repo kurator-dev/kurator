@@ -15,7 +15,7 @@ if ! [ -x "$(command -v golangci-lint)" ]; then
   util::install_tools ${GOLANGCI_LINT_PKG} ${GOLANGCI_LINT_VER}
 fi
 
-if golangci-lint run -c $REPO_ROOT/common/config/.golangci.yml; then
+if golangci-lint run -c "$REPO_ROOT/common/config/.golangci.yml"; then
   echo 'Congratulations!  All Go source files have passed staticcheck.'
 else
   echo # print one empty line, separate from warning messages.

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+
+# shellcheck disable=SC2086,SC1090
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -22,7 +24,6 @@ MEMBER_CLUSTER_KUBECONFIG=${MEMBER_CLUSTER_KUBECONFIG:-"${KUBECONFIG_PATH}/kurat
 HOST_CLUSTER_NAME=${HOST_CLUSTER_NAME:-"kurator-host"}
 MEMBER_CLUSTER_1_NAME=${MEMBER_CLUSTER_1_NAME:-"kurator-member1"}
 MEMBER_CLUSTER_2_NAME=${MEMBER_CLUSTER_2_NAME:-"kurator-member2"}
-HOST_IPADDRESS=${1:-}
 ENABLE_KIND_WITH_WORKER=${ENABLE_KIND_WITH_WORKER:-"false"}
 
 #prepare for kind cluster config
@@ -65,7 +66,7 @@ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VER
 
 echo "starting install metallb in member clusters"
 MEMBER_CLUSTERS=(${MEMBER_CLUSTER_1_NAME} ${MEMBER_CLUSTER_2_NAME})
-for c in ${MEMBER_CLUSTERS[@]}
+for c in "${MEMBER_CLUSTERS[@]}"
 do
   echo "install metallb in $c"
   kubectl create ns metallb-system --kubeconfig="${MEMBER_CLUSTER_KUBECONFIG}" --context="${c}"
