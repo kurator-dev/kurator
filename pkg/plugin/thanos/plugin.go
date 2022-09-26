@@ -168,6 +168,7 @@ func (p *Plugin) runInstallPrometheus() error {
 	if err != nil {
 		return err
 	}
+	s.Namespace = monitoringNamespace
 
 	if err := p.UpdateResource(s); err != nil {
 		return fmt.Errorf("create object store config for prometheus fail, %w", err)
@@ -270,6 +271,7 @@ func (p *Plugin) runInstallThanos(namespace string) error {
 	if err != nil {
 		return err
 	}
+	s.Namespace = namespace
 
 	if err := host.UpdateResource(s); err != nil {
 		return fmt.Errorf("create object store config fail, %w", err)
