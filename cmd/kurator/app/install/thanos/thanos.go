@@ -48,9 +48,9 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	}
 
 	f := cmd.PersistentFlags()
-	f.StringVar(&pluginArgs.HostKubeconfig, "host-kubeconfig", "/etc/karmada/karmada-host.config",
-		"path to kubeconfig file to deploy Thanos query and store, default to /etc/karmada/karmada-apiserver.config")
-	f.StringVar(&pluginArgs.HostContext, "host-context", "karmada", "name of the kubeconfig context to use")
+	f.StringVar(&pluginArgs.HostKubeconfig, "host-kubeconfig", "/root/.kube/kurator-host.config",
+		"path to kubeconfig file to deploy Thanos query and store, default to /root/.kube/kurator-host.config")
+	f.StringVar(&pluginArgs.HostContext, "host-context", "kurator-host", "name of the kubeconfig context to use")
 
 	f.StringVar(&pluginArgs.ObjectStoreConfig, "object-store-config", "", "path to the object store configuration file used by thanos, read more details here: https://prometheus-operator.dev/docs/operator/thanos/#configuring-thanos-object-storage")
 
