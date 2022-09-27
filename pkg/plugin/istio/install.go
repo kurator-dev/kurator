@@ -31,6 +31,7 @@ import (
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
 	"github.com/sirupsen/logrus"
 	"helm.sh/helm/v3/pkg/kube"
+	istiolabel "istio.io/api/label"
 	"istio.io/istio/operator/pkg/manifest"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -113,7 +114,7 @@ func (p *IstioPlugin) overrideNamespaceIfNeeded() error {
 		network := clusterNetwork{
 			IstioSystemNamespace: istioSystemNamespace,
 			ClusterName:          c,
-			Network:              networkName(c),
+			Network:              p.clusterNetwork(c),
 		}
 
 		b, err := templateIstioSystemOverridePolicy(network)
@@ -477,7 +478,22 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 	return multiErr.ErrorOrNil()
 }
 
+func (p *IstioPlugin) clusterNetwork(cluster string) string {
+	c, err := p.KarmadaClient().ClusterV1alpha1().Clusters().Get(context.TODO(), cluster, metav1.GetOptions{})
+	if err != nil {
+		// fallback to generated network
+		return networkName(cluster)
+	}
+
+	if n, ok := c.Labels[istiolabel.TopologyNetwork.Name]; ok {
+		return n
+	}
+
+	return networkName(cluster)
+}
+
 func networkName(cluster string) string {
+	logrus.Warnf("fallback to generate network name, cluster %s", cluster)
 	return fmt.Sprintf("%s-network", cluster)
 }
 
@@ -486,8 +502,8 @@ func (p *IstioPlugin) iopFiles(cluster string) ([]string, error) {
 	iopFiles = append(iopFiles, p.args.IopFiles...)
 	if !p.IsFlat() {
 		mesh := clusterNetwork{
-			Network:     networkName(cluster), // TODO: support custom network, e.g. primary and remote1 in network1, remote2 in network2
-			MeshID:      "mesh1",              // TODO: make this configurable
+			Network:     p.clusterNetwork(cluster),
+			MeshID:      "mesh1", // TODO: make this configurable
 			ClusterName: cluster,
 		}
 
