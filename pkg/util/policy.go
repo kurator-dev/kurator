@@ -17,16 +17,16 @@ limitations under the License.
 package util
 
 import (
-	"context"
 	"fmt"
 
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
-	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	"helm.sh/helm/v3/pkg/kube"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"kurator.dev/kurator/pkg/client"
 )
 
 // resource like Namespace will be propagated by default, do not apply in ResourceSelector
@@ -81,6 +81,10 @@ func generatePropagationPolicy(clusters []string, obj runtime.Object) (*policyv1
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy.karmada.io/v1alpha1",
+			Kind:       "PropagationPolicy",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      metaInfo.GetName(),
 			Namespace: metaInfo.GetNamespace(),
@@ -105,14 +109,14 @@ func generatePropagationPolicy(clusters []string, obj runtime.Object) (*policyv1
 	return pp, nil
 }
 
-func CreatePropagationPolicy(karmadaclient karmadaclientset.Interface, clusters []string, obj runtime.Object) error {
+func ApplyPropagationPolicy(c *client.Client, clusters []string, obj runtime.Object) error {
 	pp, err := generatePropagationPolicy(clusters, obj)
 	if err != nil {
 		return fmt.Errorf("failed to generator propagation policy %w", err)
 	}
-	if _, err := karmadaclient.PolicyV1alpha1().PropagationPolicies(pp.Namespace).
-		Create(context.TODO(), pp, metav1.CreateOptions{}); err != nil {
-		return err
+
+	if err := c.UpdateResource(pp); err != nil {
+		return fmt.Errorf("failed to apply propagation policy %w", err)
 	}
 	return nil
 }

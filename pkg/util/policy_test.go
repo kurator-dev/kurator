@@ -213,6 +213,10 @@ func TestGeneratePropagationPolicy(t *testing.T) {
 				},
 			},
 			expected: &policyv1alpha1.PropagationPolicy{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "policy.karmada.io/v1alpha1",
+					Kind:       "PropagationPolicy",
+				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "istio-remote-secret-fake",
 					Namespace: "istio-system",

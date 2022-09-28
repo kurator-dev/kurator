@@ -33,9 +33,11 @@ import (
 	"helm.sh/helm/v3/pkg/kube"
 	istiolabel "istio.io/api/label"
 	"istio.io/istio/operator/pkg/manifest"
+	"istio.io/istio/security/pkg/pki/ca"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/tools/clientcmd/api/latest"
 	"sigs.k8s.io/yaml"
@@ -137,34 +139,41 @@ func (p *IstioPlugin) overrideNamespaceIfNeeded() error {
 
 func (p *IstioPlugin) createIstioCacerts() error {
 	logrus.Infof("Begin to create istio cacerts")
+
+	nn := types.NamespacedName{
+		Namespace: istioOperatorNamespace,
+		Name:      ca.CASecret,
+	}
+
+	s, err := p.KubeClient().CoreV1().Secrets(nn.Namespace).Get(context.TODO(), nn.Name, metav1.GetOptions{})
+	if err == nil {
+		// skip create cacerts if exists
+		logrus.Infof("secret %s already exists, skipping create", nn)
+		// ensure PropagationPolicy
+		return util.ApplyPropagationPolicy(p.Client, p.allClusters(), s)
+	}
+
+	if !apierrors.IsNotFound(err) {
+		return fmt.Errorf("unexpect error when get secret %s, %w", nn, err)
+	}
+
 	var gen cert.Generator
 	if len(p.args.Cacerts) != 0 {
 		gen = cert.NewPluggedCert(p.args.Cacerts)
 	} else {
 		gen = cert.NewSelfSignedCert("cluster.local")
 	}
-	cacert, err := gen.Secret(istioSystemNamespace)
+	cacert, err := gen.Secret(nn.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to gen secret, %w", err)
 	}
 
-	_, err = p.KubeClient().CoreV1().Secrets(cacert.Namespace).Get(context.TODO(), cacert.Name, metav1.GetOptions{})
-	if err == nil {
-		// skip create cacerts if exists
-		logrus.Infof("secret %s/%s already exists, skipping create", cacert.Namespace, cacert.Name)
-		return nil
-	}
-
-	if !apierrors.IsNotFound(err) {
-		return fmt.Errorf("unexpect error when get secret %s/%s, %w", cacert.Namespace, cacert.Name, err)
-	}
-
 	if _, err := p.KubeClient().CoreV1().Secrets(cacert.Namespace).
 		Create(context.TODO(), cacert, metav1.CreateOptions{}); err != nil {
-		return fmt.Errorf("failed to create secret %s/%s, %w", cacert.Namespace, cacert.Name, err)
+		return fmt.Errorf("failed to create secret %s, %w", nn, err)
 	}
 
-	return util.CreatePropagationPolicy(p.KarmadaClient(), p.allClusters(), cacert)
+	return util.ApplyPropagationPolicy(p.Client, p.allClusters(), cacert)
 }
 
 func (p *IstioPlugin) installCrds() error {
@@ -202,17 +211,17 @@ func (p *IstioPlugin) installCrds() error {
 	}
 
 	if _, err := p.applyWithFilter(out, crdFilter); err != nil {
-		return err
+		return fmt.Errorf("apply ClusterPropagationPolicy for CRD fail, %w", err)
 	}
 
-	if err := p.createIstioCustomResourceClusterPropagationPolicy(); err != nil {
-		return nil
+	if err := p.applyPolicyForIstioCustomResource(); err != nil {
+		return fmt.Errorf("create ClusterPropagationPolicy for CRD fail, %w", err)
 	}
 
 	return nil
 }
 
-func (p *IstioPlugin) createIstioCustomResourceClusterPropagationPolicy() error {
+func (p *IstioPlugin) applyPolicyForIstioCustomResource() error {
 	crds, err := p.CrdClient().ApiextensionsV1().CustomResourceDefinitions().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to list crds, %w", err)
@@ -236,6 +245,10 @@ func (p *IstioPlugin) createIstioCustomResourceClusterPropagationPolicy() error 
 	}
 
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy.karmada.io/v1alpha1",
+			Kind:       "ClusterPropagationPolicy",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "istio-customresource-to-primary",
 		},
@@ -249,10 +262,7 @@ func (p *IstioPlugin) createIstioCustomResourceClusterPropagationPolicy() error 
 		},
 	}
 
-	_, err = p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().
-		Create(context.TODO(), cpp, metav1.CreateOptions{})
-
-	return err
+	return p.UpdateResource(cpp)
 }
 
 func (p *IstioPlugin) createIstioOperator() error {
@@ -266,6 +276,10 @@ func (p *IstioPlugin) createIstioOperator() error {
 
 	// create ClusterPropagationPolicy for istio-operator's ClusterRole/ClusterRoleBinding
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy.karmada.io/v1alpha1",
+			Kind:       "ClusterPropagationPolicy",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "istio-operator",
 		},
@@ -281,6 +295,10 @@ func (p *IstioPlugin) createIstioOperator() error {
 
 	// create PropagationPolicy for istio-operator's Deployment/ServiceAccount
 	pp := &policyv1alpha1.PropagationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy.karmada.io/v1alpha1",
+			Kind:       "PropagationPolicy",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "istio-operator",
 			Namespace: istioOperatorNamespace,
@@ -297,14 +315,12 @@ func (p *IstioPlugin) createIstioOperator() error {
 
 	util.AppendResourceSelector(cpp, pp, resources)
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().
-		Create(context.TODO(), cpp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(cpp); err != nil {
+		return fmt.Errorf("apply ClusterPropagationPolicy fail, %v", err)
 	}
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().PropagationPolicies(pp.Namespace).
-		Create(context.TODO(), pp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(pp); err != nil {
+		return fmt.Errorf("apply PropagationPolicy fail, %v", err)
 	}
 
 	return nil
@@ -380,7 +396,7 @@ func (p *IstioPlugin) createIstioElb() error {
 		return nil
 	}
 
-	istioElbSvc := &v1.Service{
+	istiodElbSvc := &v1.Service{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "Service",
@@ -405,12 +421,11 @@ func (p *IstioPlugin) createIstioElb() error {
 			Type:            v1.ServiceTypeLoadBalancer,
 		},
 	}
-	if _, err := p.KubeClient().CoreV1().
-		Services(istioSystemNamespace).Create(context.TODO(), istioElbSvc, metav1.CreateOptions{}); err != nil {
+	if err := p.UpdateResource(istiodElbSvc); err != nil {
 		return err
 	}
 
-	return util.CreatePropagationPolicy(p.KarmadaClient(), []string{p.args.Primary}, istioElbSvc)
+	return util.ApplyPropagationPolicy(p.Client, []string{p.args.Primary}, istiodElbSvc)
 }
 
 func (p *IstioPlugin) createPrimaryIstioOperator() error {
@@ -444,7 +459,7 @@ func (p *IstioPlugin) createPrimaryIstioOperator() error {
 		return fmt.Errorf("failed to create iop in primary cluster, %w", err)
 	}
 
-	return util.CreatePropagationPolicy(p.KarmadaClient(), []string{p.args.Primary}, iop)
+	return util.ApplyPropagationPolicy(p.Client, []string{p.args.Primary}, iop)
 }
 
 func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
@@ -529,12 +544,13 @@ func (p *IstioPlugin) createIstioRemoteSecret(remote string) error {
 	if err != nil {
 		return err
 	}
-	if _, err := p.KubeClient().CoreV1().Secrets(istioRemoteSecret.Namespace).Create(context.TODO(), istioRemoteSecret, metav1.CreateOptions{}); err != nil {
+
+	if err := p.UpdateResource(istioRemoteSecret); err != nil {
 		return fmt.Errorf("failed to create secret %s/%s, %w", istioRemoteSecret.Namespace, istioRemoteSecret.Name, err)
 	}
 
 	// create PropagationPolicy for Secret
-	return util.CreatePropagationPolicy(p.KarmadaClient(), []string{p.args.Primary}, istioRemoteSecret)
+	return util.ApplyPropagationPolicy(p.Client, []string{p.args.Primary}, istioRemoteSecret)
 }
 
 func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddress string) error {
@@ -569,7 +585,7 @@ func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddres
 		return fmt.Errorf("failed to create iop in cluster %s, %w", remote, err)
 	}
 
-	return util.CreatePropagationPolicy(p.KarmadaClient(), []string{remote}, iop)
+	return util.ApplyPropagationPolicy(p.Client, []string{remote}, iop)
 }
 
 func (p *IstioPlugin) remotePilotAddress() (string, error) {
@@ -630,7 +646,7 @@ func (p *IstioPlugin) applyWithFilter(manifest []byte, fn func(*resource.Info) b
 		resource = resource.Filter(fn)
 	}
 
-	if _, err := p.HelmClient().Create(resource); err != nil {
+	if _, err := p.HelmClient().Update(resource, resource, true); err != nil {
 		return resource, err
 	}
 
