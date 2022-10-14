@@ -51,7 +51,7 @@ const (
 	istioSystemNamespace       = "istio-system"
 	istioOperatorNamespace     = "istio-operator"
 	karmadaClusterNamespace    = "karmada-cluster"
-	defaultNetworkName         = "network-primary"
+	defaultNetworkName         = ""
 
 	iopCRDName = "istiooperators.install.istio.io"
 	crdKind    = "CustomResourceDefinition"
@@ -144,7 +144,7 @@ func (p *IstioPlugin) createIstioCacerts() error {
 	logrus.Infof("Begin to create istio cacerts")
 
 	s, err := p.KubeClient().CoreV1().Secrets(caSecret.Namespace).Get(context.TODO(), caSecret.Name, metav1.GetOptions{})
-	if err == nil {
+	if s != nil {
 		// skip create cacerts if exists
 		logrus.Infof("secret %s already exists, skipping create", caSecret)
 		// ensure PropagationPolicy
@@ -454,7 +454,7 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 func (p *IstioPlugin) clusterNetwork(cluster string) string {
 	c, err := p.KarmadaClient().ClusterV1alpha1().Clusters().Get(context.TODO(), cluster, metav1.GetOptions{})
 	if err != nil {
-		// fallback to primary cluster's network
+		// fallback to default network
 		logrus.Warnf("cluster %s fallback to default network", cluster)
 		return defaultNetworkName
 	}
@@ -463,14 +463,8 @@ func (p *IstioPlugin) clusterNetwork(cluster string) string {
 		return n
 	}
 
-	if cluster == p.args.Primary {
-		logrus.Infof("primary cluster %s use default network", cluster)
-		return defaultNetworkName
-	}
-
-	logrus.Infof("cluster %s use primary's network", cluster)
-	// return primary cluster's network if not sepcifies
-	return p.clusterNetwork(p.args.Primary)
+	logrus.Infof("cluster %s use default network", cluster)
+	return defaultNetworkName
 }
 
 func (p *IstioPlugin) iopFiles(cluster string) ([]string, error) {
