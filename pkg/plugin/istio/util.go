@@ -18,10 +18,14 @@ package istio
 
 import (
 	"bytes"
+	"context"
 	"io/fs"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	"kurator.dev/kurator/manifests"
 	"kurator.dev/kurator/pkg/client"
@@ -41,6 +45,22 @@ func waitIngressgatewayReady(client *client.Client, opts *generic.Options, clust
 
 func waitEastwestgatewayReady(client *client.Client, opts *generic.Options, cluster string) error {
 	return util.WaitMemberClusterPodReady(client, cluster, istioSystemNamespace, "app=istio-eastwestgateway", opts.WaitInterval, opts.WaitTimeout)
+}
+
+func waitSecertReady(client *client.Client, opts *generic.Options, cluster string, nn types.NamespacedName) error {
+	kubeClient, err := client.NewClusterClientSet(cluster)
+	if err != nil {
+		return err
+	}
+
+	return wait.PollImmediate(opts.WaitInterval, opts.WaitTimeout, func() (done bool, err error) {
+		secret, err := kubeClient.CoreV1().Secrets(nn.Namespace).Get(context.TODO(), nn.Name, metav1.GetOptions{})
+		if err != nil {
+			return false, nil
+		}
+
+		return secret != nil, nil
+	})
 }
 
 func exposeServicesFiles() (string, error) {

@@ -47,14 +47,21 @@ import (
 )
 
 const (
-	remotePilotAddressServiceName = "istiod-elb"
-	eastwestgatewayServiceName    = "istio-eastwestgateway"
-	istioSystemNamespace          = "istio-system"
-	istioOperatorNamespace        = "istio-operator"
-	karmadaClusterNamespace       = "karmada-cluster"
+	eastwestgatewayServiceName = "istio-eastwestgateway"
+	istioSystemNamespace       = "istio-system"
+	istioOperatorNamespace     = "istio-operator"
+	karmadaClusterNamespace    = "karmada-cluster"
+	defaultNetworkName         = ""
 
 	iopCRDName = "istiooperators.install.istio.io"
 	crdKind    = "CustomResourceDefinition"
+)
+
+var (
+	caSecret = types.NamespacedName{
+		Namespace: istioSystemNamespace,
+		Name:      ca.CASecret,
+	}
 )
 
 func (p *IstioPlugin) runInstall() error {
@@ -108,10 +115,6 @@ func (p *IstioPlugin) ensureNamespaces() error {
 }
 
 func (p *IstioPlugin) overrideNamespaceIfNeeded() error {
-	if p.IsFlat() {
-		return nil
-	}
-
 	for _, c := range p.allClusters() {
 		network := clusterNetwork{
 			IstioSystemNamespace: istioSystemNamespace,
@@ -140,21 +143,16 @@ func (p *IstioPlugin) overrideNamespaceIfNeeded() error {
 func (p *IstioPlugin) createIstioCacerts() error {
 	logrus.Infof("Begin to create istio cacerts")
 
-	nn := types.NamespacedName{
-		Namespace: istioOperatorNamespace,
-		Name:      ca.CASecret,
-	}
-
-	s, err := p.KubeClient().CoreV1().Secrets(nn.Namespace).Get(context.TODO(), nn.Name, metav1.GetOptions{})
-	if err == nil {
+	s, err := p.KubeClient().CoreV1().Secrets(caSecret.Namespace).Get(context.TODO(), caSecret.Name, metav1.GetOptions{})
+	if s != nil {
 		// skip create cacerts if exists
-		logrus.Infof("secret %s already exists, skipping create", nn)
+		logrus.Infof("secret %s already exists, skipping create", caSecret)
 		// ensure PropagationPolicy
 		return util.ApplyPropagationPolicy(p.Client, p.allClusters(), s)
 	}
 
 	if !apierrors.IsNotFound(err) {
-		return fmt.Errorf("unexpect error when get secret %s, %w", nn, err)
+		return fmt.Errorf("unexpect error when get secret %s, %w", caSecret, err)
 	}
 
 	var gen cert.Generator
@@ -163,14 +161,14 @@ func (p *IstioPlugin) createIstioCacerts() error {
 	} else {
 		gen = cert.NewSelfSignedCert("cluster.local")
 	}
-	cacert, err := gen.Secret(nn.Namespace)
+	cacert, err := gen.Secret(caSecret.Namespace)
 	if err != nil {
 		return fmt.Errorf("failed to gen secret, %w", err)
 	}
 
 	if _, err := p.KubeClient().CoreV1().Secrets(cacert.Namespace).
 		Create(context.TODO(), cacert, metav1.CreateOptions{}); err != nil {
-		return fmt.Errorf("failed to create secret %s, %w", nn, err)
+		return fmt.Errorf("failed to create secret %s, %w", caSecret, err)
 	}
 
 	return util.ApplyPropagationPolicy(p.Client, p.allClusters(), cacert)
@@ -348,9 +346,9 @@ func (p *IstioPlugin) createIstioOperatorDeployment() (kube.ResourceList, error)
 }
 
 func (p *IstioPlugin) installControlPlane() error {
-	logrus.Infof("Begin to install istio control-plane on %s", p.args.Primary)
-	if err := p.createIstioElb(); err != nil {
-		return err
+	logrus.Infof("Begin to install istio control-plane on cluster %s", p.args.Primary)
+	if err := waitSecertReady(p.Client, p.options, p.args.Primary, caSecret); err != nil {
+		return fmt.Errorf("wait cacert timeout, %w", err)
 	}
 
 	if err := p.createPrimaryIstioOperator(); err != nil {
@@ -368,11 +366,6 @@ func (p *IstioPlugin) installControlPlane() error {
 }
 
 func (p *IstioPlugin) exposeServices() error {
-	if p.IsFlat() {
-		logrus.Debugf("skipping expose services in flat network")
-		return nil
-	}
-
 	if err := waitEastwestgatewayReady(p.Client, p.options, p.args.Primary); err != nil {
 		return fmt.Errorf("istio-eastwestgateway in cluster %s not ready, err: %w", p.args.Primary, err)
 	}
@@ -390,44 +383,6 @@ func (p *IstioPlugin) exposeServices() error {
 	return nil
 }
 
-func (p *IstioPlugin) createIstioElb() error {
-	// in non-flat network mesh, we use eastwestgateway to export istiod
-	if !p.IsFlat() {
-		return nil
-	}
-
-	istiodElbSvc := &v1.Service{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Service",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      remotePilotAddressServiceName,
-			Namespace: istioSystemNamespace,
-		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{
-				{
-					Name:     "tcp",
-					Protocol: v1.ProtocolTCP,
-					Port:     15012,
-				},
-			},
-			Selector: map[string]string{
-				"app":   "istiod",
-				"istio": "pilot",
-			},
-			SessionAffinity: v1.ServiceAffinityNone,
-			Type:            v1.ServiceTypeLoadBalancer,
-		},
-	}
-	if err := p.UpdateResource(istiodElbSvc); err != nil {
-		return err
-	}
-
-	return util.ApplyPropagationPolicy(p.Client, []string{p.args.Primary}, istiodElbSvc)
-}
-
 func (p *IstioPlugin) createPrimaryIstioOperator() error {
 	setFlags := make([]string, 0, len(p.args.SetFlags)+3)
 	// override hub and tag before user's flags
@@ -437,7 +392,7 @@ func (p *IstioPlugin) createPrimaryIstioOperator() error {
 	// override clusterName to primary, control plane cluster always named `primary`
 	setFlags = append(setFlags, fmt.Sprintf("values.global.multiCluster.clusterName=%s", p.args.Primary))
 
-	// TODO: always use eastwest-gateway on Primary?
+	// always use eastwest-gateway
 	iopFiles, err := p.iopFiles(p.args.Primary)
 	if err != nil {
 		return fmt.Errorf("failed to get iop files: %w", err)
@@ -470,6 +425,9 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 
 	for _, remote := range p.args.Remotes {
 		logrus.Infof("Begin to install istio in cluster %s", remote)
+		if err := waitSecertReady(p.Client, p.options, remote, caSecret); err != nil {
+			return fmt.Errorf("wait cacert timeout, %w", err)
+		}
 
 		if err := p.createIstioRemoteSecret(remote); err != nil {
 			return nil
@@ -496,44 +454,40 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 func (p *IstioPlugin) clusterNetwork(cluster string) string {
 	c, err := p.KarmadaClient().ClusterV1alpha1().Clusters().Get(context.TODO(), cluster, metav1.GetOptions{})
 	if err != nil {
-		// fallback to generated network
-		return networkName(cluster)
+		// fallback to default network
+		logrus.Warnf("cluster %s fallback to default network", cluster)
+		return defaultNetworkName
 	}
 
 	if n, ok := c.Labels[istiolabel.TopologyNetwork.Name]; ok {
 		return n
 	}
 
-	return networkName(cluster)
-}
-
-func networkName(cluster string) string {
-	logrus.Warnf("fallback to generate network name, cluster %s", cluster)
-	return fmt.Sprintf("%s-network", cluster)
+	logrus.Infof("cluster %s use default network", cluster)
+	return defaultNetworkName
 }
 
 func (p *IstioPlugin) iopFiles(cluster string) ([]string, error) {
 	iopFiles := make([]string, 0, len(p.args.IopFiles)+1)
 	iopFiles = append(iopFiles, p.args.IopFiles...)
-	if !p.IsFlat() {
-		mesh := clusterNetwork{
-			Network:     p.clusterNetwork(cluster),
-			MeshID:      "mesh1", // TODO: make this configurable
-			ClusterName: cluster,
-		}
 
-		logrus.Debugf("mesh options: %+v", mesh)
-		b, err := templateEastWest(mesh)
-		if err != nil {
-			return nil, err
-		}
-		additionalIopFile := path.Join(p.options.HomeDir, fmt.Sprintf("eastwest-%s.yaml", cluster))
-		if err := os.WriteFile(additionalIopFile, b, 0o644); err != nil {
-			return nil, err
-		}
-
-		iopFiles = append(iopFiles, additionalIopFile)
+	mesh := clusterNetwork{
+		Network:     p.clusterNetwork(cluster),
+		MeshID:      "mesh1", // TODO: make this configurable
+		ClusterName: cluster,
 	}
+
+	logrus.Debugf("mesh options: %+v", mesh)
+	b, err := templateEastWest(mesh)
+	if err != nil {
+		return nil, err
+	}
+	additionalIopFile := path.Join(p.options.HomeDir, fmt.Sprintf("eastwest-%s.yaml", cluster))
+	if err := os.WriteFile(additionalIopFile, b, 0o644); err != nil {
+		return nil, err
+	}
+
+	iopFiles = append(iopFiles, additionalIopFile)
 
 	return iopFiles, nil
 }
@@ -589,25 +543,7 @@ func (p *IstioPlugin) createRemoteIstioOperator(remote string, remotePilotAddres
 }
 
 func (p *IstioPlugin) remotePilotAddress() (string, error) {
-	if !p.IsFlat() {
-		return p.eastwestgatewayAddress()
-	}
-
-	svc, err := p.KubeClient().CoreV1().Services(istioSystemNamespace).Get(context.TODO(), remotePilotAddressServiceName, metav1.GetOptions{})
-	if err != nil {
-		if apierrors.IsNotFound(err) {
-			return "", fmt.Errorf("service %s not found", remotePilotAddressServiceName)
-		}
-		return "", err
-	}
-
-	for _, ingress := range svc.Status.LoadBalancer.Ingress {
-		if ingress.Hostname == p.args.Primary {
-			return ingress.IP, nil
-		}
-	}
-
-	return "", fmt.Errorf("service %s status is pending", remotePilotAddressServiceName)
+	return p.eastwestgatewayAddress()
 }
 
 func (p *IstioPlugin) eastwestgatewayAddress() (string, error) {
