@@ -144,13 +144,15 @@ func (p *IstioPlugin) createIstioCacerts() error {
 	logrus.Infof("Begin to create istio cacerts")
 
 	s, err := p.KubeClient().CoreV1().Secrets(caSecret.Namespace).Get(context.TODO(), caSecret.Name, metav1.GetOptions{})
-	if s != nil {
+	if err == nil {
 		// skip create cacerts if exists
 		logrus.Infof("secret %s already exists, skipping create", caSecret)
 		// ensure PropagationPolicy
 		return util.ApplyPropagationPolicy(p.Client, p.allClusters(), s)
 	}
-
+	// err can be divided into two types:
+	// 1 Unexpect, return directly
+	// 2 IsNotFound, to create Istio Cacerts
 	if !apierrors.IsNotFound(err) {
 		return fmt.Errorf("unexpect error when get secret %s, %w", caSecret, err)
 	}
