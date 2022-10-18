@@ -81,7 +81,7 @@ func (p *SubmarinerPlugin) Execute(cmdArgs, environment []string) error {
 	}
 
 	if err := p.runInstall(); err != nil {
-		logrus.Infof("failed to install istio, %s", err)
+		logrus.Infof("failed to install submariner, %s", err)
 		return err
 	}
 
