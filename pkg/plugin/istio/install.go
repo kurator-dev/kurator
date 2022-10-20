@@ -148,6 +148,7 @@ func (p *IstioPlugin) createIstioCacerts() error {
 	if err == nil {
 		// skip create cacerts if exists
 		logrus.Infof("secret %s already exists, skipping create", caSecret)
+		s.TypeMeta = typemeta.Secret
 		// ensure PropagationPolicy
 		return util.ApplyPropagationPolicy(p.Client, p.allClusters(), s)
 	}
@@ -230,7 +231,8 @@ func (p *IstioPlugin) applyPolicyForIstioCustomResource() error {
 
 	resourceSelectors := make([]policyv1alpha1.ResourceSelector, 0)
 	for _, crd := range crds.Items {
-		if !strings.HasSuffix(crd.Name, "istio.io") {
+		// For some resources, they will be created in the subsequent createIstioOperator steps. In order to ensure the idempotency of the installation, some options are skipped here.
+		if !strings.HasSuffix(crd.Name, "istio.io") || crd.Name == iopCRDName {
 			continue
 		}
 
