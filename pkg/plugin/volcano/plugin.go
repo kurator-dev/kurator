@@ -18,7 +18,6 @@ package volcano
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"runtime"
 	"strings"
@@ -86,16 +85,16 @@ func (p *Plugin) Execute(cmdArgs, environment []string) error {
 		return nil
 	}
 
-	if _, err := p.HelmClient().Create(resourceList); err != nil {
+	if _, err := p.HelmClient().Update(resourceList, resourceList, false); err != nil {
 		return err
 	}
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().Create(context.TODO(), cpp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(cpp); err != nil {
+		return fmt.Errorf("apply ClusterPropagationPolicy fail, %v", err)
 	}
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().PropagationPolicies(pp.Namespace).Create(context.TODO(), pp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(pp); err != nil {
+		return fmt.Errorf("apply PropagationPolicy fail, %v", err)
 	}
 
 	return nil
@@ -105,6 +104,10 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 	*policyv1alpha1.ClusterPropagationPolicy,
 	*policyv1alpha1.PropagationPolicy) {
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy.karmada.io/v1alpha1",
+			Kind:       "ClusterPropagationPolicy",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "volcano",
 		},
@@ -119,6 +122,10 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "policy.karmada.io/v1alpha1",
+			Kind:       "PropagationPolicy",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "volcano",
 			Namespace: volcanoSystemNamespace,
