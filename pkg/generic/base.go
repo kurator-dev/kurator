@@ -17,7 +17,7 @@ limitations under the License.
 package generic
 
 import (
-	"io/ioutil"
+	"io"
 
 	"github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
@@ -25,7 +25,7 @@ import (
 
 func (g *Options) FlagSet(n string) *flag.FlagSet {
 	f := flag.NewFlagSet(n, flag.ExitOnError)
-	f.SetOutput(ioutil.Discard)
+	f.SetOutput(io.Discard)
 
 	// Set the default Usage to empty
 	f.Usage = func() {

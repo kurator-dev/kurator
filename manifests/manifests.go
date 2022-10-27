@@ -21,6 +21,7 @@ import (
 )
 
 // FS embeds the manifests
+//
 //go:embed profiles/* profiles/prom/* profiles/prom-thanos/* profiles/thanos/*
 var FS embed.FS
 
