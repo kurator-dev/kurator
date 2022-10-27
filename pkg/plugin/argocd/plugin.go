@@ -160,6 +160,10 @@ func (p *ArgoCDPlugin) installArgoCD() error {
 		}
 	}
 
+	if err := util.WaitNamespaceDelete(p.KubeClient(), namespace, p.options.WaitInterval, p.options.WaitTimeout); err != nil {
+		return fmt.Errorf("wait delete namespace %s err, %w", namespace, err)
+	}
+
 	if _, err := karmadautil.EnsureNamespaceExist(p.KubeClient(), namespace, false); err != nil {
 		return fmt.Errorf("failed to ensure namespace %s, %w", namespace, err)
 	}
