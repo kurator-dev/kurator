@@ -38,6 +38,7 @@ import (
 	"kurator.dev/kurator/manifests"
 	"kurator.dev/kurator/pkg/client"
 	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/typemeta"
 	"kurator.dev/kurator/pkg/util"
 )
 
@@ -174,10 +175,7 @@ func (p *Plugin) runInstallPrometheus() error {
 		return fmt.Errorf("create object store config for prometheus fail, %w", err)
 	}
 	objectStorePolicy := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "thanos-objstore-config",
 			Namespace: monitoringNamespace,
@@ -334,10 +332,7 @@ func (p *Plugin) exposeThanosSidecar() error {
 
 	// 2. create elb service for thanos
 	thanosSidecarElbSvc := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Service",
-		},
+		TypeMeta: typemeta.Service,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      thanosSidecarELBSvcName,
 			Namespace: monitoringNamespace,
@@ -365,10 +360,7 @@ func (p *Plugin) exposeThanosSidecar() error {
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      thanosSidecarElbSvc.Name,
 			Namespace: thanosSidecarElbSvc.Namespace,
@@ -401,10 +393,7 @@ func (p *Plugin) generatePropagationPolicies(resourceList helmclient.ResourceLis
 	*policyv1alpha1.ClusterPropagationPolicy,
 	*policyv1alpha1.PropagationPolicy) {
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "ClusterPropagationPolicy",
-		},
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: thanosPolicyName,
 		},
@@ -419,10 +408,7 @@ func (p *Plugin) generatePropagationPolicies(resourceList helmclient.ResourceLis
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      thanosPolicyName,
 			Namespace: monitoringNamespace,
