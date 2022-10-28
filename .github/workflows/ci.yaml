@@ -10,7 +10,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.19.x
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Run gen-check
@@ -24,7 +24,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.19.x
       - name: Install Node
         uses: actions/setup-node@v3
         with:
@@ -50,7 +50,7 @@ jobs:
       - name: install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.19.x
       - name: compile
         run: make build
   test:
@@ -62,6 +62,6 @@ jobs:
       - name: install Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.17.x
+          go-version: 1.19.x
       - name: make test
         run: make test
