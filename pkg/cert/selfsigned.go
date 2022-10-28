@@ -24,7 +24,8 @@ import (
 	"istio.io/istio/security/pkg/pki/ca"
 	"istio.io/istio/security/pkg/pki/util"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"kurator.dev/kurator/pkg/typemeta"
 )
 
 const (
@@ -77,10 +78,7 @@ func (cert *SelfSignedCert) Secret(namespace string) (*v1.Secret, error) {
 
 	secret := k8ssecret.BuildSecret("", ca.CASecret, namespace, nil, nil, nil, certBytes, privKeyBytes, istioCASecretType)
 	// we need TypeMeta to create PropagationPolicy
-	secret.TypeMeta = metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Secret",
-	}
+	secret.TypeMeta = typemeta.Secret
 
 	return secret, nil
 }

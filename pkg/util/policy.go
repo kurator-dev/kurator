@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"kurator.dev/kurator/pkg/client"
+	"kurator.dev/kurator/pkg/typemeta"
 )
 
 // resource like Namespace will be propagated by default, do not apply in ResourceSelector
@@ -81,10 +82,7 @@ func generatePropagationPolicy(clusters []string, obj runtime.Object) (*policyv1
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      metaInfo.GetName(),
 			Namespace: metaInfo.GetNamespace(),

@@ -34,6 +34,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"k8s.io/kubectl/pkg/scheme"
+
+	"kurator.dev/kurator/pkg/typemeta"
 )
 
 var (
@@ -74,10 +76,7 @@ func TestVolcano(t *testing.T) {
 
 	clusters := []string{"fake-cluster"}
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "ClusterPropagationPolicy",
-		},
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "volcano",
 		},
@@ -92,10 +91,7 @@ func TestVolcano(t *testing.T) {
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "volcano",
 			Namespace: "volcano-system",
@@ -138,10 +134,7 @@ func TestIstioOperator(t *testing.T) {
 
 	clusters := []string{"fake-cluster"}
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "ClusterPropagationPolicy",
-		},
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "istio-operator",
 		},
@@ -156,10 +149,7 @@ func TestIstioOperator(t *testing.T) {
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "istio-operator",
 			Namespace: "istio-operator",
@@ -203,20 +193,14 @@ func TestGeneratePropagationPolicy(t *testing.T) {
 		{
 			name: "",
 			obj: &corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "v1",
-					Kind:       "Secret",
-				},
+				TypeMeta: typemeta.Secret,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "istio-remote-secret-fake",
 					Namespace: "istio-system",
 				},
 			},
 			expected: &policyv1alpha1.PropagationPolicy{
-				TypeMeta: metav1.TypeMeta{
-					APIVersion: "policy.karmada.io/v1alpha1",
-					Kind:       "PropagationPolicy",
-				},
+				TypeMeta: typemeta.PropagationPolicy,
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "istio-remote-secret-fake",
 					Namespace: "istio-system",

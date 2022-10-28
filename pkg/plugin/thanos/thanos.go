@@ -24,13 +24,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"kurator.dev/kurator/pkg/typemeta"
 )
 
 var thanosSidecarRemoteService = &corev1.Service{
-	TypeMeta: metav1.TypeMeta{
-		APIVersion: "v1",
-		Kind:       "Service",
-	},
+	TypeMeta: typemeta.Service,
 	ObjectMeta: metav1.ObjectMeta{
 		Name:      "thanos-sidecar-remote",
 		Namespace: "thanos",
@@ -60,10 +59,7 @@ func objectStoreSecret(filename string) (*corev1.Secret, error) {
 
 	return &corev1.Secret{
 		// we need TypeMeta to create PropagationPolicy
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
+		TypeMeta: typemeta.Secret,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "thanos-objstore-config",
 		},
@@ -82,10 +78,7 @@ func thanosSidecarRemoteEndpoints(sidecarElbIPs []string) *corev1.Endpoints {
 	}
 
 	return &corev1.Endpoints{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Endpoints",
-		},
+		TypeMeta: typemeta.Endpoints,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "thanos-sidecar-remote",
 			Namespace: "thanos",
@@ -112,10 +105,7 @@ func thanosSidecarRemoteEndpoints(sidecarElbIPs []string) *corev1.Endpoints {
 
 func clusterOverridePolicy(cluster string) *policyv1alpha1.OverridePolicy {
 	return &policyv1alpha1.OverridePolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "OverridePolicy",
-		},
+		TypeMeta: typemeta.OverridePolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      prometheusCRName + "-" + cluster,
 			Namespace: monitoringNamespace,

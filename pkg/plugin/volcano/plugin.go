@@ -30,6 +30,7 @@ import (
 
 	"kurator.dev/kurator/pkg/client"
 	"kurator.dev/kurator/pkg/generic"
+	"kurator.dev/kurator/pkg/typemeta"
 	"kurator.dev/kurator/pkg/util"
 )
 
@@ -104,10 +105,7 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 	*policyv1alpha1.ClusterPropagationPolicy,
 	*policyv1alpha1.PropagationPolicy) {
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "ClusterPropagationPolicy",
-		},
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "volcano",
 		},
@@ -122,10 +120,7 @@ func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "volcano",
 			Namespace: volcanoSystemNamespace,

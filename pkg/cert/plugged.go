@@ -23,6 +23,8 @@ import (
 	"istio.io/istio/security/pkg/pki/ca"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"kurator.dev/kurator/pkg/typemeta"
 )
 
 const (
@@ -62,10 +64,7 @@ func (cert *PluggedCert) Secret(namespace string) (*v1.Secret, error) {
 
 	return &v1.Secret{
 		// we need TypeMeta to create PropagationPolicy
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
+		TypeMeta: typemeta.Secret,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cacertsSecretName,
 			Namespace: namespace,

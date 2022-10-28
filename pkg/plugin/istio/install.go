@@ -43,6 +43,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"kurator.dev/kurator/pkg/cert"
+	"kurator.dev/kurator/pkg/typemeta"
 	"kurator.dev/kurator/pkg/util"
 )
 
@@ -245,10 +246,7 @@ func (p *IstioPlugin) applyPolicyForIstioCustomResource() error {
 	}
 
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "ClusterPropagationPolicy",
-		},
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "istio-customresource-to-primary",
 		},
@@ -276,10 +274,7 @@ func (p *IstioPlugin) createIstioOperator() error {
 
 	// create ClusterPropagationPolicy for istio-operator's ClusterRole/ClusterRoleBinding
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "ClusterPropagationPolicy",
-		},
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "istio-operator",
 		},
@@ -295,10 +290,7 @@ func (p *IstioPlugin) createIstioOperator() error {
 
 	// create PropagationPolicy for istio-operator's Deployment/ServiceAccount
 	pp := &policyv1alpha1.PropagationPolicy{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "policy.karmada.io/v1alpha1",
-			Kind:       "PropagationPolicy",
-		},
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "istio-operator",
 			Namespace: istioOperatorNamespace,
@@ -619,10 +611,7 @@ func (p *IstioPlugin) generateRemoteSecret(remote string) (*v1.Secret, error) {
 	}
 
 	return &v1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
+		TypeMeta: typemeta.Secret,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("istio-remote-secret-%s", remote),
 			Namespace: istioSystemNamespace,
