@@ -22,6 +22,7 @@ import (
 	"time"
 
 	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
+	karmadautil "github.com/karmada-io/karmada/pkg/util"
 	v1 "k8s.io/api/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
@@ -161,4 +162,18 @@ func WaitServiceReady(client kubeclient.Interface, namespace, name string, inter
 		return nil, fmt.Errorf("%v with last err %v", err, lastErr)
 	}
 	return svc, nil
+}
+
+// WaitNamespaceDelete will wait until namespace is completely deleted
+func WaitNamespaceDelete(client kubeclient.Interface, namespace string, interval, timeout time.Duration) error {
+	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+		isExist, err := karmadautil.IsNamespaceExist(client, namespace)
+		if err != nil {
+			return true, err
+		}
+		if isExist {
+			return false, nil
+		}
+		return true, nil
+	})
 }
