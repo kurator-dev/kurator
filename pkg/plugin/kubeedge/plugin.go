@@ -18,7 +18,6 @@ package kubeedge
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -39,6 +38,7 @@ import (
 	"kurator.dev/kurator/pkg/client"
 	"kurator.dev/kurator/pkg/generic"
 	"kurator.dev/kurator/pkg/moreos"
+	"kurator.dev/kurator/pkg/typemeta"
 	"kurator.dev/kurator/pkg/util"
 )
 
@@ -125,6 +125,7 @@ func (p *KubeEdgePlugin) runInstall() error {
 
 	// create ClusterPropagationPolicy for kubeedge's cluster scoped resources
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
+		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: defaultPolicyName,
 		},
@@ -140,6 +141,7 @@ func (p *KubeEdgePlugin) runInstall() error {
 
 	// create PropagationPolicy for kubeedge's namespace scoped resources
 	pp := &policyv1alpha1.PropagationPolicy{
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      defaultPolicyName,
 			Namespace: p.installArgs.Namespace,
@@ -165,18 +167,16 @@ func (p *KubeEdgePlugin) runInstall() error {
 		return nil
 	}
 
-	if _, err := p.HelmClient().Create(resources); err != nil {
-		return fmt.Errorf("run helm create failed, %w", err)
+	if _, err := p.HelmClient().Update(resources, resources, true); err != nil {
+		return fmt.Errorf("run helm Update failed, %w", err)
 	}
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().ClusterPropagationPolicies().
-		Create(context.TODO(), cpp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(cpp); err != nil {
+		return fmt.Errorf("apply ClusterPropagationPolicy fail, %v", err)
 	}
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().PropagationPolicies(pp.Namespace).
-		Create(context.TODO(), pp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(pp); err != nil {
+		return fmt.Errorf("apply PropagationPolicy fail, %v", err)
 	}
 
 	return nil
@@ -269,6 +269,7 @@ func (p *KubeEdgePlugin) checkReady() error {
 
 func (p *KubeEdgePlugin) exposeCloudcore() error {
 	cloudcoreService := &corev1.Service{
+		TypeMeta: typemeta.Service,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: cloudcoreELBServiceName,
 		},
@@ -293,11 +294,12 @@ func (p *KubeEdgePlugin) exposeCloudcore() error {
 		},
 	}
 
-	if _, err := p.Client.KubeClient().CoreV1().Services(p.installArgs.Namespace).Create(context.TODO(), cloudcoreService, metav1.CreateOptions{}); err != nil {
+	if err := p.UpdateResource(cloudcoreService); err != nil {
 		return fmt.Errorf("expose cloudcore fail, %w", err)
 	}
 
 	pp := &policyv1alpha1.PropagationPolicy{
+		TypeMeta: typemeta.PropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cloudcoreELBServiceName,
 			Namespace: p.installArgs.Namespace,
@@ -319,9 +321,8 @@ func (p *KubeEdgePlugin) exposeCloudcore() error {
 		},
 	}
 
-	if _, err := p.KarmadaClient().PolicyV1alpha1().PropagationPolicies(pp.Namespace).
-		Create(context.TODO(), pp, metav1.CreateOptions{}); err != nil {
-		return err
+	if err := p.UpdateResource(pp); err != nil {
+		return fmt.Errorf("apply PropagationPolicy fail, %v", err)
 	}
 
 	return nil
