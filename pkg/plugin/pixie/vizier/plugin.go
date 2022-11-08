@@ -164,7 +164,7 @@ func (p *Plugin) applyCRDs(helmClient helmclient.Interface) (helmclient.Resource
 		return nil, fmt.Errorf("failed to build crds: %w", err)
 	}
 
-	if _, err := helmClient.Create(r); err != nil {
+	if _, err := helmClient.Update(r, r, true); err != nil {
 		return r, err
 	}
 
@@ -222,7 +222,7 @@ func (p *Plugin) applyTemplates(helmClient helmclient.Interface, cluster string)
 		return r.Mapping.GroupVersionKind.Kind != crdKind
 	})
 
-	if _, err := helmClient.Create(r); err != nil {
+	if _, err := helmClient.Update(r, r, true); err != nil {
 		return r, err
 	}
 
