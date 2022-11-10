@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  hub: ghcr.io/kurator-dev
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+logging:
+  level: 0
+
+feautreGates: EKS=true,EKSEnableIAM=false,EKSAllowAddRoles=false,EKSFargate=false,MachinePool=false,EventBridgeInstanceState=false,AutoControllerIdentityCreator=true,BootstrapFormatIgnition=false,ExternalResourceGC=false
+
+aws:
+  # AWS_BASE64ENCODED_CREDENTIALS
+  credentials: ""

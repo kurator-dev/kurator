@@ -1,0 +1,204 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
+    controller-gen.kubebuilder.io/version: v0.7.1-0.20211110210727-ab52f76cc7d1
+  labels:
+    cluster.x-k8s.io/provider: infrastructure-aws
+    cluster.x-k8s.io/v1alpha3: v1alpha3
+    cluster.x-k8s.io/v1alpha4: v1alpha4
+    cluster.x-k8s.io/v1beta1: v1beta1
+  name: eksconfigtemplates.bootstrap.cluster.x-k8s.io
+spec:
+  conversion:
+    strategy: Webhook
+    webhook:
+      clientConfig:
+        caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUQ0ekNDQXN1Z0F3SUJBZ0lVQ3lxYVFvUktQM1ZtVk52Q0hTazM1UDBnQW5Vd0RRWUpLb1pJaHZjTkFRRUwKQlFBd1hERUxNQWtHQTFVRUJoTUNlSGd4Q2pBSUJnTlZCQWdNQVhneENqQUlCZ05WQkFjTUFYZ3hDakFJQmdOVgpCQW9NQVhneENqQUlCZ05WQkFzTUFYZ3hDekFKQmdOVkJBTU1BbU5oTVJBd0RnWUpLb1pJaHZjTkFRa0JGZ0Y0Ck1CNFhEVEl5TVRFeE1qQTNORFV3TUZvWERUSTNNVEV4TVRBM05EVXdNRm93UmpFWE1CVUdBMVVFQ2hNT2MzbHoKZEdWdE9tMWhjM1JsY25NeEt6QXBCZ05WQkFNTUlpb3VhM1Z5WVhSdmNpMXplWE4wWlcwdWMzWmpMbU5zZFhOMApaWEl1Ykc5allXd3dnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdBd2dnRUtBb0lCQVFDYThhYk1IVklNCkkxNFp4SDUraHc4SlIwSEVucmlxV0RPMTdTd0hoY21VRHc4emd5d1hwNGdjdTA0SDB6cUFYcTZvNU9hd1lJbFkKSjVsVGloMnBhaGV2K0N5VDhka0pPSURTcE5uMThaZnl2UTkvYVZDdDhiMkJCMTJQcHVwSU1PWEV0dXJ3TFpmMgpCMVlYdzBPQkNJVXVydE96MW9zSlRjZUw1dlUvdkFyNVUvQzN6YVVITFlXTUlQY2tkR2U0dk1FbkdqSjhxUEg0CkxyTUpiZkFnUmZuNmJTQVJQNE01SHYrOVFNTnZjVTY3eWhUcEl0KzlHcU9seG9hbjMzb1J6NnNWeFMwWkFybnEKVm1vWmVZVWJobFhFek5HeXlMQ1UxeWQyY2d0aG1jR1lmb0NwTjFwYW81MUdVWlp5MnRYYWRia3Iraitmdjh0ZQpMOVJrVHgzdzZXaVJBZ01CQUFHamdiSXdnYTh3RGdZRFZSMFBBUUgvQkFRREFnV2dNQjBHQTFVZEpRUVdNQlFHCkNDc0dBUVVGQndNQ0JnZ3JCZ0VGQlFjREFUQU1CZ05WSFJNQkFmOEVBakFBTUIwR0ExVWREZ1FXQkJTYXNuK2cKUEtsdnM2RE9KS2FoWWgydFpyRDlOREFmQmdOVkhTTUVHREFXZ0JTeFBxQWovZXNLV2lpemY5c3EwS3Fxd0hsQQpEekF3QmdOVkhSRUVLVEFuZ2hRcUxtdDFjbUYwYjNJdGMzbHpkR1Z0TG5OMlk0SUpiRzlqWVd4b2IzTjBod1IvCkFBQUJNQTBHQ1NxR1NJYjNEUUVCQ3dVQUE0SUJBUUIydWNuWlBKV1h5WGVkSDBYdEZreHpoTlhUeU0zdkttREEKSWk4TDViZmNVelh4VUVqb1B5aldYRVR0QVNtbTBNS3NUdTdDK3ptalM4QVNOUWZvRjdVcFM0bGNpakc5TXY0RAp1WEdNZnlJTU1hcUUrRWJFR2NJdWVKMEZBMjVZT2tDdzFza1BFVkdVTERZZENVWE1wMDZ1R2ZsR0hiL0JPMm4rCmMvbk5ZdDR4RmtySEhKaUNZM3FXQkhhN0FLVXAxZHU1bnN6Mm4yK3E5WkN0Nmp3YThKaC9zUlZDZFlDNC9tWVkKTWc5VkFjMDZlcTA2dmFWY1pxZU5UbnR1TGFVY3R2KzkvL2NSTzFncS9wbEFFZ015R2V3YUxYWHptcGNlWnV1RwpmbTlzRDdXeHltSlpXaGdEaFAvUmpwZm1rcHNFaGNUcm1leHJFbTJEZ01QVDVwdWhuQmQwCi0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+        service:
+          name: kurator-webhook-service
+          namespace: {{ .Release.Namespace }}
+          path: /convert
+      conversionReviewVersions:
+      - v1
+      - v1beta1
+  group: bootstrap.cluster.x-k8s.io
+  names:
+    categories:
+    - cluster-api
+    kind: EKSConfigTemplate
+    listKind: EKSConfigTemplateList
+    plural: eksconfigtemplates
+    shortNames:
+    - eksct
+    singular: eksconfigtemplate
+  scope: Namespaced
+  versions:
+  - name: v1alpha3
+    schema:
+      openAPIV3Schema:
+        description: EKSConfigTemplate is the Schema for the eksconfigtemplates API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: EKSConfigTemplateSpec defines the desired state of EKSConfigTemplate
+            properties:
+              template:
+                description: EKSConfigTemplateResource defines the Template structure
+                properties:
+                  spec:
+                    description: EKSConfigSpec defines the desired state of EKSConfig
+                    properties:
+                      kubeletExtraArgs:
+                        additionalProperties:
+                          type: string
+                        description: Passes the kubelet args into the EKS bootstrap
+                          script
+                        type: object
+                    type: object
+                type: object
+            required:
+            - template
+            type: object
+        type: object
+    served: true
+    storage: false
+  - name: v1alpha4
+    schema:
+      openAPIV3Schema:
+        description: EKSConfigTemplate is the Schema for the eksconfigtemplates API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: EKSConfigTemplateSpec defines the desired state of EKSConfigTemplate
+            properties:
+              template:
+                description: EKSConfigTemplateResource defines the Template structure
+                properties:
+                  spec:
+                    description: EKSConfigSpec defines the desired state of EKSConfig
+                    properties:
+                      kubeletExtraArgs:
+                        additionalProperties:
+                          type: string
+                        description: Passes the kubelet args into the EKS bootstrap
+                          script
+                        type: object
+                    type: object
+                type: object
+            required:
+            - template
+            type: object
+        type: object
+    served: true
+    storage: false
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: EKSConfigTemplate is the Amazon EKS Bootstrap Configuration Template
+          API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: EKSConfigTemplateSpec defines the desired state of templated
+              EKSConfig Amazon EKS Bootstrap Configuration resources.
+            properties:
+              template:
+                description: EKSConfigTemplateResource defines the Template structure.
+                properties:
+                  spec:
+                    description: EKSConfigSpec defines the desired state of Amazon
+                      EKS Bootstrap Configuration.
+                    properties:
+                      apiRetryAttempts:
+                        description: APIRetryAttempts is the number of retry attempts
+                          for AWS API call.
+                        type: integer
+                      containerRuntime:
+                        description: ContainerRuntime specify the container runtime
+                          to use when bootstrapping EKS.
+                        type: string
+                      dnsClusterIP:
+                        description: DNSClusterIP overrides the IP address to use
+                          for DNS queries within the cluster.
+                        type: string
+                      dockerConfigJson:
+                        description: DockerConfigJson is used for the contents of
+                          the /etc/docker/daemon.json file. Useful if you want a custom
+                          config differing from the default one in the AMI. This is
+                          expected to be a json string.
+                        type: string
+                      kubeletExtraArgs:
+                        additionalProperties:
+                          type: string
+                        description: KubeletExtraArgs passes the specified kubelet
+                          args into the Amazon EKS machine bootstrap script
+                        type: object
+                      pauseContainer:
+                        description: PauseContainer allows customization of the pause
+                          container to use.
+                        properties:
+                          accountNumber:
+                            description: AccountNumber is the AWS account number to
+                              pull the pause container from.
+                            type: string
+                          version:
+                            description: Version is the tag of the pause container
+                              to use.
+                            type: string
+                        required:
+                        - accountNumber
+                        - version
+                        type: object
+                      useMaxPods:
+                        description: UseMaxPods  sets --max-pods for the kubelet when
+                          true.
+                        type: boolean
+                    type: object
+                type: object
+            required:
+            - template
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

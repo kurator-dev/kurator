@@ -7,6 +7,7 @@ replace sigs.k8s.io/cluster-api => sigs.k8s.io/cluster-api v1.1.5
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/bramvdbogaerde/go-scp v1.2.0
+	github.com/cert-manager/cert-manager v1.10.0
 	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
@@ -44,7 +45,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/logging v1.5.0 // indirect
 	cloud.google.com/go/longrunning v0.1.1 // indirect
-	github.com/Azure/azure-sdk-for-go v66.0.0+incompatible // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.28 // indirect
@@ -62,7 +62,6 @@ require (
 	github.com/alessio/shellescape v1.4.1 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220418222510-f25a4f6275ed // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
-	github.com/armon/go-metrics v0.3.9 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/amazon-vpc-cni-k8s v1.11.4 // indirect
 	github.com/aws/aws-sdk-go v1.44.105 // indirect
@@ -80,7 +79,6 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
-	github.com/digitalocean/godo v1.86.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.10.3-0.20221102231857-7c4facc13f86 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.8 // indirect
@@ -118,9 +116,6 @@ require (
 	github.com/grafana/regexp v0.0.0-20220304095617-2e8d9baf4ac2 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-hclog v1.2.0 // indirect
-	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect

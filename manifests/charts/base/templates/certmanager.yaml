@@ -1,0 +1,23 @@
+{{ if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kurator-serving-cert
+  namespace: {{ .Release.Namespace }}
+spec:
+  dnsNames:
+  - kurator-webhook-service.{{ .Release.Namespace }}.svc
+  - kurator-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: kurator-selfsigned-issuer
+  secretName: kurator-webhook-service-cert
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: kurator-selfsigned-issuer
+  namespace: {{ .Release.Namespace }}
+spec:
+  selfSigned: {}
+{{ end }}

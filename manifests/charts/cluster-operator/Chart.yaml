@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cluster-operator
+description: A Helm chart for kurator cluster operator
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
