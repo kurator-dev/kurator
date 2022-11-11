@@ -18,23 +18,37 @@ LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
 			-X kurator.dev/kurator/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
 			-X kurator.dev/kurator/pkg/version.gitTreeState=$(GIT_TREESTATE) \
 			-X kurator.dev/kurator/pkg/version.buildDate=$(BUILD_DATE)"
+GO_BUILD=CGO_ENABLED=0 GOOS=$(GOOS) go build -ldflags $(LDFLAGS)
+DOCKER_BUILD=docker build --build-arg BASE_VERSION=bionic --build-arg BASE_IMAGE=ubuntu
 
 FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor \) -prune -o -type f
 XARGS = xargs -0 -r
 
+IMAGE_HUB ?= ghcr.io/kurator-dev
+IMAGE_TAG ?= latest
+
 .PHONY: build
-build: tidy kurator
+build: clean tidy kurator cluster-operator
 
 .PHONY: tidy
 tidy:
 	go mod tidy -compat=1.17
 
 .PHONY: kurator
-kurator: clean
-	CGO_ENABLED=0 GOOS=$(GOOS) go build \
-		-ldflags $(LDFLAGS) \
-		-o $(OUT_PATH)/kurator \
-		cmd/kurator/main.go
+kurator:
+	$(GO_BUILD) -o $(OUT_PATH)/kurator cmd/kurator/main.go
+
+.PHONY: cluster-operator
+cluster-operator:
+	$(GO_BUILD) -o $(OUT_PATH)/cluster-operator cmd/cluster-operator/main.go
+
+.PHONY: docker
+docker: docker.cluster-operator
+
+.PHONY: docker.cluster-operator
+docker.cluster-operator: cluster-operator
+	cp ./cmd/cluster-operator/Dockerfile $(OUT_PATH)/
+	cd $(OUT_PATH)/ && $(DOCKER_BUILD) -t ${IMAGE_HUB}/cluster-operator:${IMAGE_TAG} .
 
 .PHONY: lint
 lint: golangci-lint lint-copyright lint-markdown lint-shellcheck
@@ -86,7 +100,7 @@ clean:
 	rm -rf $(OUT_BASE_PATH)
 
 .PHONY: gen
-gen: \
+gen: clean \
 	tidy \
 	fix-copyright \
 	gen-thanos \
