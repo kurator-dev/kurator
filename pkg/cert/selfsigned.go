@@ -76,7 +76,7 @@ func (cert *SelfSignedCert) Secret(namespace string) (*v1.Secret, error) {
 
 	certBytes, privKeyBytes, _, _ := keyCertBundle.GetAllPem()
 
-	secret := k8ssecret.BuildSecret("", ca.CASecret, namespace, nil, nil, nil, certBytes, privKeyBytes, istioCASecretType)
+	secret := k8ssecret.BuildSecret(ca.CASecret, namespace, nil, nil, nil, certBytes, privKeyBytes, istioCASecretType)
 	// we need TypeMeta to create PropagationPolicy
 	secret.TypeMeta = typemeta.Secret
 
