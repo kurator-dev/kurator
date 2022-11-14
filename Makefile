@@ -101,6 +101,7 @@ clean:
 
 .PHONY: gen
 gen: clean \
+    init-gen \
 	tidy \
 	fix-copyright \
 	gen-thanos \
