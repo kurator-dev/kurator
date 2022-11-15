@@ -31,11 +31,15 @@ require (
 	k8s.io/apimachinery v0.25.3
 	k8s.io/cli-runtime v0.25.3
 	k8s.io/client-go v0.25.3
+	k8s.io/code-generator v0.25.2
 	k8s.io/klog/v2 v2.80.1
 	k8s.io/kubectl v0.25.3
 	sigs.k8s.io/cluster-api v1.2.2
 	sigs.k8s.io/cluster-api-provider-aws v1.5.1
 	sigs.k8s.io/controller-runtime v0.13.0
+	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220706151251-15154aaa6767
+	sigs.k8s.io/controller-tools v0.10.0
+	sigs.k8s.io/kustomize/kustomize/v4 v4.5.7
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -63,6 +67,7 @@ require (
 	github.com/antlr/antlr4/runtime/Go/antlr v0.0.0-20220418222510-f25a4f6275ed // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
+	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/aws/amazon-vpc-cni-k8s v1.11.4 // indirect
 	github.com/aws/aws-sdk-go v1.44.105 // indirect
 	github.com/awslabs/goformation/v4 v4.19.5 // indirect
@@ -94,6 +99,7 @@ require (
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/zapr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
@@ -141,6 +147,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
@@ -149,6 +156,7 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/gomega v1.23.0 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -161,6 +169,7 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/vincent-petithory/dataurl v1.0.0 // indirect
@@ -176,6 +185,7 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/exp v0.0.0-20221031165847-c99f073a8326 // indirect
+	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/oauth2 v0.1.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
@@ -183,6 +193,7 @@ require (
 	golang.org/x/term v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/api v0.101.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
@@ -197,12 +208,14 @@ require (
 	k8s.io/apiserver v0.25.3 // indirect
 	k8s.io/cluster-bootstrap v0.24.0 // indirect
 	k8s.io/component-base v0.25.3 // indirect
+	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221012122500-cfd413dd9e85 // indirect
 	sigs.k8s.io/aws-iam-authenticator v0.5.9 // indirect
 	sigs.k8s.io/gateway-api v0.5.1-0.20221021174151-21bba43681b3 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
+	sigs.k8s.io/kustomize/cmd/config v0.10.9 // indirect
 	sigs.k8s.io/kustomize/kyaml v0.13.9 // indirect
 	sigs.k8s.io/mcs-api v0.1.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
