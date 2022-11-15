@@ -27,6 +27,8 @@ XARGS = xargs -0 -r
 IMAGE_HUB ?= ghcr.io/kurator-dev
 IMAGE_TAG ?= latest
 
+HELM_CHART_VERSION ?= 0.1.0
+
 .PHONY: build
 build: clean tidy kurator cluster-operator
 
@@ -89,6 +91,14 @@ gen-prom-thanos: init-gen
 gen-thanos: init-gen
 	hack/gen-thanos.sh
 
+.PHONY: gen-thanos
+sync-crds:
+	hack/sync-crds.sh
+
+.PHONY: gen-chart
+gen-chart: sync-crds
+	HELM_CHART_VERSION=$(HELM_CHART_VERSION) hack/gen-chart.sh
+
 .PHONY: test
 test: clean tidy
 	go test ./...
@@ -107,7 +117,8 @@ gen: clean \
 	gen-thanos \
 	gen-prom \
 	gen-prom-thanos \
-	gen-thanos
+	gen-thanos \
+	gen-chart
 
 .PHONY: gen-check
 gen-check: gen
