@@ -1,7 +1,7 @@
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 SOURCES := $(shell find . -type f  -name '*.go')
-
+CRD_PATH ?= "manifests/charts/base/templates"
 GIT_VERSION ?= $(shell git describe --tags --dirty --always)
 GIT_COMMIT_HASH ?= $(shell git rev-parse HEAD)
 GIT_TREESTATE = "clean"
@@ -28,6 +28,18 @@ IMAGE_HUB ?= ghcr.io/kurator-dev
 IMAGE_TAG ?= latest
 
 HELM_CHART_VERSION ?= 0.1.0
+
+# Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
+ifeq (,$(shell go env GOBIN))
+GOBIN=$(shell go env GOPATH)/bin
+else
+GOBIN=$(shell go env GOBIN)
+endif
+
+CONTROLLER_GEN = $(GOBIN)/controller-gen
+
+IMAGE_HUB ?= ghcr.io/kurator-dev
+IMAGE_TAG ?= latest
 
 .PHONY: build
 build: clean tidy kurator cluster-operator
@@ -127,3 +139,16 @@ gen-check: gen
 .PHONY: serve
 serve:
 	hack/local-docsite-up.sh
+
+PHONY: init-codegen
+init-codegen:
+	hack/init-codegen.sh
+
+# make it configurable, read CRD_PATH from env, default path is manifests/charts/base/templates
+.PHONY: gen-crd
+gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=$(CRD_PATH)
+
+.PHONY: generate
+generate: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	hack/update-codegen.sh
