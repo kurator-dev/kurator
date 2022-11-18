@@ -147,7 +147,7 @@ init-codegen:
 # make it configurable, read CRD_PATH from env, default path is manifests/charts/base/templates
 .PHONY: gen-crd
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=$(CRD_PATH)
+	$(CONTROLLER_GEN) crd  paths="./pkg/apis/cluster/..." output:crd:dir=$(CRD_PATH)
 
 .PHONY: generate
 generate: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

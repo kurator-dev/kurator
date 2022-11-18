@@ -5,7 +5,7 @@ set -o nounset
 set -o pipefail
 
 PKG_PATH=kurator.dev/kurator/pkg/client-go
-APIS_PATH=kurator.dev/kurator/pkg/apis
+APIS_PATH=kurator.dev/kurator/pkg/apis/cluster/v1alpha1
 
 # For all commands, the working directory is the parent directory(repo root).
 REPO_ROOT=$(git rev-parse --show-toplevel)
@@ -20,14 +20,14 @@ echo "Generating with deepcopy-gen"
 deepcopy-gen \
   --go-header-file hack/boilerplate.go.txt \
   --input-dirs=${APIS_PATH} \
-  --output-package=${APIS_PATH}/policy/v1alpha1 \
+  --output-package=${APIS_PATH} \
   --output-file-base=zz_generated.deepcopy
 
 echo "Generating with register-gen"
 register-gen \
   --go-header-file hack/boilerplate.go.txt \
   --input-dirs=${APIS_PATH} \
-  --output-package=${APIS_PATH}/policy/v1alpha1 \
+  --output-package=${APIS_PATH} \
   --output-file-base=zz_generated.register
 
 echo "Generating with client-gen"
