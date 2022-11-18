@@ -66,15 +66,15 @@ func newClient() *kube.Client {
 
 func main() {
 	outputDir := env("OUTPUT_DIR", "manifests/charts/base/templates")
-	clusterApiVersion := env("CLUSTER_API_PROVIDER_VERSION", "v1.1.5")
-	awsProviderVersion := env("AWS_PROVIDER_VERSION", "v1.5.1")
+	clusterApiVersion := env("CLUSTER_API_PROVIDER_VERSION", "v1.2.5")
+	awsProviderVersion := env("AWS_PROVIDER_VERSION", "v2.0.0")
 
-	genClusterApiCore(outputDir, clusterApiVersion)
-	genAWS(outputDir, awsProviderVersion)
+	genCapi(outputDir, clusterApiVersion)
+	genCapa(outputDir, awsProviderVersion)
 }
 
-func genClusterApiCore(outputDir string, version string) {
-	fmt.Printf("start to gen Cluster API crds, output: %s \n", outputDir)
+func genCapi(outputDir string, version string) {
+	fmt.Printf("start to gen Cluster API crds, version: %s output: %s \n", version, outputDir)
 	infraComponentsYaml := fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api/releases/download/%s/core-components.yaml", version)
 	resp, err := http.Get(infraComponentsYaml)
 	if err != nil {
@@ -94,8 +94,8 @@ func genClusterApiCore(outputDir string, version string) {
 	writeCRDs(outputDir, resources)
 }
 
-func genAWS(outputDir string, version string) {
-	fmt.Printf("start to gen AWS crds, output: %s \n", outputDir)
+func genCapa(outputDir string, version string) {
+	fmt.Printf("start to gen AWS crds, version: %s output: %s \n", version, outputDir)
 	infraComponentsYaml := fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api-provider-aws/releases/download/%s/infrastructure-components.yaml", version)
 	resp, err := http.Get(infraComponentsYaml)
 	if err != nil {

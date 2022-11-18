@@ -14,24 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// code in the package copied from: https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/v1.5.1/main.go
+// code in the package copied from: https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/v2.0.0/main.go
 package aws
 
 import (
 	"context"
 	"errors"
 
-	infrav1 "sigs.k8s.io/cluster-api-provider-aws/api/v1beta1"
-	eksbootstrapcontrollers "sigs.k8s.io/cluster-api-provider-aws/bootstrap/eks/controllers"
-	"sigs.k8s.io/cluster-api-provider-aws/controllers"
-	ekscontrolplanev1 "sigs.k8s.io/cluster-api-provider-aws/controlplane/eks/api/v1beta1"
-	ekscontrolplanecontrollers "sigs.k8s.io/cluster-api-provider-aws/controlplane/eks/controllers"
-	expinfrav1 "sigs.k8s.io/cluster-api-provider-aws/exp/api/v1beta1"
-	"sigs.k8s.io/cluster-api-provider-aws/exp/controlleridentitycreator"
-	expcontrollers "sigs.k8s.io/cluster-api-provider-aws/exp/controllers"
-	"sigs.k8s.io/cluster-api-provider-aws/exp/instancestate"
-	"sigs.k8s.io/cluster-api-provider-aws/feature"
-	"sigs.k8s.io/cluster-api-provider-aws/pkg/cloud/endpoints"
+	infrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
+	eksbootstrapcontrollers "sigs.k8s.io/cluster-api-provider-aws/v2/bootstrap/eks/controllers"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/controllers"
+	ekscontrolplanev1 "sigs.k8s.io/cluster-api-provider-aws/v2/controlplane/eks/api/v1beta2"
+	ekscontrolplanecontrollers "sigs.k8s.io/cluster-api-provider-aws/v2/controlplane/eks/controllers"
+	expinfrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/exp/api/v1beta2"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/exp/controlleridentitycreator"
+	expcontrollers "sigs.k8s.io/cluster-api-provider-aws/v2/exp/controllers"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/exp/instancestate"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/feature"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/pkg/cloud/endpoints"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
@@ -204,10 +204,6 @@ func InitControllers(ctx context.Context, opts *config.Options, mgr ctrl.Manager
 		log.Info("Enabling Ignition support for machine bootstrap data")
 	}
 
-	if err := (&infrav1.AWSMachineTemplate{}).SetupWebhookWithManager(mgr); err != nil {
-		log.Error(err, "unable to create webhook", "webhook", "AWSMachineTemplate")
-		return err
-	}
 	if err := (&infrav1.AWSCluster{}).SetupWebhookWithManager(mgr); err != nil {
 		log.Error(err, "unable to create webhook", "webhook", "AWSCluster")
 		return err

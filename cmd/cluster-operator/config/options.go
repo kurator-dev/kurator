@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/spf13/pflag"
-	"sigs.k8s.io/cluster-api-provider-aws/feature"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/feature"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
@@ -38,6 +38,8 @@ type Options struct {
 	WebhookPort             int
 	WebhookCertDir          string
 	HealthAddr              string
+
+	Concurrency int
 }
 
 func (opt *Options) AddFlags(fs *pflag.FlagSet) {
@@ -136,6 +138,13 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 		"watch-filter",
 		"",
 		fmt.Sprintf("Label value that the controller watches to reconcile cluster-api objects. Label key is always %s. If unspecified, the controller watches for all cluster-api objects.", clusterv1.WatchLabel),
+	)
+
+	fs.IntVar(
+		&opt.ClusterConcurrency,
+		"concurrency",
+		5,
+		"Number of Cluster API resource to process simultaneously",
 	)
 
 	feature.MutableGates.AddFlag(fs)

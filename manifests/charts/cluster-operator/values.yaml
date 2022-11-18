@@ -9,7 +9,21 @@ image:
 logging:
   level: 0
 
-feautreGates: EKS=true,EKSEnableIAM=false,EKSAllowAddRoles=false,EKSFargate=false,MachinePool=false,EventBridgeInstanceState=false,AutoControllerIdentityCreator=true,BootstrapFormatIgnition=false,ExternalResourceGC=false
+feautreGates:
+# capa
+- AutoControllerIdentityCreator=true
+- BootstrapFormatIgnition=false 
+- EKS=true
+- EKSEnableIAM=false
+- EKSAllowAddRoles=false
+- EKSFargate=false
+- MachinePool=false
+- EventBridgeInstanceState=false
+- ExternalResourceGC=false
+# capi
+- MachinePool=false
+- ClusterResourceSet=false
+- ClusterTopology=false
 
 aws:
   # AWS_BASE64ENCODED_CREDENTIALS

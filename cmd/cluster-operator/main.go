@@ -32,11 +32,12 @@ import (
 	cgrecord "k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
 	"k8s.io/klog/v2/klogr"
-	"sigs.k8s.io/cluster-api-provider-aws/feature"
+	"sigs.k8s.io/cluster-api-provider-aws/v2/feature"
 	"sigs.k8s.io/cluster-api/util/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"kurator.dev/kurator/cmd/cluster-operator/aws"
+	"kurator.dev/kurator/cmd/cluster-operator/capi"
 	"kurator.dev/kurator/cmd/cluster-operator/config"
 	"kurator.dev/kurator/cmd/cluster-operator/customcluster"
 	"kurator.dev/kurator/cmd/cluster-operator/scheme"
@@ -125,8 +126,15 @@ func run(ctx context.Context, opts *config.Options) error {
 
 	record.InitFromRecorder(mgr.GetEventRecorderFor("cluster-operator"))
 	log.V(1).Info(fmt.Sprintf("feature gates: %+v\n", feature.Gates))
+
+	// capi
+	if err = capi.InitControllers(ctx, opts, mgr); err != nil {
+		return fmt.Errorf("capi init fail, %w", err)
+	}
+
+	// capa
 	if err = aws.InitControllers(ctx, opts, mgr); err != nil {
-		return err
+		return fmt.Errorf("capa init fail, %w", err)
 	}
 
 	if err = customcluster.InitControllers(ctx, mgr); err != nil {

@@ -32,8 +32,8 @@ helm install kurator-cluster-operator out/charts/cluster-operator-0.1.0.tgz -n k
 ## Cleanup
 
 ```
-helm uninstall kurator-base -n kurator-system
 helm uninstall kurator-cluster-operator -n kurator-system 
+helm uninstall kurator-base -n kurator-system
 kubectl delete crd $(k get crds | grep cluster.x-k8s.io | awk '{print $1}')
 kubectl delete ns kurator-system
 ```

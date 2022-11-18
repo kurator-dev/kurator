@@ -46,7 +46,7 @@ build: clean tidy kurator cluster-operator
 
 .PHONY: tidy
 tidy:
-	go mod tidy -compat=1.17
+	go mod tidy
 
 .PHONY: kurator
 kurator:
