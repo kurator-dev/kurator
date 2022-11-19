@@ -1,5 +1,3 @@
-//go:build windows
-
 /*
 Copyright Kurator Authors.
 
@@ -16,17 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package moreos
+package scheme
 
 import (
-	"os"
-	"strings"
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
 
-const (
-	exe = ".exe"
-)
-
-func isExecutable(f os.FileInfo) bool {
-	return strings.HasSuffix(f.Name(), exe)
+func init() {
+	_ = clusterv1alpha1.AddToScheme(Scheme)
 }
