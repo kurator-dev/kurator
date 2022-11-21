@@ -28,7 +28,7 @@ import (
 )
 
 // CustomMachineReconciler reconciles a CustomMachine object
-type CustomMachineReconciler struct {
+type CustomMachineController struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
@@ -46,7 +46,7 @@ type CustomMachineReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *CustomMachineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
@@ -55,7 +55,7 @@ func (r *CustomMachineReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *CustomMachineReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *CustomMachineController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&clusterv1alpha1.CustomMachine{}).
 		Complete(r)

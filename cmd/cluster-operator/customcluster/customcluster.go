@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package customresource
+package customcluster
 
 import (
 	"context"
@@ -24,10 +24,10 @@ import (
 	"kurator.dev/kurator/pkg/controllers"
 )
 
-var log = ctrl.Log.WithName("custom_resource")
+var log = ctrl.Log.WithName("custom_cluster")
 
 func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
-	if err := (&controllers.CustomClusterReconciler{
+	if err := (&controllers.CustomClusterController{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
@@ -35,7 +35,7 @@ func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
 		return err
 	}
 
-	if err := (&controllers.CustomMachineReconciler{
+	if err := (&controllers.CustomMachineController{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

@@ -38,7 +38,7 @@ import (
 
 	"kurator.dev/kurator/cmd/cluster-operator/aws"
 	"kurator.dev/kurator/cmd/cluster-operator/config"
-	"kurator.dev/kurator/cmd/cluster-operator/customresource"
+	"kurator.dev/kurator/cmd/cluster-operator/customcluster"
 	"kurator.dev/kurator/cmd/cluster-operator/scheme"
 	"kurator.dev/kurator/pkg/version"
 )
@@ -129,7 +129,7 @@ func run(ctx context.Context, opts *config.Options) error {
 		return err
 	}
 
-	if err = customresource.InitControllers(ctx, mgr); err != nil {
+	if err = customcluster.InitControllers(ctx, mgr); err != nil {
 		return err
 	}
 
