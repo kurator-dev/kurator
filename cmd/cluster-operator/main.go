@@ -38,6 +38,7 @@ import (
 
 	"kurator.dev/kurator/cmd/cluster-operator/aws"
 	"kurator.dev/kurator/cmd/cluster-operator/config"
+	"kurator.dev/kurator/cmd/cluster-operator/customcluster"
 	"kurator.dev/kurator/cmd/cluster-operator/scheme"
 	"kurator.dev/kurator/pkg/version"
 )
@@ -125,6 +126,10 @@ func run(ctx context.Context, opts *config.Options) error {
 	record.InitFromRecorder(mgr.GetEventRecorderFor("cluster-operator"))
 	log.V(1).Info(fmt.Sprintf("feature gates: %+v\n", feature.Gates))
 	if err = aws.InitControllers(ctx, opts, mgr); err != nil {
+		return err
+	}
+
+	if err = customcluster.InitControllers(ctx, mgr); err != nil {
 		return err
 	}
 

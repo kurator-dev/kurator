@@ -103,7 +103,7 @@ gen-prom-thanos: init-gen
 gen-thanos: init-gen
 	hack/gen-thanos.sh
 
-.PHONY: gen-thanos
+.PHONY: sync-crds
 sync-crds:
 	hack/sync-crds.sh
 
