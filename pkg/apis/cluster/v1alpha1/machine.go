@@ -71,7 +71,7 @@ type Machine struct {
 	HostName string `json:"hostName,omitempty"`
 	// PrivateIP is the private ip address of the machine:
 	// +optional
-	PrivateIP string `json:"publicIP,omitempty"`
+	PrivateIP string `json:"privateIP,omitempty"`
 	// PublicIP specifies the public IP.
 	// +optional
 	PublicIP string `json:"publicIP,omitempty"`

@@ -55,6 +55,9 @@ spec:
                       description: AdditionalTags is an optional set of tags to add
                         to an instance.
                       type: object
+                    privateIP:
+                      description: 'PrivateIP is the private ip address of the machine:'
+                      type: string
                     providerID:
                       description: ProviderID is the unique identifier as specified
                         by the cloud provider.
@@ -130,6 +133,9 @@ spec:
                       description: AdditionalTags is an optional set of tags to add
                         to an instance.
                       type: object
+                    privateIP:
+                      description: 'PrivateIP is the private ip address of the machine:'
+                      type: string
                     providerID:
                       description: ProviderID is the unique identifier as specified
                         by the cloud provider.
