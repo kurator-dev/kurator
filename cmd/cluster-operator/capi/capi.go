@@ -70,6 +70,8 @@ func setupReconcilers(ctx context.Context, opts *config.Options, mgr ctrl.Manage
 	if err != nil {
 		return fmt.Errorf("unable to create cluster cache tracker, %w", err)
 	}
+	// ClusterCacheReconciler is responsible for stopping remote cluster caches when
+	// the cluster for the remote cache is being deleted.
 	if err := (&remote.ClusterCacheReconciler{
 		Client:           mgr.GetClient(),
 		Log:              ctrl.Log.WithName("remote").WithName("ClusterCacheReconciler"),
