@@ -22,8 +22,13 @@ import (
 	"fmt"
 
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
+	kubeadmbootstrapcontrollers "sigs.k8s.io/cluster-api/bootstrap/kubeadm/controllers"
 	"sigs.k8s.io/cluster-api/controllers"
 	"sigs.k8s.io/cluster-api/controllers/remote"
+	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
+	kubeadmcontrolplanecontrollers "sigs.k8s.io/cluster-api/controlplane/kubeadm/controllers"
+	kcpwebhooks "sigs.k8s.io/cluster-api/controlplane/kubeadm/webhooks"
 	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
 	addonscontrollers "sigs.k8s.io/cluster-api/exp/addons/controllers"
 	expv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
@@ -194,6 +199,22 @@ func setupReconcilers(ctx context.Context, opts *config.Options, mgr ctrl.Manage
 		return fmt.Errorf("unable to create MachineHealthCheck controller, %w", err)
 	}
 
+	if err := (&kubeadmcontrolplanecontrollers.KubeadmControlPlaneReconciler{
+		Client:           mgr.GetClient(),
+		APIReader:        mgr.GetAPIReader(),
+		Tracker:          tracker,
+		WatchFilterValue: opts.WatchFilterValue,
+	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
+		return fmt.Errorf("unable to create KubeadmControlPlane controller, %w", err)
+	}
+
+	if err := (&kubeadmbootstrapcontrollers.KubeadmConfigReconciler{
+		Client:           mgr.GetClient(),
+		WatchFilterValue: opts.WatchFilterValue,
+	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
+		return fmt.Errorf("unable to create KubeadmConfig controller, %w", err)
+	}
+
 	return nil
 }
 
@@ -236,6 +257,27 @@ func setupWebhooks(mgr ctrl.Manager) error {
 
 	if err := (&clusterv1.MachineHealthCheck{}).SetupWebhookWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create MachineHealthCheck webhook, %w", err)
+	}
+
+	if err := (&bootstrapv1.KubeadmConfig{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create KubeadmConfig webhook, %w", err)
+	}
+	if err := (&bootstrapv1.KubeadmConfigTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create KubeadmConfigTemplate webhook, %w", err)
+	}
+
+	if err := (&controlplanev1.KubeadmControlPlane{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create KubeadmControlPlane webhook, %w", err)
+	}
+
+	if err := (&kcpwebhooks.ScaleValidator{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create KubeadmControlPlane scale webhook, %w", err)
+	}
+
+	if err := (&controlplanev1.KubeadmControlPlaneTemplate{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create KubeadmControlPlaneTemplate webhook, %w", err)
 	}
 
 	return nil
