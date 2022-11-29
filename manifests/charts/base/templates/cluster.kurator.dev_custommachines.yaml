@@ -194,6 +194,11 @@ spec:
             type: object
           status:
             description: Current status of the machine.
+            properties:
+              ready:
+                description: 'TODO: add state. TODO: display with kubectl Indicate
+                  whether the machines are ready.'
+                type: boolean
             type: object
         type: object
     served: true

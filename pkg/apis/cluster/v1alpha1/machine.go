@@ -49,7 +49,10 @@ type CustomMachineSpec struct {
 
 // CustomMachineStatus represents the current status of the machine.
 type CustomMachineStatus struct {
-	// TODO add state.
+	// TODO: add state.
+	// TODO: display with kubectl
+	// Indicate whether the machines are ready.
+	Ready *bool `json:"ready,omitempty"`
 }
 
 // Machine defines a node.

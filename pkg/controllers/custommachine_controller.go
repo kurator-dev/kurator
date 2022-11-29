@@ -18,45 +18,84 @@ package controllers
 
 import (
 	"context"
+	"time"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/cluster-api/controllers/external"
+	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
+	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
 
-// CustomMachineReconciler reconciles a CustomMachine object
+// CustomMachineController reconciles a CustomMachine object
 type CustomMachineController struct {
 	client.Client
-	Scheme *runtime.Scheme
-}
-
-//+kubebuilder:rbac:groups=kurator.dev.kurator.dev,resources=custommachines,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=kurator.dev.kurator.dev,resources=custommachines/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=kurator.dev.kurator.dev,resources=custommachines/finalizers,verbs=update
-
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the CustomMachine object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
-func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
-
-	// TODO(user): your logic here
-
-	return ctrl.Result{}, nil
+	APIReader       client.Reader
+	Scheme          *runtime.Scheme
+	externalTracker external.ObjectTracker
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *CustomMachineController) SetupWithManager(mgr ctrl.Manager) error {
+func (r *CustomMachineController) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&clusterv1alpha1.CustomMachine{}).
+		WithOptions(options).
 		Complete(r)
+}
+
+func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	log := log.FromContext(ctx)
+	// Fetch the CustomMachine instance.
+	customMachine := &clusterv1alpha1.CustomMachine{}
+	if err := r.Client.Get(ctx, req.NamespacedName, customMachine); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Could not find CustomMachine ", req.NamespacedName, "maybe deleted")
+			return ctrl.Result{}, nil
+		}
+
+		// Error reading the object - requeue the request.
+		return ctrl.Result{Requeue: true}, err
+	}
+	return r.reconcile(ctx, customMachine)
+}
+
+func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *clusterv1alpha1.CustomMachine) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+	keyRef := customMachine.Spec.Master[0].SSHKey
+	if err := utilconversion.UpdateReferenceAPIContract(ctx, r.Client, r.APIReader, keyRef); err != nil {
+		return ctrl.Result{}, err
+	}
+	obj, err := external.Get(ctx, r.Client, keyRef, customMachine.Namespace)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("Could not find external object for CustomMachine, requeuing", "refGroupVersionKind", keyRef.GroupVersionKind(), "refName", keyRef.Name)
+			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+		return ctrl.Result{}, err
+	}
+	// Initialize the patch helper.
+	patchHelper, err := patch.NewHelper(customMachine, r.Client)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+	// Set external object ControllerReference to the Cluster.
+	if err := controllerutil.SetControllerReference(customMachine, obj, r.Client.Scheme()); err != nil {
+		return ctrl.Result{}, err
+	}
+	// Ensure we add a watcher to the external ssh key object.
+	if err := r.externalTracker.Watch(log, obj, &handler.EnqueueRequestForOwner{OwnerType: &clusterv1alpha1.CustomMachine{}}); err != nil {
+		return ctrl.Result{}, err
+	}
+	machineReady := true
+	customMachine.Status.Ready = &machineReady
+	err = patchHelper.Patch(ctx, customMachine)
+	return ctrl.Result{}, err
 }
