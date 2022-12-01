@@ -20,6 +20,7 @@ import (
 	"context"
 
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/pkg/controllers"
 )
@@ -38,7 +39,7 @@ func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
 	if err := (&controllers.CustomMachineController{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "CustomMachine")
 		return err
 	}
