@@ -65,18 +65,18 @@ func newClient() *kube.Client {
 }
 
 func main() {
-	outputDir := env("OUTPUT_DIR", "manifests/charts/base/templates")
+	crdOutputDir := env("CRD_OUTPUT_DIR", "manifests/charts/base/templates")
 	clusterApiVersion := env("CLUSTER_API_PROVIDER_VERSION", "v1.2.5")
 	awsProviderVersion := env("AWS_PROVIDER_VERSION", "v2.0.0")
 
-	genCapiCore(outputDir, clusterApiVersion)
-	genCapiBootstrap(outputDir, clusterApiVersion)
-	genCapiControlplane(outputDir, clusterApiVersion)
-	genCapa(outputDir, awsProviderVersion)
+	genCapiCore(crdOutputDir, clusterApiVersion)
+	genCapiBootstrap(crdOutputDir, clusterApiVersion)
+	genCapiControlplane(crdOutputDir, clusterApiVersion)
+	genCapa(crdOutputDir, awsProviderVersion)
 }
 
 func genCapiCore(outputDir string, version string) {
-	fmt.Printf("start to gen Cluster API crds, version: %s output: %s \n", version, outputDir)
+	fmt.Printf("start to gen Cluster API core crds, version: %s output: %s \n", version, outputDir)
 	infraComponentsYaml := fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api/releases/download/%s/core-components.yaml", version)
 	resp, err := http.Get(infraComponentsYaml)
 	if err != nil {
@@ -94,6 +94,7 @@ func genCapiCore(outputDir string, version string) {
 	}
 
 	writeCRDs(outputDir, resources)
+	writeWebhooks(outputDir, resources)
 }
 
 func genCapiBootstrap(outputDir string, version string) {
@@ -115,6 +116,7 @@ func genCapiBootstrap(outputDir string, version string) {
 	}
 
 	writeCRDs(outputDir, resources)
+	writeWebhooks(outputDir, resources)
 }
 
 func genCapiControlplane(outputDir string, version string) {
@@ -136,6 +138,7 @@ func genCapiControlplane(outputDir string, version string) {
 	}
 
 	writeCRDs(outputDir, resources)
+	writeWebhooks(outputDir, resources)
 }
 
 func genCapa(outputDir string, version string) {
@@ -157,12 +160,30 @@ func genCapa(outputDir string, version string) {
 	}
 
 	writeCRDs(outputDir, resources)
+	writeWebhooks(outputDir, resources)
 }
 
 func writeCRDs(outputDir string, resources kube.ResourceList) {
 	crds := resources.Filter(func(r *resource.Info) bool {
 		// only need CRD
 		return r.Mapping.GroupVersionKind.Kind == "CustomResourceDefinition"
+	})
+
+	for _, r := range crds {
+		out, _ := yaml.Marshal(r.Object)
+		n := path.Join(outputDir, fmt.Sprintf("%s.yaml", r.Name))
+		if err := os.WriteFile(n, out, 0o755); err != nil {
+			fmt.Printf("write file err: %v", err)
+			os.Exit(-1)
+		}
+	}
+}
+
+func writeWebhooks(outputDir string, resources kube.ResourceList) {
+	crds := resources.Filter(func(r *resource.Info) bool {
+		// only need webhook
+		return r.Mapping.GroupVersionKind.Kind == "MutatingWebhookConfiguration" ||
+			r.Mapping.GroupVersionKind.Kind == "ValidatingWebhookConfiguration"
 	})
 
 	for _, r := range crds {

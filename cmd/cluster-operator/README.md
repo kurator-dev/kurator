@@ -27,6 +27,7 @@ helm install -n cert-manager cert-manager jetstack/cert-manager --set installCRD
 kubectl create namespace kurator-system
 helm install kurator-base out/charts/base-0.1.0.tgz -n kurator-system
 helm install kurator-cluster-operator out/charts/cluster-operator-0.1.0.tgz -n kurator-system
+helm install -f /root/capa-values.yaml -n kurator-system kurator-cluster-operator out/charts/cluster-operator-0.1.0.tgz
 ```
 
 ## Cleanup
@@ -37,3 +38,7 @@ helm uninstall kurator-base -n kurator-system
 kubectl delete crd $(k get crds | grep cluster.x-k8s.io | awk '{print $1}')
 kubectl delete ns kurator-system
 ```
+
+## TODO
+
+- support CNI install? user ClusterResourceSet?

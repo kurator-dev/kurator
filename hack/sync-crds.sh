@@ -20,6 +20,7 @@ set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 HELM_CRD_BASE=${REPO_ROOT}/manifests/charts/base/templates
+WEBHOOK_BASE=${REPO_ROOT}/manifests/charts/cluster-operator/templates
 CLUSTER_API_PROVIDER_VERSION=${CLUSTER_API_PROVIDER_VERSION:-'v1.2.5'}
 AWS_PROVIDER_VERSION=${AWS_PROVIDER_VERSION:-'v2.0.0'}
 # set default ca prevent deleting crd fail
@@ -37,7 +38,19 @@ sed -i "s|capi-serving-cert|kurator-serving-cert|g" $(find ${HELM_CRD_BASE} -typ
 sed -i "s|capi-system|{{ .Release.Namespace }}|g" $(find ${HELM_CRD_BASE} -type f)
 sed -i "s|capi-webhook-service|kurator-webhook-service|g" $(find ${HELM_CRD_BASE} -type f)
 
+# bootstrap
+sed -i "s|capi-kubeadm-bootstrap-serving-cert|kurator-serving-cert|g" $(find ${HELM_CRD_BASE} -type f)
+sed -i "s|capi-kubeadm-bootstrap-system|{{ .Release.Namespace }}|g" $(find ${HELM_CRD_BASE} -type f)
+sed -i "s|capi-kubeadm-bootstrap-webhook-service|kurator-webhook-service|g" $(find ${HELM_CRD_BASE} -type f)
+
+# kubeadm-control-plane
+sed -i "s|capi-kubeadm-control-plane-serving-cert|kurator-serving-cert|g" $(find ${HELM_CRD_BASE} -type f)
+sed -i "s|capi-kubeadm-control-plane-system|{{ .Release.Namespace }}|g" $(find ${HELM_CRD_BASE} -type f)
+sed -i "s|capi-kubeadm-control-plane-webhook-service|kurator-webhook-service|g" $(find ${HELM_CRD_BASE} -type f)
+
 # capa
 sed -i "s|capa-serving-cert|kurator-serving-cert|g" $(find ${HELM_CRD_BASE} -type f)
 sed -i "s|capa-system|{{ .Release.Namespace }}|g" $(find ${HELM_CRD_BASE} -type f)
 sed -i "s|capa-webhook-service|kurator-webhook-service|g" $(find ${HELM_CRD_BASE} -type f)
+
+mv ${HELM_CRD_BASE}/*-webhook-configuration.yaml ${WEBHOOK_BASE}

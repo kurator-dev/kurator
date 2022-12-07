@@ -24,7 +24,7 @@ metadata:
   namespace: default
 spec:
   region: us-east-1
-  sshKeyName: default
+  sshKeyName: default # aws KeyPair name
 ---
 apiVersion: controlplane.cluster.x-k8s.io/v1beta1
 kind: KubeadmControlPlane
@@ -55,7 +55,7 @@ spec:
       apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
       kind: AWSMachineTemplate
       name: capi-quickstart-control-plane
-  replicas: 3
+  replicas: 1
   version: v1.25.0
 ---
 apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
@@ -77,7 +77,7 @@ metadata:
   namespace: default
 spec:
   clusterName: capi-quickstart
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels: null
   template:

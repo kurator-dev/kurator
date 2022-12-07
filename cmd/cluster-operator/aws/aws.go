@@ -204,6 +204,10 @@ func InitControllers(ctx context.Context, opts *config.Options, mgr ctrl.Manager
 		log.Info("Enabling Ignition support for machine bootstrap data")
 	}
 
+	if err := (&infrav1.AWSMachineTemplateWebhook{}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create webhook", "webhook", "AWSCluster")
+		return err
+	}
 	if err := (&infrav1.AWSCluster{}).SetupWebhookWithManager(mgr); err != nil {
 		log.Error(err, "unable to create webhook", "webhook", "AWSCluster")
 		return err
