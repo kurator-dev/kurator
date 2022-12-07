@@ -69,13 +69,57 @@ func main() {
 	clusterApiVersion := env("CLUSTER_API_PROVIDER_VERSION", "v1.2.5")
 	awsProviderVersion := env("AWS_PROVIDER_VERSION", "v2.0.0")
 
-	genCapi(outputDir, clusterApiVersion)
+	genCapiCore(outputDir, clusterApiVersion)
+	genCapiBootstrap(outputDir, clusterApiVersion)
+	genCapiControlplane(outputDir, clusterApiVersion)
 	genCapa(outputDir, awsProviderVersion)
 }
 
-func genCapi(outputDir string, version string) {
+func genCapiCore(outputDir string, version string) {
 	fmt.Printf("start to gen Cluster API crds, version: %s output: %s \n", version, outputDir)
 	infraComponentsYaml := fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api/releases/download/%s/core-components.yaml", version)
+	resp, err := http.Get(infraComponentsYaml)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer func() {
+		resp.Body.Close()
+	}()
+
+	c := newClient()
+	resources, err := c.Build(resp.Body, false)
+	if err != nil {
+		fmt.Printf("build helm fail: %v", err)
+		os.Exit(-1)
+	}
+
+	writeCRDs(outputDir, resources)
+}
+
+func genCapiBootstrap(outputDir string, version string) {
+	fmt.Printf("start to gen Cluster API bootstrap crds, version: %s output: %s \n", version, outputDir)
+	infraComponentsYaml := fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api/releases/download/%s/bootstrap-components.yaml", version)
+	resp, err := http.Get(infraComponentsYaml)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer func() {
+		resp.Body.Close()
+	}()
+
+	c := newClient()
+	resources, err := c.Build(resp.Body, false)
+	if err != nil {
+		fmt.Printf("build helm fail: %v", err)
+		os.Exit(-1)
+	}
+
+	writeCRDs(outputDir, resources)
+}
+
+func genCapiControlplane(outputDir string, version string) {
+	fmt.Printf("start to gen Cluster API control-plane crds, version: %s output: %s \n", version, outputDir)
+	infraComponentsYaml := fmt.Sprintf("https://github.com/kubernetes-sigs/cluster-api/releases/download/%s/control-plane-components.yaml", version)
 	resp, err := http.Get(infraComponentsYaml)
 	if err != nil {
 		log.Fatalln(err)
