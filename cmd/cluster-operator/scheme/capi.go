@@ -40,6 +40,7 @@ import (
 )
 
 func init() {
+	// capi core
 	_ = clientgoscheme.AddToScheme(Scheme)
 	_ = apiextensionsv1.AddToScheme(Scheme)
 	_ = clusterv1alpha3.AddToScheme(Scheme)
@@ -53,15 +54,14 @@ func init() {
 	_ = addonsv1.AddToScheme(Scheme)
 	_ = runtimev1.AddToScheme(Scheme)
 	_ = ipamv1.AddToScheme(Scheme)
-
+	// bootstrap
 	_ = bootstrapv1alpha3.AddToScheme(Scheme)
 	_ = bootstrapv1alpha4.AddToScheme(Scheme)
 	_ = bootstrapv1.AddToScheme(Scheme)
-
+	// kubeadm controlplane
 	_ = clientgoscheme.AddToScheme(Scheme)
 	_ = clusterv1.AddToScheme(Scheme)
 	_ = controlplanev1alpha3.AddToScheme(Scheme)
 	_ = controlplanev1alpha4.AddToScheme(Scheme)
 	_ = controlplanev1.AddToScheme(Scheme)
-
 }
