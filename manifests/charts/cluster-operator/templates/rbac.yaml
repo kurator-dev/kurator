@@ -49,6 +49,18 @@ metadata:
   name: kurator-manager-role
 rules:
 - apiGroups:
+  - cluster.kurator.dev
+  resources:
+  - customclusters
+  - custommachines
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - ""
   resources:
   - events
