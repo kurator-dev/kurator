@@ -41,4 +41,5 @@ kubectl delete ns kurator-system
 
 ## TODO
 
-- support CNI install? user ClusterResourceSet?
+- support CNI install? use ClusterResourceSet?
+- support Ingresss/LoadBalancer Service? use aws-load-balancer-controller?
