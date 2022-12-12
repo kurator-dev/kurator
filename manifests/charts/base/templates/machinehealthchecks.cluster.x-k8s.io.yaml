@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.8.0
+    controller-gen.kubebuilder.io/version: v0.9.1
   labels:
     cluster.x-k8s.io/provider: cluster-api
   name: machinehealthchecks.cluster.x-k8s.io
@@ -124,6 +124,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               selector:
                 description: Label selector to match machines whose health will be
                   exercised
@@ -169,6 +170,7 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+                x-kubernetes-map-type: atomic
               unhealthyConditions:
                 description: UnhealthyConditions contains a list of the conditions
                   that determine whether a node is considered unhealthy.  The conditions
@@ -384,6 +386,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               selector:
                 description: Label selector to match machines whose health will be
                   exercised
@@ -429,6 +432,7 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+                x-kubernetes-map-type: atomic
               unhealthyConditions:
                 description: UnhealthyConditions contains a list of the conditions
                   that determine whether a node is considered unhealthy.  The conditions
@@ -653,6 +657,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               selector:
                 description: Label selector to match machines whose health will be
                   exercised
@@ -698,6 +703,7 @@ spec:
                       are ANDed.
                     type: object
                 type: object
+                x-kubernetes-map-type: atomic
               unhealthyConditions:
                 description: UnhealthyConditions contains a list of the conditions
                   that determine whether a node is considered unhealthy.  The conditions
@@ -822,9 +828,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

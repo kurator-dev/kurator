@@ -19,7 +19,7 @@ LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
 			-X kurator.dev/kurator/pkg/version.gitTreeState=$(GIT_TREESTATE) \
 			-X kurator.dev/kurator/pkg/version.buildDate=$(BUILD_DATE)"
 GO_BUILD=CGO_ENABLED=0 GOOS=$(GOOS) go build -ldflags $(LDFLAGS)
-DOCKER_BUILD=docker build --build-arg BASE_VERSION=bionic --build-arg BASE_IMAGE=ubuntu
+DOCKER_BUILD=docker build --build-arg BASE_VERSION=nonroot --build-arg BASE_IMAGE=gcr.io/distroless/static
 
 FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor \) -prune -o -type f
 XARGS = xargs -0 -r
@@ -46,7 +46,7 @@ build: clean tidy kurator cluster-operator
 
 .PHONY: tidy
 tidy:
-	go mod tidy -compat=1.17
+	go mod tidy
 
 .PHONY: kurator
 kurator:

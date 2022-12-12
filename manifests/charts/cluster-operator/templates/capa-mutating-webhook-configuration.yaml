@@ -3,15 +3,18 @@ kind: MutatingWebhookConfiguration
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
-  name: kurator-mutating-webhook-configuration
+  labels:
+    cluster.x-k8s.io/provider: infrastructure-aws
+  name: capa-mutating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
   - v1
+  - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awscluster
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awscluster
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awscluster.infrastructure.cluster.x-k8s.io
@@ -19,7 +22,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -27,12 +30,13 @@ webhooks:
     - awsclusters
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsclustercontrolleridentity
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsclustercontrolleridentity
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsclustercontrolleridentity.infrastructure.cluster.x-k8s.io
@@ -40,7 +44,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -48,12 +52,13 @@ webhooks:
     - awsclustercontrolleridentities
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsclusterroleidentity
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsclusterroleidentity
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsclusterroleidentity.infrastructure.cluster.x-k8s.io
@@ -61,7 +66,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -69,12 +74,13 @@ webhooks:
     - awsclusterroleidentities
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsclusterstaticidentity
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsclusterstaticidentity
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsclusterstaticidentity.infrastructure.cluster.x-k8s.io
@@ -82,7 +88,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -90,12 +96,13 @@ webhooks:
     - awsclusterstaticidentities
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsclustertemplate
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsclustertemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsclustertemplate.infrastructure.cluster.x-k8s.io
@@ -103,7 +110,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -111,19 +118,20 @@ webhooks:
     - awsclustertemplates
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsmachine
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsmachine
   failurePolicy: Fail
   name: mutation.awsmachine.infrastructure.cluster.x-k8s.io
   rules:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -131,12 +139,13 @@ webhooks:
     - awsmachines
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsfargateprofile
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsfargateprofile
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsfargateprofile.infrastructure.cluster.x-k8s.io
@@ -144,7 +153,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -152,12 +161,13 @@ webhooks:
     - awsfargateprofiles
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsmachinepool
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsmachinepool
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsmachinepool.infrastructure.cluster.x-k8s.io
@@ -165,7 +175,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -173,12 +183,13 @@ webhooks:
     - awsmachinepools
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta1-awsmanagedmachinepool
+      path: /mutate-infrastructure-cluster-x-k8s-io-v1beta2-awsmanagedmachinepool
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsmanagedmachinepool.infrastructure.cluster.x-k8s.io
@@ -186,7 +197,7 @@ webhooks:
   - apiGroups:
     - infrastructure.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -194,12 +205,13 @@ webhooks:
     - awsmanagedmachinepools
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-bootstrap-cluster-x-k8s-io-v1beta1-eksconfig
+      path: /mutate-bootstrap-cluster-x-k8s-io-v1beta2-eksconfig
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.eksconfigs.bootstrap.cluster.x-k8s.io
@@ -207,7 +219,7 @@ webhooks:
   - apiGroups:
     - bootstrap.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -215,12 +227,13 @@ webhooks:
     - eksconfig
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-bootstrap-cluster-x-k8s-io-v1beta1-eksconfigtemplate
+      path: /mutate-bootstrap-cluster-x-k8s-io-v1beta2-eksconfigtemplate
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.eksconfigtemplates.bootstrap.cluster.x-k8s.io
@@ -228,7 +241,7 @@ webhooks:
   - apiGroups:
     - bootstrap.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE
@@ -236,12 +249,13 @@ webhooks:
     - eksconfigtemplate
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /mutate-controlplane-cluster-x-k8s-io-v1beta1-awsmanagedcontrolplane
+      path: /mutate-controlplane-cluster-x-k8s-io-v1beta2-awsmanagedcontrolplane
   failurePolicy: Fail
   matchPolicy: Equivalent
   name: default.awsmanagedcontrolplanes.controlplane.cluster.x-k8s.io
@@ -249,7 +263,7 @@ webhooks:
   - apiGroups:
     - controlplane.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1beta2
     operations:
     - CREATE
     - UPDATE

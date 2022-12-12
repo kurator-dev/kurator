@@ -3,278 +3,253 @@ kind: ValidatingWebhookConfiguration
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
-  name: kurator-validating-webhook-configuration
+  labels:
+    cluster.x-k8s.io/provider: cluster-api
+  name: capi-validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
   - v1
-  clientConfig:
-    service:
-      name: kurator-webhook-service
-      namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awscluster
-  failurePolicy: Fail
-  matchPolicy: Equivalent
-  name: validation.awscluster.infrastructure.cluster.x-k8s.io
-  rules:
-  - apiGroups:
-    - infrastructure.cluster.x-k8s.io
-    apiVersions:
-    - v1beta1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - awsclusters
-  sideEffects: None
-- admissionReviewVersions:
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsclustercontrolleridentity
+      path: /validate-cluster-x-k8s-io-v1beta1-machine
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsclustercontrolleridentity.infrastructure.cluster.x-k8s.io
+  name: validation.machine.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsclustercontrolleridentities
+    - machines
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsclusterroleidentity
+      path: /validate-cluster-x-k8s-io-v1beta1-machinedeployment
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsclusterroleidentity.infrastructure.cluster.x-k8s.io
+  name: validation.machinedeployment.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsclusterroleidentities
+    - machinedeployments
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsclusterstaticidentity
+      path: /validate-cluster-x-k8s-io-v1beta1-machinehealthcheck
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsclusterstaticidentity.infrastructure.cluster.x-k8s.io
+  name: validation.machinehealthcheck.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsclusterstaticidentities
+    - machinehealthchecks
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsclustertemplate
+      path: /validate-cluster-x-k8s-io-v1beta1-machineset
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsclustertemplate.infrastructure.cluster.x-k8s.io
+  name: validation.machineset.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsclustertemplates
+    - machinesets
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsmachine
+      path: /validate-cluster-x-k8s-io-v1beta1-cluster
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsmachine.infrastructure.cluster.x-k8s.io
+  name: validation.cluster.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
-    - awsmachines
+    - clusters
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsmachinetemplate
+      path: /validate-cluster-x-k8s-io-v1beta1-clusterclass
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsmachinetemplate.infrastructure.x-k8s.io
+  name: validation.clusterclass.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
-    - awsmachinetemplates
+    - clusterclasses
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsfargateprofile
+      path: /validate-runtime-cluster-x-k8s-io-v1alpha1-extensionconfig
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsfargateprofile.infrastructure.cluster.x-k8s.io
+  name: validation.extensionconfig.runtime.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - runtime.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1alpha1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsfargateprofiles
+    - extensionconfigs
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsmachinepool
+      path: /validate-cluster-x-k8s-io-v1beta1-machinepool
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsmachinepool.infrastructure.cluster.x-k8s.io
+  name: validation.machinepool.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsmachinepools
+    - machinepools
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-infrastructure-cluster-x-k8s-io-v1beta1-awsmanagedmachinepool
+      path: /validate-addons-cluster-x-k8s-io-v1beta1-clusterresourceset
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.awsmanagedmachinepool.infrastructure.cluster.x-k8s.io
+  name: validation.clusterresourceset.addons.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - infrastructure.cluster.x-k8s.io
+    - addons.cluster.x-k8s.io
     apiVersions:
     - v1beta1
     operations:
     - CREATE
     - UPDATE
     resources:
-    - awsmanagedmachinepools
+    - clusterresourcesets
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-bootstrap-cluster-x-k8s-io-v1beta1-eksconfig
+      path: /validate-ipam-cluster-x-k8s-io-v1alpha1-ipaddress
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.eksconfigs.bootstrap.cluster.x-k8s.io
+  name: validation.ipaddress.ipam.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - bootstrap.cluster.x-k8s.io
+    - ipam.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1alpha1
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
-    - eksconfig
+    - ipaddresses
   sideEffects: None
 - admissionReviewVersions:
+  - v1
   - v1beta1
   clientConfig:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
-      path: /validate-bootstrap-cluster-x-k8s-io-v1beta1-eksconfigtemplate
+      path: /validate-ipam-cluster-x-k8s-io-v1alpha1-ipaddressclaim
   failurePolicy: Fail
   matchPolicy: Equivalent
-  name: validation.eksconfigtemplates.bootstrap.cluster.x-k8s.io
+  name: validation.ipaddressclaim.ipam.cluster.x-k8s.io
   rules:
   - apiGroups:
-    - bootstrap.cluster.x-k8s.io
+    - ipam.cluster.x-k8s.io
     apiVersions:
-    - v1beta1
+    - v1alpha1
     operations:
     - CREATE
     - UPDATE
+    - DELETE
     resources:
-    - eksconfigtemplate
-  sideEffects: None
-- admissionReviewVersions:
-  - v1beta1
-  clientConfig:
-    service:
-      name: kurator-webhook-service
-      namespace: {{ .Release.Namespace }}
-      path: /validate-controlplane-cluster-x-k8s-io-v1beta1-awsmanagedcontrolplane
-  failurePolicy: Fail
-  matchPolicy: Equivalent
-  name: validation.awsmanagedcontrolplanes.controlplane.cluster.x-k8s.io
-  rules:
-  - apiGroups:
-    - controlplane.cluster.x-k8s.io
-    apiVersions:
-    - v1beta1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - awsmanagedcontrolplanes
+    - ipaddressclaims
   sideEffects: None

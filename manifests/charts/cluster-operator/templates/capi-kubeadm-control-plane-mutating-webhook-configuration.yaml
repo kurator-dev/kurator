@@ -1,0 +1,52 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
+  labels:
+    cluster.x-k8s.io/provider: control-plane-kubeadm
+  name: capi-kubeadm-control-plane-mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: kurator-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /mutate-controlplane-cluster-x-k8s-io-v1beta1-kubeadmcontrolplane
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: default.kubeadmcontrolplane.controlplane.cluster.x-k8s.io
+  rules:
+  - apiGroups:
+    - controlplane.cluster.x-k8s.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - kubeadmcontrolplanes
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: kurator-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /mutate-controlplane-cluster-x-k8s-io-v1beta1-kubeadmcontrolplanetemplate
+  failurePolicy: Fail
+  name: default.kubeadmcontrolplanetemplate.controlplane.cluster.x-k8s.io
+  rules:
+  - apiGroups:
+    - controlplane.cluster.x-k8s.io
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - kubeadmcontrolplanetemplates
+  sideEffects: None

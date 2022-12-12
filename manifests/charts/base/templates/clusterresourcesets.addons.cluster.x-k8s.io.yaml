@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.8.0
+    controller-gen.kubebuilder.io/version: v0.9.1
   labels:
     cluster.x-k8s.io/provider: cluster-api
   name: clusterresourcesets.addons.cluster.x-k8s.io
@@ -514,9 +514,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

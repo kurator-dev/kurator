@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/kurator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.8.0
+    controller-gen.kubebuilder.io/version: v0.9.1
   labels:
     cluster.x-k8s.io/provider: cluster-api
   name: machines.cluster.x-k8s.io
@@ -113,6 +113,7 @@ spec:
                         description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                   data:
                     description: "Data contains the bootstrap data, such as cloud-init
                       details scripts. If nil, the Machine should remain in the Pending
@@ -171,6 +172,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               nodeDrainTimeout:
                 description: 'NodeDrainTimeout is the total amount of time that the
                   controller will spend on draining a node. The default value is 0,
@@ -346,6 +348,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               observedGeneration:
                 description: ObservedGeneration is the latest generation observed
                   by the controller.
@@ -456,6 +459,7 @@ spec:
                         description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                   dataSecretName:
                     description: DataSecretName is the name of the secret that stores
                       the bootstrap data script. If nil, the Machine should remain
@@ -509,6 +513,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               nodeDrainTimeout:
                 description: 'NodeDrainTimeout is the total amount of time that the
                   controller will spend on draining a node. The default value is 0,
@@ -660,7 +665,7 @@ spec:
                     type: string
                   containerRuntimeVersion:
                     description: ContainerRuntime Version reported by the node through
-                      runtime remote API (e.g. docker://1.5.0).
+                      runtime remote API (e.g. containerd://1.4.2).
                     type: string
                   kernelVersion:
                     description: Kernel Version reported by the node from 'uname -r'
@@ -737,6 +742,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               observedGeneration:
                 description: ObservedGeneration is the latest generation observed
                   by the controller.
@@ -846,6 +852,7 @@ spec:
                         description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                         type: string
                     type: object
+                    x-kubernetes-map-type: atomic
                   dataSecretName:
                     description: DataSecretName is the name of the secret that stores
                       the bootstrap data script. If nil, the Machine should remain
@@ -899,6 +906,13 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
+              nodeDeletionTimeout:
+                description: NodeDeletionTimeout defines how long the controller will
+                  attempt to delete the Node that the Machine hosts after the Machine
+                  is marked for deletion. A duration of 0 will retry deletion indefinitely.
+                  Defaults to 10 seconds.
+                type: string
               nodeDrainTimeout:
                 description: 'NodeDrainTimeout is the total amount of time that the
                   controller will spend on draining a node. The default value is 0,
@@ -1051,7 +1065,7 @@ spec:
                     type: string
                   containerRuntimeVersion:
                     description: ContainerRuntime Version reported by the node through
-                      runtime remote API (e.g. docker://1.5.0).
+                      runtime remote API (e.g. containerd://1.4.2).
                     type: string
                   kernelVersion:
                     description: Kernel Version reported by the node from 'uname -r'
@@ -1128,6 +1142,7 @@ spec:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               observedGeneration:
                 description: ObservedGeneration is the latest generation observed
                   by the controller.
@@ -1143,9 +1158,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

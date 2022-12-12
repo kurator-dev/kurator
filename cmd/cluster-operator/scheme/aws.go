@@ -19,36 +19,29 @@ package scheme
 
 import (
 	cgscheme "k8s.io/client-go/kubernetes/scheme"
-	infrav1alpha3 "sigs.k8s.io/cluster-api-provider-aws/api/v1alpha3"
-	infrav1alpha4 "sigs.k8s.io/cluster-api-provider-aws/api/v1alpha4"
-	infrav1 "sigs.k8s.io/cluster-api-provider-aws/api/v1beta1"
-	eksbootstrapv1alpha3 "sigs.k8s.io/cluster-api-provider-aws/bootstrap/eks/api/v1alpha3"
-	eksbootstrapv1alpha4 "sigs.k8s.io/cluster-api-provider-aws/bootstrap/eks/api/v1alpha4"
-	eksbootstrapv1 "sigs.k8s.io/cluster-api-provider-aws/bootstrap/eks/api/v1beta1"
-	ekscontrolplanev1alpha3 "sigs.k8s.io/cluster-api-provider-aws/controlplane/eks/api/v1alpha3"
-	ekscontrolplanev1alpha4 "sigs.k8s.io/cluster-api-provider-aws/controlplane/eks/api/v1alpha4"
-	ekscontrolplanev1 "sigs.k8s.io/cluster-api-provider-aws/controlplane/eks/api/v1beta1"
-	expinfrav1alpha3 "sigs.k8s.io/cluster-api-provider-aws/exp/api/v1alpha3"
-	expinfrav1alpha4 "sigs.k8s.io/cluster-api-provider-aws/exp/api/v1alpha4"
-	expinfrav1 "sigs.k8s.io/cluster-api-provider-aws/exp/api/v1beta1"
+	_ "k8s.io/component-base/logs/json/register"
+	infrav1beta1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta1"
+	infrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
+	eksbootstrapv1beta1 "sigs.k8s.io/cluster-api-provider-aws/v2/bootstrap/eks/api/v1beta1"
+	eksbootstrapv1 "sigs.k8s.io/cluster-api-provider-aws/v2/bootstrap/eks/api/v1beta2"
+	ekscontrolplanev1beta1 "sigs.k8s.io/cluster-api-provider-aws/v2/controlplane/eks/api/v1beta1"
+	ekscontrolplanev1 "sigs.k8s.io/cluster-api-provider-aws/v2/controlplane/eks/api/v1beta2"
+	expinfrav1beta1 "sigs.k8s.io/cluster-api-provider-aws/v2/exp/api/v1beta1"
+	expinfrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/exp/api/v1beta2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	expclusterv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
 )
 
 func init() {
 	_ = eksbootstrapv1.AddToScheme(Scheme)
-	_ = eksbootstrapv1alpha3.AddToScheme(Scheme)
-	_ = eksbootstrapv1alpha4.AddToScheme(Scheme)
+	_ = eksbootstrapv1beta1.AddToScheme(Scheme)
 	_ = cgscheme.AddToScheme(Scheme)
 	_ = clusterv1.AddToScheme(Scheme)
 	_ = expclusterv1.AddToScheme(Scheme)
 	_ = ekscontrolplanev1.AddToScheme(Scheme)
-	_ = ekscontrolplanev1alpha3.AddToScheme(Scheme)
-	_ = ekscontrolplanev1alpha4.AddToScheme(Scheme)
+	_ = ekscontrolplanev1beta1.AddToScheme(Scheme)
 	_ = infrav1.AddToScheme(Scheme)
-	_ = infrav1alpha3.AddToScheme(Scheme)
-	_ = expinfrav1alpha3.AddToScheme(Scheme)
-	_ = infrav1alpha4.AddToScheme(Scheme)
-	_ = expinfrav1alpha4.AddToScheme(Scheme)
+	_ = infrav1beta1.AddToScheme(Scheme)
+	_ = expinfrav1beta1.AddToScheme(Scheme)
 	_ = expinfrav1.AddToScheme(Scheme)
 }
