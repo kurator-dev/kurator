@@ -2,7 +2,7 @@
 title: "Quick start"
 linkTitle: "Quick start"
 description: >
-  The easest way to get start with Kurator.
+  The easiest way to get start with Kurator.
 ---
 
 ## Setup kubernetes clusters
