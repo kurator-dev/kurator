@@ -79,10 +79,35 @@ Create a kubernetes cluster on AWS, which contains control plane nodes and worke
     link="./image/capa-aws.png"
     >}}
 
+Generating the cluster configuration:
+
+```console
+export AWS_CONTROL_PLANE_MACHINE_TYPE=t3.large
+export AWS_NODE_MACHINE_TYPE=t3.large
+export AWS_REGION=us-east-1
+export AWS_SSH_KEY_NAME=default
+export KUBERNETES_VERSION=v1.25.0
+export CONTROL_PLANE_MACHINE_COUNT=3
+export WORKER_MACHINE_COUNT=3
+clusterctl generate cluster capi-quickstart --infrastructure=aws:v2.0.0 > manifests/examples/capi-quickstart.yaml
+```
+
+The cluster resource topology shows as follows:
+
+{{< image width="75%"
+    link="./image/capa-crd.png"
+    >}}
+
+
+Apply the cluster manifest:
+
 ```console
 kubectl apply -f manifests/examples/capi-quickstart.yaml
+```
 
-# verify the control plane is up 
+Wait the control plane is up:
+
+```console
 kubectl get kubeadmcontrolplane -w
 ```
 
@@ -90,11 +115,11 @@ kubectl get kubeadmcontrolplane -w
 
 ```console
 # retrieve the cluster Kubeconfig 
-clusterctl get kubeconfig capi-quickstart > capi-quickstart.kubeconfig
+clusterctl get kubeconfig capi-quickstart > /root/.kube/capi-quickstart.kubeconfig
 # deploy calico solution
 kubectl --kubeconfig=/root/.kube/capi-quickstart.kubeconfig apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.24.1/manifests/calico.yaml
 # After a short while, our nodes should be running and in Ready state
-kubectl --kubeconfig=./capi-quickstart.kubeconfig get nodes
+kubectl --kubeconfig=/root/.kube/capi-quickstart.kubeconfig get nodes
 ```
 
 ## Cleanup
