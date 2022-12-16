@@ -1,7 +1,7 @@
 ---
 title: "Components"
 linkTitle: "Components"
-weight: 3
+weight: 2
 description: >
   Install components by Kurator?
 ---
