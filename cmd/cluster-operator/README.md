@@ -38,8 +38,3 @@ helm uninstall kurator-base -n kurator-system
 kubectl delete crd $(k get crds | grep cluster.x-k8s.io | awk '{print $1}')
 kubectl delete ns kurator-system
 ```
-
-## TODO
-
-- support CNI install? use ClusterResourceSet?
-- support Ingresss/LoadBalancer Service? use aws-load-balancer-controller?
