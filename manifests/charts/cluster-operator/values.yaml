@@ -27,4 +27,4 @@ feautreGates:
 
 aws:
   # AWS_BASE64ENCODED_CREDENTIALS
-  credentials: ""
+  credentials: "Cg==" # zero credential
