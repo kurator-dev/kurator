@@ -1,5 +1,5 @@
 ---
-title: Federated HPA
+title: Cluster Operator on AWS
 authors:
 - "@zirain" # Authors' github accounts here.
 reviewers:
@@ -31,13 +31,13 @@ this KEP.  Describe why the change is important and the benefits to users.
 ### Goals
 
 1. Provisioning, upgrading, and operating multiple Kubernetes clusters base on Cluster API.
-2. Least privilege base on IRSA.
-3. Easy to manage cluster infrastructure on AWS.
+1. Least privilege base on IRSA.
+1. Easy to manage cluster infrastructure on AWS.
 
 ### Non-Goals
 
 1. Manage AWS credentials
-2. Manage AWS IAM role and policy
+1. Manage AWS IAM role and policy
 
 ## Proposal
 
@@ -61,17 +61,17 @@ bogged down.
 
 #### Story 1
 
-For a developer who want to provision a kubernetes cluster on AWS with [Amazon VPC CNI](https://github.com/aws/amazon-vpc-cni-k8s).
+For a operator who want to provision a kubernetes cluster on AWS with [Amazon VPC CNI](https://github.com/aws/amazon-vpc-cni-k8s).
 
 
 #### Story 2
 
-For a developer who want to provision a kubernetes cluster on AWS with [Amazon EBS CSI](https://github.com/kubernetes-sigs/aws-ebs-csi-driver).
+For a operator who want to provision a kubernetes cluster on AWS with [Amazon EBS CSI](https://github.com/kubernetes-sigs/aws-ebs-csi-driver).
 
 
 #### Story 3
 
-For a developer who want to provision a kubernetes cluster on AWS with [AWS Load Balancer Controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller).
+For a operator who want to provision a kubernetes cluster on AWS with [AWS Load Balancer Controller](https://kubernetes-sigs.github.io/aws-load-balancer-controller).
 
 
 ### Notes/Constraints/Caveats (Optional)
@@ -85,7 +85,7 @@ This might be a good place to talk about core concepts and how they relate.
 
 ### Risks and Mitigations
 
-1. Need grant `s3` access to master node to support [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html).
+1. Need to grant `s3` access permission to master node to support [IRSA](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html).
 2. Amazon VPC CNI need bypass all ports in security group.
 
 <!--
@@ -104,20 +104,27 @@ Consider including folks who also work outside the SIG or subproject.
 
 ![cluster oparator architecture](images/clusteroperator.drawio.png)
 
-An new CRD `ClusterPlugin` will be used to describe the infrastructure of kubernetes cluster.
+A new CRD `ClusterPlugin` will be used to describe the infrastructure of kubernetes cluster.
 
 ```golang
 // ClusterPluginSpec declares plugins in the cluster
 type ClusterPluginSpec struct {
 	// ClusterName is the name of the Cluster this object belongs to.
 	ClusterName string `json:"clusterName"`
-	// Netwokring decalres the networking configuration of the Cluster this object belongs to.
-	Netwokring ClusterNetwokringSpec `json:"netkworking,omitempty"`
-	// Netwokring decalres the storage configuration of the Cluster this object belongs to.
+	// Networking decalres the networking configuration of the Cluster this object belongs to.
+	Networking ClusterNetworkingSpec `json:"netkworking,omitempty"`
+	// Storage decalres the storage configuration of the Cluster this object belongs to.
 	Storage ClusterStorageSpec `json:"stroage,omitempty"`
-	// Netwokring decalres the ingress configuration of the Cluster this object belongs to.
+	// Ingress decalres the ingress configuration of the Cluster this object belongs to.
 	Ingress ClusterIngressSpec `json:"ingress,omitempty"`
 }
+
+type ClusterNetworkingSpec struct {
+	AmazonVPC *AmazonVPCNetworkingSpec `json:"amazonVPC,omitempty"`
+	Calico    *CalicoNetworkingSpec    `json:"calico,omitempty"`
+}
+
+
 ```
 
 ### How to install CNI for target cluster?
