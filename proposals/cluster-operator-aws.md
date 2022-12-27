@@ -38,8 +38,15 @@ this KEP.  Describe why the change is important and the benefits to users.
 
 1. Manage AWS credentials
 1. Manage AWS IAM role and policy
+1. Manage EFS security group rule
 
 ## Proposal
+
+This proposal will import controllers from [Cluster API](https://github.com/kubernetes-sigs/cluster-api) and [Cluster API AWS provider](https://github.com/kubernetes-sigs/cluster-api-provider-aws), simplified deployment model and make it easy to install.
+
+A new CRD `ClusterPlugin` will be used to describe the infrastructure of kubernetes cluster.
+
+`PluginController` will watch `KubeadmControlPlane` and `ClusterPlugin`, start to install `CNI` on target cluster when `KubeadmControlPlane` is initialized, then start to install CSI on target cluster when `KubeadmControlPlane` is ready.
 
 <!--
 This is where we get down to the specifics of what the proposal actually is.
@@ -104,7 +111,7 @@ Consider including folks who also work outside the SIG or subproject.
 
 ![cluster oparator architecture](images/clusteroperator.drawio.png)
 
-A new CRD `ClusterPlugin` will be used to describe the infrastructure of kubernetes cluster.
+The API design of `ClusterPlugin` as following:
 
 ```golang
 // ClusterPluginSpec declares plugins in the cluster
@@ -120,34 +127,41 @@ type ClusterPluginSpec struct {
 }
 
 type ClusterNetworkingSpec struct {
+	// AmazonVPC decalres the configuration of amazon vpc cni driver.
 	AmazonVPC *AmazonVPCNetworkingSpec `json:"amazonVPC,omitempty"`
-	Calico    *CalicoNetworkingSpec    `json:"calico,omitempty"`
+	// Calico decalres the configuration of calico cni driver.
+	Calico *CalicoNetworkingSpec `json:"calico,omitempty"`
 }
 
-
+type ClusterStorageSpec struct {
+	// EBS decalres the configuration of amazon ebs csi driver.
+	EBS *EBSStorageSpec `json:"ebs,omitempty"`
+	// EFS decalres the configuration of amazon efs csi driver.
+	EFS *EFSStorageSpec `json:"efs,omitempty"`
+}
 ```
 
 ### How to install CNI for target cluster?
 
-`PluginController` should watch `KubeadmControlPlane`, when `KubeadmControlPlane` is initialized, `PluginController` start to install CNI on target cluster.
+When `KubeadmControlPlane` is initialized, `PluginController` start to install CNI on target cluster.
 
 1. Check IAM policy and role, make sure the trust policy is attached to the role.
-2. Apply CNI driver to cluster, wait `KubeadmControlPlane` ready.
-3. Update security group when using `Amazon VPC CNI`.
+1. Apply CNI driver to cluster, wait `KubeadmControlPlane` ready.
+2. Update security group base on the installed CNI(`Amazon VPC CNI` need to allow all ports between workerss and master nodes).
 
 ### How to install CSI for target cluster?
 
-`PluginController` should watch `KubeadmControlPlane`, when `KubeadmControlPlane` is ready, `PluginController` start to install CSI on target cluster.
+When `KubeadmControlPlane` is ready, `PluginController` start to install CSI on target cluster.
 
 1. Check IAM policy and role, make sure the trust policy is attached to the role.
-2. Apply CSI driver to cluster, wait all components running ready.
+1. Apply CSI driver to cluster, wait all components running ready.
 
 ### How to install CSI for target cluster?
 
-`PluginController` should watch `KubeadmControlPlane`, when `KubeadmControlPlane` is ready, `PluginController` start to install CSI on target cluster.
+When `KubeadmControlPlane` is ready, `PluginController` start to install CSI on target cluster.
 
 1. Check IAM policy and role, make sure the trust policy is attached to the role.
-2. Apply ingress controller to cluster, wait all components running ready.
+1. Apply ingress controller to cluster, wait all components running ready.
 
 ### How to clean resources when deleting cluster?
 
