@@ -47,12 +47,43 @@ type CustomClusterSpec struct {
 
 	// MachineRef is the reference of nodes for provisioning a kurator cluster.
 	// +optional
-	MachineRef corev1.ObjectReference `json:"machineRef,omitempty"`
+	MachineRef *corev1.ObjectReference `json:"machineRef,omitempty"`
+
+	// CNIConfig is the configuration for the CNI of the cluster on VMs.
+	CNI CNIConfig `json:"cni"`
 }
+
+type CNIConfig struct {
+	// Type is the type of CNI. The default value is calico and can be ["calico", "cilium", "canal", "flannel"]
+	Type string `json:"type"`
+}
+
+type CustomClusterPhase string
+
+const (
+	// RunningPhase represents the cluster on VMs is creating. In this phase, the worker named ends in "init" is running to initialize the cluster on VMs
+	RunningPhase CustomClusterPhase = "Running"
+
+	// SucceededPhase represents the cluster on VMs is created successful. In this phase, the worker named ends in "init" is completed
+	SucceededPhase CustomClusterPhase = "Succeeded"
+
+	// TerminatingPhase represents the cluster on VMs is being cleared. In this phase, the worker named ends in "terminate" is running to clear the cluster on VMs
+	TerminatingPhase CustomClusterPhase = "Terminating"
+
+	// InitFailedPhase represents something is wrong when creating the cluster on VMs. In this phase, the worker named ends in "init" is in error
+	InitFailedPhase CustomClusterPhase = "InitFailed"
+
+	// TerminateFailedPhase represents something is wrong when clearing the cluster on VMs. In this phase, the worker named ends in "terminate" is in error
+	TerminateFailedPhase CustomClusterPhase = "TerminateFailed"
+)
 
 // CustomClusterStatus represents the current status of the cluster.
 type CustomClusterStatus struct {
-	// TODO add state.
+
+	// Phase represents the current phase of customCluster actuation.
+	// E.g.  Running, Succeed, Terminating, Failed etc.
+	// +optional
+	Phase CustomClusterPhase `json:"phase,omitempty"`
 }
 
 // +kubebuilder:object:root=true

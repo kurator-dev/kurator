@@ -1,0 +1,17 @@
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: cc-kcp
+  namespace: default
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+    initConfiguration:
+    joinConfiguration:
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: cluster.kurator.dev/v1alpha1
+      kind: customMachine
+      name: cc-custommachine
+      namespace: default
+  version: v1.23.7

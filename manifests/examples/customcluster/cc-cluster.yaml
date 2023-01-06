@@ -1,0 +1,20 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: cc-cluster
+  namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+        - 192.168.0.0/16
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: cc-kcp
+    namespace: default
+  infrastructureRef:
+    apiVersion: cluster.kurator.dev/v1alpha1
+    kind: CustomCluster
+    name: cc-customcluster
+    namespace: default
