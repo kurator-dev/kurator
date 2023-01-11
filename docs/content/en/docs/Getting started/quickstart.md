@@ -21,3 +21,22 @@ hack/local-dev-setup.sh
 make kurator
 ```
 
+## Troubleshooting
+
+### ERROR Timeout waiting for file exist /root/.kube/kurator-host.config
+
+See [kind Known Issues][kind-known-issues]
+
+```console
+sysctl fs.inotify.max_user_watches=524288
+sysctl fs.inotify.max_user_instances=512
+```
+
+### jq: command not found
+
+```console
+apt-get install -y jq
+```
+
+[kind-known-issues]: https://kind.sigs.k8s.io/docs/user/known-issues/
+

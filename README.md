@@ -15,11 +15,40 @@ It provides powerful capabilities to multi-cloud and multi-cluster, including:
 
 This guide will cover:
 
+- Install Kurator
 - Install Karmada and join a Kubernetes member cluster
 - Install Istio
 - Install KubeEdge and join an edge node
 - Install Volcano
 - Install Prometheus
+
+### Install Kurator
+
+**Clone this repo to your machine:**
+
+```console
+git clone https://github.com/kurator-dev/kurator.git
+```
+
+**Change to the Kurator directory:**
+
+```console
+cd kurator
+```
+
+**Build Kurator:**
+
+```console
+make kurator
+```
+
+An executable file named `kurator` will be created at out/$(GOOS)-$(GOARCH)/ 
+
+**Put the `kurator`  to the executable directory:**
+
+```console
+cp out/linux-amd64/kurator /usr/bin/
+```
 
 ### Local env setup
 
@@ -49,7 +78,7 @@ kurator join karmada member1 \
 **Join cluster `member2`:**
 
 ```console
-$ kurator join karmada member2 \
+kurator join karmada member2 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member2
 ```
