@@ -104,7 +104,7 @@ gen-thanos: init-gen
 	hack/gen-thanos.sh
 
 .PHONY: sync-crds
-sync-crds:
+sync-crds: gen-crd
 	hack/sync-crds.sh
 
 .PHONY: gen-chart
@@ -124,6 +124,7 @@ clean:
 .PHONY: gen
 gen: clean \
     init-gen \
+	generate \
 	tidy \
 	fix-copyright \
 	gen-thanos \
