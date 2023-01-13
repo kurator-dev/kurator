@@ -1,0 +1,84 @@
+<mxfile host="65bd71144e">
+    <diagram id="G2nML-5QxiATg-hCjWUf" name="第 1 页">
+        <mxGraphModel dx="1077" dy="790" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.542;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="T9_6CeGzkizl7xOx6pnr-1" target="T9_6CeGzkizl7xOx6pnr-5" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="570" y="419"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-10" value="infrastructureRef" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="T9_6CeGzkizl7xOx6pnr-7" connectable="0" vertex="1">
+                    <mxGeometry x="0.2635" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.458;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="T9_6CeGzkizl7xOx6pnr-1" target="T9_6CeGzkizl7xOx6pnr-6" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="150" y="419"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-9" value="bootstrap.configRef" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="T9_6CeGzkizl7xOx6pnr-8" connectable="0" vertex="1">
+                    <mxGeometry x="0.2416" y="-3" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-16" value="clusterName" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;labelBackgroundColor=none;fontColor=#000000;" parent="1" source="T9_6CeGzkizl7xOx6pnr-1" target="T9_6CeGzkizl7xOx6pnr-2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-1" value="kind:MachineDeployment" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="399" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-4" value="infrastructureRef" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="T9_6CeGzkizl7xOx6pnr-2" target="T9_6CeGzkizl7xOx6pnr-3" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="560" y="140"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="T9_6CeGzkizl7xOx6pnr-2" target="T9_6CeGzkizl7xOx6pnr-11" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="160" y="140"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-13" value="controlPlaneRef" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="T9_6CeGzkizl7xOx6pnr-12" connectable="0" vertex="1">
+                    <mxGeometry x="0.4" y="-2" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-2" value="kind:Cluster" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="120" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-3" value="kind:AWSCluster" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="200" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-5" value="kind:AWSMachineTemplate" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="519" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-6" value="kind:KubeadmConfigTemplate" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="519" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-15" value="&lt;div style=&quot;line-height: 19px&quot;&gt;machineTemplate.infrastructureRef&lt;br&gt;&lt;/div&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="T9_6CeGzkizl7xOx6pnr-11" target="T9_6CeGzkizl7xOx6pnr-14" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="T9_6CeGzkizl7xOx6pnr-11" value="kind:KubeadmControlPlane" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="200" width="240" height="40" as="geometry"/>
+                </mxCell>
+                <object label="kind:AWSMachineTemplate" hedietLinkedDataV1_path="" id="T9_6CeGzkizl7xOx6pnr-14">
+                    <mxCell style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                        <mxGeometry x="40" y="320" width="240" height="40" as="geometry"/>
+                    </mxCell>
+                </object>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
