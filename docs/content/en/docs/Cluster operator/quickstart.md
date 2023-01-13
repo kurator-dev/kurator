@@ -105,6 +105,8 @@ Apply the cluster manifest:
 kubectl apply -f manifests/examples/capi-quickstart.yaml
 ```
 
+> if you want create a cluster with multi instance types, please checkout the [multi nodes demo](https://github.com/kurator-dev/kurator/blob/main/manifests/examples/multi-tenancy/capi-nodes.yaml)
+
 Wait the control plane is up:
 
 ```console
