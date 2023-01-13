@@ -29,14 +29,8 @@ import (
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	kubeadmcontrolplanecontrollers "sigs.k8s.io/cluster-api/controlplane/kubeadm/controllers"
 	kcpwebhooks "sigs.k8s.io/cluster-api/controlplane/kubeadm/webhooks"
-	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
-	addonscontrollers "sigs.k8s.io/cluster-api/exp/addons/controllers"
-	expv1 "sigs.k8s.io/cluster-api/exp/api/v1beta1"
-	expcontrollers "sigs.k8s.io/cluster-api/exp/controllers"
-	"sigs.k8s.io/cluster-api/feature"
 	"sigs.k8s.io/cluster-api/webhooks"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/cluster-operator/config"
@@ -86,55 +80,6 @@ func setupReconcilers(ctx context.Context, opts *config.Options, mgr ctrl.Manage
 		return fmt.Errorf("unable to create ClusterCache controller, %w", err)
 	}
 
-	if feature.Gates.Enabled(feature.ClusterTopology) {
-		unstructuredCachingClient, err := client.NewDelegatingClient(
-			client.NewDelegatingClientInput{
-				// Use the default client for write operations.
-				Client: mgr.GetClient(),
-				// For read operations, use the same cache used by all the controllers but ensure
-				// unstructured objects will be also cached (this does not happen with the default client).
-				CacheReader:       mgr.GetCache(),
-				CacheUnstructured: true,
-			},
-		)
-		if err != nil {
-			return fmt.Errorf("unable to create unstructured caching client for ClusterTopology, %w", err)
-		}
-
-		if err := (&controllers.ClusterClassReconciler{
-			Client:                    mgr.GetClient(),
-			APIReader:                 mgr.GetAPIReader(),
-			UnstructuredCachingClient: unstructuredCachingClient,
-			WatchFilterValue:          opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
-			return fmt.Errorf("unable to create ClusterClass controller, %w", err)
-		}
-
-		if err := (&controllers.ClusterTopologyReconciler{
-			Client:                    mgr.GetClient(),
-			APIReader:                 mgr.GetAPIReader(),
-			UnstructuredCachingClient: unstructuredCachingClient,
-			WatchFilterValue:          opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
-			return fmt.Errorf("unable to create ClusterTopology controller, %w", err)
-		}
-
-		if err := (&controllers.MachineDeploymentTopologyReconciler{
-			Client:           mgr.GetClient(),
-			APIReader:        mgr.GetAPIReader(),
-			WatchFilterValue: opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, controller.Options{}); err != nil {
-			return fmt.Errorf("unable to create MachineDeploymentTopology controller, %w", err)
-		}
-
-		if err := (&controllers.MachineSetTopologyReconciler{
-			Client:           mgr.GetClient(),
-			APIReader:        mgr.GetAPIReader(),
-			WatchFilterValue: opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, controller.Options{}); err != nil {
-			return fmt.Errorf("unable to create MachineSetTopology controller, %w", err)
-		}
-	}
 	if err := (&controllers.ClusterReconciler{
 		Client:           mgr.GetClient(),
 		APIReader:        mgr.GetAPIReader(),
@@ -164,31 +109,6 @@ func setupReconcilers(ctx context.Context, opts *config.Options, mgr ctrl.Manage
 		WatchFilterValue: opts.WatchFilterValue,
 	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
 		return fmt.Errorf("unable to create MachineDeployment controller, %w", err)
-	}
-
-	if feature.Gates.Enabled(feature.MachinePool) {
-		if err := (&expcontrollers.MachinePoolReconciler{
-			Client:           mgr.GetClient(),
-			WatchFilterValue: opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
-			return fmt.Errorf("unable to create MachinePool controller, %w", err)
-		}
-	}
-
-	if feature.Gates.Enabled(feature.ClusterResourceSet) {
-		if err := (&addonscontrollers.ClusterResourceSetReconciler{
-			Client:           mgr.GetClient(),
-			Tracker:          tracker,
-			WatchFilterValue: opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
-			return fmt.Errorf("unable to create ClusterResourceSet controller, %w", err)
-		}
-		if err := (&addonscontrollers.ClusterResourceSetBindingReconciler{
-			Client:           mgr.GetClient(),
-			WatchFilterValue: opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
-			return fmt.Errorf("unable to create ClusterResourceSetBinding controller, %w", err)
-		}
 	}
 
 	if err := (&controllers.MachineHealthCheckReconciler{
@@ -241,18 +161,6 @@ func setupWebhooks(mgr ctrl.Manager) error {
 
 	if err := (&clusterv1.MachineDeployment{}).SetupWebhookWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create MachineDeployment webhook, %w", err)
-	}
-
-	if feature.Gates.Enabled(feature.MachinePool) {
-		if err := (&expv1.MachinePool{}).SetupWebhookWithManager(mgr); err != nil {
-			return fmt.Errorf("unable to create MachinePool webhook, %w", err)
-		}
-	}
-
-	if feature.Gates.Enabled(feature.ClusterResourceSet) {
-		if err := (&addonsv1.ClusterResourceSet{}).SetupWebhookWithManager(mgr); err != nil {
-			return fmt.Errorf("unable to create ClusterResourceSet webhook, %w", err)
-		}
 	}
 
 	if err := (&clusterv1.MachineHealthCheck{}).SetupWebhookWithManager(mgr); err != nil {

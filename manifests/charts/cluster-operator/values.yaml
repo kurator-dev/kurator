@@ -12,18 +12,6 @@ logging:
 feautreGates:
 # capa
 - AutoControllerIdentityCreator=true
-- BootstrapFormatIgnition=false 
-- EKS=true
-- EKSEnableIAM=false
-- EKSAllowAddRoles=false
-- EKSFargate=false
-- MachinePool=false
-- EventBridgeInstanceState=false
-- ExternalResourceGC=false
-# capi
-- MachinePool=false
-- ClusterResourceSet=false
-- ClusterTopology=false
 
 aws:
   # AWS_BASE64ENCODED_CREDENTIALS
