@@ -64,6 +64,10 @@ docker.cluster-operator: cluster-operator
 	cp ./cmd/cluster-operator/Dockerfile $(OUT_PATH)/
 	cd $(OUT_PATH)/ && $(DOCKER_BUILD) -t ${IMAGE_HUB}/cluster-operator:${IMAGE_TAG} .
 
+.PHONY: docker-push
+docker-push: docker
+	docker push ${IMAGE_HUB}/cluster-operator:${IMAGE_TAG}
+
 .PHONY: lint
 lint: golangci-lint lint-copyright lint-markdown lint-shellcheck
 

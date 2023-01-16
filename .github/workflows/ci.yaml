@@ -53,6 +53,9 @@ jobs:
           go-version: 1.19.x
       - name: compile
         run: make build
+      - name: docker build
+        run: make docker
+
   test:
     name: Unit test
     runs-on: ubuntu-18.04
