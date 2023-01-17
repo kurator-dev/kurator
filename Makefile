@@ -31,10 +31,11 @@ HELM_CHART_VERSION ?= 0.1.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+	GOBIN=$(shell go env GOPATH)/bin
 else
-GOBIN=$(shell go env GOBIN)
+	GOBIN=$(shell go env GOBIN)
 endif
+export PATH := $(GOBIN):$(PATH)
 
 CONTROLLER_GEN = $(GOBIN)/controller-gen
 
