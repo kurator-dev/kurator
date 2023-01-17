@@ -39,8 +39,8 @@ import (
 
 	"kurator.dev/kurator/cmd/cluster-operator/aws"
 	"kurator.dev/kurator/cmd/cluster-operator/capi"
-	"kurator.dev/kurator/cmd/cluster-operator/config"
 	"kurator.dev/kurator/cmd/cluster-operator/customcluster"
+	"kurator.dev/kurator/cmd/cluster-operator/options"
 	"kurator.dev/kurator/cmd/cluster-operator/scheme"
 	"kurator.dev/kurator/pkg/version"
 )
@@ -60,17 +60,11 @@ func main() {
 }
 
 func newRootCommand() *cobra.Command {
-	opts := &config.Options{}
+	opts := &options.Options{}
 	cmd := &cobra.Command{
 		Use:          "cluster-operator",
 		Short:        "Kurator builds distributed cloud-native stacks.",
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if opts.SyncPeriod > config.MaxEKSSyncPeriod {
-				return fmt.Errorf("syn-period(%v) should not greater than EKS max-sync-period %v", opts.SyncPeriod, config.MaxEKSSyncPeriod)
-			}
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctrl.SetLogger(klogr.New())
 			ctx := ctrl.SetupSignalHandler()
@@ -103,7 +97,7 @@ func newVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func run(ctx context.Context, opts *config.Options) error {
+func run(ctx context.Context, opts *options.Options) error {
 	if opts.WatchNamespace != "" {
 		log.Info("Watching cluster-api objects only in namespace for reconciliation", "namespace", opts.WatchNamespace)
 	}
@@ -130,7 +124,6 @@ func run(ctx context.Context, opts *config.Options) error {
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 		LeaderElectionID:           "kurator-cluster-operator-leader-elect",
 		LeaderElectionNamespace:    opts.LeaderElectionNamespace,
-		SyncPeriod:                 &opts.SyncPeriod,
 		Namespace:                  opts.WatchNamespace,
 		EventBroadcaster:           broadcaster,
 		Port:                       opts.WebhookPort,
