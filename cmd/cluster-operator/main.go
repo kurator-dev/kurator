@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -51,17 +52,17 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 
-	cmd := newControllerCommand()
+	cmd := newRootCommand()
 	if err := cmd.Execute(); err != nil {
 		fmt.Println("execute kurator command failed: ", err)
 		os.Exit(-1)
 	}
 }
 
-func newControllerCommand() *cobra.Command {
+func newRootCommand() *cobra.Command {
 	opts := &config.Options{}
 	cmd := &cobra.Command{
-		Use:          "controller",
+		Use:          "cluster-operator",
 		Short:        "Kurator builds distributed cloud-native stacks.",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -76,12 +77,29 @@ func newControllerCommand() *cobra.Command {
 			return run(ctx, opts)
 		},
 	}
+	cmd.AddCommand(newVersionCommand())
 
 	cmd.ResetFlags()
 
 	opts.AddFlags(cmd.PersistentFlags())
-	// TODO: support version
 
+	return cmd
+}
+
+func newVersionCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "Print the version of kurator cluster-operator",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			v := version.Get()
+			y, err := json.MarshalIndent(&v, "", "  ")
+			if err != nil {
+				return err
+			}
+			fmt.Println(string(y))
+			return nil
+		},
+	}
 	return cmd
 }
 
