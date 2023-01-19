@@ -15,11 +15,10 @@ limitations under the License.
 */
 
 // code in the package copied from: https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/v1.5.1/main.go
-package config
+package options
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/feature"
@@ -38,8 +37,7 @@ type Options struct {
 	WebhookPort             int
 	WebhookCertDir          string
 	HealthAddr              string
-
-	Concurrency int
+	Concurrency             int
 }
 
 func (opt *Options) AddFlags(fs *pflag.FlagSet) {
@@ -79,34 +77,6 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 	)
 
 	fs.IntVar(
-		&opt.ClusterConcurrency,
-		"awscluster-concurrency",
-		5,
-		"Number of AWSClusters to process simultaneously",
-	)
-
-	fs.IntVar(
-		&opt.InstanceStateConcurrency,
-		"instance-state-concurrency",
-		5,
-		"Number of concurrent watches for instance state changes",
-	)
-
-	fs.IntVar(
-		&opt.MachineConcurrency,
-		"awsmachine-concurrency",
-		10,
-		"Number of AWSMachines to process simultaneously",
-	)
-
-	fs.DurationVar(
-		&opt.SyncPeriod,
-		"sync-period",
-		10*time.Minute,
-		fmt.Sprintf("The minimum interval at which watched resources are reconciled. If EKS is enabled the maximum allowed is %s", MaxEKSSyncPeriod),
-	)
-
-	fs.IntVar(
 		&opt.WebhookPort,
 		"webhook-port",
 		9443,
@@ -141,11 +111,14 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 	)
 
 	fs.IntVar(
-		&opt.ClusterConcurrency,
+		&opt.Concurrency,
 		"concurrency",
 		5,
-		"Number of Cluster API resource to process simultaneously",
+		"Number of Cluster API resources to process simultaneously",
 	)
 
+	// TODO: this may need to be operator scope rather than AWS platform scope.
 	feature.MutableGates.AddFlag(fs)
+
+	opt.AWSOptions.AddFlags(fs)
 }

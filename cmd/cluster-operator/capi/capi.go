@@ -33,14 +33,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
-	"kurator.dev/kurator/cmd/cluster-operator/config"
+	"kurator.dev/kurator/cmd/cluster-operator/options"
 )
 
 var (
 	log = ctrl.Log.WithName("capi")
 )
 
-func InitControllers(ctx context.Context, opts *config.Options, mgr ctrl.Manager) error {
+func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
 	if err := setupReconcilers(ctx, opts, mgr); err != nil {
 		log.Error(err, "init capi reconcilers failed")
 		return fmt.Errorf("init capi reconciler failed: %w", err)
@@ -54,7 +54,7 @@ func InitControllers(ctx context.Context, opts *config.Options, mgr ctrl.Manager
 	return nil
 }
 
-func setupReconcilers(ctx context.Context, opts *config.Options, mgr ctrl.Manager) error {
+func setupReconcilers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
 	// Set up a ClusterCacheTracker and ClusterCacheReconciler to provide to controllers
 	// requiring a connection to a remote cluster
 	// ClusterCacheTracker.GetClient return client for remote cluster

@@ -15,23 +15,21 @@ limitations under the License.
 */
 
 // code in the package copied from: https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/v1.5.1/main.go
-package config
+package options
 
 import (
-	"time"
-)
-
-var (
-	// MaxEKSSyncPeriod is the maximum allowed duration for the sync-period flag when using EKS. It is set to 10 minutes
-	// because during resync it will create a new AWS auth token which can a maximum life of 15 minutes and this ensures
-	// the token (and kubeconfig secret) is refreshed before token expiration.
-	MaxEKSSyncPeriod = time.Minute * 10
+	"github.com/spf13/pflag"
 )
 
 type AWSOptions struct {
-	ClusterConcurrency       int
-	InstanceStateConcurrency int
-	MachineConcurrency       int
-	ServiceEndpoints         string
-	SyncPeriod               time.Duration
+	ServiceEndpoints string
+}
+
+func (opt *AWSOptions) AddFlags(fs *pflag.FlagSet) {
+	fs.StringVar(
+		&opt.ServiceEndpoints,
+		"service-endpoints",
+		"",
+		"Set custom AWS service endpoins in semi-colon separated format: ${SigningRegion1}:${ServiceID1}=${URL},${ServiceID2}=${URL};${SigningRegion2}...",
+	)
 }
