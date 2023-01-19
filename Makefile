@@ -31,15 +31,14 @@ HELM_CHART_VERSION ?= 0.1.0
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
-GOBIN=$(shell go env GOPATH)/bin
+	GOBIN=$(shell go env GOPATH)/bin
 else
-GOBIN=$(shell go env GOBIN)
+	GOBIN=$(shell go env GOBIN)
 endif
+export PATH := $(GOBIN):$(PATH)
 
 CONTROLLER_GEN = $(GOBIN)/controller-gen
 
-IMAGE_HUB ?= ghcr.io/kurator-dev
-IMAGE_TAG ?= latest
 
 .PHONY: build
 build: clean tidy kurator cluster-operator
@@ -127,8 +126,7 @@ clean:
 
 .PHONY: gen
 gen: clean \
-    init-gen \
-	generate \
+	gen-code \
 	tidy \
 	fix-copyright \
 	gen-thanos \
@@ -155,5 +153,5 @@ gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomRe
 	$(CONTROLLER_GEN) crd  paths="./pkg/apis/cluster/..." output:crd:dir=$(CRD_PATH)
 
 .PHONY: generate
-generate: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	hack/update-codegen.sh
