@@ -37,9 +37,6 @@ else
 endif
 export PATH := $(GOBIN):$(PATH)
 
-CONTROLLER_GEN = $(GOBIN)/controller-gen
-
-
 .PHONY: build
 build: clean tidy kurator cluster-operator
 
@@ -150,7 +147,7 @@ init-codegen:
 # make it configurable, read CRD_PATH from env, default path is manifests/charts/base/templates
 .PHONY: gen-crd
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	$(CONTROLLER_GEN) crd  paths="./pkg/apis/cluster/..." output:crd:dir=$(CRD_PATH)
+	CRD_PATH=$(CRD_PATH) hack/update-crdgen.sh
 
 .PHONY: generate
 gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
