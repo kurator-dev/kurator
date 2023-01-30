@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2086,SC1090
+# shellcheck disable=SC2086,SC1090,SC2206
 set -o errexit
 set -o nounset
 set -o pipefail
