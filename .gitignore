@@ -26,3 +26,7 @@ bin/
 # docs
 docs/resources/_gen
 docs/.hugo_build.lock
+
+# ignore all local dev files
+.vscode/
+.local/
