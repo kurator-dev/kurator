@@ -97,13 +97,6 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 	)
 
 	fs.StringVar(
-		&opt.ServiceEndpoints,
-		"service-endpoints",
-		"",
-		"Set custom AWS service endpoins in semi-colon separated format: ${SigningRegion1}:${ServiceID1}=${URL},${ServiceID2}=${URL};${SigningRegion2}...",
-	)
-
-	fs.StringVar(
 		&opt.WatchFilterValue,
 		"watch-filter",
 		"",
