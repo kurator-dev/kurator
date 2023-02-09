@@ -133,6 +133,14 @@ func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Reques
 	}
 	log = log.WithValues("customCluster", klog.KObj(customCluster))
 	ctx = ctrl.LoggerInto(ctx, log)
+	// ensure customCluster status no nil
+	if len(customCluster.Status.Phase) == 0 {
+		customCluster.Status.Phase = v1alpha1.PendingPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", req)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+	}
 
 	// Fetch the Cluster instance.
 	var clusterName string
@@ -184,29 +192,29 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 
 	// If upstream cluster at pre-delete, the customCluster need to be deleted.
 	if !cluster.DeletionTimestamp.IsZero() {
-		// If customCluster is already in phase terminating, the controller will check the terminating worker to handle terminating process.
-		if phase == v1alpha1.TerminatingPhase {
-			return r.reconcileHandleTerminating(ctx, customCluster, customMachine)
+		// If customCluster is already in phase Deleting, the controller will check the terminating worker to handle Deleting process.
+		if phase == v1alpha1.DeletingPhase {
+			return r.reconcileHandleDeleting(ctx, customCluster, customMachine)
 		}
-		// If customCluster is not in terminating, the controller should terminate the Vms cluster by create a terminating worker.
+		// If customCluster is not in Deleting, the controller should terminate the Vms cluster by create a terminating worker.
 		return r.reconcileVMsTerminate(ctx, customCluster)
 	}
 
-	// CustomCluster in phase nil or initFailed will try to enter running phase by creating an init worker successfully.
-	if len(phase) == 0 || phase == v1alpha1.InitFailedPhase {
+	// CustomCluster in phase nil or ProvisionFailed will try to enter Provisioning phase by creating an init worker successfully.
+	if phase == v1alpha1.PendingPhase || phase == v1alpha1.ProvisionFailedPhase {
 		return r.reconcileCustomClusterInit(ctx, customCluster, customMachine, cluster)
 	}
 
-	// If customCluster is in phase running, the controller will handle running process by checking the init worker status.
-	if phase == v1alpha1.RunningPhase {
-		return r.reconcileHandleRunning(ctx, customCluster, customMachine, cluster)
+	// If customCluster is in phase Provisioning, the controller will handle Provisioning process by checking the init worker status.
+	if phase == v1alpha1.ProvisioningPhase {
+		return r.reconcileHandleProvisioning(ctx, customCluster, customMachine, cluster)
 	}
 
 	return ctrl.Result{}, nil
 }
 
-// reconcileHandleRunning determine whether customCluster enter succeed phase or initFailed phase when current phase is running.
-func (r *CustomClusterController) reconcileHandleRunning(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, cluster *clusterv1.Cluster) (ctrl.Result, error) {
+// reconcileHandleProvisioning determine whether customCluster enter Provisioned phase or ProvisionFailed phase when current phase is Provisioning.
+func (r *CustomClusterController) reconcileHandleProvisioning(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, cluster *clusterv1.Cluster) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	initWorker := &corev1.Pod{}
@@ -221,29 +229,29 @@ func (r *CustomClusterController) reconcileHandleRunning(ctx context.Context, cu
 	}
 
 	if initWorker.Status.Phase == corev1.PodSucceeded {
-		customCluster.Status.Phase = v1alpha1.SucceededPhase
+		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
 		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update init worker.", "worker", initWorkerKey)
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
 			return ctrl.Result{RequeueAfter: RequeueAfter}, err
 		}
-		log.Info("customCluster's phase changes from Running to Succeeded")
+		log.Info("customCluster's phase changes from Provisioning to Provisioned")
 		return ctrl.Result{}, nil
 	}
 
 	if initWorker.Status.Phase == corev1.PodFailed {
-		customCluster.Status.Phase = v1alpha1.InitFailedPhase
+		customCluster.Status.Phase = v1alpha1.ProvisionFailedPhase
 		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update init worker.", "worker", initWorkerKey)
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
 			return ctrl.Result{RequeueAfter: RequeueAfter}, err
 		}
-		log.Info("customCluster's phase changes from Running to InitFailed")
+		log.Info("customCluster's phase changes from Provisioning to ProvisionFailed")
 		return ctrl.Result{}, nil
 	}
 	return ctrl.Result{}, nil
 }
 
-// reconcileHandleTerminating determine whether customCluster go to reconcileDeleteResource or enter terminateFailed phase when current phase is terminating.
-func (r *CustomClusterController) reconcileHandleTerminating(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (ctrl.Result, error) {
+// reconcileHandleDeleting determine whether customCluster go to reconcileDeleteResource or enter DeletingFailed phase when current phase is Deleting.
+func (r *CustomClusterController) reconcileHandleDeleting(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	terminateWorker := &corev1.Pod{}
@@ -265,12 +273,12 @@ func (r *CustomClusterController) reconcileHandleTerminating(ctx context.Context
 	}
 
 	if terminateWorker.Status.Phase == corev1.PodFailed {
-		customCluster.Status.Phase = v1alpha1.TerminateFailedPhase
+		customCluster.Status.Phase = v1alpha1.DeletingFailedPhase
 		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update terminate worker", "worker", terminateWorkerKey)
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
 			return ctrl.Result{RequeueAfter: RequeueAfter}, err
 		}
-		log.Info("customCluster's phase changes from Terminating to TerminateFailed")
+		log.Info("customCluster's phase changes from Deleting to DeletingFailed")
 		return ctrl.Result{}, nil
 	}
 	return ctrl.Result{}, nil
@@ -314,12 +322,12 @@ func (r *CustomClusterController) reconcileVMsTerminate(ctx context.Context, cus
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
-	customCluster.Status.Phase = v1alpha1.TerminatingPhase
-	if err1 := r.Status().Update(ctx, customCluster); err1 != nil {
-		log.Error(err1, "failed to update customCluster.", "customCluster", customCluster.Name)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
+	customCluster.Status.Phase = v1alpha1.DeletingPhase
+	if err := r.Status().Update(ctx, customCluster); err != nil {
+		log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
-	log.Info("customCluster's phase changes to Terminating")
+	log.Info("customCluster's phase changes to Deleting")
 
 	return ctrl.Result{}, nil
 }
@@ -451,12 +459,12 @@ func (r *CustomClusterController) reconcileCustomClusterInit(ctx context.Context
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
-	customCluster.Status.Phase = v1alpha1.RunningPhase
+	customCluster.Status.Phase = v1alpha1.ProvisioningPhase
 	if err1 := r.Status().Update(ctx, customCluster); err1 != nil {
 		log.Error(err1, "failed to update customCluster status", "customCluster", customCluster.Name)
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
 	}
-	log.Info("customCluster's phase changes to Running")
+	log.Info("customCluster's phase changes to Provisioning")
 
 	return ctrl.Result{}, nil
 }

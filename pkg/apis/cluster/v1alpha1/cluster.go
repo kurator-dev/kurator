@@ -61,20 +61,23 @@ type CNIConfig struct {
 type CustomClusterPhase string
 
 const (
-	// RunningPhase represents the cluster on VMs is creating. In this phase, the worker named ends in "init" is running to initialize the cluster on VMs
-	RunningPhase CustomClusterPhase = "Running"
+	// PendingPhase represents the customCluster's first phase after being created
+	PendingPhase CustomClusterPhase = "Pending"
 
-	// SucceededPhase represents the cluster on VMs is created successful. In this phase, the worker named ends in "init" is completed
-	SucceededPhase CustomClusterPhase = "Succeeded"
+	// ProvisioningPhase represents the cluster on VMs is provisioning. In this phase, the worker named ends in "init" is running to initialize the cluster on VMs
+	ProvisioningPhase CustomClusterPhase = "Provisioning"
 
-	// TerminatingPhase represents the cluster on VMs is being cleared. In this phase, the worker named ends in "terminate" is running to clear the cluster on VMs
-	TerminatingPhase CustomClusterPhase = "Terminating"
+	// ProvisionedPhase represents the cluster on VMs has been created and configured. In this phase, the worker named ends in "init" is completed
+	ProvisionedPhase CustomClusterPhase = "Provisioned"
 
-	// InitFailedPhase represents something is wrong when creating the cluster on VMs. In this phase, the worker named ends in "init" is in error
-	InitFailedPhase CustomClusterPhase = "InitFailed"
+	// DeletingPhase represents the delete request has been sent but cluster on VMs has not yet been completely deleted. In this phase, the worker named ends in "terminate" is running to clear the cluster on VMs
+	DeletingPhase CustomClusterPhase = "Deleting"
 
-	// TerminateFailedPhase represents something is wrong when clearing the cluster on VMs. In this phase, the worker named ends in "terminate" is in error
-	TerminateFailedPhase CustomClusterPhase = "TerminateFailed"
+	// ProvisionFailedPhase represents something is wrong when creating the cluster on VMs. In this phase, the worker named ends in "init" is in error
+	ProvisionFailedPhase CustomClusterPhase = "ProvisionFailed"
+
+	// DeletingFailedPhase represents something is wrong when clearing the cluster on VMs. In this phase, the worker named ends in "terminate" is in error
+	DeletingFailedPhase CustomClusterPhase = "DeletingFailed"
 )
 
 // CustomClusterStatus represents the current status of the cluster.
