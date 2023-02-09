@@ -265,7 +265,11 @@ rules:
   - cluster.kurator.dev
   resources:
   - customclusters
+  - customclusters/status
+  - customclusters/finalizers
   - custommachines
+  - custommachines/status
+  - custommachines/finalizers
   verbs:
   - create
   - get
@@ -273,6 +277,7 @@ rules:
   - patch
   - update
   - watch
+  - delete
 - apiGroups:
   - ""
   resources:
@@ -570,6 +575,7 @@ rules:
   - configmaps
   - events
   - secrets
+  - pods
   verbs:
   - create
   - delete

@@ -1,0 +1,13 @@
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: CustomCluster
+metadata:
+  name: cc-customcluster
+  namespace: default
+spec:
+  cni:
+    type: cilium
+  machineRef:
+    apiVersion: cluster.kurator.dev/v1alpha1
+    kind: CustomMachine
+    name: cc-custommachine
+    namespace: default

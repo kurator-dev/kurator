@@ -23,14 +23,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/cluster-api/controllers/external"
-	utilconversion "sigs.k8s.io/cluster-api/util/conversion"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
@@ -52,12 +50,12 @@ func (r *CustomMachineController) SetupWithManager(ctx context.Context, mgr ctrl
 }
 
 func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+	log := ctrl.LoggerFrom(ctx)
 	// Fetch the CustomMachine instance.
 	customMachine := &clusterv1alpha1.CustomMachine{}
 	if err := r.Client.Get(ctx, req.NamespacedName, customMachine); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Info("Could not find CustomMachine ", req.NamespacedName, "maybe deleted")
+			log.Info("customMachine is not exist", "customMachine", req)
 			return ctrl.Result{}, nil
 		}
 
@@ -70,14 +68,11 @@ func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Reques
 func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *clusterv1alpha1.CustomMachine) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	keyRef := customMachine.Spec.Master[0].SSHKey
-	if err := utilconversion.UpdateReferenceAPIContract(ctx, r.Client, r.APIReader, keyRef); err != nil {
-		return ctrl.Result{}, err
-	}
 	obj, err := external.Get(ctx, r.Client, keyRef, customMachine.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("Could not find external object for CustomMachine, requeuing", "refGroupVersionKind", keyRef.GroupVersionKind(), "refName", keyRef.Name)
-			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+			return ctrl.Result{RequeueAfter: 5 * time.Second}, nil
 		}
 		return ctrl.Result{}, err
 	}
