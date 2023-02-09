@@ -18,18 +18,22 @@ package infra
 
 import (
 	"context"
+	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"kurator.dev/kurator/pkg/controllers/infra"
+	"kurator.dev/kurator/pkg/util/names"
 )
 
 var log = ctrl.Log.WithName("infra cluster")
 
 func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
 	if err := (&infra.ClusterController{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:        mgr.GetClient(),
+		Scheme:        mgr.GetScheme(),
+		NameGenerator: names.NewSimpleGenerator(),
+		PollInterval:  10 * time.Second,
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Infra Cluster")
 		return err
