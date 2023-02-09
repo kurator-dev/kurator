@@ -144,11 +144,14 @@ PHONY: init-codegen
 init-codegen:
 	hack/init-codegen.sh
 
+.PHONY: gen-api
+gen-api: gen-code gen-crd
+
 # make it configurable, read CRD_PATH from env, default path is manifests/charts/base/templates
 .PHONY: gen-crd
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	CRD_PATH=$(CRD_PATH) hack/update-crdgen.sh
 
-.PHONY: generate
+.PHONY: gen-code
 gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	hack/update-codegen.sh

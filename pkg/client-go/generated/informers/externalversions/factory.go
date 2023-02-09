@@ -29,6 +29,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 	versioned "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
 	cluster "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/cluster"
+	infra "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/infra"
 	internalinterfaces "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/internalinterfaces"
 )
 
@@ -173,8 +174,13 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Cluster() cluster.Interface
+	Infra() infra.Interface
 }
 
 func (f *sharedInformerFactory) Cluster() cluster.Interface {
 	return cluster.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Infra() infra.Interface {
+	return infra.New(f, f.namespace, f.tweakListOptions)
 }

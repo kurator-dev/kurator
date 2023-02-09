@@ -27,6 +27,8 @@ import (
 	clientset "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
 	fakeclusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1/fake"
+	infrav1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
+	fakeinfrav1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -82,4 +84,9 @@ var (
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
 func (c *Clientset) ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface {
 	return &fakeclusterv1alpha1.FakeClusterV1alpha1{Fake: &c.Fake}
+}
+
+// InfraV1alpha1 retrieves the InfraV1alpha1Client
+func (c *Clientset) InfraV1alpha1() infrav1alpha1.InfraV1alpha1Interface {
+	return &fakeinfrav1alpha1.FakeInfraV1alpha1{Fake: &c.Fake}
 }
