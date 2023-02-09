@@ -26,11 +26,13 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
+	infrav1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface
+	InfraV1alpha1() infrav1alpha1.InfraV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -38,11 +40,17 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	clusterV1alpha1 *clusterv1alpha1.ClusterV1alpha1Client
+	infraV1alpha1   *infrav1alpha1.InfraV1alpha1Client
 }
 
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
 func (c *Clientset) ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface {
 	return c.clusterV1alpha1
+}
+
+// InfraV1alpha1 retrieves the InfraV1alpha1Client
+func (c *Clientset) InfraV1alpha1() infrav1alpha1.InfraV1alpha1Interface {
+	return c.infraV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -93,6 +101,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.infraV1alpha1, err = infrav1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
@@ -115,6 +127,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.clusterV1alpha1 = clusterv1alpha1.New(c)
+	cs.infraV1alpha1 = infrav1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

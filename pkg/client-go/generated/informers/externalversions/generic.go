@@ -24,6 +24,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -57,6 +58,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().CustomClusters().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("custommachines"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().CustomMachines().Informer()}, nil
+
+		// Group=infra.kurator.dev, Version=v1alpha1
+	case infrav1alpha1.SchemeGroupVersion.WithResource("clusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infra().V1alpha1().Clusters().Informer()}, nil
 
 	}
 
