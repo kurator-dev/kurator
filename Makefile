@@ -109,7 +109,7 @@ sync-crds: gen-crd
 
 .PHONY: gen-chart
 gen-chart: sync-crds
-	HELM_CHART_VERSION=$(HELM_CHART_VERSION) hack/gen-chart.sh
+	HELM_CHART_VERSION=$(HELM_CHART_VERSION) IMAGE_TAG=$(IMAGE_TAG) hack/gen-chart.sh
 
 .PHONY: test
 test: clean tidy
