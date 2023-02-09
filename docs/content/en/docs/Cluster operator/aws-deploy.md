@@ -1,8 +1,8 @@
 ---
-title: "Quick start"
-linkTitle: "Quick start"
+title: "Deploy Cluster on AWS"
+linkTitle: "Deploy Cluster on AWS"
 description: >
-  The easiest way to get start with Kurator.
+  The easiest way to deploy cluster on AWS with Kurator.
 ---
 
 In this tutorial we’ll cover the basics of how to use [Cluster API](https://cluster-api.sigs.k8s.io) and kurator cluster operator to create one or more Kubernetes clusters.
