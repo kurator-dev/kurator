@@ -3,6 +3,17 @@ kind: ClusterRole
 metadata:
   name: kurator-cluster-operator
 rules:
+# cluster operaotr crd
+- apiGroups:
+  - infra.kurator.dev
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
 # role from capi
 - apiGroups:
   - addons.cluster.x-k8s.io

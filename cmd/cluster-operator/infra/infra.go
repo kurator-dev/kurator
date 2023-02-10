@@ -14,12 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package scheme
+package infra
 
 import (
-	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	"context"
+
+	ctrl "sigs.k8s.io/controller-runtime"
+
+	"kurator.dev/kurator/pkg/controllers/infra"
 )
 
-func init() {
-	_ = clusterv1alpha1.AddToScheme(Scheme)
+var log = ctrl.Log.WithName("infra cluster")
+
+func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
+	if err := (&infra.ClusterController{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		log.Error(err, "unable to create controller", "controller", "Infra Cluster")
+		return err
+	}
+
+	return nil
 }

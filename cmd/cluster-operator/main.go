@@ -40,6 +40,7 @@ import (
 	"kurator.dev/kurator/cmd/cluster-operator/aws"
 	"kurator.dev/kurator/cmd/cluster-operator/capi"
 	"kurator.dev/kurator/cmd/cluster-operator/customcluster"
+	"kurator.dev/kurator/cmd/cluster-operator/infra"
 	"kurator.dev/kurator/cmd/cluster-operator/options"
 	"kurator.dev/kurator/cmd/cluster-operator/scheme"
 	"kurator.dev/kurator/pkg/version"
@@ -150,6 +151,10 @@ func run(ctx context.Context, opts *options.Options) error {
 
 	if err = customcluster.InitControllers(ctx, mgr); err != nil {
 		return err
+	}
+
+	if err = infra.InitControllers(ctx, mgr); err != nil {
+		return fmt.Errorf("infra cluster init fail, %w", err)
 	}
 
 	if err := mgr.AddReadyzCheck("webhook", mgr.GetWebhookServer().StartedChecker()); err != nil {
