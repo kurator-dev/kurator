@@ -18,8 +18,13 @@ package scheme
 
 import (
 	"k8s.io/apimachinery/pkg/runtime"
+
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 var (
 	Scheme = runtime.NewScheme()
+	_      = clusterv1alpha1.AddToScheme(Scheme)
+	_      = infrav1alpha1.AddToScheme(Scheme)
 )
