@@ -9,13 +9,28 @@ metadata:
 spec:
   group: infra.kurator.dev
   names:
+    categories:
+    - kurator-dev
     kind: Cluster
     listKind: ClusterList
     plural: clusters
     singular: cluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Infra type of the cluster
+      jsonPath: .spec.infraType
+      name: InfraType
+      type: string
+    - description: Kubernetes version of the cluster
+      jsonPath: .spec.version
+      name: Version
+      type: string
+    - description: Phase of the cluster
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Cluster is the schema for the clusters API
