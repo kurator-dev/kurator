@@ -29,6 +29,8 @@ import (
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	kubeadmcontrolplanecontrollers "sigs.k8s.io/cluster-api/controlplane/kubeadm/controllers"
 	kcpwebhooks "sigs.k8s.io/cluster-api/controlplane/kubeadm/webhooks"
+	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
+	adddoncontrollers "sigs.k8s.io/cluster-api/exp/addons/controllers"
 	"sigs.k8s.io/cluster-api/webhooks"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -135,6 +137,20 @@ func setupReconcilers(ctx context.Context, opts *options.Options, mgr ctrl.Manag
 		return fmt.Errorf("unable to create KubeadmConfig controller, %w", err)
 	}
 
+	if err := (&adddoncontrollers.ClusterResourceSetReconciler{
+		Client:           mgr.GetClient(),
+		Tracker:          tracker,
+		WatchFilterValue: opts.WatchFilterValue,
+	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
+		return fmt.Errorf("unable to create ClusterResourceSet controller, %w", err)
+	}
+	if err := (&adddoncontrollers.ClusterResourceSetBindingReconciler{
+		Client:           mgr.GetClient(),
+		WatchFilterValue: opts.WatchFilterValue,
+	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
+		return fmt.Errorf("unable to create ClusterResourceSetBinding controller, %w", err)
+	}
+
 	return nil
 }
 
@@ -186,6 +202,10 @@ func setupWebhooks(mgr ctrl.Manager) error {
 
 	if err := (&controlplanev1.KubeadmControlPlaneTemplate{}).SetupWebhookWithManager(mgr); err != nil {
 		return fmt.Errorf("unable to create KubeadmControlPlaneTemplate webhook, %w", err)
+	}
+
+	if err := (&addonsv1.ClusterResourceSet{}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create ClusterResourceSet webhook, %w", err)
 	}
 
 	return nil
