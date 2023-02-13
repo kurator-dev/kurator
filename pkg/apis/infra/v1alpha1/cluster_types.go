@@ -226,13 +226,27 @@ type ResourceRef struct {
 type ClusterStatus struct {
 	// Conditions defines current service state of the cluster.
 	// +optional
-	Conditions []capiv1.Conditions `json:"conditions,omitempty"`
+	Conditions capiv1.Conditions `json:"conditions,omitempty"`
 	// Phase is the current lifecycle phase of the cluster.
+	// +optional
 	Phase string `json:"phase,omitempty"`
 	// APIEndpoint is the endpoint to communicate with the apiserver.
+	// +optional
 	APIEndpoint string `json:"apiEndpoint,omitempty"`
 	// ServiceAccountIssuer is the URL of the service account issuer.
+	// +optional
 	ServiceAccountIssuer string `json:"serviceAccountIssuer"`
+	// ObservedGeneration is the most recent generation observed by the controller.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+}
+
+func (c *Cluster) GetConditions() capiv1.Conditions {
+	return c.Status.Conditions
+}
+
+func (c *Cluster) SetConditions(conditions capiv1.Conditions) {
+	c.Status.Conditions = conditions
 }
 
 // ClusterList contains a list of Cluster.
