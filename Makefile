@@ -27,7 +27,7 @@ XARGS = xargs -0 -r
 IMAGE_HUB ?= ghcr.io/kurator-dev
 IMAGE_TAG ?= latest
 
-HELM_CHART_VERSION ?= 0.1.0
+HELM_CHART_VERSION ?= 0.3-dev
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

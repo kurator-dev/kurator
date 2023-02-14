@@ -39,6 +39,7 @@ do
     sed -i "s|hub: ghcr.io/kurator-dev|hub: ${IMAGE_HUB}|g" $(find ${CHART_OUT_PATH}/${HELM_CHART_NAME} -type f | grep values.yaml)
     sed -i "s|tag: latest|tag: ${IMAGE_TAG}|g" $(find ${CHART_OUT_PATH}/${HELM_CHART_NAME} -type f | grep values.yaml)
     sed -i "s|version: 0.1.0|version: ${HELM_CHART_VERSION}|g" $(find ${CHART_OUT_PATH}/${HELM_CHART_NAME} -type f | grep Chart.yaml)
+    sed -i "s|appVersion: 0.1.0|appVersion: ${HELM_CHART_VERSION}|g" $(find ${CHART_OUT_PATH}/${HELM_CHART_NAME} -type f | grep Chart.yaml)
     helm package "${CHART_OUT_PATH}/${c}" -d "${CHART_OUT_PATH}"
 done
 
