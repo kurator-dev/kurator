@@ -1,8 +1,8 @@
+VERSION ?= 0.3-dev
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 SOURCES := $(shell find . -type f  -name '*.go')
 CRD_PATH ?= "manifests/charts/base/templates"
-GIT_VERSION ?= $(shell git describe --tags --dirty --always)
 GIT_COMMIT_HASH ?= $(shell git rev-parse HEAD)
 GIT_TREESTATE = "clean"
 GIT_DIFF = $(shell git diff --quiet >/dev/null 2>&1; if [ $$? -eq 1 ]; then echo "1"; fi)
@@ -14,7 +14,7 @@ BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
 OUT_BASE_PATH= out
 OUT_PATH = $(OUT_BASE_PATH)/$(GOOS)-$(GOARCH)
 
-LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(GIT_VERSION) \
+LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(VERSION) \
 			-X kurator.dev/kurator/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
 			-X kurator.dev/kurator/pkg/version.gitTreeState=$(GIT_TREESTATE) \
 			-X kurator.dev/kurator/pkg/version.buildDate=$(BUILD_DATE)"
@@ -25,9 +25,9 @@ FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -pat
 XARGS = xargs -0 -r
 
 IMAGE_HUB ?= ghcr.io/kurator-dev
-IMAGE_TAG ?= latest
+IMAGE_TAG ?= $(VERSION)
 
-HELM_CHART_VERSION ?= 0.1.0
+HELM_CHART_VERSION ?= $(VERSION)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))

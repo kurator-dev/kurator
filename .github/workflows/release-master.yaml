@@ -21,9 +21,10 @@ jobs:
       - name: compile
         run: make build
       - name: docker build
-        run: make docker
+        # master branc alway use latest tag
+        run: VERSION=latest make docker
       - name: login registry
         # This is where you will update the PAT to GITHUB_TOKEN
         run: echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u $ --password-stdin
       - name: docker push
-        run: make docker-push
+        run: VERSION=latest make docker-push
