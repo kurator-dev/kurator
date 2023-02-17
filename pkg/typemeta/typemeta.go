@@ -16,7 +16,10 @@ limitations under the License.
 
 package typemeta
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	awsinfrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
+)
 
 var (
 	PropagationPolicy = metav1.TypeMeta{
@@ -47,5 +50,10 @@ var (
 	OverridePolicy = metav1.TypeMeta{
 		APIVersion: "policy.karmada.io/v1alpha1",
 		Kind:       "OverridePolicy",
+	}
+
+	AWSClusterStaticIdentity = metav1.TypeMeta{
+		APIVersion: awsinfrav1.GroupVersion.String(),
+		Kind:       string(awsinfrav1.ClusterStaticIdentityKind),
 	}
 )

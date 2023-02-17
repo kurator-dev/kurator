@@ -28,15 +28,6 @@ rules:
   - update
   - watch
 - apiGroups:
-  - addons.cluster.x-k8s.io
-  resources:
-  - clusterresourcesets/finalizers
-  - clusterresourcesets/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
   - apiextensions.k8s.io
   resources:
   - customresourcedefinitions
@@ -440,17 +431,12 @@ rules:
   - awsclusterroleidentities
   - awsclusterstaticidentities
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-- apiGroups:
-  - infrastructure.cluster.x-k8s.io
-  resources:
-  - awsclusterroleidentities
-  - awsclusterstaticidentities
-  verbs:
-  - get
-  - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - infrastructure.cluster.x-k8s.io
