@@ -70,12 +70,7 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 	}
 
 	defer func() {
-		patchOpts := []patch.Option{}
-		if reterr == nil {
-			patchOpts = append(patchOpts, patch.WithStatusObservedGeneration{})
-		}
-
-		if err := patchHelper.Patch(ctx, infraCluster, patchOpts...); err != nil {
+		if err := patchHelper.Patch(ctx, infraCluster); err != nil {
 			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch infra Cluster %s", req.NamespacedName)})
 		}
 	}()
