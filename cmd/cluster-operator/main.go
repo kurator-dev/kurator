@@ -149,7 +149,7 @@ func run(ctx context.Context, opts *options.Options) error {
 		return fmt.Errorf("capa init fail, %w", err)
 	}
 
-	if err = customcluster.InitControllers(ctx, mgr); err != nil {
+	if err = customcluster.InitControllers(ctx, opts, mgr); err != nil {
 		return err
 	}
 

@@ -22,17 +22,18 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
+	"kurator.dev/kurator/cmd/cluster-operator/options"
 	"kurator.dev/kurator/pkg/controllers"
 )
 
 var log = ctrl.Log.WithName("custom_cluster")
 
-func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
+func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
 	if err := (&controllers.CustomClusterController{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
-	}).SetupWithManager(ctx, mgr, controller.Options{}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "CustomCluster")
 		return err
 	}
@@ -41,7 +42,7 @@ func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
-	}).SetupWithManager(ctx, mgr, controller.Options{}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "CustomMachine")
 		return err
 	}
