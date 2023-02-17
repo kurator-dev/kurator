@@ -10,11 +10,6 @@ defaultContentLanguageInSubdir = false
 [languages]
 [languages.en]
 languageName ="English"
-# Weight used for sorting.
-weight = 1
-[languages.zh]
-languageName ="中文"
-contentDir = "content/zh"
 
 [module]
 proxy = "direct"
