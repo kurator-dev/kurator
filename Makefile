@@ -136,9 +136,13 @@ gen: clean \
 gen-check: gen
 	hack/gen-check.sh
 
-.PHONY: serve
-serve:
+.PHONY: doc.serve
+doc.serve:
 	hack/local-docsite-up.sh
+
+.PHONY: doc.build
+doc.build:
+	hack/local-docsite-build.sh
 
 PHONY: init-codegen
 init-codegen:
