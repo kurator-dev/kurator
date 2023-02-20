@@ -57,22 +57,10 @@ type CustomMachineStatus struct {
 
 // Machine defines a node.
 type Machine struct {
-	// ProviderID is the unique identifier as specified by the cloud provider.
-	// +optional
-	ProviderID *string `json:"providerID,omitempty"`
-	// InstanceID is the EC2 instance ID for this machine.
-	// +optional
-	InstanceID *string `json:"instanceID,omitempty"`
-	// InstanceType is the type of instance to create. Example: m4.xlarge
-	// +optional
-	InstanceType string `json:"instanceType"`
-	// AdditionalTags is an optional set of tags to add to an instance.
-	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
-	// HostName is the hostname of the machine:
+	// HostName is the hostname of the machine.
 	// +optional
 	HostName string `json:"hostName,omitempty"`
-	// PrivateIP is the private ip address of the machine:
+	// PrivateIP is the private ip address of the machine.
 	// +optional
 	PrivateIP string `json:"privateIP,omitempty"`
 	// PublicIP specifies the public IP.
@@ -87,6 +75,9 @@ type Machine struct {
 	// SSHKeyName is the name of the ssh key to attach to the instance. Valid values are empty string (do not use SSH keys), a valid SSH key name, or omitted (use the default SSH key name)
 	// +optional
 	SSHKey *corev1.ObjectReference `json:"sshKey,omitempty"`
+	// AdditionalTags is an optional set of tags to add to an instance.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // +kubebuilder:object:root=true

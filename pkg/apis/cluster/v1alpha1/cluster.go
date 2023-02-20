@@ -27,7 +27,7 @@ import (
 // +kubebuilder:resource:path=customclusters,shortName=cc
 // +kubebuilder:subresource:status
 
-// CustomCluster is the schema for existing node based Kubernetes Cluster API.
+// CustomCluster represents the parameters for a cluster in supplement of Cluster API.
 type CustomCluster struct {
 	metav1.TypeMeta `json:",inline"`
 
