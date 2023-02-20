@@ -33,7 +33,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Cluster is the schema for the clusters API
+        description: Cluster is the schema for the cluster's API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -48,7 +48,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: ClusterSpect defines the desired state of Cluster
+            description: ClusterSpec defines the desired state of the Cluster
             properties:
               additionalResources:
                 description: 'AdditionalResources provides a way to automatically
@@ -71,7 +71,7 @@ spec:
                   type: object
                 type: array
               credential:
-                description: Credential is the credential to use to access the cloud
+                description: Credential is the credential used to access the cloud
                   provider.
                 properties:
                   secretRef:
@@ -236,7 +236,7 @@ spec:
                 - enabled
                 type: object
               region:
-                description: Region is the region to use for the cluster.
+                description: Region is the region to deploy the cluster.
                 type: string
               version:
                 description: Version is the Kubernetes version to use for the cluster.
