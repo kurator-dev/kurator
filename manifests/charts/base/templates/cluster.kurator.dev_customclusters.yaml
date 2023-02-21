@@ -21,8 +21,8 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: CustomCluster is the schema for existing node based Kubernetes
-          Cluster API.
+        description: CustomCluster represents the parameters for a cluster in supplement
+          of Cluster API.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation

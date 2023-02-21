@@ -24,7 +24,7 @@ import (
 	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// Cluster is the schema for the clusters API
+// Cluster is the schema for the cluster's API
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
@@ -40,16 +40,16 @@ type Cluster struct {
 	Status            ClusterStatus `json:"status,omitempty"`
 }
 
-// ClusterSpect defines the desired state of Cluster
+// ClusterSpec defines the desired state of the Cluster
 type ClusterSpec struct {
 	// InfraType is the infra type of the cluster.
 	InfraType ClusterInfraType `json:"infraType"`
-	// Credential is the credential to use to access the cloud provider.
+	// Credential is the credential used to access the cloud provider.
 	// +optional
 	Credential *CredentialConfig `json:"credential,omitempty"`
 	// Version is the Kubernetes version to use for the cluster.
 	Version string `json:"version"`
-	// Region is the region to use for the cluster.
+	// Region is the region to deploy the cluster.
 	Region string `json:"region"`
 	// Network is the network configuration for the cluster.
 	Network NetworkConfig `json:"network"`

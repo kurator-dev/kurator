@@ -40,14 +40,7 @@ spec:
                   description: Machine defines a node.
                   properties:
                     hostName:
-                      description: 'HostName is the hostname of the machine:'
-                      type: string
-                    instanceID:
-                      description: InstanceID is the EC2 instance ID for this machine.
-                      type: string
-                    instanceType:
-                      description: 'InstanceType is the type of instance to create.
-                        Example: m4.xlarge'
+                      description: HostName is the hostname of the machine.
                       type: string
                     labels:
                       additionalProperties:
@@ -56,11 +49,7 @@ spec:
                         to an instance.
                       type: object
                     privateIP:
-                      description: 'PrivateIP is the private ip address of the machine:'
-                      type: string
-                    providerID:
-                      description: ProviderID is the unique identifier as specified
-                        by the cloud provider.
+                      description: PrivateIP is the private ip address of the machine.
                       type: string
                     publicIP:
                       description: PublicIP specifies the public IP.
@@ -118,14 +107,7 @@ spec:
                   description: Machine defines a node.
                   properties:
                     hostName:
-                      description: 'HostName is the hostname of the machine:'
-                      type: string
-                    instanceID:
-                      description: InstanceID is the EC2 instance ID for this machine.
-                      type: string
-                    instanceType:
-                      description: 'InstanceType is the type of instance to create.
-                        Example: m4.xlarge'
+                      description: HostName is the hostname of the machine.
                       type: string
                     labels:
                       additionalProperties:
@@ -134,11 +116,7 @@ spec:
                         to an instance.
                       type: object
                     privateIP:
-                      description: 'PrivateIP is the private ip address of the machine:'
-                      type: string
-                    providerID:
-                      description: ProviderID is the unique identifier as specified
-                        by the cloud provider.
+                      description: PrivateIP is the private ip address of the machine.
                       type: string
                     publicIP:
                       description: PublicIP specifies the public IP.
