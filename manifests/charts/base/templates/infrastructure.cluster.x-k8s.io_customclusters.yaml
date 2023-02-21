@@ -6,9 +6,9 @@ metadata:
   creationTimestamp: null
   labels:
     cluster.x-k8s.io/v1beta1: v1alpha1
-  name: customclusters.cluster.kurator.dev
+  name: customclusters.infrastructure.cluster.x-k8s.io
 spec:
-  group: cluster.kurator.dev
+  group: infrastructure.cluster.x-k8s.io
   names:
     kind: CustomCluster
     listKind: CustomClusterList

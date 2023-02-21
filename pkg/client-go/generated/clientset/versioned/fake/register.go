@@ -25,7 +25,7 @@ import (
 	serializer "k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
-	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
+	infrastructurev1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 var scheme = runtime.NewScheme()
@@ -33,7 +33,7 @@ var codecs = serializer.NewCodecFactory(scheme)
 
 var localSchemeBuilder = runtime.SchemeBuilder{
 	clusterv1alpha1.AddToScheme,
-	infrav1alpha1.AddToScheme,
+	infrastructurev1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

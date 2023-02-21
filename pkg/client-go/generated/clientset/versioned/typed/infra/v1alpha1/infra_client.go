@@ -26,24 +26,29 @@ import (
 	"kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/scheme"
 )
 
-type InfraV1alpha1Interface interface {
+type InfrastructureV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	ClustersGetter
+	CustomClustersGetter
+	CustomMachinesGetter
 }
 
-// InfraV1alpha1Client is used to interact with features provided by the infra.kurator.dev group.
-type InfraV1alpha1Client struct {
+// InfrastructureV1alpha1Client is used to interact with features provided by the infrastructure.cluster.x-k8s.io group.
+type InfrastructureV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *InfraV1alpha1Client) Clusters(namespace string) ClusterInterface {
-	return newClusters(c, namespace)
+func (c *InfrastructureV1alpha1Client) CustomClusters(namespace string) CustomClusterInterface {
+	return newCustomClusters(c, namespace)
 }
 
-// NewForConfig creates a new InfraV1alpha1Client for the given config.
+func (c *InfrastructureV1alpha1Client) CustomMachines(namespace string) CustomMachineInterface {
+	return newCustomMachines(c, namespace)
+}
+
+// NewForConfig creates a new InfrastructureV1alpha1Client for the given config.
 // NewForConfig is equivalent to NewForConfigAndClient(c, httpClient),
 // where httpClient was generated with rest.HTTPClientFor(c).
-func NewForConfig(c *rest.Config) (*InfraV1alpha1Client, error) {
+func NewForConfig(c *rest.Config) (*InfrastructureV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -55,9 +60,9 @@ func NewForConfig(c *rest.Config) (*InfraV1alpha1Client, error) {
 	return NewForConfigAndClient(&config, httpClient)
 }
 
-// NewForConfigAndClient creates a new InfraV1alpha1Client for the given config and http client.
+// NewForConfigAndClient creates a new InfrastructureV1alpha1Client for the given config and http client.
 // Note the http client provided takes precedence over the configured transport values.
-func NewForConfigAndClient(c *rest.Config, h *http.Client) (*InfraV1alpha1Client, error) {
+func NewForConfigAndClient(c *rest.Config, h *http.Client) (*InfrastructureV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -66,12 +71,12 @@ func NewForConfigAndClient(c *rest.Config, h *http.Client) (*InfraV1alpha1Client
 	if err != nil {
 		return nil, err
 	}
-	return &InfraV1alpha1Client{client}, nil
+	return &InfrastructureV1alpha1Client{client}, nil
 }
 
-// NewForConfigOrDie creates a new InfraV1alpha1Client for the given config and
+// NewForConfigOrDie creates a new InfrastructureV1alpha1Client for the given config and
 // panics if there is an error in the config.
-func NewForConfigOrDie(c *rest.Config) *InfraV1alpha1Client {
+func NewForConfigOrDie(c *rest.Config) *InfrastructureV1alpha1Client {
 	client, err := NewForConfig(c)
 	if err != nil {
 		panic(err)
@@ -79,9 +84,9 @@ func NewForConfigOrDie(c *rest.Config) *InfraV1alpha1Client {
 	return client
 }
 
-// New creates a new InfraV1alpha1Client for the given RESTClient.
-func New(c rest.Interface) *InfraV1alpha1Client {
-	return &InfraV1alpha1Client{c}
+// New creates a new InfrastructureV1alpha1Client for the given RESTClient.
+func New(c rest.Interface) *InfrastructureV1alpha1Client {
+	return &InfrastructureV1alpha1Client{c}
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -99,7 +104,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *InfraV1alpha1Client) RESTClient() rest.Interface {
+func (c *InfrastructureV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

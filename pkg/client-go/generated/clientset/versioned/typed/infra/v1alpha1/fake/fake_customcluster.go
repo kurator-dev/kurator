@@ -27,18 +27,18 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	v1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // FakeCustomClusters implements CustomClusterInterface
 type FakeCustomClusters struct {
-	Fake *FakeClusterV1alpha1
+	Fake *FakeInfrastructureV1alpha1
 	ns   string
 }
 
-var customclustersResource = schema.GroupVersionResource{Group: "cluster.kurator.dev", Version: "v1alpha1", Resource: "customclusters"}
+var customclustersResource = schema.GroupVersionResource{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Resource: "customclusters"}
 
-var customclustersKind = schema.GroupVersionKind{Group: "cluster.kurator.dev", Version: "v1alpha1", Kind: "CustomCluster"}
+var customclustersKind = schema.GroupVersionKind{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Kind: "CustomCluster"}
 
 // Get takes name of the customCluster, and returns the corresponding customCluster object, and an error if there is any.
 func (c *FakeCustomClusters) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.CustomCluster, err error) {

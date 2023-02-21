@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 
-	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // CustomMachineController reconciles a CustomMachine object
@@ -44,7 +44,7 @@ type CustomMachineController struct {
 // SetupWithManager sets up the controller with the Manager.
 func (r *CustomMachineController) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&clusterv1alpha1.CustomMachine{}).
+		For(&v1alpha1.CustomMachine{}).
 		WithOptions(options).
 		Complete(r)
 }
@@ -52,7 +52,7 @@ func (r *CustomMachineController) SetupWithManager(ctx context.Context, mgr ctrl
 func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	// Fetch the CustomMachine instance.
-	customMachine := &clusterv1alpha1.CustomMachine{}
+	customMachine := &v1alpha1.CustomMachine{}
 	if err := r.Client.Get(ctx, req.NamespacedName, customMachine); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("customMachine is not exist", "customMachine", req)
@@ -65,7 +65,7 @@ func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Reques
 	return r.reconcile(ctx, customMachine)
 }
 
-func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *clusterv1alpha1.CustomMachine) (ctrl.Result, error) {
+func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *v1alpha1.CustomMachine) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	keyRef := customMachine.Spec.Master[0].SSHKey
 	obj, err := external.Get(ctx, r.Client, keyRef, customMachine.Namespace)
@@ -86,7 +86,7 @@ func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *
 		return ctrl.Result{}, err
 	}
 	// Ensure we add a watcher to the external ssh key object.
-	if err := r.externalTracker.Watch(log, obj, &handler.EnqueueRequestForOwner{OwnerType: &clusterv1alpha1.CustomMachine{}}); err != nil {
+	if err := r.externalTracker.Watch(log, obj, &handler.EnqueueRequestForOwner{OwnerType: &v1alpha1.CustomMachine{}}); err != nil {
 		return ctrl.Result{}, err
 	}
 	machineReady := true

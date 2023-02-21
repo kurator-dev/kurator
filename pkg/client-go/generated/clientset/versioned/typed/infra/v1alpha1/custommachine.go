@@ -26,7 +26,7 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	rest "k8s.io/client-go/rest"
-	v1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	v1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 	scheme "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/scheme"
 )
 
@@ -57,7 +57,7 @@ type customMachines struct {
 }
 
 // newCustomMachines returns a CustomMachines
-func newCustomMachines(c *ClusterV1alpha1Client, namespace string) *customMachines {
+func newCustomMachines(c *InfrastructureV1alpha1Client, namespace string) *customMachines {
 	return &customMachines{
 		client: c.RESTClient(),
 		ns:     namespace,

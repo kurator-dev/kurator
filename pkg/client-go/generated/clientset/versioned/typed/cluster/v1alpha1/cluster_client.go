@@ -28,8 +28,7 @@ import (
 
 type ClusterV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	CustomClustersGetter
-	CustomMachinesGetter
+	ClustersGetter
 }
 
 // ClusterV1alpha1Client is used to interact with features provided by the cluster.kurator.dev group.
@@ -37,12 +36,8 @@ type ClusterV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ClusterV1alpha1Client) CustomClusters(namespace string) CustomClusterInterface {
-	return newCustomClusters(c, namespace)
-}
-
-func (c *ClusterV1alpha1Client) CustomMachines(namespace string) CustomMachineInterface {
-	return newCustomMachines(c, namespace)
+func (c *ClusterV1alpha1Client) Clusters(namespace string) ClusterInterface {
+	return newClusters(c, namespace)
 }
 
 // NewForConfig creates a new ClusterV1alpha1Client for the given config.

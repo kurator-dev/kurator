@@ -18,10 +18,18 @@ limitations under the License.
 
 package v1alpha1
 
-// ClusterListerExpansion allows custom methods to be added to
-// ClusterLister.
-type ClusterListerExpansion interface{}
+// CustomClusterListerExpansion allows custom methods to be added to
+// CustomClusterLister.
+type CustomClusterListerExpansion interface{}
 
-// ClusterNamespaceListerExpansion allows custom methods to be added to
-// ClusterNamespaceLister.
-type ClusterNamespaceListerExpansion interface{}
+// CustomClusterNamespaceListerExpansion allows custom methods to be added to
+// CustomClusterNamespaceLister.
+type CustomClusterNamespaceListerExpansion interface{}
+
+// CustomMachineListerExpansion allows custom methods to be added to
+// CustomMachineLister.
+type CustomMachineListerExpansion interface{}
+
+// CustomMachineNamespaceListerExpansion allows custom methods to be added to
+// CustomMachineNamespaceLister.
+type CustomMachineNamespaceListerExpansion interface{}

@@ -32,59 +32,59 @@ import (
 	v1alpha1 "kurator.dev/kurator/pkg/client-go/generated/listers/cluster/v1alpha1"
 )
 
-// CustomMachineInformer provides access to a shared informer and lister for
-// CustomMachines.
-type CustomMachineInformer interface {
+// ClusterInformer provides access to a shared informer and lister for
+// Clusters.
+type ClusterInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.CustomMachineLister
+	Lister() v1alpha1.ClusterLister
 }
 
-type customMachineInformer struct {
+type clusterInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewCustomMachineInformer constructs a new informer for CustomMachine type.
+// NewClusterInformer constructs a new informer for Cluster type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewCustomMachineInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredCustomMachineInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewClusterInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredClusterInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredCustomMachineInformer constructs a new informer for CustomMachine type.
+// NewFilteredClusterInformer constructs a new informer for Cluster type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredCustomMachineInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredClusterInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ClusterV1alpha1().CustomMachines(namespace).List(context.TODO(), options)
+				return client.ClusterV1alpha1().Clusters(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ClusterV1alpha1().CustomMachines(namespace).Watch(context.TODO(), options)
+				return client.ClusterV1alpha1().Clusters(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&clusterv1alpha1.CustomMachine{},
+		&clusterv1alpha1.Cluster{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *customMachineInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredCustomMachineInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *clusterInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredClusterInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *customMachineInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&clusterv1alpha1.CustomMachine{}, f.defaultInformer)
+func (f *clusterInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&clusterv1alpha1.Cluster{}, f.defaultInformer)
 }
 
-func (f *customMachineInformer) Lister() v1alpha1.CustomMachineLister {
-	return v1alpha1.NewCustomMachineLister(f.Informer().GetIndexer())
+func (f *clusterInformer) Lister() v1alpha1.ClusterLister {
+	return v1alpha1.NewClusterLister(f.Informer().GetIndexer())
 }
