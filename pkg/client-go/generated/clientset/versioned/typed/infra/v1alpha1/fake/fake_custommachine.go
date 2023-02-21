@@ -27,18 +27,18 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	v1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // FakeCustomMachines implements CustomMachineInterface
 type FakeCustomMachines struct {
-	Fake *FakeClusterV1alpha1
+	Fake *FakeInfrastructureV1alpha1
 	ns   string
 }
 
-var custommachinesResource = schema.GroupVersionResource{Group: "cluster.kurator.dev", Version: "v1alpha1", Resource: "custommachines"}
+var custommachinesResource = schema.GroupVersionResource{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Resource: "custommachines"}
 
-var custommachinesKind = schema.GroupVersionKind{Group: "cluster.kurator.dev", Version: "v1alpha1", Kind: "CustomMachine"}
+var custommachinesKind = schema.GroupVersionKind{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Kind: "CustomMachine"}
 
 // Get takes name of the customMachine, and returns the corresponding customMachine object, and an error if there is any.
 func (c *FakeCustomMachines) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.CustomMachine, err error) {

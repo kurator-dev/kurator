@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 func TestGetHostsContent(t *testing.T) {

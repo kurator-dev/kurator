@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: custommachines.cluster.kurator.dev
+  name: custommachines.infrastructure.cluster.x-k8s.io
 spec:
-  group: cluster.kurator.dev
+  group: infrastructure.cluster.x-k8s.io
   names:
     kind: CustomMachine
     listKind: CustomMachineList

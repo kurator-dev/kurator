@@ -18,6 +18,4 @@ limitations under the License.
 
 package v1alpha1
 
-type CustomClusterExpansion interface{}
-
-type CustomMachineExpansion interface{}
+type ClusterExpansion interface{}

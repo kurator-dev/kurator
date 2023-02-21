@@ -5,9 +5,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: clusters.infra.kurator.dev
+  name: clusters.cluster.kurator.dev
 spec:
-  group: infra.kurator.dev
+  group: cluster.kurator.dev
   names:
     categories:
     - kurator-dev

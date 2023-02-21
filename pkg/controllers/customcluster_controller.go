@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // CustomClusterController reconciles a CustomCluster object.

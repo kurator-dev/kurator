@@ -24,10 +24,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
-	// CustomClusters returns a CustomClusterInformer.
-	CustomClusters() CustomClusterInformer
-	// CustomMachines returns a CustomMachineInformer.
-	CustomMachines() CustomMachineInformer
+	// Clusters returns a ClusterInformer.
+	Clusters() ClusterInformer
 }
 
 type version struct {
@@ -41,12 +39,7 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
-// CustomClusters returns a CustomClusterInformer.
-func (v *version) CustomClusters() CustomClusterInformer {
-	return &customClusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
-}
-
-// CustomMachines returns a CustomMachineInformer.
-func (v *version) CustomMachines() CustomMachineInformer {
-	return &customMachineInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// Clusters returns a ClusterInformer.
+func (v *version) Clusters() ClusterInformer {
+	return &clusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

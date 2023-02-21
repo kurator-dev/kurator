@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	infrav1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
+	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
 
 const (

@@ -26,10 +26,10 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 	versioned "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
 	internalinterfaces "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "kurator.dev/kurator/pkg/client-go/generated/listers/cluster/v1alpha1"
+	v1alpha1 "kurator.dev/kurator/pkg/client-go/generated/listers/infra/v1alpha1"
 )
 
 // CustomClusterInformer provides access to a shared informer and lister for
@@ -62,16 +62,16 @@ func NewFilteredCustomClusterInformer(client versioned.Interface, namespace stri
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ClusterV1alpha1().CustomClusters(namespace).List(context.TODO(), options)
+				return client.InfrastructureV1alpha1().CustomClusters(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.ClusterV1alpha1().CustomClusters(namespace).Watch(context.TODO(), options)
+				return client.InfrastructureV1alpha1().CustomClusters(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&clusterv1alpha1.CustomCluster{},
+		&infrav1alpha1.CustomCluster{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,7 +82,7 @@ func (f *customClusterInformer) defaultInformer(client versioned.Interface, resy
 }
 
 func (f *customClusterInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&clusterv1alpha1.CustomCluster{}, f.defaultInformer)
+	return f.factory.InformerFor(&infrav1alpha1.CustomCluster{}, f.defaultInformer)
 }
 
 func (f *customClusterInformer) Lister() v1alpha1.CustomClusterLister {

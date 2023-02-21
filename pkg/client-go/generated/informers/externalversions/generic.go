@@ -54,14 +54,14 @@ func (f *genericInformer) Lister() cache.GenericLister {
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
 	// Group=cluster.kurator.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("customclusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().CustomClusters().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("custommachines"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().CustomMachines().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("clusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().Clusters().Informer()}, nil
 
-		// Group=infra.kurator.dev, Version=v1alpha1
-	case infrav1alpha1.SchemeGroupVersion.WithResource("clusters"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Infra().V1alpha1().Clusters().Informer()}, nil
+		// Group=infrastructure.cluster.x-k8s.io, Version=v1alpha1
+	case infrav1alpha1.SchemeGroupVersion.WithResource("customclusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().CustomClusters().Informer()}, nil
+	case infrav1alpha1.SchemeGroupVersion.WithResource("custommachines"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().CustomMachines().Informer()}, nil
 
 	}
 

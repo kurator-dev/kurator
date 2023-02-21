@@ -14,4 +14,5 @@ do
     ${CONTROLLER_GEN} crd  paths="${APIS_PATH}" output:crd:dir="${CRD_PATH}"
 done
 
-kubectl kustomize manifests/charts/ -o "${CRD_PATH}"/cluster.kurator.dev_customclusters.yaml
+echo "running kustomize to generate the final CRD"
+kubectl kustomize manifests/charts/ -o "${CRD_PATH}"/infrastructure.cluster.x-k8s.io_customclusters.yaml

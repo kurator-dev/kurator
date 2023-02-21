@@ -24,17 +24,21 @@ import (
 	v1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
 )
 
-type FakeInfraV1alpha1 struct {
+type FakeInfrastructureV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeInfraV1alpha1) Clusters(namespace string) v1alpha1.ClusterInterface {
-	return &FakeClusters{c, namespace}
+func (c *FakeInfrastructureV1alpha1) CustomClusters(namespace string) v1alpha1.CustomClusterInterface {
+	return &FakeCustomClusters{c, namespace}
+}
+
+func (c *FakeInfrastructureV1alpha1) CustomMachines(namespace string) v1alpha1.CustomMachineInterface {
+	return &FakeCustomMachines{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeInfraV1alpha1) RESTClient() rest.Interface {
+func (c *FakeInfrastructureV1alpha1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

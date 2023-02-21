@@ -174,13 +174,13 @@ type SharedInformerFactory interface {
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
 	Cluster() cluster.Interface
-	Infra() infra.Interface
+	Infrastructure() infra.Interface
 }
 
 func (f *sharedInformerFactory) Cluster() cluster.Interface {
 	return cluster.New(f, f.namespace, f.tweakListOptions)
 }
 
-func (f *sharedInformerFactory) Infra() infra.Interface {
+func (f *sharedInformerFactory) Infrastructure() infra.Interface {
 	return infra.New(f, f.namespace, f.tweakListOptions)
 }
