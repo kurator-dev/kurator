@@ -10,7 +10,7 @@ on:
 jobs:
   latest-release:
     name: Push image to ghcr.io
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout code
         uses: actions/checkout@v3

@@ -3,7 +3,7 @@ on:
   pull_request:
 jobs:
   gen-check:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     name: Gen check
     timeout-minutes: 40
     steps:
@@ -17,7 +17,7 @@ jobs:
         run: |
           make gen-check
   lint:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     name: Lint
     timeout-minutes: 40
     steps:
@@ -39,7 +39,7 @@ jobs:
           make lint
   build:
     name: Compile
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout code
         uses: actions/checkout@v2
@@ -58,7 +58,7 @@ jobs:
 
   test:
     name: Unit test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: checkout code
         uses: actions/checkout@v2
