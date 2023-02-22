@@ -123,7 +123,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *i
 		// retry before CAPI Cluster is deleted
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
-	// CAPI Cluster is deleted, do the reset
+	// CAPI Cluster is deleted, do the rest
 
 	scope := scope.NewCluster(infraCluster)
 	prov := infraprovider.NewProvider(r.Client, scope)

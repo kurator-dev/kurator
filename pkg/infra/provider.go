@@ -48,7 +48,7 @@ type Provider interface {
 	Reconcile(ctx context.Context, cluster *infrav1.Cluster) error
 	// Clean removes all resources created by the provider.
 	Clean(ctx context.Context, cluster *infrav1.Cluster) error
-	// IsInitialized returns true when kube apiserver is accessable.
+	// IsInitialized returns true when kube apiserver is accessible.
 	IsInitialized(ctx context.Context) bool
 	// IsReady returns true when the cluster is ready to be used.
 	IsReady(ctx context.Context) bool
