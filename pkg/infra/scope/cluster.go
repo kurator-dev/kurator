@@ -29,8 +29,8 @@ import (
 const (
 	VpcDefaultCIDR = "10.0.0.0/16"
 
-	clusterNameLabel      = "infra.kurator.dev/cluster-name"
-	clusterNamespaceLabel = "infra.kurator.dev/cluster-namespace"
+	clusterNameLabel      = "cluster.kurator.dev/cluster-name"
+	clusterNamespaceLabel = "cluster.kurator.dev/cluster-namespace"
 )
 
 type Cluster struct {

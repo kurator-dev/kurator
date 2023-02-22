@@ -5,7 +5,7 @@ metadata:
 rules:
 # cluster operaotr crd
 - apiGroups:
-  - infra.kurator.dev
+  - cluster.kurator.dev
   resources:
   - '*'
   verbs:

@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
 	capiutil "sigs.k8s.io/cluster-api/util"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -47,7 +46,7 @@ import (
 
 const (
 	// ClusterFinalizer allows ClusterController to clean up associated resources before removing it from apiserver.
-	clusterFinalizer = "cluster.infra.kurator.dev"
+	clusterFinalizer = "cluster.cluster.kurator.dev"
 )
 
 // ClusterController reconciles a Cluster object
@@ -76,9 +75,9 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 	defer func() {
 		patchOpts := []patch.Option{
 			patch.WithOwnedConditions{Conditions: []capiv1.ConditionType{
-				infrav1.InfraProviderReadyCondition,
-				infrav1.CNIReadyCondition,
-				capiv1.ReadyCondition,
+				infrav1.InfrastructureProviderProvisionedCondition,
+				infrav1.CNIProvisionedCondition,
+				infrav1.ReadyCondition,
 			}},
 		}
 
@@ -119,11 +118,12 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *i
 	}
 
 	capiCluster := &capiv1.Cluster{}
-	getClusterErr := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, capiCluster)
-	if !apiserrors.IsNotFound(getClusterErr) {
+	err := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, capiCluster)
+	if err == nil || !apiserrors.IsNotFound(err) {
 		// retry before CAPI Cluster is deleted
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
+	// CAPI Cluster is deleted, do the reset
 
 	scope := scope.NewCluster(infraCluster)
 	prov := infraprovider.NewProvider(r.Client, scope)
@@ -132,7 +132,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *i
 	}
 
 	// clean up ClusterResourceSet
-	if err := r.deleteClusterResourceSets(ctx, infraCluster); err != nil {
+	if err := r.deleteClusterResourceSets(ctx, scope); err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete ClusterResourceSet for Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
 
@@ -141,9 +141,9 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *i
 	return ctrl.Result{}, nil
 }
 
-func (r *ClusterController) deleteClusterResourceSets(ctx context.Context, infraCluster *infrav1.Cluster) error {
+func (r *ClusterController) deleteClusterResourceSets(ctx context.Context, scope *scope.Cluster) error {
 	csrList := &addonsv1.ClusterResourceSetList{}
-	if err := r.List(ctx, csrList, client.InNamespace(infraCluster.Namespace), util.ClusterMatchingLabels(infraCluster)); err != nil {
+	if err := r.List(ctx, csrList, client.InNamespace(scope.Namespace), scope.MatchingLabels()); err != nil {
 		return errors.Wrapf(err, "failed to list ClusterResourceSet")
 	}
 
@@ -188,34 +188,33 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	scope := scope.NewCluster(infraCluster)
 	provider := infraprovider.NewProvider(r.Client, scope)
 	if err := provider.Reconcile(ctx, infraCluster); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.InfraProviderReadyCondition, infrav1.InfraProviderProvisioningFailedReason,
+		conditions.MarkFalse(infraCluster, infrav1.InfrastructureProviderProvisionedCondition, infrav1.InfrastructureProviderProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
-	conditions.MarkTrue(infraCluster, infrav1.InfraProviderReadyCondition)
-	infraCluster.Status.Phase = string(infrav1.ClusterPhaseInfraProvisioned)
+	conditions.MarkTrue(infraCluster, infrav1.InfrastructureProviderProvisionedCondition)
+	infraCluster.Status.Phase = string(infrav1.ClusterPhaseInfrastructureProvisioned)
 
 	// check Cluster status
-	if !r.clusterInitialized(ctx, infraCluster) {
+	if !provider.IsInitialized(ctx) {
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
 
 	if err := r.reconcileCNI(ctx, infraCluster, scope); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.CNIReadyCondition, infrav1.CNIProvisioningFailedReason,
+		conditions.MarkFalse(infraCluster, infrav1.CNIProvisionedCondition, infrav1.CNIProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile CNI resources")
 	}
-	conditions.MarkTrue(infraCluster, infrav1.CNIReadyCondition)
-	infraCluster.Status.Phase = string(infrav1.ClusterCNIProvisioned)
+	conditions.MarkTrue(infraCluster, infrav1.CNIProvisionedCondition)
+	infraCluster.Status.Phase = string(infrav1.ClusterPhaseCNIProvisioned)
 
-	if !r.clusterReady(ctx, infraCluster) {
+	if !provider.IsReady(ctx) {
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
-	// TODO: reconcile other resources
+	// TODO: reconcile cluster additinal resources
 
-	// set ClusterResourceSet's owner reference to infraCluster
-	if err := r.reconcileClusterResourceSet(ctx, infraCluster); err != nil {
-		conditions.MarkFalse(infraCluster, capiv1.ReadyCondition, infrav1.ClusterAPIResourceProvisioningFailedReason,
+	if err := r.ensureOwnerReference(ctx, scope, infraCluster); err != nil {
+		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterAPIResourceProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile ClusterResourceSet for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
@@ -224,45 +223,11 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	return ctrl.Result{}, nil
 }
 
-// TODO: make this more gerneic, support other control plane providers
-func (r *ClusterController) clusterInitialized(ctx context.Context, infraCluster *infrav1.Cluster) bool {
-	capiCluster := &capiv1.Cluster{}
-	if err := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, capiCluster); err != nil {
-		return false
-	}
-
-	kcp := &controlplanev1.KubeadmControlPlane{}
-	if err := r.Get(ctx, types.NamespacedName{Namespace: capiCluster.Namespace, Name: capiCluster.Spec.ControlPlaneRef.Name}, kcp); err != nil {
-		return false
-	}
-
-	return kcp.Status.Initialized
-}
-
-// TODO: make this more gerneic, support other control plane providers
-func (r *ClusterController) clusterReady(ctx context.Context, infraCluster *infrav1.Cluster) bool {
-	capiCluster := &capiv1.Cluster{}
-	if err := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, capiCluster); err != nil {
-		return false
-	}
-
-	kcp := &controlplanev1.KubeadmControlPlane{}
-	if err := r.Get(ctx, types.NamespacedName{Namespace: capiCluster.Namespace, Name: capiCluster.Spec.ControlPlaneRef.Name}, kcp); err != nil {
-		return false
-	}
-
-	if kcp.Status.Initialized && kcp.Status.Ready {
-		return true
-	}
-
-	return false
-}
-
-func (r *ClusterController) reconcileClusterResourceSet(ctx context.Context, infraCluster *infrav1.Cluster) error {
+func (r *ClusterController) ensureOwnerReference(ctx context.Context, scope *scope.Cluster, infraCluster *infrav1.Cluster) error {
 	// reconcile OwnerReferences for ClusterResourceSet
 	csrList := &addonsv1.ClusterResourceSetList{}
-	if err := r.List(ctx, csrList, util.ClusterMatchingLabels(infraCluster)); err != nil {
-		return errors.Wrapf(err, "failed to list ClusterResourceSet for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+	if err := r.List(ctx, csrList, scope.MatchingLabels()); err != nil {
+		return errors.Wrapf(err, "failed to list ClusterResourceSet for infra Cluster %s/%s", scope.Namespace, scope.Name)
 	}
 
 	ownerRef := metav1.OwnerReference{
@@ -276,7 +241,7 @@ func (r *ClusterController) reconcileClusterResourceSet(ctx context.Context, inf
 			return errors.Wrapf(err, "failed to delete refs for ClusterResourceSet %s/%s", csr.Namespace, csr.Name)
 		}
 
-		// always get 429 if update owner reference of ClusterResourceSet, so manually delete when deleting cluster
+		// always get 409 if update owner reference of ClusterResourceSet, so manually delete when deleting cluster
 	}
 
 	return nil

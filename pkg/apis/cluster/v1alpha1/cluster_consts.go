@@ -21,16 +21,21 @@ import (
 )
 
 const (
-	// InfraProviderReadyCondition reports on wheter the infra is ready.
-	InfraProviderReadyCondition capiv1.ConditionType = "InfraProviderReadyCondition"
-	// InfraProviderProvisioningFailedReason (Severity=Error) documents that the infra provisioning failed.
-	InfraProviderProvisioningFailedReason = "InfraProviderProvisioningFailedReason"
+	// ReadyCondition defines the Ready condition type that summarizes the operational state of a Cluster.
+	ReadyCondition capiv1.ConditionType = "Ready"
 
-	CNIReadyCondition capiv1.ConditionType = "CNIReadyCondition"
+	// InfrastructureProviderProvisionedCondition reports on wheter the infra resource is provisioned.
+	InfrastructureProviderProvisionedCondition capiv1.ConditionType = "InfrastructureProviderProvisioned"
+	// InfrastructureProviderProvisionFailedReason (Severity=Error) documents that the infra provisioning failed.
+	InfrastructureProviderProvisionFailedReason = "InfrastructureProviderProvisionFailed"
 
-	CNIProvisioningFailedReason = "CNIProvisioningFailedReason"
+	//	CNIProvisionedCondition reports on whether the CNI is provisioned.
+	CNIProvisionedCondition capiv1.ConditionType = "CNIProvisioned"
+	// CNIProvisionFailedReason (Severity=Error) documents that the CNI provisioning failed.
+	CNIProvisionFailedReason = "CNIProvisionFailed"
 
-	ClusterAPIResourceProvisioningFailedReason = "ClusterAPIResourceProvisioningFailedReason"
+	// ClusterAPIResourceProvisionFailedReason (Severity=Error) documents that the additinal Cluster API resources (ClusterResourceSet etc.) provisioning failed.
+	ClusterAPIResourceProvisionFailedReason = "ClusterAPIResourceProvisionFailed"
 )
 
 // ClusterPhase is a string representation of the cluster's phase.
@@ -40,13 +45,14 @@ const (
 	// ClusterPhaseProvisioning is the state when the cluster is being provisioned.
 	ClusterPhaseProvisioning ClusterPhase = "Provisioning"
 
-	// ClusterPhaseInfraProvisioned is the state when the infra has been provisioned.
-	ClusterPhaseInfraProvisioned ClusterPhase = "IfraProvisioned"
+	// ClusterPhaseInfrastructureProvisioned is the state when the infrastructure has been provisioned.
+	ClusterPhaseInfrastructureProvisioned ClusterPhase = "InfrastructureProvisioned"
 
-	// ClusterCNIProvisioned is the state when the cni has been provisioned.
-	ClusterCNIProvisioned ClusterPhase = "CNIProvisioned"
+	// ClusterPhaseCNIProvisioned is the state when the cni has been provisioned.
+	ClusterPhaseCNIProvisioned ClusterPhase = "CNIProvisioned"
 
 	// ClusterPhaseReady is the state when the cluster is ready.
+	// Ready means both cluster and CNI has been provisioned
 	ClusterPhaseReady ClusterPhase = "Ready"
 
 	// ClusterPhaseDeleting is the state when a delete request has been sent to the API Server.

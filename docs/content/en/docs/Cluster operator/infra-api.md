@@ -1,6 +1,6 @@
 ---
-title: "Deploy Cluster with Infra API"
-linkTitle: "Deploy Cluster on Infra API"
+title: "Deploy Cluster with Kurator Cluster API"
+linkTitle: "Deploy Cluster with Kurator Cluster API"
 description: >
   The easiest way to deploy cluster with Kurator Infra API.
 ---

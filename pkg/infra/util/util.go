@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"fmt"
 	"hash/fnv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -31,9 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	ctrl "sigs.k8s.io/controller-runtime"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	"kurator.dev/kurator/pkg/client"
 )
 
@@ -53,23 +50,8 @@ func PatchResources(b []byte) (kube.ResourceList, error) {
 	if _, err := c.HelmClient().Update(target, target, true); err != nil {
 		return nil, errors.Wrapf(err, "failed to update resources")
 	}
-	if err := c.HelmClient().Wait(target, time.Minute); err != nil {
-		return nil, errors.Wrapf(err, "failed to wait for resources")
-	}
 
 	return target, nil
-}
-
-const (
-	clusterNameLabel      = "infra.kurator.dev/cluster-name"
-	clusterNamespaceLabel = "infra.kurator.dev/cluster-namespace"
-)
-
-func ClusterMatchingLabels(infraCluster *infrav1.Cluster) ctrlclient.MatchingLabels {
-	return ctrlclient.MatchingLabels{
-		clusterNameLabel:      infraCluster.Name,
-		clusterNamespaceLabel: infraCluster.Namespace,
-	}
 }
 
 func AWSConfig(region string, credSecret *corev1.Secret) *aws.Config {

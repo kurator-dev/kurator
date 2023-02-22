@@ -7,8 +7,8 @@ metadata:
   name: {{ .Name }}
   namespace: {{ .Namespace }}
   labels:
-    infra.kurator.dev/cluster-name: {{ .ClusterName }}
-    infra.kurator.dev/cluster-namespace: {{ .Namespace }}
+    cluster.kurator.dev/cluster-name: {{ .ClusterName }}
+    cluster.kurator.dev/cluster-namespace: {{ .Namespace }}
 ---
 apiVersion: addons.cluster.x-k8s.io/v1beta1
 kind: ClusterResourceSet
@@ -16,13 +16,13 @@ metadata:
   name: {{ .Name }}
   namespace: {{ .Namespace }}
   labels:
-    infra.kurator.dev/cluster-name: {{ .ClusterName }}
-    infra.kurator.dev/cluster-namespace: {{ .Namespace }}
+    cluster.kurator.dev/cluster-name: {{ .ClusterName }}
+    cluster.kurator.dev/cluster-namespace: {{ .Namespace }}
 spec:
   clusterSelector:
     matchLabels:
-      infra.kurator.dev/cluster-name: {{ .ClusterName }}
-      infra.kurator.dev/cluster-namespace: {{ .Namespace }}
+      cluster.kurator.dev/cluster-name: {{ .ClusterName }}
+      cluster.kurator.dev/cluster-namespace: {{ .Namespace }}
   resources:
     - kind: ConfigMap
       name: {{ .Name }}

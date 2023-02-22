@@ -4727,8 +4727,8 @@ metadata:
   name: test-xxxxx-cni
   namespace: default
   labels:
-    infra.kurator.dev/cluster-name: test
-    infra.kurator.dev/cluster-namespace: default
+    cluster.kurator.dev/cluster-name: test
+    cluster.kurator.dev/cluster-namespace: default
 ---
 apiVersion: addons.cluster.x-k8s.io/v1beta1
 kind: ClusterResourceSet
@@ -4736,13 +4736,13 @@ metadata:
   name: test-xxxxx-cni
   namespace: default
   labels:
-    infra.kurator.dev/cluster-name: test
-    infra.kurator.dev/cluster-namespace: default
+    cluster.kurator.dev/cluster-name: test
+    cluster.kurator.dev/cluster-namespace: default
 spec:
   clusterSelector:
     matchLabels:
-      infra.kurator.dev/cluster-name: test
-      infra.kurator.dev/cluster-namespace: default
+      cluster.kurator.dev/cluster-name: test
+      cluster.kurator.dev/cluster-namespace: default
   resources:
     - kind: ConfigMap
       name: test-xxxxx-cni

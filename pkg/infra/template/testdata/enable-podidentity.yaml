@@ -4,8 +4,8 @@ metadata:
   name: capa-quickstart
   namespace: default
   labels:
-    infra.kurator.dev/cluster-name: capa-quickstart
-    infra.kurator.dev/cluster-namespace: default
+    cluster.kurator.dev/cluster-name: capa-quickstart
+    cluster.kurator.dev/cluster-namespace: default
 spec:
   clusterNetwork:
     pods:

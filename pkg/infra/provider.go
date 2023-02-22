@@ -31,6 +31,8 @@ import (
 	capabootstrap "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/cloudformation/bootstrap"
 	cloudformation "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/cloudformation/service"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/util/system"
+	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -42,8 +44,14 @@ import (
 )
 
 type Provider interface {
+	// Reconcile ensures all resources used by Provider.
 	Reconcile(ctx context.Context, cluster *infrav1.Cluster) error
+	// Clean removes all resources created by the provider.
 	Clean(ctx context.Context, cluster *infrav1.Cluster) error
+	// IsInitialized returns true when kube apiserver is accessable.
+	IsInitialized(ctx context.Context) bool
+	// IsReady returns true when the cluster is ready to be used.
+	IsReady(ctx context.Context) bool
 }
 
 func NewProvider(kube client.Client, scope *scope.Cluster) Provider {
@@ -84,7 +92,7 @@ func (p *AWSProvider) Reconcile(ctx context.Context, infraCluster *infrav1.Clust
 func (p *AWSProvider) Clean(ctx context.Context, cluster *infrav1.Cluster) error {
 	// AWSClusterStaticIdentitySpec is not namespaced, so we need to delete the identity by listing all of them matching the cluster labels
 	awsIdentities := &awsinfrav1.AWSClusterStaticIdentityList{}
-	if err := p.Kube.List(ctx, awsIdentities, util.ClusterMatchingLabels(cluster)); err != nil {
+	if err := p.Kube.List(ctx, awsIdentities, p.scope.MatchingLabels()); err != nil {
 		return errors.Wrapf(err, "failed to list AWSClusterStaticIdentity")
 	}
 
@@ -99,6 +107,38 @@ func (p *AWSProvider) Clean(ctx context.Context, cluster *infrav1.Cluster) error
 	}
 
 	return nil
+}
+
+func (p *AWSProvider) IsInitialized(ctx context.Context) bool {
+	capiCluster := &capiv1.Cluster{}
+	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: p.scope.Namespace, Name: p.scope.Name}, capiCluster); err != nil {
+		return false
+	}
+
+	kcp := &controlplanev1.KubeadmControlPlane{}
+	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: capiCluster.Namespace, Name: capiCluster.Spec.ControlPlaneRef.Name}, kcp); err != nil {
+		return false
+	}
+
+	return kcp.Status.Initialized
+}
+
+func (p *AWSProvider) IsReady(ctx context.Context) bool {
+	capiCluster := &capiv1.Cluster{}
+	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: p.scope.Namespace, Name: p.scope.Name}, capiCluster); err != nil {
+		return false
+	}
+
+	kcp := &controlplanev1.KubeadmControlPlane{}
+	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: capiCluster.Namespace, Name: capiCluster.Spec.ControlPlaneRef.Name}, kcp); err != nil {
+		return false
+	}
+
+	if kcp.Status.Initialized && kcp.Status.Ready {
+		return true
+	}
+
+	return false
 }
 
 func (p *AWSProvider) reconcileAWSClusterAPIResources(ctx context.Context, clusterCreds *corev1.Secret) (ctrl.Result, error) {

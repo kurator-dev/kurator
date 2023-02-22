@@ -4,8 +4,8 @@ metadata:
   name: {{ .Name }}
   namespace: {{ .Namespace }}
   labels:
-    infra.kurator.dev/cluster-name: {{ .Name }}
-    infra.kurator.dev/cluster-namespace: {{ .Namespace }}
+    cluster.kurator.dev/cluster-name: {{ .Name }}
+    cluster.kurator.dev/cluster-namespace: {{ .Namespace }}
 spec:
   clusterNetwork:
     pods:

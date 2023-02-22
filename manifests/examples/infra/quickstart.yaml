@@ -1,4 +1,4 @@
-apiVersion: infra.kurator.dev/v1alpha1
+apiVersion: cluster.kurator.dev/v1alpha1
 kind: Cluster
 metadata:
   name: quickstart
