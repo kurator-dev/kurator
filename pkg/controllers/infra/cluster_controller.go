@@ -18,6 +18,7 @@ package infra
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"github.com/pkg/errors"
@@ -214,6 +215,12 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	conditions.MarkTrue(infraCluster, infrav1.CNIProvisionedCondition)
 	// TODO: reconcile cluster additinal resources
 
+	if err := r.reconcileAdditionalResources(ctx, infraCluster); err != nil {
+		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterResourceSetProvisionFailedReason,
+			capiv1.ConditionSeverityError, err.Error())
+		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile additional resources for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+	}
+
 	if err := r.ensureOwnerReference(ctx, scope, infraCluster); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterResourceSetProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
@@ -222,6 +229,54 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	conditions.MarkTrue(infraCluster, capiv1.ReadyCondition)
 	infraCluster.Status.Phase = string(infrav1.ClusterPhaseReady)
 	return ctrl.Result{}, nil
+}
+
+func (r *ClusterController) reconcileAdditionalResources(ctx context.Context, infraCluster *infrav1.Cluster) error {
+	if len(infraCluster.Spec.AdditionalResources) == 0 {
+		return nil
+	}
+	refs := util.AdditionalResources(infraCluster)
+
+	csr := &addonsv1.ClusterResourceSet{}
+	if err := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, csr); err != nil {
+		if apiserrors.IsNotFound(err) {
+			csr = &addonsv1.ClusterResourceSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: infraCluster.Namespace,
+					Name:      infraCluster.Name,
+					Labels: map[string]string{
+						scope.ClusterNameLabel:      infraCluster.Name,
+						scope.ClusterNamespaceLabel: infraCluster.Namespace,
+					},
+				},
+				Spec: addonsv1.ClusterResourceSetSpec{
+					ClusterSelector: metav1.LabelSelector{
+						MatchLabels: map[string]string{
+							scope.ClusterNameLabel:      infraCluster.Name,
+							scope.ClusterNamespaceLabel: infraCluster.Namespace,
+						},
+					},
+					Resources: refs,
+				},
+			}
+			if err := r.Create(ctx, csr); err != nil {
+				return errors.Wrapf(err, "failed to create ClusterResourceSet %s/%s", csr.Namespace, csr.Name)
+			}
+		} else {
+			return errors.Wrapf(err, "failed to get ClusterResourceSet %s/%s", csr.Namespace, csr.Name)
+		}
+	}
+
+	if reflect.DeepEqual(csr.Spec.Resources, refs) {
+		return nil
+	}
+
+	csr.Spec.Resources = refs
+	if err := r.Update(ctx, csr); err != nil {
+		return errors.Wrapf(err, "failed to update ClusterResourceSet %s/%s", csr.Namespace, csr.Name)
+	}
+
+	return nil
 }
 
 func (r *ClusterController) ensureOwnerReference(ctx context.Context, scope *scope.Cluster, infraCluster *infrav1.Cluster) error {

@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"hash/fnv"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -29,8 +30,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
+	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	"kurator.dev/kurator/pkg/client"
 )
 
@@ -73,4 +76,24 @@ func GenerateUID(nn types.NamespacedName) string {
 	hash := fnv.New32a()
 	hashutil.DeepHashObject(hash, nn.String())
 	return rand.SafeEncodeString(fmt.Sprint(hash.Sum32()))
+}
+
+func AdditionalResources(infraCluster *infrav1.Cluster) []addonsv1.ResourceRef {
+	refs := make([]addonsv1.ResourceRef, 0, len(infraCluster.Spec.AdditionalResources))
+	for _, resource := range infraCluster.Spec.AdditionalResources {
+		refs = append(refs, addonsv1.ResourceRef{
+			Kind: resource.Kind,
+			Name: resource.Name,
+		})
+	}
+
+	sort.Slice(refs, func(i, j int) bool {
+		if refs[i].Kind == refs[j].Kind {
+			return refs[i].Name < refs[j].Name
+		}
+
+		return refs[i].Kind < refs[j].Kind
+	})
+
+	return refs
 }

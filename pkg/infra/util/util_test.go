@@ -21,6 +21,8 @@ import (
 
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
+	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
 )
 
 func TestGenerateUID(t *testing.T) {
@@ -45,6 +47,107 @@ func TestGenerateUID(t *testing.T) {
 			} else {
 				g.Expect(gotLeft).ToNot(gomega.Equal(gotRight))
 			}
+		})
+	}
+}
+
+func TestAdditionalResources(t *testing.T) {
+	cases := []struct {
+		input    *infrav1.Cluster
+		expected []addonsv1.ResourceRef
+	}{
+		{
+			input: &infrav1.Cluster{
+				Spec: infrav1.ClusterSpec{
+					AdditionalResources: []infrav1.ResourceRef{
+						{
+							Kind: "Secret",
+							Name: "kurator-secret1",
+						},
+						{
+							Kind: "ConfigMap",
+							Name: "kurator-config1",
+						},
+						{
+							Kind: "Secret",
+							Name: "kurator-secret2",
+						},
+						{
+							Kind: "ConfigMap",
+							Name: "kurator-config2",
+						},
+					},
+				},
+			},
+			expected: []addonsv1.ResourceRef{
+				{
+					Kind: "ConfigMap",
+					Name: "kurator-config1",
+				},
+				{
+					Kind: "ConfigMap",
+					Name: "kurator-config2",
+				},
+				{
+					Kind: "Secret",
+					Name: "kurator-secret1",
+				},
+				{
+					Kind: "Secret",
+					Name: "kurator-secret2",
+				},
+			},
+		},
+		{
+			input: &infrav1.Cluster{
+				Spec: infrav1.ClusterSpec{
+					AdditionalResources: []infrav1.ResourceRef{
+						{
+							Kind: "ConfigMap",
+							Name: "kurator-config2",
+						},
+						{
+							Kind: "Secret",
+							Name: "kurator-secret1",
+						},
+						{
+							Kind: "ConfigMap",
+							Name: "kurator-config1",
+						},
+						{
+							Kind: "Secret",
+							Name: "kurator-secret2",
+						},
+					},
+				},
+			},
+			expected: []addonsv1.ResourceRef{
+				{
+					Kind: "ConfigMap",
+					Name: "kurator-config1",
+				},
+				{
+					Kind: "ConfigMap",
+					Name: "kurator-config2",
+				},
+				{
+					Kind: "Secret",
+					Name: "kurator-secret1",
+				},
+				{
+					Kind: "Secret",
+					Name: "kurator-secret2",
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run("", func(t *testing.T) {
+			got := AdditionalResources(tc.input)
+
+			g := gomega.NewWithT(t)
+			g.Expect(got).To(gomega.Equal(tc.expected))
 		})
 	}
 }

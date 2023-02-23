@@ -29,8 +29,8 @@ import (
 const (
 	VpcDefaultCIDR = "10.0.0.0/16"
 
-	clusterNameLabel      = "cluster.kurator.dev/cluster-name"
-	clusterNamespaceLabel = "cluster.kurator.dev/cluster-namespace"
+	ClusterNameLabel      = "cluster.kurator.dev/cluster-name"
+	ClusterNamespaceLabel = "cluster.kurator.dev/cluster-namespace"
 )
 
 type Cluster struct {
@@ -103,8 +103,8 @@ func (c *Cluster) SecretName() string {
 
 func (c *Cluster) MatchingLabels() ctrlclient.MatchingLabels {
 	return ctrlclient.MatchingLabels{
-		clusterNameLabel:      c.Name,
-		clusterNamespaceLabel: c.Namespace,
+		ClusterNameLabel:      c.Name,
+		ClusterNamespaceLabel: c.Namespace,
 	}
 }
 
