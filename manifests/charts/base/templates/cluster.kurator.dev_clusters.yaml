@@ -391,7 +391,8 @@ spec:
             description: ClusterStatus defines the observed state of Cluster
             properties:
               apiEndpoint:
-                description: APIEndpoint is the endpoint to communicate with the apiserver.
+                description: 'APIEndpoint is the endpoint to communicate with the
+                  apiserver. Format should be: `https://host:port`'
                 type: string
               conditions:
                 description: Conditions defines current service state of the cluster.
@@ -438,6 +439,18 @@ spec:
                   - type
                   type: object
                 type: array
+              kubeconfig:
+                description: Kubeconfig represents the secret that contains the credential
+                  to access this cluster.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret. If empty, it is default
+                      to the namespace of the API object which refer it.
+                    type: string
+                type: object
               phase:
                 description: Phase is the current lifecycle phase of the cluster.
                 type: string
