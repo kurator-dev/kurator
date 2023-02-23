@@ -34,8 +34,8 @@ const (
 	// CNIProvisionFailedReason (Severity=Error) documents that the CNI provisioning failed.
 	CNIProvisionFailedReason = "CNIProvisionFailed"
 
-	// ClusterAPIResourceProvisionFailedReason (Severity=Error) documents that the additinal Cluster API resources (ClusterResourceSet etc.) provisioning failed.
-	ClusterAPIResourceProvisionFailedReason = "ClusterAPIResourceProvisionFailed"
+	// ClusterResourceSetProvisionFailedReason (Severity=Error) documents that the additinal Cluster API resources (ClusterResourceSet etc.) provisioning failed.
+	ClusterResourceSetProvisionFailedReason = "ClusterResourceSetProvisionFailed"
 )
 
 // ClusterPhase is a string representation of the cluster's phase.
@@ -44,12 +44,6 @@ type ClusterPhase string
 const (
 	// ClusterPhaseProvisioning is the state when the cluster is being provisioned.
 	ClusterPhaseProvisioning ClusterPhase = "Provisioning"
-
-	// ClusterPhaseInfrastructureProvisioned is the state when the infrastructure has been provisioned.
-	ClusterPhaseInfrastructureProvisioned ClusterPhase = "InfrastructureProvisioned"
-
-	// ClusterPhaseCNIProvisioned is the state when the cni has been provisioned.
-	ClusterPhaseCNIProvisioned ClusterPhase = "CNIProvisioned"
 
 	// ClusterPhaseReady is the state when the cluster is ready.
 	// Ready means both cluster and CNI has been provisioned

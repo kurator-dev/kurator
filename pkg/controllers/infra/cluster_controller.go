@@ -192,29 +192,30 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
-	conditions.MarkTrue(infraCluster, infrav1.InfrastructureProviderProvisionedCondition)
-	infraCluster.Status.Phase = string(infrav1.ClusterPhaseInfrastructureProvisioned)
-
 	// check Cluster status
 	if !provider.IsInitialized(ctx) {
+		conditions.MarkFalse(infraCluster, infrav1.InfrastructureProviderProvisionedCondition, infrav1.InfrastructureProviderProvisionFailedReason,
+			capiv1.ConditionSeverityWarning, "Provider is not initialized")
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
+	conditions.MarkTrue(infraCluster, infrav1.InfrastructureProviderProvisionedCondition)
 
 	if err := r.reconcileCNI(ctx, infraCluster, scope); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.CNIProvisionedCondition, infrav1.CNIProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile CNI resources")
 	}
-	conditions.MarkTrue(infraCluster, infrav1.CNIProvisionedCondition)
-	infraCluster.Status.Phase = string(infrav1.ClusterPhaseCNIProvisioned)
 
 	if !provider.IsReady(ctx) {
+		conditions.MarkFalse(infraCluster, infrav1.CNIProvisionedCondition, infrav1.CNIProvisionFailedReason,
+			capiv1.ConditionSeverityWarning, "Provider is not ready")
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
+	conditions.MarkTrue(infraCluster, infrav1.CNIProvisionedCondition)
 	// TODO: reconcile cluster additinal resources
 
 	if err := r.ensureOwnerReference(ctx, scope, infraCluster); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterAPIResourceProvisionFailedReason,
+		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterResourceSetProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile ClusterResourceSet for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
