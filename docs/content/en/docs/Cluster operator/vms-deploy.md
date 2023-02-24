@@ -25,7 +25,7 @@ $ kubectl get pod -A | grep kurator-cluster-operator
 kurator-system       kurator-cluster-operator-857cf45445-lkwsw               1/1     Running             0          17s
 ```
 
-### Installs an SSH key for your VMs
+### Install an SSH key on your VMs
 
 Assuming the public IP address of the VMs where you want to install K8s is "200.x.x.1" and "200.x.x.2".
 The private IP address is "192.x.x.1" and "192.x.x.2".
@@ -40,16 +40,16 @@ ssh-keygen
 
 You need follow prompts to "Enter file in which to save the key" and "Enter passphrase".
 
-#### Installs an authorized key
+#### Install SSH public key
 
 ```console
-ssh-copy-id 200.x.x.1 
-ssh-copy-id 200.x.x.2
+ssh-copy-id [user@]200.x.x.1
+ssh-copy-id [user@]200.x.x.2
 ```
 
 #### Check your access
 
-Then you can get access without requiring a password for each login.
+Try logging into the VMs with a password for each login.
 
 ```console
 ssh 200.x.x.1 
@@ -62,11 +62,12 @@ Now you can easily log in VMs, but you still need to pass this ability to Kurato
 
 #### Create the secret with kubectl
 
+Create a secret used to install kubernetes cluster on your VMs via ssh.
+
 ```console
 kubectl create secret generic cluster-secret --from-file=ssh-privatekey=/root/.ssh/id_rsa
 ```
 
-"secret/cluster-secret created" will appear.
 
 #### Check the secret
 
@@ -84,31 +85,30 @@ Type:  Opaque
 Data
 ====
 ssh-privatekey:  2590 bytes
-ssh-publickey:   565 bytes
 ```
 
-### Configure your resources
+### Customize your cluster configuration
 
-You can find resources examples from the path "manifests/examples/customcluster/" in Kurator Repository.
+You can find custom cluster examples [here](https://github.com/kurator-dev/kurator/tree/main/manifests/examples/customcluster).
 
-Here are the four types of resources needed for VMs cluster management：
+Here are the four types of resources needed for VMs cluster provision：
 
 - cluster
 - kcp(KubeadmControlPlane)
 - customCluster
 - customMachine
 
-You can copy the examples and replaces the parameters to what you need:
+You can copy the examples and update the parameters as you need:
 
 ```console
 cp -rfp manifests/examples/customcluster manifests/examples/my-customcluster
 ```
 
-You need to edit the hosts configuration of the VMs first.
+First you need to update the host configuration.
 
 ```console
 $ vi manifests/examples/my-customcluster/cc-custommachine.yaml
-apiVersion: cluster.kurator.dev/v1alpha1
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
 kind: CustomMachine
 metadata:
   name: cc-custommachine
@@ -120,7 +120,6 @@ spec:
       publicIP: 200.x.x.1 
       # edit to your real parameters
       privateIP: 192.x.x.1 
-      instanceType: node
       sshKey:
         apiVersion: v1
         kind: Secret
@@ -137,19 +136,19 @@ spec:
         name: cluster-secret
 ```
 
-If you just modify the IP and run the example resource directly, you will get a cluster with a master and a worker.
+If you just modify the IP and apply the manifest directly, you will get a kubernetes cluster with one master and one node.
 
 Here are some optional parameters you may care about and the setting position:
 
-| parameters | setting-position |
-| :-----| :---- | 
-| KubeVersion | kcp-version | 
-| PodCIDR | cluster-clusterNetwork-pods-cidrBlocks | 
-| CNIPlugin | customCluster-CNI-type | 
+| parameters | setting-position                            |
+| :-----|:--------------------------------------------| 
+| KubeVersion | KubeadmControlPlane.Spec.Version            | 
+| PodCIDR | Cluster.Spec.ClusterNetwork.Pods.CidrBlocks | 
+| CNIPlugin | CustomCluster.CNI.Type                      | 
 
-## Create a k8s cluster for VMs
+## Deploy a k8s cluster on VMs
 
-Now everything ready and let's start to create a k8s cluster for your VMs.
+Now everything ready and let's start to deploy a k8s cluster on your VMs.
 
 ### Apply resource configuration
 
@@ -159,25 +158,24 @@ kubectl apply -f manifests/examples/my-customcluster
 
 ### Check your Installation
 
-If you want more operator log details, you can use following command.
+If you want to see cluster operator log details, you can use following command.
 
 ```console
-# replace the "kurator-cluster-operator-857cf45445-lkwsw" to your own operator name
-kubectl logs -n kurator-system kurator-cluster-operator-857cf45445-lkwsw
+kubectl logs -n kurator-system -l app=kurator-cluster-operator
 ```
 
-Check the pod of installing cluster.
+Check the pod installing cluster.
 
 ```console
 $ kubectl get pod | grep cc-customcluster-init
 cc-customcluster-init   0/1     ContainerCreating   0          15s
 ```
 
-The status of "ContainerCreating" may take 40 minute for image pulling and the status of "Running" may take 15 min.
+The duration of "ContainerCreating" and "Running" may last tens of minutes which heavily depend on you bandwidth.
 
-Image pulling only needs to be executed once on the same kind cluster.
+Image pull only needs to be executed once in the same cluster.
 
-If you want see the procedures of init worker, you can use following command.
+If you want see the procedures of init worker, you can use the following command.
 
 ```console
 kubectl logs cc-customcluster-init
@@ -187,10 +185,9 @@ kubectl logs cc-customcluster-init
 
 When the installation of cluster is done, the status of the init worker will change from "running" to "complete". The phase of customCluster will also change into "succeeded".
 
-You can turn to the terminal of VMs and confirm your installation. Here is an example using cilium as CNI plugin.
+You can login the master node and confirm your installation. Here is an example using cilium as CNI plugin.
 
 ```console
-# current terminal is at master node "200.x.x.1"
 $ kubectl get po -A
 NAMESPACE     NAME                               READY   STATUS    RESTARTS   AGE
 kube-system   cilium-6sjhd                       1/1     Running   0          13m
@@ -221,14 +218,14 @@ If you no longer need cluster on VMs and want to delete the cluster, you only ne
 Check the cluster object you have.
 
 ```console
-$ kubectl get cluster
-NAME                    PHASE      AGE    VERSION
+$ kubectl get clusters.cluster.x-k8s.io
+NAME         PHASE      AGE    VERSION
 cc-cluster   running    3h6m   
 ```
 
-### Delete the customcluster resource
+### Delete the custom cluster resource
 
-Delete the customcluster which you want.
+Delete the custom cluster which you want.
 
 ```console
 kubectl delete cluster cc-cluster 

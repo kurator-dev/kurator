@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    control-plane: kurator-cluster-operator
+    app: kurator-cluster-operator
   name: kurator-cluster-operator
   namespace: {{ .Release.Namespace }}
 spec:
@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       labels:
-        control-plane: kurator-cluster-operator
+        app: kurator-cluster-operator
     spec:
       containers:
       - args:

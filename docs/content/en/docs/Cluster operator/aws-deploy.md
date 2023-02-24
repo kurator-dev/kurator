@@ -5,7 +5,7 @@ description: >
   The easiest way to deploy cluster on AWS with Kurator.
 ---
 
-In this tutorial we’ll cover the basics of how to use [Cluster API](https://cluster-api.sigs.k8s.io) and kurator cluster operator to create one or more Kubernetes clusters.
+In this tutorial we’ll cover the basics of how to use [Cluster API](https://cluster-api.sigs.k8s.io) and kurator cluster operator to create kubernetes cluster.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ helm install -n kurator-system kurator-cluster-operator out/charts/cluster-opera
 
 ## Create a vanilla cluster on AWS
 
-The clusterctl CLI tool handles the lifecycle of a Cluster API management cluster.
+The clusterctl CLI tool handles the lifecycle of a Cluster API managed cluster.
 
 ```console
 # download clusterctl
@@ -46,7 +46,7 @@ Create a kubernetes cluster on AWS, which contains control plane nodes and worke
     link="./image/capa-aws.png"
     >}}
 
-Generating the cluster configuration:
+Generate the cluster configuration:
 
 ```console
 export AWS_CONTROL_PLANE_MACHINE_TYPE=t3.large

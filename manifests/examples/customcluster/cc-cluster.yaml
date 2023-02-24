@@ -14,7 +14,7 @@ spec:
     name: cc-kcp
     namespace: default
   infrastructureRef:
-    apiVersion: cluster.kurator.dev/v1alpha1
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
     kind: CustomCluster
     name: cc-customcluster
     namespace: default

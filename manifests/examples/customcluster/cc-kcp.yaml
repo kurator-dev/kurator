@@ -10,8 +10,8 @@ spec:
     joinConfiguration:
   machineTemplate:
     infrastructureRef:
-      apiVersion: cluster.kurator.dev/v1alpha1
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
       kind: customMachine
       name: cc-custommachine
       namespace: default
-  version: v1.23.7
+  version: v1.25.0
