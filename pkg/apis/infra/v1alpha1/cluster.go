@@ -43,7 +43,7 @@ type CustomCluster struct {
 
 // CustomClusterSpec defines the desired state of a kurator cluster.
 type CustomClusterSpec struct {
-	// TODO: any UCS specific configurations that does not exist in upstream cluster api
+	// TODO: any other configurations that does not exist in upstream cluster api
 
 	// MachineRef is the reference of nodes for provisioning a kurator cluster.
 	// +optional
@@ -82,11 +82,29 @@ const (
 
 // CustomClusterStatus represents the current status of the cluster.
 type CustomClusterStatus struct {
-
 	// Phase represents the current phase of customCluster actuation.
 	// E.g.  Running, Succeed, Terminating, Failed etc.
 	// +optional
 	Phase CustomClusterPhase `json:"phase,omitempty"`
+
+	// APIEndpoint is the endpoint to communicate with the apiserver.
+	// Format should be: `https://host:port`
+	// +optional
+	APIEndpoint string `json:"apiEndpoint,omitempty"`
+
+	// Kubeconfig represents the secret that contains the credential to access this cluster.
+	// +optional
+	Kubeconfig *SecretReference `json:"kubeconfig,omitempty"`
+}
+
+// SecretReference represents the secret that is referred.
+type SecretReference struct {
+	// Namespace of the secret.
+	// If empty, it is default to the namespace of the API object which refer it.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+	// Name of the secret.
+	Name string `json:"name,omitempty"`
 }
 
 // +kubebuilder:object:root=true

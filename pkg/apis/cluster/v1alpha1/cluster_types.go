@@ -21,7 +21,9 @@ import (
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	capiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+
+	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // Cluster is the schema for the cluster's API
@@ -226,23 +228,27 @@ type ResourceRef struct {
 type ClusterStatus struct {
 	// Conditions defines current service state of the cluster.
 	// +optional
-	Conditions capiv1.Conditions `json:"conditions,omitempty"`
+	Conditions capiv1beta1.Conditions `json:"conditions,omitempty"`
 	// Phase is the current lifecycle phase of the cluster.
 	// +optional
 	Phase string `json:"phase,omitempty"`
 	// APIEndpoint is the endpoint to communicate with the apiserver.
+	// Format should be: `https://host:port`
 	// +optional
 	APIEndpoint string `json:"apiEndpoint,omitempty"`
+	// Kubeconfig represents the secret that contains the credential to access this cluster.
+	// +optional
+	KubeConfig *infrav1alpha1.SecretReference `json:"kubeconfig,omitempty"`
 	// ServiceAccountIssuer is the URL of the service account issuer.
 	// +optional
 	ServiceAccountIssuer string `json:"serviceAccountIssuer"`
 }
 
-func (c *Cluster) GetConditions() capiv1.Conditions {
+func (c *Cluster) GetConditions() capiv1beta1.Conditions {
 	return c.Status.Conditions
 }
 
-func (c *Cluster) SetConditions(conditions capiv1.Conditions) {
+func (c *Cluster) SetConditions(conditions capiv1beta1.Conditions) {
 	c.Status.Conditions = conditions
 }
 
