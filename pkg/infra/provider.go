@@ -245,6 +245,7 @@ func (p *AWSProvider) reconcileAWSClusterSecret(ctx context.Context, credSecret 
 				Namespace: ctlNamespace, // provider always use system namespace
 				Name:      secretName,
 			},
+			Type:       credSecret.Type,
 			StringData: credSecret.StringData,
 			Data:       credSecret.Data,
 		}
