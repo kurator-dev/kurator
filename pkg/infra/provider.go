@@ -18,6 +18,7 @@ package infraprovider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	awssdkcfn "github.com/aws/aws-sdk-go/service/cloudformation"
@@ -26,13 +27,14 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	errorutil "k8s.io/apimachinery/pkg/util/errors"
 	awsinfrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
 	awsbootstrapv1 "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/api/bootstrap/v1beta1"
 	capabootstrap "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/cloudformation/bootstrap"
 	cloudformation "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/cloudformation/service"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/util/system"
 	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
-	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/conditions"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -49,9 +51,9 @@ type Provider interface {
 	// Clean removes all resources created by the provider.
 	Clean(ctx context.Context, cluster *infrav1.Cluster) error
 	// IsInitialized returns true when kube apiserver is accessible.
-	IsInitialized(ctx context.Context) bool
+	IsInitialized(ctx context.Context) error
 	// IsReady returns true when the cluster is ready to be used.
-	IsReady(ctx context.Context) bool
+	IsReady(ctx context.Context) error
 }
 
 func NewProvider(kube client.Client, scope *scope.Cluster) Provider {
@@ -109,36 +111,43 @@ func (p *AWSProvider) Clean(ctx context.Context, cluster *infrav1.Cluster) error
 	return nil
 }
 
-func (p *AWSProvider) IsInitialized(ctx context.Context) bool {
+func (p *AWSProvider) IsInitialized(ctx context.Context) error {
 	capiCluster := &capiv1.Cluster{}
 	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: p.scope.Namespace, Name: p.scope.Name}, capiCluster); err != nil {
-		return false
+		return fmt.Errorf("failed to get Cluster: %v", err)
 	}
 
-	kcp := &controlplanev1.KubeadmControlPlane{}
-	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: capiCluster.Namespace, Name: capiCluster.Spec.ControlPlaneRef.Name}, kcp); err != nil {
-		return false
+	if conditions.IsFalse(capiCluster, capiv1.ReadyCondition) {
+		// merge all false conditions
+		errs := []error{}
+		for _, condition := range capiCluster.Status.Conditions {
+			if condition.Status == corev1.ConditionTrue || condition.Type == capiv1.ReadyCondition {
+				continue
+			}
+
+			errs = append(errs, errors.New(condition.Message))
+		}
+
+		return errorutil.NewAggregate(errs)
 	}
 
-	return kcp.Status.Initialized
+	return nil
 }
 
-func (p *AWSProvider) IsReady(ctx context.Context) bool {
+func (p *AWSProvider) IsReady(ctx context.Context) error {
 	capiCluster := &capiv1.Cluster{}
 	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: p.scope.Namespace, Name: p.scope.Name}, capiCluster); err != nil {
-		return false
+		return fmt.Errorf("failed to get Cluster: %v", err)
 	}
 
-	kcp := &controlplanev1.KubeadmControlPlane{}
-	if err := p.Kube.Get(ctx, types.NamespacedName{Namespace: capiCluster.Namespace, Name: capiCluster.Spec.ControlPlaneRef.Name}, kcp); err != nil {
-		return false
+	if conditions.IsFalse(capiCluster, capiv1.ReadyCondition) {
+		msg := conditions.GetMessage(capiCluster, capiv1.ReadyCondition)
+		return errors.New(msg)
 	}
 
-	if kcp.Status.Initialized && kcp.Status.Ready {
-		return true
-	}
+	// TODO: check if all nodes are ready
 
-	return false
+	return nil
 }
 
 func (p *AWSProvider) reconcileAWSClusterAPIResources(ctx context.Context, clusterCreds *corev1.Secret) (ctrl.Result, error) {
