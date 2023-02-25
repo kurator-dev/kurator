@@ -82,20 +82,20 @@ func TestAdditionalResources(t *testing.T) {
 			},
 			expected: []addonsv1.ResourceRef{
 				{
-					Kind: "ConfigMap",
-					Name: "kurator-config1",
-				},
-				{
-					Kind: "ConfigMap",
-					Name: "kurator-config2",
-				},
-				{
 					Kind: "Secret",
 					Name: "kurator-secret1",
 				},
 				{
+					Kind: "ConfigMap",
+					Name: "kurator-config1",
+				},
+				{
 					Kind: "Secret",
 					Name: "kurator-secret2",
+				},
+				{
+					Kind: "ConfigMap",
+					Name: "kurator-config2",
 				},
 			},
 		},
@@ -125,15 +125,15 @@ func TestAdditionalResources(t *testing.T) {
 			expected: []addonsv1.ResourceRef{
 				{
 					Kind: "ConfigMap",
-					Name: "kurator-config1",
-				},
-				{
-					Kind: "ConfigMap",
 					Name: "kurator-config2",
 				},
 				{
 					Kind: "Secret",
 					Name: "kurator-secret1",
+				},
+				{
+					Kind: "ConfigMap",
+					Name: "kurator-config1",
 				},
 				{
 					Kind: "Secret",

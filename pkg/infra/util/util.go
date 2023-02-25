@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"fmt"
 	"hash/fnv"
-	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -86,14 +85,6 @@ func AdditionalResources(infraCluster *infrav1.Cluster) []addonsv1.ResourceRef {
 			Name: resource.Name,
 		})
 	}
-
-	sort.Slice(refs, func(i, j int) bool {
-		if refs[i].Kind == refs[j].Kind {
-			return refs[i].Name < refs[j].Name
-		}
-
-		return refs[i].Kind < refs[j].Kind
-	})
 
 	return refs
 }
