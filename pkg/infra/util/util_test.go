@@ -21,8 +21,9 @@ import (
 
 	"github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/types"
-	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
+
+	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
 
 func TestGenerateUID(t *testing.T) {
