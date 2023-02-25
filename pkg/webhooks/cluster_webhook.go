@@ -115,6 +115,41 @@ func validateCIDRBlocks(cidrBlocks []string, fldPath *field.Path) field.ErrorLis
 	return allErrs
 }
 
+const (
+	AWSMaxDataVolumeCount = 25
+)
+
+func validateVolume(in *v1.Cluster) field.ErrorList {
+	var allErrs field.ErrorList
+	if in.Spec.InfraType == v1.AWSClusterInfraType {
+		allErrs = append(allErrs, validateAWSVolume(in)...)
+	}
+
+	return allErrs
+}
+
+func validateAWSVolume(in *v1.Cluster) field.ErrorList {
+	var allErrs field.ErrorList
+
+	if len(in.Spec.Master.NonRootVolumes) > AWSMaxDataVolumeCount {
+		allErrs = append(allErrs, field.TooMany(
+			field.NewPath("spec", "master", "nonRootVolumes"),
+			len(in.Spec.Master.NonRootVolumes),
+			AWSMaxDataVolumeCount))
+	}
+
+	workersFiledPath := field.NewPath("spec", "workers")
+	for idx, node := range in.Spec.Workers {
+		if len(node.NonRootVolumes) > AWSMaxDataVolumeCount {
+			allErrs = append(allErrs, field.TooMany(
+				workersFiledPath.Index(idx).Child("nonRootVolumes"),
+				len(node.NonRootVolumes),
+				AWSMaxDataVolumeCount))
+		}
+	}
+	return allErrs
+}
+
 func validateAdditionalResource(in []v1.ResourceRef, fldPath *field.Path) field.ErrorList {
 	var allErrs field.ErrorList
 	if len(in) == 0 {
@@ -153,6 +188,7 @@ func (wh *ClusterWebhook) validate(in *v1.Cluster) error {
 	allErrs = append(allErrs, validateInfra(in)...)
 	allErrs = append(allErrs, validateVersion(in)...)
 	allErrs = append(allErrs, validateNetwork(in.Spec.Network, field.NewPath("spec", "network"))...)
+	allErrs = append(allErrs, validateVolume(in)...)
 	allErrs = append(allErrs, validateAdditionalResource(in.Spec.AdditionalResources, field.NewPath("spec", "additionalResources"))...)
 
 	if len(allErrs) > 0 {

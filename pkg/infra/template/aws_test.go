@@ -116,6 +116,54 @@ func TestRenderClusterAPIForAWS(t *testing.T) {
 			},
 			expected: "enable-podidentity.yaml",
 		},
+		{
+			name: "aws/with-volumes",
+			aws: &scope.Cluster{
+				UID:            "xxxxxx",
+				InfraType:      "aws",
+				NamespacedName: types.NamespacedName{Namespace: "default", Name: "capa-quickstart"},
+				Version:        "v1.23.0",
+				Region:         "us-east-1",
+				VpcCIDR:        "10.0.0.0/16",
+				PodCIDR:        []string{"192.168.0.0/16"},
+				ServiceCIDR:    []string{"10.96.0.0/12"},
+				ControlPlane: &scope.Instance{
+					Replicas:     3,
+					InstanceType: "t3.large",
+					ImageOS:      "ubuntu-18.04",
+					RootVolume: &scope.InstanceVolume{
+						Size: 100,
+						Type: "gp2",
+					},
+				},
+				Workers: []*scope.Instance{
+					{
+						Replicas:     3,
+						InstanceType: "t3.large",
+						ImageOS:      "ubuntu-18.04",
+						RootVolume: &scope.InstanceVolume{
+							Size: 100,
+							Type: "gp3",
+						},
+						DataVolumes: []scope.InstanceVolume{
+							{
+								DeviceName: "/dev/sdb1",
+								Size:       200,
+								Type:       "gp2",
+							},
+							{
+								DeviceName: "/dev/sdb2",
+								Size:       300,
+								Type:       "gp3",
+							},
+						},
+					},
+				},
+				EnablePodIdentity: true,
+				BucketName:        "test-bucket",
+			},
+			expected: "with-volumes.yaml",
+		},
 	}
 
 	for _, tc := range cases {
