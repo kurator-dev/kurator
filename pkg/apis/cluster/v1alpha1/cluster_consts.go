@@ -21,19 +21,19 @@ import (
 )
 
 const (
-	// InfrastructureProviderProvisionedCondition reports on wheter the infrastructure resource is provisioned.
-	InfrastructureProviderProvisionedCondition capiv1.ConditionType = "InfrastructureProviderProvisioned"
-	// InfrastructureProviderProvisionFailedReason (Severity=Error) documents that the infrastructure provisioning failed.
-	InfrastructureProviderProvisionFailedReason = "InfrastructureProviderProvisionFailed"
-	// InfrastructureProviderProvisionReadyReason (Severity=Info) documents that the infrastructure is not ready.
-	InfrastructureProviderProvisionReadyReason = "InfrastructureProviderProvisionReady"
+	// InfrastructureReadyCondition reports a summary status of the infrastructure resources.
+	InfrastructureReadyCondition capiv1.ConditionType = "InfrastructureReady"
+	// InfrastructureProvisionFailedReason (Severity=Error) documents that the infrastructure provisioning failed.
+	InfrastructureProvisionFailedReason = "InfrastructureProvisionFailed"
+	// InfrastructureNotReadyReason (Severity=Error) documents that the infrastructure is not ready.
+	InfrastructureNotReadyReason = "InfrastructureNotReady"
 
-	//	CNIProvisionedCondition reports on whether the CNI is provisioned.
-	CNIProvisionedCondition capiv1.ConditionType = "CNIProvisioned"
+	//	CNICondition reports on whether the CNI is provisioned.
+	CNICondition capiv1.ConditionType = "CNI"
 	// CNIProvisionFailedReason (Severity=Error) documents that the CNI provisioning failed.
 	CNIProvisionFailedReason = "CNIProvisionFailed"
 	// CNIProvisionReadyReason (Severity=Error) documents that the CNI is not ready.
-	CNIProvisionReadyReason = "CNIProvisionReady"
+	CNINotReadyReason = "CNINotReady"
 
 	// ReadyCondition defines the Ready condition type that summarizes the operational state of a Cluster.
 	ReadyCondition capiv1.ConditionType = "Ready"

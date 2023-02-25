@@ -76,8 +76,8 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 	defer func() {
 		patchOpts := []patch.Option{
 			patch.WithOwnedConditions{Conditions: []capiv1.ConditionType{
-				infrav1.InfrastructureProviderProvisionedCondition,
-				infrav1.CNIProvisionedCondition,
+				infrav1.InfrastructureReadyCondition,
+				infrav1.CNICondition,
 				infrav1.ReadyCondition,
 			}},
 		}
@@ -189,31 +189,30 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	scope := scope.NewCluster(infraCluster)
 	provider := infraprovider.NewProvider(r.Client, scope)
 	if err := provider.Reconcile(ctx, infraCluster); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.InfrastructureProviderProvisionedCondition, infrav1.InfrastructureProviderProvisionFailedReason,
+		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
 	// check Cluster status
 	if err := provider.IsInitialized(ctx); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.InfrastructureProviderProvisionedCondition, infrav1.InfrastructureProviderProvisionReadyReason,
+		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureNotReadyReason,
 			capiv1.ConditionSeverityWarning, err.Error())
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
-	conditions.MarkTrue(infraCluster, infrav1.InfrastructureProviderProvisionedCondition)
+	conditions.MarkTrue(infraCluster, infrav1.InfrastructureReadyCondition)
 
 	if err := r.reconcileCNI(ctx, infraCluster, scope); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.CNIProvisionedCondition, infrav1.CNIProvisionFailedReason,
+		conditions.MarkFalse(infraCluster, infrav1.CNICondition, infrav1.CNIProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile CNI resources")
 	}
 
 	if err := provider.IsReady(ctx); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.CNIProvisionedCondition, infrav1.CNIProvisionReadyReason,
+		conditions.MarkFalse(infraCluster, infrav1.CNICondition, infrav1.CNINotReadyReason,
 			capiv1.ConditionSeverityWarning, err.Error())
 		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
 	}
-	conditions.MarkTrue(infraCluster, infrav1.CNIProvisionedCondition)
-	// TODO: reconcile cluster additinal resources
+	conditions.MarkTrue(infraCluster, infrav1.CNICondition)
 
 	if err := r.reconcileAdditionalResources(ctx, infraCluster); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterResourceSetProvisionFailedReason,
@@ -226,6 +225,7 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile ClusterResourceSet for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
+
 	conditions.MarkTrue(infraCluster, capiv1.ReadyCondition)
 	infraCluster.Status.Phase = string(infrav1.ClusterPhaseReady)
 	return ctrl.Result{}, nil
