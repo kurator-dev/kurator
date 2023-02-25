@@ -145,7 +145,19 @@ func (p *AWSProvider) IsReady(ctx context.Context) error {
 		return errors.New(msg)
 	}
 
-	// TODO: check if all nodes are ready
+	// check if all nodes are ready
+	msList := &capiv1.MachineSetList{}
+	if err := p.Kube.List(ctx, msList, client.InNamespace(p.scope.Namespace), client.MatchingLabels{
+		capiv1.ClusterLabelName: p.scope.Name,
+	}); err != nil {
+		return fmt.Errorf("failed to list MachineSets: %v", err)
+	}
+
+	for _, ms := range msList.Items {
+		if ms.Status.ReadyReplicas != *ms.Spec.Replicas {
+			return fmt.Errorf("not all machines of %s/%s are ready", ms.Namespace, ms.Name)
+		}
+	}
 
 	return nil
 }
