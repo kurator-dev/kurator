@@ -92,19 +92,9 @@ type CustomClusterStatus struct {
 	// +optional
 	APIEndpoint string `json:"apiEndpoint,omitempty"`
 
-	// Kubeconfig represents the secret that contains the credential to access this cluster.
+	// KubeconfigSecretRef represents the secret that contains the credential to access this cluster.
 	// +optional
-	Kubeconfig *SecretReference `json:"kubeconfig,omitempty"`
-}
-
-// SecretReference represents the secret that is referred.
-type SecretReference struct {
-	// Namespace of the secret.
-	// If empty, it is default to the namespace of the API object which refer it.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
-	// Name of the secret.
-	Name string `json:"name,omitempty"`
+	KubeconfigSecretRef string `json:"kubeconfigSecretRef,omitempty"`
 }
 
 // +kubebuilder:object:root=true
