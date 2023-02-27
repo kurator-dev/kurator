@@ -1,8 +1,7 @@
 ---
 title: "Integrate ArgoCD with Kurator"
-linkTitle: "Integrate ArgoCD with Kurator"
 description: >
-    Integrate ArgoCD with Kurator?
+    This task shows how to integrate ArgoCD with Kurator.
 ---
 
 ### What is ArgoCD

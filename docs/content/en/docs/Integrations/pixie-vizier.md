@@ -1,6 +1,5 @@
 ---
 title: "Integrate Pixie Vizier with Kurator"
-linkTitle: "Integrate Pixie Vizier with Kurator"
 ---
 
 ## What is Pixie Vizier
