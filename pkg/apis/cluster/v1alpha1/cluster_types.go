@@ -85,10 +85,12 @@ type NetworkConfig struct {
 	// PodCIDRs is the CIDR block for pods in this cluster.
 	// Defaults to 192.168.0.0/16.
 	// +optional
+	// +kubebuilder:default:={"192.168.0.0/16"}
 	PodCIDRs CIDRBlocks `json:"podCIDRs,omitempty"`
 	// ServiceCIDRs is the CIDR block for services in this cluster.
 	// Defaults to 10.96.0.0/12.
 	// +optional
+	// +kubebuilder:default:={"10.96.0.0/12"}
 	ServiceCIDRs CIDRBlocks `json:"serviceCIDRs,omitempty"`
 	// CNI is the configuration for the CNI.
 	CNI CNIConfig `json:"cni"`
@@ -107,6 +109,7 @@ type VPCConfig struct {
 	// CIDRBlock is the CIDR block to be used when the provider creates a managed VPC.
 	// Defaults to 10.0.0.0/16.
 	// +optional
+	// +kubebuilder:default:="10.0.0.0/16"
 	CIDRBlock string `json:"cidrBlock"`
 }
 
@@ -179,6 +182,7 @@ type MachineConfig struct {
 	// ImageOS is the OS of the image to use for the instance.
 	// Defaults to "ubuntu".
 	// +optional
+	// +kubebuilder:default:="ubuntu"
 	ImageOS string `json:"imageOS,omitempty"`
 	// RootVolume is the root volume to attach to the instance.
 	// +optional
@@ -251,6 +255,8 @@ func (c *Cluster) GetConditions() capiv1beta1.Conditions {
 func (c *Cluster) SetConditions(conditions capiv1beta1.Conditions) {
 	c.Status.Conditions = conditions
 }
+
+// +kubebuilder:webhook:verbs=create;update,path=/validate-cluster-kurator-dev-v1alpha1-cluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=cluster.kurator.dev,resources=cluster,versions=v1alpha1,name=validation.cluster.cluster.kurator.dev,sideEffects=None,admissionReviewVersions=v1alpha1
 
 // ClusterList contains a list of Cluster.
 // +kubebuilder:object:root=true
