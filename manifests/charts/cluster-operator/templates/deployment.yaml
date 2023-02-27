@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: kurator-cluster-operator
+    app.kubernetes.io/name: kurator-cluster-operator
   name: kurator-cluster-operator
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      control-plane: kurator-cluster-operator
+      app.kubernetes.io/name: kurator-cluster-operator
   template:
     metadata:
       labels:
-        app: kurator-cluster-operator
+        app.kubernetes.io/name: kurator-cluster-operator
     spec:
       containers:
       - args:
