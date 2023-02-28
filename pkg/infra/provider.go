@@ -37,7 +37,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	"kurator.dev/kurator/pkg/infra/scope"
 	"kurator.dev/kurator/pkg/infra/template"
 	"kurator.dev/kurator/pkg/infra/util"
@@ -46,9 +45,9 @@ import (
 
 type Provider interface {
 	// Reconcile ensures all resources used by Provider.
-	Reconcile(ctx context.Context, cluster *infrav1.Cluster) error
+	Reconcile(ctx context.Context) error
 	// Clean removes all resources created by the provider.
-	Clean(ctx context.Context, cluster *infrav1.Cluster) error
+	Clean(ctx context.Context) error
 	// IsInitialized returns true when kube apiserver is accessible.
 	IsInitialized(ctx context.Context) error
 	// IsReady returns true when the cluster is ready to be used.
@@ -69,8 +68,8 @@ type AWSProvider struct {
 	scope *scope.Cluster
 }
 
-func (p *AWSProvider) Reconcile(ctx context.Context, infraCluster *infrav1.Cluster) error {
-	clusterCreds, err := p.reconcileAWSCreds(ctx)
+func (p *AWSProvider) Reconcile(ctx context.Context) error {
+	_, err := p.reconcileAWSCreds(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "failed to reconcile cluster credentials")
 	}
@@ -81,7 +80,7 @@ func (p *AWSProvider) Reconcile(ctx context.Context, infraCluster *infrav1.Clust
 
 	// TODO: ensure IRSA
 
-	if _, err := p.reconcileAWSClusterAPIResources(ctx, clusterCreds); err != nil {
+	if _, err := p.reconcileAWSClusterAPIResources(ctx); err != nil {
 		return errors.Wrapf(err, "failed to reconcile Cluster API resources")
 	}
 
@@ -90,7 +89,7 @@ func (p *AWSProvider) Reconcile(ctx context.Context, infraCluster *infrav1.Clust
 	return nil
 }
 
-func (p *AWSProvider) Clean(ctx context.Context, cluster *infrav1.Cluster) error {
+func (p *AWSProvider) Clean(ctx context.Context) error {
 	credSecret, err := p.getClusterSecret(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get cluster secret")
@@ -170,7 +169,7 @@ func (p *AWSProvider) IsReady(ctx context.Context) error {
 	return nil
 }
 
-func (p *AWSProvider) reconcileAWSClusterAPIResources(ctx context.Context, clusterCreds *corev1.Secret) (ctrl.Result, error) {
+func (p *AWSProvider) reconcileAWSClusterAPIResources(ctx context.Context) (ctrl.Result, error) {
 	_, err := p.reconcileAWSCluster(ctx)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile AWSCluster %s/%s", p.scope.Namespace, p.scope.Name)

@@ -128,7 +128,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *i
 
 	scope := scope.NewCluster(infraCluster)
 	prov := infraprovider.NewProvider(r.Client, scope)
-	if err := prov.Clean(ctx, infraCluster); err != nil {
+	if err := prov.Clean(ctx); err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
 
@@ -188,10 +188,10 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	// TODO: precheck
 	scope := scope.NewCluster(infraCluster)
 	provider := infraprovider.NewProvider(r.Client, scope)
-	if err := provider.Reconcile(ctx, infraCluster); err != nil {
+	if err := provider.Reconcile(ctx); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
-		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{RequeueAfter: r.PollInterval}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
 	// check Cluster status
 	if err := provider.IsInitialized(ctx); err != nil {
@@ -201,7 +201,7 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	}
 	conditions.MarkTrue(infraCluster, infrav1.InfrastructureReadyCondition)
 
-	if err := r.reconcileCNI(ctx, infraCluster, scope); err != nil {
+	if err := r.reconcileCNI(scope); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.CNICondition, infrav1.CNIProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile CNI resources")
@@ -341,7 +341,7 @@ func (r *ClusterController) ensureClusterResourceSetRefsOwnerRef(ctx context.Con
 	return nil
 }
 
-func (r *ClusterController) reconcileCNI(ctx context.Context, infraCluster *infrav1.Cluster, scopeCluster *scope.Cluster) error {
+func (r *ClusterController) reconcileCNI(scopeCluster *scope.Cluster) error {
 	// For now, use CusterResourceSet to apply the CNI resources
 	cni, err := infraplugin.RenderCNI(scopeCluster)
 	if err != nil {
