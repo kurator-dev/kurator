@@ -38,7 +38,7 @@ endif
 export PATH := $(GOBIN):$(PATH)
 
 .PHONY: build
-build: clean tidy kurator cluster-operator
+build: tidy kurator cluster-operator
 
 .PHONY: tidy
 tidy:
