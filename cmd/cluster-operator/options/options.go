@@ -19,6 +19,7 @@ package options
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/pflag"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/feature"
@@ -38,6 +39,8 @@ type Options struct {
 	WebhookCertDir          string
 	HealthAddr              string
 	Concurrency             int
+
+	RequeueAfter time.Duration
 }
 
 func (opt *Options) AddFlags(fs *pflag.FlagSet) {
@@ -108,6 +111,13 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 		"concurrency",
 		5,
 		"Number of Cluster API resources to process simultaneously",
+	)
+
+	fs.DurationVar(
+		&opt.RequeueAfter,
+		"requeue-after",
+		10*time.Second,
+		"The duration to requeue the reconcile key after.",
 	)
 
 	// TODO: this may need to be operator scope rather than AWS platform scope.
