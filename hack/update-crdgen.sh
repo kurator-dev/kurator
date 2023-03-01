@@ -17,9 +17,9 @@ do
         webhook output:webhook:dir="${WEBHOOK_PATH}"
 done
 
-echo "running kustomize to generate the final CRD"
+echo "running kustomize to generate the final CRDs"
 kubectl kustomize "${CRD_PATH}" -o "${CRD_PATH}"/infrastructure.cluster.x-k8s.io_customclusters.yaml
-mv "${CRD_PATH}"/*.yaml "manifests/charts/base/templates/"
+mv "${CRD_PATH}"/*.yaml "${OPERATOR_CHART_PATH}"/crds/
 
 echo "running kustomize to generate the final Webhook"
 kubectl kustomize "${WEBHOOK_PATH}" -o "${WEBHOOK_PATH}"/manifests.yaml

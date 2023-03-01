@@ -5,10 +5,9 @@
 - Build
 
 ```
-make docker
-make gen-chart
+VERSION=0.3-dev make docker gen-chart
 
-kind load docker-image ghcr.io/kurator-dev/cluster-operator:latest --name <your_kind_cluster>
+kind load docker-image ghcr.io/kurator-dev/cluster-operator:0.3-dev --name <your_kind_cluster>
 ```
 
 - Install cert manager
@@ -24,17 +23,16 @@ helm install -n cert-manager cert-manager jetstack/cert-manager --set installCRD
 
 ```
 # must run this after cert-manager is ready
-kubectl create namespace kurator-system
-helm install kurator-base out/charts/base-0.1.0.tgz -n kurator-system
-helm install kurator-cluster-operator out/charts/cluster-operator-0.1.0.tgz -n kurator-system
-helm install -f /root/capa-values.yaml -n kurator-system kurator-cluster-operator out/charts/cluster-operator-0.1.0.tgz
+helm install --create-namespace kurator-cluster-operator out/charts/cluster-operator-0.3-dev.tgz -n kurator-system
+
+kubectl logs -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-system --tail=-1
 ```
 
 ## Cleanup
 
 ```
-helm uninstall kurator-cluster-operator -n kurator-system 
-helm uninstall kurator-base -n kurator-system
+helm uninstall kurator-cluster-operator -n kurator-system
 kubectl delete crd $(k get crds | grep cluster.x-k8s.io | awk '{print $1}')
+kubectl delete crd $(k get crds | grep kurator.dev | awk '{print $1}')
 kubectl delete ns kurator-system
 ```

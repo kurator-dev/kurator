@@ -28,6 +28,8 @@ import (
 	"helm.sh/helm/v3/pkg/kube"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/resource"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"k8s.io/kubectl/pkg/scheme"
@@ -170,7 +172,15 @@ func writeCRDs(outputDir string, resources kube.ResourceList) {
 	})
 
 	for _, r := range crds {
-		out, _ := yaml.Marshal(r.Object)
+		obj := r.Object.(*unstructured.Unstructured)
+		crd := &apiextv1.CustomResourceDefinition{}
+
+		_ = runtime.DefaultUnstructuredConverter.FromUnstructured(obj.Object, crd)
+
+		delete(crd.Annotations, "cert-manager.io/inject-ca-from")
+		crd.Spec.Conversion = nil
+
+		out, _ := yaml.Marshal(crd)
 		n := path.Join(outputDir, fmt.Sprintf("%s.yaml", r.Name))
 		if err := os.WriteFile(n, out, 0o755); err != nil {
 			fmt.Printf("write file err: %v", err)

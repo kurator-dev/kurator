@@ -1,3 +1,6 @@
+certManager:
+  enabled: true
+
 replicaCount: 1
 
 image:
