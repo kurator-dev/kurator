@@ -1,0 +1,31 @@
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: Cluster
+metadata:
+  name: quickstart
+  namespace: default
+spec:
+  infraType: aws
+  credential:
+    secretRef: quickstart
+  version: v1.23.0
+  region: us-east-1
+  network:
+    vpc:
+      cidrBlock: 10.10.0.0/16
+    podCIDRs:
+      - 192.168.0.0/16
+    serviceCIDRs:
+      - 10.96.0.0/12
+    cni:
+      type: calico
+  master:
+    replicas: 1
+    instanceType: t3.large
+  workers:
+    - replicas: 1
+      instanceType: t3.large
+  additionalResources:
+    - kind: Secret
+      name: abc
+    - kind: Secret
+      name: abc

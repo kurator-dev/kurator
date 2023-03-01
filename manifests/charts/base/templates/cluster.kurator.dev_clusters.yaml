@@ -90,6 +90,7 @@ spec:
                       Machine on different infra.
                     x-kubernetes-preserve-unknown-fields: true
                   imageOS:
+                    default: ubuntu
                     description: ImageOS is the OS of the image to use for the instance.
                       Defaults to "ubuntu".
                     type: string
@@ -195,12 +196,16 @@ spec:
                     - type
                     type: object
                   podCIDRs:
+                    default:
+                    - 192.168.0.0/16
                     description: PodCIDRs is the CIDR block for pods in this cluster.
                       Defaults to 192.168.0.0/16.
                     items:
                       type: string
                     type: array
                   serviceCIDRs:
+                    default:
+                    - 10.96.0.0/12
                     description: ServiceCIDRs is the CIDR block for services in this
                       cluster. Defaults to 10.96.0.0/12.
                     items:
@@ -210,6 +215,7 @@ spec:
                     description: VPC is the configuration for the VPC.
                     properties:
                       cidrBlock:
+                        default: 10.0.0.0/16
                         description: CIDRBlock is the CIDR block to be used when the
                           provider creates a managed VPC. Defaults to 10.0.0.0/16.
                         type: string
@@ -250,6 +256,7 @@ spec:
                         Machine on different infra.
                       x-kubernetes-preserve-unknown-fields: true
                     imageOS:
+                      default: ubuntu
                       description: ImageOS is the OS of the image to use for the instance.
                         Defaults to "ubuntu".
                       type: string

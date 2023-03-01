@@ -2,7 +2,6 @@ VERSION ?= 0.3-dev
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 SOURCES := $(shell find . -type f  -name '*.go')
-CRD_PATH ?= "manifests/charts/base/templates"
 GIT_COMMIT_HASH ?= $(shell git rev-parse HEAD)
 GIT_TREESTATE = "clean"
 GIT_DIFF = $(shell git diff --quiet >/dev/null 2>&1; if [ $$? -eq 1 ]; then echo "1"; fi)
@@ -151,10 +150,9 @@ init-codegen:
 .PHONY: gen-api
 gen-api: gen-code gen-crd
 
-# make it configurable, read CRD_PATH from env, default path is manifests/charts/base/templates
 .PHONY: gen-crd
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
-	CRD_PATH=$(CRD_PATH) hack/update-crdgen.sh
+	hack/update-crdgen.sh
 
 .PHONY: gen-code
 gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.

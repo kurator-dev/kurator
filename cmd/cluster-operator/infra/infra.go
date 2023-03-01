@@ -18,11 +18,13 @@ package infra
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"kurator.dev/kurator/pkg/controllers/infra"
+	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("infra cluster")
@@ -35,6 +37,12 @@ func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Infra Cluster")
 		return err
+	}
+
+	if err := (&webhooks.ClusterWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create Cluster webhook, %w", err)
 	}
 
 	return nil
