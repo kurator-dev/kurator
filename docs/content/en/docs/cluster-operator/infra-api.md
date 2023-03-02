@@ -2,10 +2,10 @@
 title: "Deploy Cluster with Kurator Cluster API"
 linkTitle: "Deploy Cluster with Kurator Cluster API"
 description: >
-  The easiest way to deploy cluster with Kurator Infra API.
+  The easiest way to deploy cluster with Kurator Cluster API.
 ---
 
-In this tutorial we’ll cover the basics of how to use [Infra API](https://github.com/kurator-dev/kurator/blob/main/pkg/apis/infra/v1alpha1/cluster_types.go) to provision Kubernetes clusters.
+In this tutorial we’ll cover the basics of how to use [Cluster API](https://github.com/kurator-dev/kurator/blob/main/pkg/apis/cluster/v1alpha1/cluster_types.go) to provision Kubernetes clusters.
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ In this tutorial we’ll cover the basics of how to use [Infra API](https://gith
 Apply the cluster manifest:
 
 ```console
-kubectl apply -f manifests/examples/infra/quickstart.yaml
+kubectl apply -f examples/cluster/quickstart.yaml
 ```
 
 Wait the control plane is up:

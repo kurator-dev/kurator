@@ -56,7 +56,7 @@ export AWS_SSH_KEY_NAME=default
 export KUBERNETES_VERSION=v1.25.0
 export CONTROL_PLANE_MACHINE_COUNT=3
 export WORKER_MACHINE_COUNT=3
-clusterctl generate cluster capi-quickstart --infrastructure=aws:v2.0.0 > manifests/examples/capi-quickstart.yaml
+clusterctl generate cluster capi-quickstart --infrastructure=aws:v2.0.0 > examples/infra/capi-quickstart.yaml
 ```
 
 The cluster resource topology shows as follows:
@@ -69,10 +69,10 @@ The cluster resource topology shows as follows:
 Apply the cluster manifest:
 
 ```console
-kubectl apply -f manifests/examples/capi-quickstart.yaml
+kubectl apply -f examples/infra/capi-quickstart.yaml
 ```
 
-> if you want create a cluster with multi instance types, please checkout the [multi nodes demo](https://github.com/kurator-dev/kurator/blob/main/manifests/examples/multi-tenancy/capi-nodes.yaml)
+> if you want create a cluster with multi instance types, please checkout the [multi nodes demo](https://github.com/kurator-dev/kurator/blob/main/examples/infra/multi-tenancy/capi-nodes.yaml)
 
 Wait the control plane is up:
 
