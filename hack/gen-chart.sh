@@ -27,7 +27,7 @@ rm -rf "${OUT_BASE_PATH}"/charts
 mkdir -p "${OUT_BASE_PATH}"/charts
 
 MAINIFESTS_CHART_PATH=${REPO_ROOT}/manifests/charts
-HELM_CHARTS=(base cluster-operator)
+HELM_CHARTS=(cluster-operator)
 HELM_CHART_VERSION=${HELM_CHART_VERSION:-"0.1.0"}
 IMAGE_HUB=${IMAGE_HUB:-"ghcr.io/kurator-dev"}
 IMAGE_TAG=${IMAGE_TAG:-"latest"}

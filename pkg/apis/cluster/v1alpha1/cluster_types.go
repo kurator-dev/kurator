@@ -180,9 +180,9 @@ type MachineConfig struct {
 	// +optional
 	SSHKeyName string `json:"sshKeyName,omitempty"`
 	// ImageOS is the OS of the image to use for the instance.
-	// Defaults to "ubuntu".
+	// Defaults to "ubuntu-20.04".
 	// +optional
-	// +kubebuilder:default:="ubuntu"
+	// +kubebuilder:default:="ubuntu-20.04"
 	ImageOS string `json:"imageOS,omitempty"`
 	// RootVolume is the root volume to attach to the instance.
 	// +optional
@@ -256,7 +256,7 @@ func (c *Cluster) SetConditions(conditions capiv1beta1.Conditions) {
 	c.Status.Conditions = conditions
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-cluster-kurator-dev-v1alpha1-cluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=cluster.kurator.dev,resources=cluster,versions=v1alpha1,name=validation.cluster.cluster.kurator.dev,sideEffects=None,admissionReviewVersions=v1alpha1
+// +kubebuilder:webhook:verbs=create;update,path=/validate-cluster-kurator-dev-v1alpha1-cluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=cluster.kurator.dev,resources=cluster,versions=v1alpha1,name=validation.cluster.cluster.kurator.dev,sideEffects=None,admissionReviewVersions=v1;v1beta1
 
 // ClusterList contains a list of Cluster.
 // +kubebuilder:object:root=true

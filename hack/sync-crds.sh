@@ -19,7 +19,7 @@
 set -e
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
-HELM_CRD_BASE=${REPO_ROOT}/manifests/charts/base/templates
+HELM_CRD_BASE=${REPO_ROOT}/manifests/charts/cluster-operator/crds
 WEBHOOK_BASE=${REPO_ROOT}/manifests/charts/cluster-operator/templates
 CLUSTER_API_PROVIDER_VERSION=${CLUSTER_API_PROVIDER_VERSION:-'v1.2.5'}
 AWS_PROVIDER_VERSION=${AWS_PROVIDER_VERSION:-'v2.0.0'}
@@ -28,7 +28,7 @@ CA_BUNDLE=${CA_BUNDLE:-'LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUQ0ekNDQXN1Z0F3
 
 # gen crds
 rm -rf ${HELM_CRD_BASE}/*.x-k8s.io.yaml
-OUTPUT_DIR=${HELM_CRD_BASE} CLUSTER_API_PROVIDER_VERSION=${CLUSTER_API_PROVIDER_VERSION} AWS_PROVIDER_VERSION=${AWS_PROVIDER_VERSION} go run cmd/crd-gen-tool/main.go
+CRD_OUTPUT_DIR=${HELM_CRD_BASE} CLUSTER_API_PROVIDER_VERSION=${CLUSTER_API_PROVIDER_VERSION} AWS_PROVIDER_VERSION=${AWS_PROVIDER_VERSION} go run cmd/crd-gen-tool/main.go
 
 # sed cert
 sed -i "s|caBundle: Cg==|caBundle: ${CA_BUNDLE}|g" $(find ${HELM_CRD_BASE} -type f)
