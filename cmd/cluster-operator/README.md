@@ -32,7 +32,7 @@ kubectl logs -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-syste
 
 ```
 helm uninstall kurator-cluster-operator -n kurator-system
-kubectl delete crd $(k get crds | grep cluster.x-k8s.io | awk '{print $1}')
-kubectl delete crd $(k get crds | grep kurator.dev | awk '{print $1}')
+kubectl delete crd $(kubectl get crds | grep cluster.x-k8s.io | awk '{print $1}')
+kubectl delete crd $(kubectl get crds | grep kurator.dev | awk '{print $1}')
 kubectl delete ns kurator-system
 ```

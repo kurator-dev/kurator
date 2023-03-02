@@ -90,9 +90,9 @@ spec:
                       Machine on different infra.
                     x-kubernetes-preserve-unknown-fields: true
                   imageOS:
-                    default: ubuntu
+                    default: ubuntu-20.04
                     description: ImageOS is the OS of the image to use for the instance.
-                      Defaults to "ubuntu".
+                      Defaults to "ubuntu-20.04".
                     type: string
                   instanceType:
                     description: InstanceType is the type of instance to use for the
@@ -256,9 +256,9 @@ spec:
                         Machine on different infra.
                       x-kubernetes-preserve-unknown-fields: true
                     imageOS:
-                      default: ubuntu
+                      default: ubuntu-20.04
                       description: ImageOS is the OS of the image to use for the instance.
-                        Defaults to "ubuntu".
+                        Defaults to "ubuntu-20.04".
                       type: string
                     instanceType:
                       description: InstanceType is the type of instance to use for
