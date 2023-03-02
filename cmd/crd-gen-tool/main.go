@@ -180,7 +180,8 @@ func writeCRDs(outputDir string, resources kube.ResourceList) {
 		delete(crd.Annotations, "cert-manager.io/inject-ca-from")
 		crd.Spec.Conversion = nil
 
-		storagedVersions := make([]apiextv1.CustomResourceDefinitionVersion, 0, len(crd.Spec.Versions))
+		// only one can be set storage
+		storagedVersions := make([]apiextv1.CustomResourceDefinitionVersion, 0, 1)
 		for _, v := range crd.Spec.Versions {
 			if !v.Storage {
 				continue
