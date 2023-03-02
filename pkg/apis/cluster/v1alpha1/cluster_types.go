@@ -256,8 +256,6 @@ func (c *Cluster) SetConditions(conditions capiv1beta1.Conditions) {
 	c.Status.Conditions = conditions
 }
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-cluster-kurator-dev-v1alpha1-cluster,mutating=false,failurePolicy=fail,matchPolicy=Equivalent,groups=cluster.kurator.dev,resources=cluster,versions=v1alpha1,name=validation.cluster.cluster.kurator.dev,sideEffects=None,admissionReviewVersions=v1;v1beta1
-
 // ClusterList contains a list of Cluster.
 // +kubebuilder:object:root=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
