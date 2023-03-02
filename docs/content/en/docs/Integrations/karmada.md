@@ -1,8 +1,7 @@
 ---
 title: "Install Karmada with Kurator"
-linkTitle: "Install Karmada with Kurator"
 description: >
-  Install karmada by Kurator?
+    This task shows how to integrate multi-cluster orchestration with Kurator.
 ---
 
 ## Install Karmada

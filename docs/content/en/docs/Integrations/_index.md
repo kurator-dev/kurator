@@ -3,10 +3,6 @@ title: "Components"
 linkTitle: "Components"
 weight: 2
 description: >
-  Install components by Kurator?
+    How to simplify cloud native software integration with Kurator
 ---
-
-## Install components by Kurator
-
-TODO
 

@@ -1,8 +1,7 @@
 ---
 title: "Integrate Thanos with Kurator"
-linkTitle: "Integrate Thanos with Kurator"
 description: >
-    Integrate Thanos with Kurator?
+    This task shows how to integrate multi-cluster monitoring with Kurator.
 ---
 
 ### What is Thanos

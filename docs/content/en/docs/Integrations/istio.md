@@ -1,8 +1,7 @@
 ---
 title: "Integrate Istio with Kurator"
-linkTitle: "Integrate Istio with Kurator"
 description: >
-    Integrate Istio with Kurator?
+    This task shows how to integrate service mesh with Kurator.
 ---
 
 ### What is Istio
