@@ -81,7 +81,7 @@ spec:
       {{- if .ControlPlane.ImageOS }}
       imageLookupBaseOS: {{ .ControlPlane.ImageOS }}
       {{- end }}
-      iamInstanceProfile: control-plane.cluster-api-provider-aws.sigs.k8s.io
+      iamInstanceProfile: control-plane{{ $.StackSuffix }}
       instanceType: {{ .ControlPlane.InstanceType }}
       {{- if .ControlPlane.SSHKey }}
       sshKeyName: {{ .ControlPlane.SSHKey }}
@@ -125,7 +125,7 @@ spec:
       {{- if $workerInstance.ImageOS }}
       imageLookupBaseOS: {{ $workerInstance.ImageOS }}
       {{- end }}
-      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      iamInstanceProfile: nodes{{ $.StackSuffix }}
       instanceType: {{ $workerInstance.InstanceType }}
       {{- if $workerInstance.SSHKey }}
       sshKeyName: {{ $workerInstance.SSHKey }}

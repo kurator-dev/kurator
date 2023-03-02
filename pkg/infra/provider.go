@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	errorutil "k8s.io/apimachinery/pkg/util/errors"
 	awsinfrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
-	awsbootstrapv1 "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/api/bootstrap/v1beta1"
 	capabootstrap "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/cloudformation/bootstrap"
 	cloudformation "sigs.k8s.io/cluster-api-provider-aws/v2/cmd/clusterawsadm/cloudformation/service"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/util/system"
@@ -76,7 +75,7 @@ func (p *AWSProvider) Reconcile(ctx context.Context, infraCluster *infrav1.Clust
 		return errors.Wrapf(err, "failed to reconcile cluster credentials")
 	}
 
-	if err := p.reconcileAWSIAMProfile(ctx, clusterCreds); err != nil {
+	if err := p.reconcileAWSBootstrapStack(ctx); err != nil {
 		return errors.Wrapf(err, "failed to reconcile IAM profile")
 	}
 
@@ -92,6 +91,15 @@ func (p *AWSProvider) Reconcile(ctx context.Context, infraCluster *infrav1.Clust
 }
 
 func (p *AWSProvider) Clean(ctx context.Context, cluster *infrav1.Cluster) error {
+	credSecret, err := p.getClusterSecret(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get cluster secret")
+	}
+
+	if err := p.deleteAWSBootstrapStack(ctx, credSecret); err != nil {
+		return errors.Wrapf(err, "failed to delete bootstrap stack")
+	}
+
 	// AWSClusterStaticIdentitySpec is not namespaced, so we need to delete the identity by listing all of them matching the cluster labels
 	awsIdentities := &awsinfrav1.AWSClusterStaticIdentityList{}
 	if err := p.Kube.List(ctx, awsIdentities, p.scope.MatchingLabels()); err != nil {
@@ -329,12 +337,19 @@ func (p *AWSProvider) reconcileAWSIdentity(ctx context.Context, clusterSecret *c
 	return nil
 }
 
-func (p *AWSProvider) reconcileAWSIAMProfile(ctx context.Context, credSecret *corev1.Secret) error {
+func (p *AWSProvider) reconcileAWSBootstrapStack(ctx context.Context) error {
 	iamTpl := capabootstrap.NewTemplate()
+	suffix := p.scope.StackSuffix()
+	iamTpl.Spec.NameSuffix = &suffix
+	iamTpl.Spec.EKS.Disable = true
 	if p.scope.EnablePodIdentity {
 		iamTpl.Spec.S3Buckets.Enable = true
 	}
 
+	credSecret, err := p.getClusterSecret(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get cluster secret")
+	}
 	awsCfg := util.AWSConfig(p.scope.Region, credSecret)
 	s, err := session.NewSession(awsCfg)
 	if err != nil {
@@ -342,9 +357,35 @@ func (p *AWSProvider) reconcileAWSIAMProfile(ctx context.Context, credSecret *co
 	}
 
 	cfnSvc := cloudformation.NewService(awssdkcfn.New(s))
-	if err := cfnSvc.ReconcileBootstrapStack(awsbootstrapv1.DefaultStackName, *iamTpl.RenderCloudFormation(), nil); err != nil {
-		return errors.Wrapf(err, "failed to reconcile IAM bootstrap stack")
+	if err := cfnSvc.ReconcileBootstrapStack(p.scope.StackName(), *iamTpl.RenderCloudFormation(), nil); err != nil {
+		return errors.Wrapf(err, "failed to reconcile bootstrap stack")
 	}
 
 	return nil
+}
+
+func (c *AWSProvider) deleteAWSBootstrapStack(ctx context.Context, credSecret *corev1.Secret) error {
+	awsCfg := util.AWSConfig(c.scope.Region, credSecret)
+	s, err := session.NewSession(awsCfg)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create AWS session")
+	}
+
+	cfnSvc := cloudformation.NewService(awssdkcfn.New(s))
+	if err := cfnSvc.DeleteStack(c.scope.StackName(), nil); err != nil {
+		return errors.Wrapf(err, "failed to delete bootstrap stack")
+	}
+
+	return nil
+}
+
+func (p *AWSProvider) getClusterSecret(ctx context.Context) (*corev1.Secret, error) {
+	ctlNamespace := system.GetManagerNamespace()
+	secret := &corev1.Secret{}
+	nn := types.NamespacedName{Namespace: ctlNamespace, Name: p.scope.SecretName()}
+	if err := p.Kube.Get(ctx, nn, secret); err != nil {
+		return nil, errors.Wrapf(err, "failed to get cluster secret %s", nn.String())
+	}
+
+	return secret, nil
 }

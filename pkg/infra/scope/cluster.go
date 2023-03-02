@@ -101,6 +101,15 @@ func (c *Cluster) SecretName() string {
 	return fmt.Sprintf("%s-%s-%s", c.Namespace, c.Name, c.UID)
 }
 
+func (c *Cluster) StackSuffix() string {
+	return fmt.Sprintf(".%s-%s-%s.cluster.kurator.dev", c.Namespace, c.Name, c.UID)
+}
+
+func (c *Cluster) StackName() string {
+	// statck must satisfy regular expression pattern: [a-zA-Z][-a-zA-Z0-9]*|arn:[-a-zA-Z0-9:/._+]*
+	return fmt.Sprintf("%s-%s-%s-cluster-kurator-dev", c.Namespace, c.Name, c.UID)
+}
+
 func (c *Cluster) MatchingLabels() ctrlclient.MatchingLabels {
 	return ctrlclient.MatchingLabels{
 		ClusterNameLabel:      c.Name,

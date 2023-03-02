@@ -64,7 +64,7 @@ spec:
   template:
     spec:
       imageLookupBaseOS: ubuntu-18.04
-      iamInstanceProfile: control-plane.cluster-api-provider-aws.sigs.k8s.io
+      iamInstanceProfile: control-plane.default-capa-quickstart-xxxxxx.cluster.kurator.dev
       instanceType: t3.large
       sshKeyName: ""
 ---
@@ -101,7 +101,7 @@ spec:
   template:
     spec:
       imageLookupBaseOS: ubuntu-18.04
-      iamInstanceProfile: nodes.cluster-api-provider-aws.sigs.k8s.io
+      iamInstanceProfile: nodes.default-capa-quickstart-xxxxxx.cluster.kurator.dev
       instanceType: t3.large
       sshKeyName: ""
 ---

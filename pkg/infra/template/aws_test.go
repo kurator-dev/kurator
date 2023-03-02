@@ -37,6 +37,7 @@ func TestRenderClusterAPIForAWS(t *testing.T) {
 		{
 			name: "aws/capa-quickstart",
 			aws: &scope.Cluster{
+				UID:            "xxxxxx",
 				InfraType:      "aws",
 				NamespacedName: types.NamespacedName{Namespace: "default", Name: "capa-quickstart"},
 				Version:        "v1.23.0",
@@ -64,6 +65,7 @@ func TestRenderClusterAPIForAWS(t *testing.T) {
 		{
 			name: "aws/without-sshkey",
 			aws: &scope.Cluster{
+				UID:            "xxxxxx",
 				InfraType:      "aws",
 				NamespacedName: types.NamespacedName{Namespace: "default", Name: "capa-quickstart"},
 				Version:        "v1.23.0",
@@ -89,6 +91,7 @@ func TestRenderClusterAPIForAWS(t *testing.T) {
 		{
 			name: "aws/enable-podidentity",
 			aws: &scope.Cluster{
+				UID:            "xxxxxx",
 				InfraType:      "aws",
 				NamespacedName: types.NamespacedName{Namespace: "default", Name: "capa-quickstart"},
 				Version:        "v1.23.0",
