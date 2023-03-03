@@ -25,7 +25,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
-	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 	v1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
@@ -172,11 +171,6 @@ func (in *ClusterStatus) DeepCopyInto(out *ClusterStatus) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
-	}
-	if in.KubeConfig != nil {
-		in, out := &in.KubeConfig, &out.KubeConfig
-		*out = new(infrav1alpha1.SecretReference)
-		**out = **in
 	}
 	return
 }
