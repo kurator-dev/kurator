@@ -88,6 +88,19 @@ spec:
       {{- else }}
       sshKeyName: ""
       {{- end }}
+      {{- if .ControlPlane.RootVolume }}
+      rootVolume:
+        size: {{ .ControlPlane.RootVolume.Size }}
+        type: {{ .ControlPlane.RootVolume.Type }}
+      {{- end }}
+      {{- if .ControlPlane.DataVolumes }}
+      nonRootVolumes:
+      {{- range $idx, $vol := .ControlPlane.DataVolumes }}
+      - size: {{ $vol.Size }}
+        type: {{ $vol.Type }}
+        deviceName: {{ $vol.DeviceName }}
+      {{- end }}
+      {{- end }}
 {{- range $index, $workerInstance := .Workers}}
 ---
 apiVersion: cluster.x-k8s.io/v1beta1
@@ -131,6 +144,19 @@ spec:
       sshKeyName: {{ $workerInstance.SSHKey }}
       {{- else }}
       sshKeyName: ""
+      {{- end }}
+      {{- if $workerInstance.RootVolume }}
+      rootVolume:
+        size: {{ $workerInstance.RootVolume.Size }}
+        type: {{ $workerInstance.RootVolume.Type }}
+      {{- end }}
+      {{- if $workerInstance.DataVolumes }}
+      nonRootVolumes:
+      {{- range $idx, $vol := $workerInstance.DataVolumes }}
+      - size: {{ $vol.Size }}
+        type: {{ $vol.Type }}
+        deviceName: {{ $vol.DeviceName }}
+      {{- end }}
       {{- end }}
 ---
 apiVersion: bootstrap.cluster.x-k8s.io/v1beta1

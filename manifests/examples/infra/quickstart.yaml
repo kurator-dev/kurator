@@ -21,6 +21,18 @@ spec:
   master:
     replicas: 1
     instanceType: t3.large
+    nonRootVolumes:
+      - size: 10
+        type: gp2
+    rootVolumeSize:
+      size: 10
+      type: gp3
   workers:
     - replicas: 1
       instanceType: t3.large
+      nonRootVolumes:
+        - size: 10
+          type: gp3
+      rootVolumeSize:
+        size: 10
+        type: gp2

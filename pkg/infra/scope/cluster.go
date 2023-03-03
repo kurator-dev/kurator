@@ -57,6 +57,15 @@ type Instance struct {
 	InstanceType string
 	SSHKey       string
 	ImageOS      string
+
+	RootVolume  *InstanceVolume
+	DataVolumes []InstanceVolume
+}
+
+type InstanceVolume struct {
+	DeviceName string
+	Size       int64
+	Type       string
 }
 
 func NewCluster(cluster *infrav1.Cluster) *Cluster {
@@ -76,7 +85,7 @@ func NewCluster(cluster *infrav1.Cluster) *Cluster {
 		PodCIDR:             cluster.Spec.Network.PodCIDRs,
 		CredentialSecretRef: cluster.Spec.Credential.SecretRef,
 		ServiceCIDR:         cluster.Spec.Network.ServiceCIDRs,
-		ControlPlane:        NewInstance(cluster.Spec.Master.MachineConfig),
+		ControlPlane:        NewInstance(cluster.Spec.InfraType, cluster.Spec.Master.MachineConfig),
 		EnablePodIdentity:   cluster.Spec.PodIdentity.Enabled,
 	}
 
@@ -90,7 +99,7 @@ func NewCluster(cluster *infrav1.Cluster) *Cluster {
 
 	c.Workers = make([]*Instance, 0, len(cluster.Spec.Workers))
 	for _, worker := range cluster.Spec.Workers {
-		c.Workers = append(c.Workers, NewInstance(worker.MachineConfig))
+		c.Workers = append(c.Workers, NewInstance(cluster.Spec.InfraType, worker.MachineConfig))
 	}
 
 	c.BucketName = fmt.Sprintf("kuratorcluster-%s", c.UID)
@@ -117,7 +126,7 @@ func (c *Cluster) MatchingLabels() ctrlclient.MatchingLabels {
 	}
 }
 
-func NewInstance(machine infrav1.MachineConfig) *Instance {
+func NewInstance(infraType infrav1.ClusterInfraType, machine infrav1.MachineConfig) *Instance {
 	inst := &Instance{
 		Replicas:     machine.Replicas,
 		InstanceType: machine.InstanceType,
@@ -125,5 +134,32 @@ func NewInstance(machine infrav1.MachineConfig) *Instance {
 		ImageOS:      machine.ImageOS,
 	}
 
+	if machine.RootVolume != nil {
+		inst.RootVolume = &InstanceVolume{
+			Size: machine.RootVolume.Size,
+			Type: machine.RootVolume.Type,
+		}
+	}
+
+	if len(machine.NonRootVolumes) > 0 {
+		inst.DataVolumes = make([]InstanceVolume, 0, len(machine.NonRootVolumes))
+		for idx, vol := range machine.NonRootVolumes {
+			inst.DataVolumes = append(inst.DataVolumes, InstanceVolume{
+				Size:       vol.Size,
+				Type:       vol.Type,
+				DeviceName: deviceName(infraType, idx),
+			})
+		}
+	}
+
 	return inst
+}
+
+func deviceName(infra infrav1.ClusterInfraType, idx int) string {
+	if infra == infrav1.AWSClusterInfraType {
+		// for AWS, device name is /dev/sd[b-z]
+		return fmt.Sprintf("/dev/sd%c", 'b'+idx)
+	}
+
+	return "Not implemented"
 }

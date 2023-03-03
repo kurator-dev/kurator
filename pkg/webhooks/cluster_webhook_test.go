@@ -81,6 +81,7 @@ func TestInvalidClusterValidation(t *testing.T) {
 
 			err = wh.validate(c)
 			g.Expect(err).To(HaveOccurred())
+			t.Logf("%v", err)
 		})
 	}
 }

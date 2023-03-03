@@ -1,0 +1,140 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: capa-quickstart
+  namespace: default
+  labels:
+    cluster.kurator.dev/cluster-name: capa-quickstart
+    cluster.kurator.dev/cluster-namespace: default
+spec:
+  clusterNetwork:
+    pods:
+      cidrBlocks:
+      - 192.168.0.0/16
+    services:
+      cidrBlocks:
+      - 10.96.0.0/12
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+    kind: KubeadmControlPlane
+    name: capa-quickstart-kcp
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+    kind: AWSCluster
+    name: capa-quickstart
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: capa-quickstart-kcp
+  namespace: default
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+      apiServer:
+        extraArgs:
+          cloud-provider: aws
+          service-account-key-file: /etc/kubernetes/pki/sa-signer-pkcs8.pub
+          service-account-signing-key-file: /etc/kubernetes/pki/sa-signer.key
+          service-account-issuer: https://test-bucket.s3.amazonaws.com
+          api-audiences: sts.amazonaws.com
+      controllerManager:
+        extraArgs:
+          cloud-provider: aws
+    initConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: aws
+        name: "{{ ds.meta_data.local_hostname }}"
+    joinConfiguration:
+      nodeRegistration:
+        kubeletExtraArgs:
+          cloud-provider: aws
+        name: "{{ ds.meta_data.local_hostname }}"
+    preKubeadmCommands:
+    - aws s3 cp s3://test-bucket/sa-signer-pkcs8.pub /etc/kubernetes/pki/sa-signer-pkcs8.pub
+    - aws s3 cp s3://test-bucket/sa-signer.key /etc/kubernetes/pki/sa-signer.key && chmod 0600 /etc/kubernetes/pki/sa-signer.key
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+      kind: AWSMachineTemplate
+      name: capa-quickstart-cp
+  replicas: 3
+  version: v1.23.0
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSMachineTemplate
+metadata:
+  name: capa-quickstart-cp
+  namespace: default
+spec:
+  template:
+    spec:
+      imageLookupBaseOS: ubuntu-18.04
+      iamInstanceProfile: control-plane.default-capa-quickstart-xxxxxx.cluster.kurator.dev
+      instanceType: t3.large
+      sshKeyName: ""
+      rootVolume:
+        size: 100
+        type: gp2
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: capa-quickstart-md-0
+  namespace: default
+spec:
+  clusterName: capa-quickstart
+  replicas: 3
+  selector:
+    matchLabels: null
+  template:
+    spec:
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+          kind: KubeadmConfigTemplate
+          name: capa-quickstart-md-0
+      clusterName: capa-quickstart
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+        kind: AWSMachineTemplate
+        name: capa-quickstart-md-0
+      version: v1.23.0
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta2
+kind: AWSMachineTemplate
+metadata:
+  name: capa-quickstart-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      imageLookupBaseOS: ubuntu-18.04
+      iamInstanceProfile: nodes.default-capa-quickstart-xxxxxx.cluster.kurator.dev
+      instanceType: t3.large
+      sshKeyName: ""
+      rootVolume:
+        size: 100
+        type: gp3
+      nonRootVolumes:
+      - size: 200
+        type: gp2
+        deviceName: /dev/sdb1
+      - size: 300
+        type: gp3
+        deviceName: /dev/sdb2
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1beta1
+kind: KubeadmConfigTemplate
+metadata:
+  name: capa-quickstart-md-0
+  namespace: default
+spec:
+  template:
+    spec:
+      joinConfiguration:
+        nodeRegistration:
+          kubeletExtraArgs:
+            cloud-provider: aws   
+          name: "{{ ds.meta_data.local_hostname }}"
