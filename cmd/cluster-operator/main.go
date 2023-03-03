@@ -43,6 +43,7 @@ import (
 	"kurator.dev/kurator/cmd/cluster-operator/infra"
 	"kurator.dev/kurator/cmd/cluster-operator/options"
 	"kurator.dev/kurator/cmd/cluster-operator/scheme"
+	"kurator.dev/kurator/pkg/util"
 	"kurator.dev/kurator/pkg/version"
 )
 
@@ -68,6 +69,7 @@ func newRootCommand() *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctrl.SetLogger(klogr.New())
+			util.PrintFlags(log, cmd.Flags())
 			ctx := ctrl.SetupSignalHandler()
 			return run(ctx, opts)
 		},
@@ -153,7 +155,7 @@ func run(ctx context.Context, opts *options.Options) error {
 		return err
 	}
 
-	if err = infra.InitControllers(ctx, mgr); err != nil {
+	if err = infra.InitControllers(ctx, opts, mgr); err != nil {
 		return fmt.Errorf("infra cluster init fail, %w", err)
 	}
 

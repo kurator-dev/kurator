@@ -54,7 +54,7 @@ const (
 type ClusterController struct {
 	client.Client
 	Scheme       *runtime.Scheme
-	PollInterval time.Duration
+	RequeueAfter time.Duration
 }
 
 func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
@@ -122,7 +122,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *i
 	err := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, capiCluster)
 	if err == nil || !apiserrors.IsNotFound(err) {
 		// retry before CAPI Cluster is deleted
-		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, nil
 	}
 	// CAPI Cluster is deleted, do the rest
 
@@ -191,13 +191,13 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	if err := provider.Reconcile(ctx); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
-		return ctrl.Result{RequeueAfter: r.PollInterval}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
 	}
 	// check Cluster status
 	if err := provider.IsInitialized(ctx); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureNotReadyReason,
 			capiv1.ConditionSeverityWarning, err.Error())
-		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, nil
 	}
 	conditions.MarkTrue(infraCluster, infrav1.InfrastructureReadyCondition)
 
@@ -210,7 +210,7 @@ func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1
 	if err := provider.IsReady(ctx); err != nil {
 		conditions.MarkFalse(infraCluster, infrav1.CNICondition, infrav1.CNINotReadyReason,
 			capiv1.ConditionSeverityWarning, err.Error())
-		return ctrl.Result{RequeueAfter: r.PollInterval}, nil
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, nil
 	}
 	conditions.MarkTrue(infraCluster, infrav1.CNICondition)
 

@@ -3,6 +3,8 @@ certManager:
 
 replicaCount: 1
 
+requeueAfter: 10s
+
 image:
   hub: ghcr.io/kurator-dev
   pullPolicy: IfNotPresent
@@ -13,8 +15,8 @@ logging:
   level: 0
 
 feautreGates:
-# capa
-- AutoControllerIdentityCreator=true
+  # capa
+  - AutoControllerIdentityCreator=true
 
 aws:
   # AWS_BASE64ENCODED_CREDENTIALS

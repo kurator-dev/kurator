@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.107
 	github.com/bramvdbogaerde/go-scp v1.2.0
 	github.com/cert-manager/cert-manager v1.10.0
+	github.com/go-logr/logr v1.2.3
 	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.1.1
@@ -109,7 +110,6 @@ require (
 	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/zapr v1.2.3 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect

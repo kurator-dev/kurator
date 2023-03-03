@@ -21,6 +21,7 @@ spec:
         - --feature-gates={{ template "featureGates" . }}
         - --v={{ .Values.logging.level }}
         - --metrics-bind-addr=127.0.0.1:8080
+        - --requeue-after={{ .Values.requeueAfter }}
         env:
         - name: AWS_SHARED_CREDENTIALS_FILE
           value: /home/.aws/credentials

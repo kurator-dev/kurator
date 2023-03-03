@@ -19,21 +19,21 @@ package infra
 import (
 	"context"
 	"fmt"
-	"time"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"kurator.dev/kurator/cmd/cluster-operator/options"
 	"kurator.dev/kurator/pkg/controllers/infra"
 	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("infra cluster")
 
-func InitControllers(ctx context.Context, mgr ctrl.Manager) error {
+func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
 	if err := (&infra.ClusterController{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
-		PollInterval: 10 * time.Second, // TODO: make this configurable
+		RequeueAfter: opts.RequeueAfter,
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Infra Cluster")
 		return err
