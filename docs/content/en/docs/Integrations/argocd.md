@@ -17,7 +17,7 @@ to show you how to deploy application with ArgoCD pull mode. For more details ab
 
 ### Prerequisites
 
-{{% readfile "prerequisites-karmada.md" %}}
+{{< boilerplate prerequisites-karmada >}}
 
 ### Install ArgoCD
 

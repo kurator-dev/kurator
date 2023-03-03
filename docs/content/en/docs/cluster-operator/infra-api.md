@@ -9,17 +9,17 @@ In this tutorial we’ll cover the basics of how to use [Cluster API](https://gi
 
 ## Prerequisites
 
-{{% readfile "includes/prerequisites.tpl" %}}
+{{< boilerplate prerequisites >}}
 
 ## Build `cluster-operator` from source
 
-{{% readfile "includes/build-from-source.tpl" %}}
+{{< boilerplate build-from-source >}}
 
 ## Install cluster operator
 
 ***Please make sure cert manager is ready before install cluster operator
 
-{{% readfile "includes/install-cluster-operator.tpl" %}}
+{{< boilerplate install-cluster-operator >}}
 
 ## Create a vanilla cluster with Infra API
 
@@ -49,4 +49,4 @@ kubectl --kubeconfig=/root/.kube/quickstart.kubeconfig get nodes
 
 ## Cleanup
 
-{{% readfile "includes/cleanup.tpl" %}}
+{{< boilerplate cleanup >}}

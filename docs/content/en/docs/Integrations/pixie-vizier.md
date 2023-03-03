@@ -21,7 +21,7 @@ In this task, we will show you how to install Pixie vizier(work with Community C
 
 ## Prerequisites
 
-{{% readfile "prerequisites-karmada.md" %}}
+{{< boilerplate prerequisites-karmada >}}
 
 ## Get an account from Community Cloud for Pixie
 
