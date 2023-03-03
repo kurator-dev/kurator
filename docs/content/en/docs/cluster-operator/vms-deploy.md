@@ -89,7 +89,7 @@ ssh-privatekey:  2590 bytes
 
 ### Customize your cluster configuration
 
-You can find custom cluster examples [here](https://github.com/kurator-dev/kurator/tree/main/manifests/examples/customcluster).
+You can find custom cluster examples [here](https://github.com/kurator-dev/kurator/tree/main/examples/infra/customcluster).
 
 Here are the four types of resources needed for VMs cluster provision：
 
@@ -101,13 +101,13 @@ Here are the four types of resources needed for VMs cluster provision：
 You can copy the examples and update the parameters as you need:
 
 ```console
-cp -rfp manifests/examples/customcluster manifests/examples/my-customcluster
+cp -rfp examples/infra/customcluster examples/infra/my-customcluster
 ```
 
 First you need to update the host configuration.
 
 ```console
-$ vi manifests/examples/my-customcluster/cc-custommachine.yaml
+$ vi examples/infra/my-customcluster/cc-custommachine.yaml
 apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
 kind: CustomMachine
 metadata:
@@ -153,7 +153,7 @@ Now everything ready and let's start to deploy a k8s cluster on your VMs.
 ### Apply resource configuration
 
 ```console
-kubectl apply -f manifests/examples/my-customcluster
+kubectl apply -f examples/infra/my-customcluster
 ```
 
 ### Check your Installation

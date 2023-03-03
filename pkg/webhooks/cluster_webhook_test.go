@@ -32,7 +32,7 @@ import (
 
 func TestClusterValidation(t *testing.T) {
 	// read configuration from examples directory
-	r := path.Join("../../manifests/examples", "infra")
+	r := path.Join("../../examples", "cluster")
 	caseNames := make([]string, 0)
 	err := filepath.WalkDir(r, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {
