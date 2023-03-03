@@ -1,7 +1,7 @@
 ***IMPORTANT: In order to ensure a proper cleanup of your infrastructure you must always delete the cluster object. Deleting the entire cluster template with kubectl delete -f capi-quickstart.yaml might lead to pending resources to be cleaned up manually.***
 
 ```console
-kubectl delete cluster capi-quickstart
+kubectl delete cluster --all
 ```
 
 Uninstall cluster operator:

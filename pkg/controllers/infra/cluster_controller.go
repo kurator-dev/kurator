@@ -36,11 +36,11 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
-	infraprovider "kurator.dev/kurator/pkg/infra"
+	awsinfra "kurator.dev/kurator/pkg/infra/aws"
 	infraplugin "kurator.dev/kurator/pkg/infra/plugin"
+	infraprovider "kurator.dev/kurator/pkg/infra/provider"
 	"kurator.dev/kurator/pkg/infra/scope"
 	"kurator.dev/kurator/pkg/infra/util"
 )
@@ -58,8 +58,6 @@ type ClusterController struct {
 }
 
 func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
-	ctxLogger := log.FromContext(ctx)
-
 	cluster := &clusterv1alpha1.Cluster{}
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
 		if apiserrors.IsNotFound(err) {
@@ -91,6 +89,13 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 		}
 	}()
 
+	scope := scope.NewCluster(cluster)
+	provider, err := r.newProvider(scope)
+	if err != nil {
+		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.ProviderInitializeFailedReason, capiv1.ConditionSeverityError, err.Error())
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to create Cluster Provider %s/%s", cluster.Namespace, cluster.Name)
+	}
+
 	// Add finalizer if not exist to void the race condition.
 	if !controllerutil.ContainsFinalizer(cluster, clusterFinalizer) {
 		cluster.Status.Phase = string(capiv1.ClusterPhaseProvisioning)
@@ -105,15 +110,15 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 			return ctrl.Result{}, nil
 		}
 
-		ctxLogger.Info("Reconciling deletion for cluster")
-		return r.reconcileDelete(ctx, cluster)
+		return r.reconcileDelete(ctx, cluster, scope, provider)
 	}
 
 	// Handle normal loop.
-	return r.reconcile(ctx, cluster)
+	return r.reconcile(ctx, cluster, scope, provider)
 }
 
-func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *clusterv1alpha1.Cluster) (ctrl.Result, error) {
+func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *clusterv1alpha1.Cluster,
+	scope *scope.Cluster, provider infraprovider.Provider) (ctrl.Result, error) {
 	if err := r.deleteCAPIClusterIfNeeded(ctx, cluster); err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete CAPI Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
@@ -126,9 +131,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *cluste
 	}
 	// CAPI Cluster is deleted, do the rest
 
-	scope := scope.NewCluster(cluster)
-	prov := infraprovider.NewProvider(r.Client, scope)
-	if err := prov.Clean(ctx); err != nil {
+	if err := provider.Clean(ctx); err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete AWS Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
@@ -161,6 +164,15 @@ func (r *ClusterController) deleteClusterResourceSets(ctx context.Context, scope
 	return nil
 }
 
+func (r *ClusterController) newProvider(scope *scope.Cluster) (infraprovider.Provider, error) {
+	switch scope.InfraType {
+	case clusterv1alpha1.AWSClusterInfraType:
+		return awsinfra.NewProvider(r.Client, scope)
+	default:
+		return nil, errors.Errorf("unknown infra type %q", scope.InfraType)
+	}
+}
+
 func (r *ClusterController) deleteCAPIClusterIfNeeded(ctx context.Context, infraCluster *clusterv1alpha1.Cluster) error {
 	cluster := &capiv1.Cluster{}
 	nn := types.NamespacedName{
@@ -184,15 +196,14 @@ func (r *ClusterController) deleteCAPIClusterIfNeeded(ctx context.Context, infra
 	return nil
 }
 
-func (r *ClusterController) reconcile(ctx context.Context, cluster *clusterv1alpha1.Cluster) (ctrl.Result, error) {
-	// TODO: precheck
-	scope := scope.NewCluster(cluster)
-	provider := infraprovider.NewProvider(r.Client, scope)
+func (r *ClusterController) reconcile(ctx context.Context, cluster *clusterv1alpha1.Cluster,
+	scope *scope.Cluster, provider infraprovider.Provider) (ctrl.Result, error) {
 	if err := provider.Reconcile(ctx); err != nil {
 		conditions.MarkFalse(cluster, clusterv1alpha1.InfrastructureReadyCondition, clusterv1alpha1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
+
 	// check Cluster status
 	if err := provider.IsInitialized(ctx); err != nil {
 		conditions.MarkFalse(cluster, clusterv1alpha1.InfrastructureReadyCondition, clusterv1alpha1.InfrastructureNotReadyReason,
