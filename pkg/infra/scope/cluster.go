@@ -22,7 +22,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
-	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
@@ -34,8 +34,10 @@ const (
 )
 
 type Cluster struct {
+	// record original object so we can mutate it directly
+	Cluster   *clusterv1alpha1.Cluster
 	UID       string
-	InfraType infrav1.ClusterInfraType
+	InfraType clusterv1alpha1.ClusterInfraType
 	types.NamespacedName
 	CredentialSecretRef string
 	Version             string
@@ -68,13 +70,14 @@ type InstanceVolume struct {
 	Type       string
 }
 
-func NewCluster(cluster *infrav1.Cluster) *Cluster {
+func NewCluster(cluster *clusterv1alpha1.Cluster) *Cluster {
 	nn := types.NamespacedName{
 		Namespace: cluster.Namespace,
 		Name:      cluster.Name,
 	}
 	uid := util.GenerateUID(nn)
 	c := &Cluster{
+		Cluster:             cluster,
 		InfraType:           cluster.Spec.InfraType,
 		CNIType:             "calico",
 		UID:                 uid,
@@ -126,7 +129,7 @@ func (c *Cluster) MatchingLabels() ctrlclient.MatchingLabels {
 	}
 }
 
-func NewInstance(infraType infrav1.ClusterInfraType, machine infrav1.MachineConfig) *Instance {
+func NewInstance(infraType clusterv1alpha1.ClusterInfraType, machine clusterv1alpha1.MachineConfig) *Instance {
 	inst := &Instance{
 		Replicas:     machine.Replicas,
 		InstanceType: machine.InstanceType,
@@ -155,8 +158,8 @@ func NewInstance(infraType infrav1.ClusterInfraType, machine infrav1.MachineConf
 	return inst
 }
 
-func deviceName(infra infrav1.ClusterInfraType, idx int) string {
-	if infra == infrav1.AWSClusterInfraType {
+func deviceName(infra clusterv1alpha1.ClusterInfraType, idx int) string {
+	if infra == clusterv1alpha1.AWSClusterInfraType {
 		// for AWS, device name is /dev/sd[b-z]
 		return fmt.Sprintf("/dev/sd%c", 'b'+idx)
 	}
