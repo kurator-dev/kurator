@@ -97,18 +97,10 @@ spec:
                 description: 'APIEndpoint is the endpoint to communicate with the
                   apiserver. Format should be: `https://host:port`'
                 type: string
-              kubeconfig:
-                description: Kubeconfig represents the secret that contains the credential
-                  to access this cluster.
-                properties:
-                  name:
-                    description: Name of the secret.
-                    type: string
-                  namespace:
-                    description: Namespace of the secret. If empty, it is default
-                      to the namespace of the API object which refer it.
-                    type: string
-                type: object
+              kubeconfigSecretRef:
+                description: KubeconfigSecretRef represents the secret that contains
+                  the credential to access this cluster.
+                type: string
               phase:
                 description: Phase represents the current phase of customCluster actuation.
                   E.g.  Running, Succeed, Terminating, Failed etc.

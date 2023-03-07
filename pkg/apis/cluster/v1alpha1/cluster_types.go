@@ -22,8 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	capiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
-
-	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 // Cluster is the schema for the cluster's API
@@ -240,9 +238,9 @@ type ClusterStatus struct {
 	// Format should be: `https://host:port`
 	// +optional
 	APIEndpoint string `json:"apiEndpoint,omitempty"`
-	// Kubeconfig represents the secret that contains the credential to access this cluster.
+	// KubeconfigSecretRef represents the secret that contains the credential to access this cluster.
 	// +optional
-	KubeConfig *infrav1alpha1.SecretReference `json:"kubeconfig,omitempty"`
+	KubeconfigSecretRef string `json:"kubeconfigSecretRef,omitempty"`
 	// ServiceAccountIssuer is the URL of the service account issuer.
 	// +optional
 	ServiceAccountIssuer string `json:"serviceAccountIssuer"`
