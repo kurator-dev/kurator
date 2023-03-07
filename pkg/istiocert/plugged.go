@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cert
+package istiocert
 
 import (
 	"os"
@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	cacertsSecretName = "cacerts"
+	caCertsSecretName = "cacerts"
 )
 
 type PluggedCert struct {
@@ -66,7 +66,7 @@ func (cert *PluggedCert) Secret(namespace string) (*v1.Secret, error) {
 		// we need TypeMeta to create PropagationPolicy
 		TypeMeta: typemeta.Secret,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cacertsSecretName,
+			Name:      caCertsSecretName,
 			Namespace: namespace,
 		},
 		StringData: map[string]string{

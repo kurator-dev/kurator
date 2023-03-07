@@ -42,7 +42,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd/api/latest"
 	"sigs.k8s.io/yaml"
 
-	"kurator.dev/kurator/pkg/cert"
+	"kurator.dev/kurator/pkg/istiocert"
 	"kurator.dev/kurator/pkg/typemeta"
 	"kurator.dev/kurator/pkg/util"
 )
@@ -159,11 +159,11 @@ func (p *IstioPlugin) createIstioCacerts() error {
 		return fmt.Errorf("unexpect error when get secret %s, %w", caSecret, err)
 	}
 
-	var gen cert.Generator
+	var gen istiocert.Generator
 	if len(p.args.Cacerts) != 0 {
-		gen = cert.NewPluggedCert(p.args.Cacerts)
+		gen = istiocert.NewPluggedCert(p.args.Cacerts)
 	} else {
-		gen = cert.NewSelfSignedCert("cluster.local")
+		gen = istiocert.NewSelfSignedCert("cluster.local")
 	}
 	cacert, err := gen.Secret(caSecret.Namespace)
 	if err != nil {
