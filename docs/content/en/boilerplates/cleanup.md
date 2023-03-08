@@ -18,6 +18,7 @@ kubectl delete crd $(kubectl get crds | grep kurator.dev | awk '{print $1}')
 ```
 
 *Optional*, delete namespace:
+
 ```console
 kubectl delete ns kurator-system
 ```
@@ -30,6 +31,7 @@ helm uninstall -n cert-manager cert-manager
 
 
 *Optional*, shutdown cluster:
-```
+
+```console
 kind delete cluster --name kurator
 ```

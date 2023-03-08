@@ -9,15 +9,15 @@ In this tutorial we’ll cover the basics of how to use [Cluster API](https://cl
 
 ## Prerequisites
 
-{{% readfile "includes/prerequisites.tpl" %}}
+{{< boilerplate prerequisites >}}
 
 ## Build `cluster-operator` from source
 
-{{% readfile "includes/build-from-source.tpl" %}}
+{{< boilerplate build-from-source >}}
 
 ## Prepare AWS Credentials
 
-{{% readfile "includes/prepare-aws.tpl" %}}
+{{< boilerplate prepare-aws >}}
 
 ## Install cluster operator
 
@@ -93,4 +93,4 @@ kubectl --kubeconfig=/root/.kube/capi-quickstart.kubeconfig get nodes
 
 ## Cleanup
 
-{{% readfile "includes/cleanup.tpl" %}}
+{{< boilerplate cleanup >}}

@@ -12,7 +12,7 @@ In this task, we will show you how to install Istio with kurator.
 
 ### Prerequisites
 
-{{% readfile "prerequisites-karmada.md" %}}
+{{< boilerplate prerequisites-karmada >}}
 
 ### Install Istio
 
