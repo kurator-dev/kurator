@@ -24,6 +24,7 @@ import (
 	awscred "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awssdkcfn "github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -121,6 +122,21 @@ func awsConfig(region string, cred *AWSCredentials) *aws.Config {
 	awsConfig = awsConfig.WithCredentials(staticCreds)
 
 	return awsConfig
+}
+
+func (p *AWSProvider) Precheck(ctx context.Context) error {
+	sess, err := session.NewSession(p.config)
+	if err != nil {
+		return errors.New("failed to create AWS session")
+	}
+
+	stsSvc := sts.New(sess)
+	_, err = stsSvc.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		return fmt.Errorf("failed to get caller identity, please check your credentials secret %s", p.scope.CredentialSecretRef)
+	}
+
+	return nil
 }
 
 func (p *AWSProvider) Reconcile(ctx context.Context) error {

@@ -78,19 +78,22 @@ func NewCluster(cluster *clusterv1alpha1.Cluster) *Cluster {
 	}
 	uid := util.GenerateUID(nn)
 	c := &Cluster{
-		Cluster:             cluster,
-		InfraType:           cluster.Spec.InfraType,
-		CNIType:             "calico",
-		UID:                 uid,
-		NamespacedName:      nn,
-		Version:             cluster.Spec.Version,
-		Region:              cluster.Spec.Region,
-		VpcCIDR:             cluster.Spec.Network.VPC.CIDRBlock,
-		PodCIDR:             cluster.Spec.Network.PodCIDRs,
-		CredentialSecretRef: cluster.Spec.Credential.SecretRef,
-		ServiceCIDR:         cluster.Spec.Network.ServiceCIDRs,
-		ControlPlane:        NewInstance(cluster.Spec.InfraType, cluster.Spec.Master.MachineConfig),
-		EnablePodIdentity:   cluster.Spec.PodIdentity.Enabled,
+		Cluster:           cluster,
+		InfraType:         cluster.Spec.InfraType,
+		CNIType:           "calico",
+		UID:               uid,
+		NamespacedName:    nn,
+		Version:           cluster.Spec.Version,
+		Region:            cluster.Spec.Region,
+		VpcCIDR:           cluster.Spec.Network.VPC.CIDRBlock,
+		PodCIDR:           cluster.Spec.Network.PodCIDRs,
+		ServiceCIDR:       cluster.Spec.Network.ServiceCIDRs,
+		ControlPlane:      NewInstance(cluster.Spec.InfraType, cluster.Spec.Master.MachineConfig),
+		EnablePodIdentity: cluster.Spec.PodIdentity.Enabled,
+	}
+
+	if cluster.Spec.Credential != nil {
+		c.CredentialSecretRef = cluster.Spec.Credential.SecretRef
 	}
 
 	if c.VpcCIDR == "" {
