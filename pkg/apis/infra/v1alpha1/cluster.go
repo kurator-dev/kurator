@@ -76,8 +76,14 @@ const (
 	// ProvisionFailedPhase represents something is wrong when creating the cluster on VMs. In this phase, the worker named ends in "init" is in error
 	ProvisionFailedPhase CustomClusterPhase = "ProvisionFailed"
 
-	// DeletingFailedPhase represents something is wrong when clearing the cluster on VMs. In this phase, the worker named ends in "terminate" is in error
-	DeletingFailedPhase CustomClusterPhase = "DeletingFailed"
+	// UnknownPhase is returned if the Cluster state cannot be determined.
+	UnknownPhase CustomClusterPhase = "Unknown"
+
+	// ScalingUpPhase is returned if the Cluster state cannot be determined.
+	ScalingUpPhase CustomClusterPhase = "ScalingUp"
+
+	// ScalingDownPhase is returned if the Cluster state cannot be determined.
+	ScalingDownPhase CustomClusterPhase = "ScalingDown"
 )
 
 // CustomClusterStatus represents the current status of the cluster.

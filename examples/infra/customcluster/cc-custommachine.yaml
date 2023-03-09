@@ -8,7 +8,6 @@ spec:
     - hostName: master1
       publicIP: 202.x.x.x
       privateIP: 192.x.x.x
-      instanceType: node
       sshKey:
         apiVersion: v1
         kind: Secret
