@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	infrav1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	infraprovider "kurator.dev/kurator/pkg/infra"
 	infraplugin "kurator.dev/kurator/pkg/infra/plugin"
 	"kurator.dev/kurator/pkg/infra/scope"
@@ -60,85 +60,85 @@ type ClusterController struct {
 func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
 	ctxLogger := log.FromContext(ctx)
 
-	infraCluster := &infrav1.Cluster{}
-	if err := r.Get(ctx, req.NamespacedName, infraCluster); err != nil {
+	cluster := &clusterv1alpha1.Cluster{}
+	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
 		if apiserrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, errors.Wrapf(err, "failed to get infra Cluster %s", req.NamespacedName)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to get cluster %s", req.NamespacedName)
 	}
 
-	patchHelper, err := patch.NewHelper(infraCluster, r.Client)
+	patchHelper, err := patch.NewHelper(cluster, r.Client)
 	if err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to init patch helper for infra Cluster %s", req.NamespacedName)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to init patch helper for cluster %s", req.NamespacedName)
 	}
 
 	defer func() {
 		patchOpts := []patch.Option{
 			patch.WithOwnedConditions{Conditions: []capiv1.ConditionType{
-				infrav1.InfrastructureReadyCondition,
-				infrav1.CNICondition,
-				infrav1.ReadyCondition,
+				clusterv1alpha1.InfrastructureReadyCondition,
+				clusterv1alpha1.CNICondition,
+				clusterv1alpha1.ReadyCondition,
 			}},
 		}
 
 		if reterr != nil {
-			infraCluster.Status.Phase = string(infrav1.ClusterPhaseFailed)
+			cluster.Status.Phase = string(clusterv1alpha1.ClusterPhaseFailed)
 		}
 
-		if err := patchHelper.Patch(ctx, infraCluster, patchOpts...); err != nil {
-			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch infra Cluster %s", req.NamespacedName)})
+		if err := patchHelper.Patch(ctx, cluster, patchOpts...); err != nil {
+			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch cluster %s", req.NamespacedName)})
 		}
 	}()
 
 	// Add finalizer if not exist to void the race condition.
-	if !controllerutil.ContainsFinalizer(infraCluster, clusterFinalizer) {
-		infraCluster.Status.Phase = string(capiv1.ClusterPhaseProvisioning)
-		controllerutil.AddFinalizer(infraCluster, clusterFinalizer)
+	if !controllerutil.ContainsFinalizer(cluster, clusterFinalizer) {
+		cluster.Status.Phase = string(capiv1.ClusterPhaseProvisioning)
+		controllerutil.AddFinalizer(cluster, clusterFinalizer)
 		return ctrl.Result{}, nil
 	}
 
 	// Handle deletion reconciliation loop.
-	if !infraCluster.ObjectMeta.DeletionTimestamp.IsZero() {
-		if infraCluster.Status.Phase != string(infrav1.ClusterPhaseDeleting) {
-			infraCluster.Status.Phase = string(infrav1.ClusterPhaseDeleting)
+	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
+		if cluster.Status.Phase != string(clusterv1alpha1.ClusterPhaseDeleting) {
+			cluster.Status.Phase = string(clusterv1alpha1.ClusterPhaseDeleting)
 			return ctrl.Result{}, nil
 		}
 
 		ctxLogger.Info("Reconciling deletion for cluster")
-		return r.reconcileDelete(ctx, infraCluster)
+		return r.reconcileDelete(ctx, cluster)
 	}
 
 	// Handle normal loop.
-	return r.reconcile(ctx, infraCluster)
+	return r.reconcile(ctx, cluster)
 }
 
-func (r *ClusterController) reconcileDelete(ctx context.Context, infraCluster *infrav1.Cluster) (ctrl.Result, error) {
-	if err := r.deleteCAPIClusterIfNeeded(ctx, infraCluster); err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to delete CAPI Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *clusterv1alpha1.Cluster) (ctrl.Result, error) {
+	if err := r.deleteCAPIClusterIfNeeded(ctx, cluster); err != nil {
+		return ctrl.Result{}, errors.Wrapf(err, "failed to delete CAPI Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
 	capiCluster := &capiv1.Cluster{}
-	err := r.Get(ctx, types.NamespacedName{Namespace: infraCluster.Namespace, Name: infraCluster.Name}, capiCluster)
+	err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Name}, capiCluster)
 	if err == nil || !apiserrors.IsNotFound(err) {
 		// retry before CAPI Cluster is deleted
 		return ctrl.Result{RequeueAfter: r.RequeueAfter}, nil
 	}
 	// CAPI Cluster is deleted, do the rest
 
-	scope := scope.NewCluster(infraCluster)
+	scope := scope.NewCluster(cluster)
 	prov := infraprovider.NewProvider(r.Client, scope)
 	if err := prov.Clean(ctx); err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to delete AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to delete AWS Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
 	// clean up ClusterResourceSet
 	if err := r.deleteClusterResourceSets(ctx, scope); err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to delete ClusterResourceSet for Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to delete ClusterResourceSet for Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
 	// Remove finalizer when all related resources are deleted.
-	controllerutil.RemoveFinalizer(infraCluster, clusterFinalizer)
+	controllerutil.RemoveFinalizer(cluster, clusterFinalizer)
 	return ctrl.Result{}, nil
 }
 
@@ -161,7 +161,7 @@ func (r *ClusterController) deleteClusterResourceSets(ctx context.Context, scope
 	return nil
 }
 
-func (r *ClusterController) deleteCAPIClusterIfNeeded(ctx context.Context, infraCluster *infrav1.Cluster) error {
+func (r *ClusterController) deleteCAPIClusterIfNeeded(ctx context.Context, infraCluster *clusterv1alpha1.Cluster) error {
 	cluster := &capiv1.Cluster{}
 	nn := types.NamespacedName{
 		Namespace: infraCluster.Namespace,
@@ -184,54 +184,54 @@ func (r *ClusterController) deleteCAPIClusterIfNeeded(ctx context.Context, infra
 	return nil
 }
 
-func (r *ClusterController) reconcile(ctx context.Context, infraCluster *infrav1.Cluster) (ctrl.Result, error) {
+func (r *ClusterController) reconcile(ctx context.Context, cluster *clusterv1alpha1.Cluster) (ctrl.Result, error) {
 	// TODO: precheck
-	scope := scope.NewCluster(infraCluster)
+	scope := scope.NewCluster(cluster)
 	provider := infraprovider.NewProvider(r.Client, scope)
 	if err := provider.Reconcile(ctx); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureProvisionFailedReason,
+		conditions.MarkFalse(cluster, clusterv1alpha1.InfrastructureReadyCondition, clusterv1alpha1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
-		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 	// check Cluster status
 	if err := provider.IsInitialized(ctx); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.InfrastructureReadyCondition, infrav1.InfrastructureNotReadyReason,
+		conditions.MarkFalse(cluster, clusterv1alpha1.InfrastructureReadyCondition, clusterv1alpha1.InfrastructureNotReadyReason,
 			capiv1.ConditionSeverityWarning, err.Error())
 		return ctrl.Result{RequeueAfter: r.RequeueAfter}, nil
 	}
-	conditions.MarkTrue(infraCluster, infrav1.InfrastructureReadyCondition)
+	conditions.MarkTrue(cluster, clusterv1alpha1.InfrastructureReadyCondition)
 
 	if err := r.reconcileCNI(scope); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.CNICondition, infrav1.CNIProvisionFailedReason,
+		conditions.MarkFalse(cluster, clusterv1alpha1.CNICondition, clusterv1alpha1.CNIProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
 		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile CNI resources")
 	}
 
 	if err := provider.IsReady(ctx); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.CNICondition, infrav1.CNINotReadyReason,
+		conditions.MarkFalse(cluster, clusterv1alpha1.CNICondition, clusterv1alpha1.CNINotReadyReason,
 			capiv1.ConditionSeverityWarning, err.Error())
 		return ctrl.Result{RequeueAfter: r.RequeueAfter}, nil
 	}
-	conditions.MarkTrue(infraCluster, infrav1.CNICondition)
+	conditions.MarkTrue(cluster, clusterv1alpha1.CNICondition)
 
-	if err := r.reconcileAdditionalResources(ctx, infraCluster); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterResourceSetProvisionFailedReason,
+	if err := r.reconcileAdditionalResources(ctx, cluster); err != nil {
+		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.ClusterResourceSetProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
-		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile additional resources for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile additional resources for cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
-	if err := r.ensureOwnerReference(ctx, scope, infraCluster); err != nil {
-		conditions.MarkFalse(infraCluster, infrav1.ReadyCondition, infrav1.ClusterResourceSetProvisionFailedReason,
+	if err := r.ensureOwnerReference(ctx, scope, cluster); err != nil {
+		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.ClusterResourceSetProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
-		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile ClusterResourceSet for infra Cluster %s/%s", infraCluster.Namespace, infraCluster.Name)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to reconcile ClusterResourceSet for cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
-	conditions.MarkTrue(infraCluster, capiv1.ReadyCondition)
-	infraCluster.Status.Phase = string(infrav1.ClusterPhaseReady)
+	conditions.MarkTrue(cluster, capiv1.ReadyCondition)
+	cluster.Status.Phase = string(clusterv1alpha1.ClusterPhaseReady)
 	return ctrl.Result{}, nil
 }
 
-func (r *ClusterController) reconcileAdditionalResources(ctx context.Context, infraCluster *infrav1.Cluster) error {
+func (r *ClusterController) reconcileAdditionalResources(ctx context.Context, infraCluster *clusterv1alpha1.Cluster) error {
 	if len(infraCluster.Spec.AdditionalResources) == 0 {
 		return nil
 	}
@@ -279,15 +279,15 @@ func (r *ClusterController) reconcileAdditionalResources(ctx context.Context, in
 	return nil
 }
 
-func (r *ClusterController) ensureOwnerReference(ctx context.Context, scope *scope.Cluster, infraCluster *infrav1.Cluster) error {
+func (r *ClusterController) ensureOwnerReference(ctx context.Context, scope *scope.Cluster, infraCluster *clusterv1alpha1.Cluster) error {
 	// reconcile OwnerReferences for ClusterResourceSet
 	csrList := &addonsv1.ClusterResourceSetList{}
 	if err := r.List(ctx, csrList, scope.MatchingLabels()); err != nil {
-		return errors.Wrapf(err, "failed to list ClusterResourceSet for infra Cluster %s/%s", scope.Namespace, scope.Name)
+		return errors.Wrapf(err, "failed to list ClusterResourceSet for cluster %s/%s", scope.Namespace, scope.Name)
 	}
 
 	ownerRef := metav1.OwnerReference{
-		APIVersion: infrav1.GroupVersion.String(),
+		APIVersion: clusterv1alpha1.GroupVersion.String(),
 		Kind:       "Cluster",
 		Name:       infraCluster.Name,
 		UID:        infraCluster.UID,
@@ -359,6 +359,6 @@ func (r *ClusterController) reconcileCNI(scopeCluster *scope.Cluster) error {
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterController) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&infrav1.Cluster{}).
+		For(&clusterv1alpha1.Cluster{}).
 		Complete(r)
 }

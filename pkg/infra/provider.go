@@ -34,9 +34,11 @@ import (
 	"sigs.k8s.io/cluster-api-provider-aws/v2/util/system"
 	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/cluster-api/util/secret"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	"kurator.dev/kurator/pkg/infra/scope"
 	"kurator.dev/kurator/pkg/infra/template"
 	"kurator.dev/kurator/pkg/infra/util"
@@ -85,6 +87,10 @@ func (p *AWSProvider) Reconcile(ctx context.Context) error {
 	}
 
 	// TODO: update VPC.Name if needed
+
+	if err := p.reconcileKubeconfig(ctx); err != nil {
+		return errors.Wrapf(err, "failed to reconcile kubeconfig")
+	}
 
 	return nil
 }
@@ -387,4 +393,35 @@ func (p *AWSProvider) getClusterSecret(ctx context.Context) (*corev1.Secret, err
 	}
 
 	return secret, nil
+}
+
+func (p *AWSProvider) reconcileKubeconfig(ctx context.Context) error {
+	scopeCluster := p.scope
+
+	cluster := scopeCluster.Cluster
+	if cluster.Status.Phase != string(clusterv1alpha1.ClusterPhaseReady) {
+		return nil
+	}
+	log := ctrl.LoggerFrom(ctx)
+	awsCluster := &awsinfrav1.AWSCluster{}
+	err := p.Kube.Get(ctx, types.NamespacedName{Namespace: scopeCluster.Namespace, Name: scopeCluster.Name}, awsCluster)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get AWSCluster %s/%s", scopeCluster.Namespace, scopeCluster.Name)
+	}
+
+	if !awsCluster.Spec.ControlPlaneEndpoint.IsValid() {
+		log.Info("AWSCluster does not yet have a ControlPlaneEndpoint defined", "AWSCLuster", awsCluster.Name)
+		return nil
+	}
+
+	kubeconfig, err := secret.Get(ctx, p.Kube, client.ObjectKeyFromObject(awsCluster), secret.Kubeconfig)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get kubeconfig secret for cluster %s/%s", scopeCluster.Namespace, scopeCluster.Name)
+	}
+
+	// Status will be patched at last in ClusterController.Reconcile
+	cluster.Status.KubeconfigSecretRef = kubeconfig.Name
+	cluster.Status.APIEndpoint = awsCluster.Spec.ControlPlaneEndpoint.String()
+
+	return nil
 }
