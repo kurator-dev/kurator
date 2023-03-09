@@ -35,6 +35,9 @@ const (
 	pluginBasePath = "profiles/infra/plugins"
 )
 
+// pluginYAMLFunc returns the plugin yaml, only test can override this function to return test data
+var pluginYAMLFunc = getPluginYAML
+
 //go:embed plugin.yaml.tpl
 var pluginTpl string
 
@@ -53,12 +56,23 @@ func RenderCNI(cluster *scope.Cluster) ([]byte, error) {
 	}
 
 	pluginFilename := path.Join(pluginBasePath, fmt.Sprintf("%s-cni-%s.yaml", cluster.InfraType, cluster.CNIType))
-	out, err := getPluginYAML(pluginFilename)
+	out, err := pluginYAMLFunc(pluginFilename)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get cni yaml form %s", pluginFilename)
 	}
 
-	opts.PluginYAML = out
+	t := template.New("plugin template")
+	tpl, err := t.Funcs(sprig.TxtFuncMap()).Parse(out)
+	if err != nil {
+		return nil, err
+	}
+
+	var b bytes.Buffer
+	if err := tpl.Execute(&b, cluster.Cluster.Spec); err != nil {
+		return nil, err
+	}
+
+	opts.PluginYAML = b.String()
 	return Render(opts)
 }
 
