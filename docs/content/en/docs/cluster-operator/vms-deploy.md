@@ -2,14 +2,14 @@
 title: "Deploy Cluster on VMs"
 linkTitle: "Deploy Cluster on VMs"
 description: >
-    The easiest way to deploy cluster on VMs with Kurator.
+  The easiest way to deploy cluster on VMs with Kurator.
 ---
 
 You can easily manage the VMs cluster with Kurator, including the installation, deletion, upgrade and scale of the VMs cluster.
 
 These properties are built on [Cluster API](https://cluster-api.sigs.k8s.io) and [KubeSpray](https://kubespray.io/).
 
-This guide will describe how to create and delete the k8s cluster on VMs with Kurator.
+This guide will describe how to manage the k8s cluster on VMs with Kurator.
 
 ## Prerequisites
 
@@ -209,7 +209,108 @@ kube-system   nodelocaldns-fpfxj                 1/1     Running   0          8m
 
 We can see that the cluster on VMs is installed successful.
 
-## Delete the k8s cluster for VMs
+## Cluster Scaling
+
+With Kurator, you can declaratively add, remove, or replace multiple worker nodes on VMs.
+
+When performing scaling, you should avoid modifying the hostname in case the same VM has multiple names configured.
+
+You only need to declare the desired final worker node state on the target customMachine, and Kurator can complete the node scaling without any external intervention.
+
+You can make a copy of the custommachine.yaml file and edit it to reflect the desired scaling state.
+
+```console
+$ cp examples/infra/my-customcluster/cc-custommachine.yaml examples/infra/my-customcluster/scale.yaml
+$ vi examples/infra/my-customcluster/scale.yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: CustomMachine
+metadata:
+  name: cc-custommachine
+  namespace: default
+spec:
+  master:
+    - hostName: master1
+      publicIP: 200.x.x.1 
+      privateIP: 192.x.x.1 
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret
+  node:
+    # remove node1 for scaling down
+    #- hostName: node1
+    #  publicIP: 200.x.x.2
+    #  privateIP: 192.x.x.2
+    #  sshKey:
+    #    apiVersion: v1
+    #    kind: Secret
+    #    name: cluster-secret
+    # add node2, node3 for scaling up
+    - hostName: node2
+      publicIP: 200.x.x.3
+      privateIP: 192.x.x.3
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret
+    - hostName: node3
+      publicIP: 200.x.x.4
+      privateIP: 192.x.x.4
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret
+```
+
+Edit the desired state of the new worker nodes in the 'node' field located in the 'spec' section, following the configuration example provided above.
+
+After this, reapply the declaration.
+
+```console
+$ kubectl apply -f examples/infra/my-customcluster/scale.yaml
+custommachine.infrastructure.cluster.x-k8s.io/cc-custommachine configured
+```
+
+Kurator will start working at this point.
+
+Here are some examples of scaling:
+
+### Scaling up
+
+Kurator will compare the provisioned actual cluster state with the current custommachine state, determine the need for scaling up, and automatically execute the scale-up pod.
+
+You can view the running of pods through the following methods:
+
+```console
+$ kubectl get pod -A | grep -i scale-up
+default              cc-customcluster-scale-up                               1/1     Running     0          103s
+```
+
+### scaling down
+
+Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove the worker nodes on VMs.
+
+You can view the running of pods through the following methods:
+
+```console
+$ kubectl get pod -A | grep -i scale-down
+default              cc-customcluster-scale-down                           1/1     Running     0          37s
+```
+
+
+### Repalcing the worker nodes
+
+If the desired state includes both adding and deleting nodes, Kurator will automatically create the pod for adding nodes first, wait for it to complete, and then automatically create the pod for deleting nodes, ultimately achieving the desired state.
+
+You can view the running of pods through the following methods:
+
+```console
+$ kubectl get pod -A | grep -i scale-
+default              cc-customcluster-scale-up                           1/1     Completed   0          14m
+default              cc-customcluster-scale-down                         1/1     Running     0          37s
+```
+
+## Delete the k8s cluster on VMs
 
 If you no longer need cluster on VMs and want to delete the cluster, you only need to delete the cluster object.
 
