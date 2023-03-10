@@ -37,61 +37,106 @@ var node1 = v1alpha1.Machine{
 	PublicIP:  "4.4.4.4",
 }
 
-var curCustomMachine = &v1alpha1.CustomMachine{
+var node2 = v1alpha1.Machine{
+	HostName:  "node2",
+	PrivateIP: "5.5.5.5",
+	PublicIP:  "6.6.6.6",
+}
+
+var curCustomMachineSingle = &v1alpha1.CustomMachine{
 	Spec: v1alpha1.CustomMachineSpec{
 		Master: []v1alpha1.Machine{master1},
 		Nodes:  []v1alpha1.Machine{node1},
 	},
 }
 
+var curCustomMachineMulti = &v1alpha1.CustomMachine{
+	Spec: v1alpha1.CustomMachineSpec{
+		Master: []v1alpha1.Machine{master1},
+		Nodes:  []v1alpha1.Machine{node1, node2},
+	},
+}
+
 func TestGetHostsContent(t *testing.T) {
-	expectHost := &HostTemplateContent{
+	expectHost1 := &HostTemplateContent{
 		NodeAndIP:    []string{"master1 ansible_host=2.2.2.2 ip=1.1.1.1", "node1 ansible_host=4.4.4.4 ip=3.3.3.3"},
 		MasterName:   []string{"master1"},
 		NodeName:     []string{"node1"},
 		EtcdNodeName: []string{"master1"},
 	}
-	assert.Equal(t, expectHost, GetHostsContent(curCustomMachine))
+	assert.Equal(t, expectHost1, GetHostsContent(curCustomMachineSingle))
+
+	expectHost2 := &HostTemplateContent{
+		NodeAndIP:    []string{"master1 ansible_host=2.2.2.2 ip=1.1.1.1", "node1 ansible_host=4.4.4.4 ip=3.3.3.3", "node2 ansible_host=6.6.6.6 ip=5.5.5.5"},
+		MasterName:   []string{"master1"},
+		NodeName:     []string{"node1", "node2"},
+		EtcdNodeName: []string{"master1"},
+	}
+
+	assert.Equal(t, expectHost2, GetHostsContent(curCustomMachineMulti))
 }
 
-var targetWorkerNodes = []NodeInfo{
+var targetWorkerNodesSingle = []NodeInfo{
 	{
 		NodeName:  "node1",
-		PrivateIp: "3.3.3.3",
+		PrivateIP: "3.3.3.3",
 		PublicIP:  "4.4.4.4",
 	},
 }
 
-var targetClusterInfo = &ClusterInfo{
-	WorkerNodes: targetWorkerNodes,
+var targetClusterInfoSingle = &ClusterInfo{
+	WorkerNodes: targetWorkerNodesSingle,
+}
+
+var targetWorkerNodesMulti = []NodeInfo{
+	{
+		NodeName:  "node1",
+		PrivateIP: "3.3.3.3",
+		PublicIP:  "4.4.4.4",
+	},
+	{
+		NodeName:  "node2",
+		PrivateIP: "5.5.5.5",
+		PublicIP:  "6.6.6.6",
+	},
+}
+
+var targetClusterInfoMulti = &ClusterInfo{
+	WorkerNodes: targetWorkerNodesMulti,
 }
 
 func TestGetWorkerNodesFromCustomMachine(t *testing.T) {
-	workerNodes := getWorkerNodesFromCustomMachine(curCustomMachine)
-	assert.Equal(t, targetWorkerNodes, workerNodes)
+	workerNodes1 := getWorkerNodesFromCustomMachine(curCustomMachineSingle)
+	assert.Equal(t, targetWorkerNodesSingle, workerNodes1)
+
+	workerNodes2 := getWorkerNodesFromCustomMachine(curCustomMachineMulti)
+	assert.Equal(t, targetWorkerNodesMulti, workerNodes2)
 }
 
 func TestGetClusterInfoFromCustomMachine(t *testing.T) {
-	clusterInfo := getClusterInfoFromCustomMachine(curCustomMachine)
-	assert.Equal(t, targetClusterInfo, clusterInfo)
+	clusterInfo1 := getClusterInfoFromCustomMachine(curCustomMachineSingle)
+	assert.Equal(t, targetClusterInfoSingle, clusterInfo1)
+
+	clusterInfo2 := getClusterInfoFromCustomMachine(curCustomMachineMulti)
+	assert.Equal(t, targetClusterInfoMulti, clusterInfo2)
 }
 
 var workerNode1 = NodeInfo{
 	NodeName:  "node1",
 	PublicIP:  "200.1.1.1",
-	PrivateIp: "127.1.1.1",
+	PrivateIP: "127.1.1.1",
 }
 
 var workerNode2 = NodeInfo{
 	NodeName:  "node2",
 	PublicIP:  "200.1.1.2",
-	PrivateIp: "127.1.1.2",
+	PrivateIP: "127.1.1.2",
 }
 
 var workerNode3 = NodeInfo{
 	NodeName:  "node3",
 	PublicIP:  "200.1.1.3",
-	PrivateIp: "127.1.1.3",
+	PrivateIP: "127.1.1.3",
 }
 
 var provisionedNodes = []NodeInfo{workerNode1, workerNode3}
@@ -176,7 +221,7 @@ var clusterHost3 = &corev1.ConfigMap{
 var masterNode = NodeInfo{
 	NodeName:  "master1",
 	PublicIP:  "200.1.1.0",
-	PrivateIp: "127.1.1.0",
+	PrivateIP: "127.1.1.0",
 }
 
 func TestGetWorkerNodeInfoFromClusterHost(t *testing.T) {
@@ -203,7 +248,7 @@ func TestGetNodeInfoFromNodeStr(t *testing.T) {
 	assert.Equal(t, workerNode1, nodeInfo2)
 }
 
-func TestUpdateScaleUpConfigMapData(t *testing.T) {
-	ans := updateScaleUpConfigMapData(clusterHostDataStr1, curNodes1)
+func TestGetScaleUpConfigMapData(t *testing.T) {
+	ans := getScaleUpConfigMapData(clusterHostDataStr1, curNodes1)
 	assert.Equal(t, clusterHostDataStr3, ans)
 }
