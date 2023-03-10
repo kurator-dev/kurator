@@ -37,6 +37,8 @@ const (
 
 	// ReadyCondition defines the Ready condition type that summarizes the operational state of a Cluster.
 	ReadyCondition capiv1.ConditionType = "Ready"
+	// ProviderInitializeFailedReason (Severity=Error) documents that the cluster infrastructure provider initilize failed, probabily a wrong credential.
+	ProviderInitializeFailedReason = "ProviderInitializeFailed"
 	// ClusterResourceSetProvisionFailedReason (Severity=Error) documents that the additinal Cluster API resources (ClusterResourceSet etc.) provisioning failed.
 	ClusterResourceSetProvisionFailedReason = "ClusterResourceSetProvisionFailed"
 )

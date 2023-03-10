@@ -18,15 +18,13 @@ package util
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"hash/fnv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	hashutil "github.com/karmada-io/karmada/pkg/util/hash"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/kube"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/rand"
 	addonsv1 "sigs.k8s.io/cluster-api/exp/addons/api/v1beta1"
@@ -54,21 +52,6 @@ func PatchResources(b []byte) (kube.ResourceList, error) {
 	}
 
 	return target, nil
-}
-
-func AWSConfig(region string, credSecret *corev1.Secret) *aws.Config {
-	awsConfig := &aws.Config{
-		Region: aws.String(region),
-	}
-
-	accessKeyID := string(credSecret.Data["AccessKeyID"])
-	secretAccessKey := string(credSecret.Data["SecretAccessKey"])
-	sessionToken := string(credSecret.Data["SessionToken"])
-
-	staticCreds := credentials.NewStaticCredentials(accessKeyID, secretAccessKey, sessionToken)
-	awsConfig = awsConfig.WithCredentials(staticCreds)
-
-	return awsConfig
 }
 
 func GenerateUID(nn types.NamespacedName) string {

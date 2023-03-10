@@ -31,6 +31,7 @@ const (
 
 	ClusterNameLabel      = "cluster.kurator.dev/cluster-name"
 	ClusterNamespaceLabel = "cluster.kurator.dev/cluster-namespace"
+	BucketNamePrefix      = "kuratorcluster-"
 )
 
 type Cluster struct {
@@ -105,7 +106,7 @@ func NewCluster(cluster *clusterv1alpha1.Cluster) *Cluster {
 		c.Workers = append(c.Workers, NewInstance(cluster.Spec.InfraType, worker.MachineConfig))
 	}
 
-	c.BucketName = fmt.Sprintf("kuratorcluster-%s", c.UID)
+	c.BucketName = fmt.Sprintf("%s%s", BucketNamePrefix, c.UID)
 	return c
 }
 
@@ -114,12 +115,12 @@ func (c *Cluster) SecretName() string {
 }
 
 func (c *Cluster) StackSuffix() string {
-	return fmt.Sprintf(".%s-%s-%s.cluster.kurator.dev", c.Namespace, c.Name, c.UID)
+	return fmt.Sprintf(".%s.kurator.dev", c.UID)
 }
 
 func (c *Cluster) StackName() string {
 	// statck must satisfy regular expression pattern: [a-zA-Z][-a-zA-Z0-9]*|arn:[-a-zA-Z0-9:/._+]*
-	return fmt.Sprintf("%s-%s-%s-cluster-kurator-dev", c.Namespace, c.Name, c.UID)
+	return fmt.Sprintf("%s-%s-cluster-kurator-dev", "cf", c.UID)
 }
 
 func (c *Cluster) MatchingLabels() ctrlclient.MatchingLabels {

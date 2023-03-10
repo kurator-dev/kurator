@@ -38,8 +38,8 @@ func TestStack(t *testing.T) {
 	gotStackName := c.StackName()
 
 	g := NewWithT(t)
-	g.Expect(gotSuffix).To(Equal(".default-quickstart-dcf78fcbb.cluster.kurator.dev"))
-	g.Expect(gotStackName).To(Equal("default-quickstart-dcf78fcbb-cluster-kurator-dev"))
+	g.Expect(gotSuffix).To(Equal(".dcf78fcbb.kurator.dev"))
+	g.Expect(gotStackName).To(Equal("cf-dcf78fcbb-cluster-kurator-dev"))
 }
 
 func TestDeviceName(t *testing.T) {
