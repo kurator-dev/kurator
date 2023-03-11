@@ -1,6 +1,7 @@
 ---
 title: "Deploy Cluster on VMs"
 linkTitle: "Deploy Cluster on VMs"
+weight: 20
 description: >
     The easiest way to deploy cluster on VMs with Kurator.
 ---
@@ -12,18 +13,6 @@ These properties are built on [Cluster API](https://cluster-api.sigs.k8s.io) and
 This guide will describe how to create and delete the k8s cluster on VMs with Kurator.
 
 ## Prerequisites
-
-### Install Kurator and cluster operator
-
-Follow the guide [Build cluster-operator](https://github.com/kurator-dev/kurator/tree/main/cmd/cluster-operator) to build cluster-operator from source.
-
-You can check the cluster-operator with follow command.
-
-```console
-# get the cluster operator
-$ kubectl get pod -A | grep kurator-cluster-operator
-kurator-system       kurator-cluster-operator-857cf45445-lkwsw               1/1     Running             0          17s
-```
 
 ### Install an SSH key on your VMs
 
