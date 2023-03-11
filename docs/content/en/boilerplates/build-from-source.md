@@ -1,11 +1,11 @@
 Build cluster operator image and helm chart:
 
 ```console
-VERSION=0.3-dev make gen-chart
+VERSION={{< kurator-version >}} make gen-chart
 ```
 
 Load image to kind cluster:
 
 ```console
-kind load docker-image ghcr.io/kurator-dev/cluster-operator:0.3-dev --name kurator
+kind load docker-image ghcr.io/kurator-dev/cluster-operator:{{< kurator-version >}} --name kurator
 ```
