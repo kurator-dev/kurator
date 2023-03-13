@@ -137,11 +137,11 @@ gen-check: gen
 
 .PHONY: doc.serve
 doc.serve:
-	hack/local-docsite-up.sh
+	KURATOR_VERSION=$(VERSION) hack/local-docsite-up.sh
 
 .PHONY: doc.build
 doc.build:
-	hack/local-docsite-build.sh
+	KURATOR_VERSION=$(VERSION) hack/local-docsite-build.sh
 
 PHONY: init-codegen
 init-codegen:

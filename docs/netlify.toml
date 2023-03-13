@@ -3,6 +3,8 @@
 
 [build.environment]
     HUGO_VERSION = "0.101.0"
+    # Keep this same with makefile
+    HUGO_KURATOR_VERSION = "0.3-dev" 
     NODE_VERSION = "16.17.0"
     BUILD_WITH_CONTAINER = "0"
 

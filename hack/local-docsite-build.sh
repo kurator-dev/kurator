@@ -5,6 +5,7 @@
 HUGO_BASE_URL=${HUGO_BASE_URL:-"https://kurator.dev"}
 export HUGO_ENV="production"
 export HUGO_ENVIRONMENT="production"
+export HUGO_KURATOR_VERSION=${KURATOR_VERSION:-"dev"}
 
 pushd docs
     npm install --no-save
