@@ -21,11 +21,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -51,7 +49,6 @@ var log = ctrl.Log.WithName("cluster-operator")
 
 func main() {
 	klog.InitFlags(nil)
-	rand.Seed(time.Now().UnixNano())
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 
 	cmd := newRootCommand()
