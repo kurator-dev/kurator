@@ -21,6 +21,8 @@ import (
 )
 
 type Provider interface {
+	// Precheck returns error when there's wrong with provider configuration.
+	Precheck(ctx context.Context) error
 	// Reconcile ensures all resources used by Provider.
 	Reconcile(ctx context.Context) error
 	// Clean removes all resources created by the provider.

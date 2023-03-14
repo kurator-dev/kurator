@@ -18,6 +18,7 @@ package infra
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	apiserrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
@@ -36,6 +38,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	awsinfra "kurator.dev/kurator/pkg/infra/aws"
@@ -45,9 +49,14 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
+var (
+	log = ctrl.Log.WithName("cluster-controller")
+)
+
 const (
 	// ClusterFinalizer allows ClusterController to clean up associated resources before removing it from apiserver.
 	clusterFinalizer = "cluster.cluster.kurator.dev"
+	KindCluster      = "Cluster"
 )
 
 // ClusterController reconciles a Cluster object
@@ -58,6 +67,8 @@ type ClusterController struct {
 }
 
 func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+	l := ctrl.LoggerFrom(ctx)
+
 	cluster := &clusterv1alpha1.Cluster{}
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
 		if apiserrors.IsNotFound(err) {
@@ -89,6 +100,13 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 		}
 	}()
 
+	if err := r.reconcileSecretOwnerReference(ctx, cluster); err != nil {
+		cluster.Status.Phase = string(clusterv1alpha1.ClusterPhaseFailed)
+		l.Error(err, "reconcile secret failed, please check the cluster's configuration")
+		// mark cluster failed, and do not requeue
+		return ctrl.Result{}, nil
+	}
+
 	scope := scope.NewCluster(cluster)
 	provider, err := r.newProvider(scope)
 	if err != nil {
@@ -96,9 +114,18 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to create Cluster Provider %s/%s", cluster.Namespace, cluster.Name)
 	}
 
+	if err := provider.Precheck(ctx); err != nil {
+		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.PrecheckFailedReason, capiv1.ConditionSeverityError, err.Error())
+		cluster.Status.Phase = string(clusterv1alpha1.ClusterPhaseFailed)
+		l.Error(err, "precheck failed, please check the cluster's credential")
+		// mark cluster failed, and do not requeue
+		return ctrl.Result{}, nil
+	}
+
 	// Add finalizer if not exist to void the race condition.
 	if !controllerutil.ContainsFinalizer(cluster, clusterFinalizer) {
 		cluster.Status.Phase = string(capiv1.ClusterPhaseProvisioning)
+		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.ProvisioningReason, capiv1.ConditionSeverityError, "Provisioning")
 		controllerutil.AddFinalizer(cluster, clusterFinalizer)
 		return ctrl.Result{}, nil
 	}
@@ -107,6 +134,7 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
 		if cluster.Status.Phase != string(clusterv1alpha1.ClusterPhaseDeleting) {
 			cluster.Status.Phase = string(clusterv1alpha1.ClusterPhaseDeleting)
+			conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.DeletingReason, capiv1.ConditionSeverityError, "Deleting")
 			return ctrl.Result{}, nil
 		}
 
@@ -140,6 +168,11 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *cluste
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete ClusterResourceSet for Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
 
+	// remove secret owner reference
+	if err := r.reconcileSecretOwnerReference(ctx, cluster); err != nil {
+		return ctrl.Result{}, errors.Wrapf(err, "failed to delete secret for Cluster %s/%s", cluster.Namespace, cluster.Name)
+	}
+
 	// Remove finalizer when all related resources are deleted.
 	controllerutil.RemoveFinalizer(cluster, clusterFinalizer)
 	return ctrl.Result{}, nil
@@ -162,6 +195,39 @@ func (r *ClusterController) deleteClusterResourceSets(ctx context.Context, scope
 	}
 
 	return nil
+}
+
+// reconcileSecretOwnerReference will add owner reference in the beginning
+func (r *ClusterController) reconcileSecretOwnerReference(ctx context.Context, cluster *clusterv1alpha1.Cluster) error {
+	// skip reconcile if cluster is deleting or credential is not set
+	if cluster.Spec.Credential == nil {
+		return nil
+	}
+
+	s := &corev1.Secret{}
+	nn := types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.Credential.SecretRef}
+	if err := r.Get(ctx, nn, s); err != nil {
+		return errors.New("failed to get cluster credential secret")
+	}
+
+	patchHelper, err := patch.NewHelper(s, r.Client)
+	if err != nil {
+		return fmt.Errorf("failed to init patch helper for secret %s/%s", s.Namespace, s.Name)
+	}
+
+	clusterRef := metav1.OwnerReference{
+		APIVersion: clusterv1alpha1.GroupVersion.String(),
+		Kind:       KindCluster,
+		Name:       cluster.Name,
+		UID:        cluster.UID,
+	}
+	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
+		s.OwnerReferences = capiutil.RemoveOwnerRef(s.OwnerReferences, clusterRef)
+	} else {
+		s.OwnerReferences = capiutil.EnsureOwnerRef(s.OwnerReferences, clusterRef)
+	}
+
+	return patchHelper.Patch(ctx, s)
 }
 
 func (r *ClusterController) newProvider(scope *scope.Cluster) (infraprovider.Provider, error) {
@@ -299,7 +365,7 @@ func (r *ClusterController) ensureOwnerReference(ctx context.Context, scope *sco
 
 	ownerRef := metav1.OwnerReference{
 		APIVersion: clusterv1alpha1.GroupVersion.String(),
-		Kind:       "Cluster",
+		Kind:       KindCluster,
 		Name:       infraCluster.Name,
 		UID:        infraCluster.UID,
 	}
@@ -369,7 +435,49 @@ func (r *ClusterController) reconcileCNI(scopeCluster *scope.Cluster) error {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterController) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	c, err := ctrl.NewControllerManagedBy(mgr).
 		For(&clusterv1alpha1.Cluster{}).
-		Complete(r)
+		Build(r)
+	if err != nil {
+		return err
+	}
+
+	if err := c.Watch(
+		&source.Kind{Type: &corev1.Secret{}},
+		handler.EnqueueRequestsFromMapFunc(r.SecretToClusterFunc),
+	); err != nil {
+		return fmt.Errorf("failed adding Watch for Secret to controller manager: %v", err)
+	}
+
+	return nil
+}
+
+func (r *ClusterController) SecretToClusterFunc(o client.Object) []ctrl.Request {
+	obj, ok := o.(*corev1.Secret)
+	if !ok {
+		panic(fmt.Sprintf("Expected a Secret but got a %T", o))
+	}
+
+	var result []ctrl.Request
+	for _, ref := range obj.OwnerReferences {
+		if ref.Kind != KindCluster {
+			continue
+		}
+
+		gv, err := schema.ParseGroupVersion(ref.APIVersion)
+		if err != nil {
+			log.Error(err, "failed to parse GroupVersion", "apiVersion", ref.APIVersion)
+			continue
+		}
+
+		if gv.Group != clusterv1alpha1.GroupVersion.Group ||
+			gv.Version != clusterv1alpha1.GroupVersion.Version {
+			continue
+		}
+
+		nn := client.ObjectKey{Namespace: obj.GetNamespace(), Name: ref.Name}
+		result = append(result, ctrl.Request{NamespacedName: nn})
+	}
+
+	return result
 }
