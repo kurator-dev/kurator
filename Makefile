@@ -77,7 +77,7 @@ lint: golangci-lint lint-copyright lint-markdown lint-shellcheck
 
 .PHONY: lint-markdown
 lint-markdown:
-	markdownlint docs --ignore docs/install-components -c common/config/mdl.json
+	markdownlint docs --ignore docs/install-components --ignore docs/node_modules -c common/config/mdl.json
 	markdownlint ./README.md -c common/config/mdl.json
 
 lint-copyright:
