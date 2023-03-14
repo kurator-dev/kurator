@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -50,6 +51,19 @@ type CustomClusterController struct {
 type customClusterManageCMD string
 type customClusterManageAction string
 
+// NodeInfo represents the information of the node on VMs
+type NodeInfo struct {
+	// NodeName, also called as HostName, is the unique identifier that distinguishes it from other nodes under the same cluster. kubespray uses the Hostname as the parameter to delete the node
+	NodeName  string
+	PublicIP  string
+	PrivateIP string
+}
+
+// ClusterInfo represents the information of the cluster on VMs
+type ClusterInfo struct {
+	WorkerNodes []NodeInfo
+}
+
 const (
 	RequeueAfter = time.Second * 5
 
@@ -60,10 +74,17 @@ const (
 	ClusterKind       = "Cluster"
 	CustomClusterKind = "CustomCluster"
 
+	KubesprayCMDPrefix                                     = "ansible-playbook -i inventory/" + ClusterHostsName + " --private-key /root/.ssh/ssh-privatekey "
 	CustomClusterInitAction      customClusterManageAction = "init"
-	KubesprayInitCMD             customClusterManageCMD    = "ansible-playbook -i inventory/" + ClusterHostsName + " --private-key /root/.ssh/ssh-privatekey cluster.yml -vvv"
+	KubesprayInitCMD             customClusterManageCMD    = KubesprayCMDPrefix + "cluster.yml -vvv "
 	CustomClusterTerminateAction customClusterManageAction = "terminate"
-	KubesprayTerminateCMD        customClusterManageCMD    = "ansible-playbook -e reset_confirmation=yes -i inventory/" + ClusterHostsName + " --private-key /root/.ssh/ssh-privatekey reset.yml -vvv"
+	KubesprayTerminateCMD        customClusterManageCMD    = KubesprayCMDPrefix + "reset.yml -vvv -e reset_confirmation=yes"
+
+	CustomClusterScaleUpAction customClusterManageAction = "scale-up"
+	KubesprayScaleUpCMD        customClusterManageCMD    = KubesprayCMDPrefix + "scale.yml -vvv "
+
+	CustomClusterScaleDownAction customClusterManageAction = "scale-down"
+	KubesprayScaleDownCMDPrefix  customClusterManageCMD    = KubesprayCMDPrefix + "remove-node.yml -vvv -e skip_confirmation=yes"
 
 	// TODO: support custom this in CustomCluster/CustomMachine
 	DefaultKubesprayImage = "quay.io/kubespray/kubespray:v2.20.0"
@@ -76,12 +97,12 @@ const (
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *CustomClusterController) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
-	c, err := ctrl.NewControllerManagedBy(mgr).
+	c, err1 := ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.CustomCluster{}).
 		WithOptions(options).
 		Build(r)
-	if err != nil {
-		return fmt.Errorf("failed setting up with a controller manager: %v", err)
+	if err1 != nil {
+		return fmt.Errorf("failed setting up with a controller manager: %v", err1)
 	}
 
 	if err := c.Watch(
@@ -188,6 +209,8 @@ func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Reques
 
 // reconcile handles CustomCluster reconciliation.
 func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, cluster *clusterv1.Cluster) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
 	phase := customCluster.Status.Phase
 
 	// If upstream cluster at pre-delete, the customCluster need to be deleted.
@@ -208,6 +231,26 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 	// If customCluster is in phase Provisioning, the controller will handle Provisioning process by checking the init worker status.
 	if phase == v1alpha1.ProvisioningPhase {
 		return r.reconcileHandleProvisioning(ctx, customCluster, customMachine, cluster)
+	}
+
+	// Handle worker nodes scaling
+	if phase == v1alpha1.ProvisionedPhase || phase == v1alpha1.ScalingUpPhase || phase == v1alpha1.ScalingDownPhase {
+		currentClusterInfo := getClusterInfoFromCustomMachine(customMachine)
+		provisionedClusterInfo, err := r.getProvisionedClusterInfoFromConfigmap(ctx, customCluster)
+		if err != nil {
+			log.Error(err, "failed to get provisioned cluster Info from configmap")
+			return ctrl.Result{}, nil
+		}
+		// By comparing curClusterInfo and provisionedClusterInfo to decide whether to proceed reconcileScaleUp or reconcileScaleDown.
+		scaleUpWorkerNodes := findScaleUpWorkerNodes(provisionedClusterInfo.WorkerNodes, currentClusterInfo.WorkerNodes)
+		scaleDownWorkerNodes := findScaleDownWorkerNodes(provisionedClusterInfo.WorkerNodes, currentClusterInfo.WorkerNodes)
+		if len(scaleUpWorkerNodes) != 0 || phase == v1alpha1.ScalingUpPhase {
+			return r.reconcileScaleUp(ctx, customCluster, scaleUpWorkerNodes)
+		}
+		if len(scaleDownWorkerNodes) != 0 || phase == v1alpha1.ScalingUpPhase {
+			return r.reconcileScaleDown(ctx, customCluster, customMachine, scaleDownWorkerNodes)
+		}
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil
@@ -250,6 +293,135 @@ func (r *CustomClusterController) reconcileHandleProvisioning(ctx context.Contex
 	return ctrl.Result{}, nil
 }
 
+// reconcileScaleUp is responsible for handling the customCluster reconciliation process when worker nodes need to be scaled up.
+func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCluster *v1alpha1.CustomCluster, scaleUpWorkerNodes []NodeInfo) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
+	// Create a temporary configmap that represents the desired state to create the scaleUp pod.
+	if _, err := r.ensureScaleUpHostsCreated(ctx, customCluster, scaleUpWorkerNodes); err != nil {
+		log.Error(err, "failed to ensure that scaleUp configmap is created ", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err
+	}
+
+	// Create the scaleUp pod
+	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleUpAction, KubesprayScaleUpCMD, generateScaleUpHostsName(customCluster), generateClusterConfigName(customCluster))
+	if err1 != nil {
+		log.Error(err1, "failed to ensure that scaleUp WorkerPod is created ", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
+	}
+
+	// Check the current customCluster status
+	if customCluster.Status.Phase != v1alpha1.ScalingUpPhase {
+		customCluster.Status.Phase = v1alpha1.ScalingUpPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.ProvisionedPhase), string(v1alpha1.ScalingUpPhase)))
+	}
+
+	// Determine the progress of scaling based on the status of the workerPod
+	if workerPod.Status.Phase == corev1.PodSucceeded {
+		// Update cluster nodes to ensure that the current cluster-host represents the cluster after the scaling.
+		if err := r.updateClusterNodes(ctx, customCluster, scaleUpWorkerNodes); err != nil {
+			log.Error(err, "failed to update cluster nodes")
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+
+		// The scale up process is completed by restoring the workerPod's status to "provisioned".
+		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.ProvisionedPhase)))
+
+		// Delete the temporary scaleUp cm
+		if err := r.ensureConfigMapDeleted(ctx, generateScaleUpHostsKey(customCluster)); err != nil {
+			log.Error(err, "failed to delete scaleUp configmap", "configmap", generateScaleUpHostsKey(customCluster))
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+
+		// Delete the scaleUp worker
+		if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleUpAction)); err != nil {
+			log.Error(err, "failed to delete scaleUp worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleUpAction))
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if workerPod.Status.Phase == corev1.PodFailed {
+		customCluster.Status.Phase = v1alpha1.UnknownPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.UnknownPhase)))
+		return ctrl.Result{}, nil
+	}
+	return ctrl.Result{}, nil
+}
+
+// reconcileScaleDown is responsible for handling the customCluster reconciliation process when worker nodes need to be scaled down.
+func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, scaleDownWorkerNodes []NodeInfo) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
+	// Checks whether the worker node for scaling down already exists. If it does not exist, the function creates it.
+	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleDownAction, generateScaleDownManageCMD(scaleDownWorkerNodes), generateClusterHostsName(customCluster), generateClusterConfigName(customCluster))
+	if err1 != nil {
+		log.Error(err1, "failed to ensure that scaleDown WorkerPod is created", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
+	}
+
+	// Check the current customCluster status.
+	if customCluster.Status.Phase != v1alpha1.ScalingDownPhase {
+		customCluster.Status.Phase = v1alpha1.ScalingDownPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.ProvisionedPhase), string(v1alpha1.ScalingDownPhase)))
+	}
+
+	// Determine the progress of scaling based on the status of the workerPod.
+	if workerPod.Status.Phase == corev1.PodSucceeded {
+		// Recreate the cluster-host to ensure that the current cluster-host represents the cluster after the deletion.
+		if _, err := r.recreateClusterHosts(ctx, customCluster, customMachine); err != nil {
+			log.Error(err, "failed to recreate configmap cluster-hosts when scale down")
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+
+		// The scale down process is completed by restoring the workerPod's status to "provisioned".
+		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.ProvisionedPhase)))
+
+		// delete the scaleDown worker
+		if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleDownAction)); err != nil {
+			log.Error(err, "failed to delete scaleUp worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleDownAction))
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+
+		return ctrl.Result{}, nil
+	}
+
+	if workerPod.Status.Phase == corev1.PodFailed {
+		customCluster.Status.Phase = v1alpha1.UnknownPhase
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
+		}
+		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.UnknownPhase)))
+		return ctrl.Result{}, nil
+	}
+
+	return ctrl.Result{}, nil
+}
+
 // reconcileHandleDeleting determine whether customCluster go to reconcileDeleteResource or enter DeletingFailed phase when current phase is Deleting.
 func (r *CustomClusterController) reconcileHandleDeleting(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
@@ -273,7 +445,7 @@ func (r *CustomClusterController) reconcileHandleDeleting(ctx context.Context, c
 	}
 
 	if terminateWorker.Status.Phase == corev1.PodFailed {
-		customCluster.Status.Phase = v1alpha1.DeletingFailedPhase
+		customCluster.Status.Phase = v1alpha1.UnknownPhase
 		if err := r.Status().Update(ctx, customCluster); err != nil {
 			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
 			return ctrl.Result{RequeueAfter: RequeueAfter}, err
@@ -288,38 +460,16 @@ func (r *CustomClusterController) reconcileHandleDeleting(ctx context.Context, c
 func (r *CustomClusterController) reconcileVMsTerminate(ctx context.Context, customCluster *v1alpha1.CustomCluster) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	// Delete init worker.
-	initWorker := &corev1.Pod{}
-	initWorkerKey := generateWorkerKey(customCluster, CustomClusterInitAction)
-	errGetWorker := r.Client.Get(ctx, initWorkerKey, initWorker)
-	// errGetWorker can be divided into three situation: isNotFound; not isNotFound; nil.
-	if apierrors.IsNotFound(errGetWorker) {
-		log.Info("init worker already deleted, no action", "worker", initWorkerKey)
-	} else if errGetWorker != nil && !apierrors.IsNotFound(errGetWorker) {
-		log.Error(errGetWorker, "failed to get init worker when it should be deleted", "worker", initWorkerKey)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, errGetWorker
-	} else if errGetWorker == nil {
-		if err := r.Client.Delete(ctx, initWorker); err != nil && !apierrors.IsNotFound(err) {
-			log.Error(err, "failed to delete init worker", "worker", initWorkerKey)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
-		log.Info("init worker was deleted successfully", "worker", initWorkerKey)
+	// Delete the init worker.
+	if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterInitAction)); err != nil {
+		log.Error(err, "failed to delete init worker", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
-	// Check if terminate-worker already exist. if not, create it.
-	terminateWorkerKey := generateWorkerKey(customCluster, CustomClusterTerminateAction)
-	terminateWorkerPod := &corev1.Pod{}
-	if err := r.Client.Get(ctx, terminateWorkerKey, terminateWorkerPod); err != nil {
-		if apierrors.IsNotFound(err) {
-			terminateClusterPod := r.generateClusterManageWorker(customCluster, CustomClusterTerminateAction, KubesprayTerminateCMD)
-			terminateClusterPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
-			if err1 := r.Client.Create(ctx, terminateClusterPod); err1 != nil {
-				log.Error(err1, "failed to create customCluster terminate worker", "worker", terminateWorkerKey)
-				return ctrl.Result{RequeueAfter: RequeueAfter}, err1
-			}
-		}
-		log.Error(err, "failed to get terminate worker", "worker", terminateWorkerKey)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, err
+	// Create the termination worker.
+	if _, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterTerminateAction, KubesprayTerminateCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster)); err1 != nil {
+		log.Error(err1, "failed to create terminate worker", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
 	}
 
 	customCluster.Status.Phase = v1alpha1.DeletingPhase
@@ -336,42 +486,16 @@ func (r *CustomClusterController) reconcileVMsTerminate(ctx context.Context, cus
 func (r *CustomClusterController) reconcileDeleteResource(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	// Remove finalizer of clusterHosts.
-	clusterHostsKey := generateClusterHostsKey(customCluster)
-	clusterHosts := &corev1.ConfigMap{}
-	errGetClusterHosts := r.Client.Get(ctx, clusterHostsKey, clusterHosts)
-	// errGetClusterHosts can be divided into three situation: isNotFound; not isNotFound; nil.
-	if apierrors.IsNotFound(errGetClusterHosts) {
-		log.Info("clusterHosts already deleted, no action", "clusterHosts", clusterHostsKey)
-	} else if errGetClusterHosts != nil && !apierrors.IsNotFound(errGetClusterHosts) {
-		log.Error(errGetClusterHosts, "failed to get clusterHosts when it should be deleted", "clusterHosts", clusterHostsKey)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, errGetClusterHosts
-	} else if errGetClusterHosts == nil {
-		controllerutil.RemoveFinalizer(clusterHosts, CustomClusterConfigMapFinalizer)
-		if err := r.Client.Update(ctx, clusterHosts); err != nil && !apierrors.IsNotFound(err) {
-			log.Error(err, "failed to remove finalizer of clusterHosts when it should be deleted", "clusterHosts", clusterHostsKey)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
-		log.Info("finalizer of clusterHosts was removed successfully", "clusterHosts", clusterHostsKey)
+	// Delete the configmap cluster-hosts.
+	if err := r.ensureConfigMapDeleted(ctx, generateClusterHostsKey(customCluster)); err != nil {
+		log.Error(err, "failed to ensure that configmap is deleted", "configmap", generateClusterHostsKey(customCluster))
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
-	// Remove finalizer of clusterConfig.
-	clusterConfigKey := generateClusterConfigKey(customCluster)
-	clusterConfig := &corev1.ConfigMap{}
-	errGetClusterConfig := r.Client.Get(ctx, clusterConfigKey, clusterConfig)
-	// errGetClusterConfig can be divided into three situation: isNotFound; not isNotFound; nil.
-	if apierrors.IsNotFound(errGetClusterConfig) {
-		log.Info("clusterConfig already deleted, no action", "clusterConfig", clusterConfigKey)
-	} else if errGetClusterConfig != nil && !apierrors.IsNotFound(errGetClusterConfig) {
-		log.Error(errGetClusterConfig, "failed to get clusterConfig when it should be deleted", "clusterConfig", clusterConfigKey)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, errGetClusterConfig
-	} else if errGetClusterConfig == nil {
-		controllerutil.RemoveFinalizer(clusterConfig, CustomClusterConfigMapFinalizer)
-		if err := r.Client.Update(ctx, clusterConfig); err != nil && !apierrors.IsNotFound(err) {
-			log.Error(err, "failed to remove finalizer of clusterConfig when it should be deleted", "clusterConfig", clusterConfigKey)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
-		log.Info("finalizer of clusterConfig was removed successfully", "clusterConfig", clusterConfigKey)
+	// Delete the configmap cluster-config.
+	if err := r.ensureConfigMapDeleted(ctx, generateClusterConfigKey(customCluster)); err != nil {
+		log.Error(err, "failed to ensure that configmap is deleted", "configmap", generateClusterConfigKey(customCluster))
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
 	// Remove finalizer of customMachine.
@@ -419,31 +543,20 @@ func (r *CustomClusterController) reconcileCustomClusterInit(ctx context.Context
 
 	var clusterHost *corev1.ConfigMap
 	var errorHost error
-	if clusterHost, errorHost = r.updateClusterHosts(ctx, customCluster, customMachine); errorHost != nil {
-		log.Error(errorHost, "failed to update cluster-hosts configMap")
+	if clusterHost, errorHost = r.ensureClusterHostsCreated(ctx, customCluster, customMachine); errorHost != nil {
+		log.Error(errorHost, "failed to update cluster-hosts configmap")
 		return ctrl.Result{RequeueAfter: RequeueAfter}, errorHost
 	}
 
 	var clusterConfig *corev1.ConfigMap
 	var errorConfig error
-	if clusterConfig, errorConfig = r.updateClusterConfig(ctx, customCluster, customCluster, cluster, kcp); errorConfig != nil {
-		log.Error(errorConfig, "failed to update cluster-config configMap")
+	if clusterConfig, errorConfig = r.ensureClusterConfigCreated(ctx, customCluster, customCluster, cluster, kcp); errorConfig != nil {
+		log.Error(errorConfig, "failed to update cluster-config configmap")
 		return ctrl.Result{RequeueAfter: RequeueAfter}, errorConfig
 	}
 
-	// Check if init worker already exist. If not, create it.
-	initWorkerKey := generateWorkerKey(customCluster, CustomClusterInitAction)
-	initWorker := &corev1.Pod{}
-	if err := r.Client.Get(ctx, initWorkerKey, initWorker); err != nil {
-		if apierrors.IsNotFound(err) {
-			initClusterPod := r.generateClusterManageWorker(customCluster, CustomClusterInitAction, KubesprayInitCMD)
-			initClusterPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
-			if err1 := r.Client.Create(ctx, initClusterPod); err1 != nil {
-				log.Error(err1, "failed to create customCluster init worker", "initWorker", initWorkerKey)
-				return ctrl.Result{RequeueAfter: RequeueAfter}, err1
-			}
-		}
-		log.Error(err, "failed to get init worker", "initWorker", initWorkerKey)
+	if _, err := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterInitAction, KubesprayInitCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster)); err != nil {
+		log.Error(err, "failed to ensure that init WorkerPod is created ", "customCluster", customCluster.Name)
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
@@ -460,9 +573,9 @@ func (r *CustomClusterController) reconcileCustomClusterInit(ctx context.Context
 	}
 
 	customCluster.Status.Phase = v1alpha1.ProvisioningPhase
-	if err1 := r.Status().Update(ctx, customCluster); err1 != nil {
-		log.Error(err1, "failed to update customCluster status", "customCluster", customCluster.Name)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
+	if err := r.Status().Update(ctx, customCluster); err != nil {
+		log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 	log.Info("customCluster's phase changes to Provisioning")
 
@@ -500,8 +613,8 @@ func (r *CustomClusterController) ensureFinalizerAndOwnerRef(ctx context.Context
 	return nil
 }
 
-// generateClusterManageWorker generate a kubespray init cluster pod from configMap.
-func (r *CustomClusterController) generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD) *corev1.Pod {
+// generateClusterManageWorker generate a kubespray manage worker pod from configmap.
+func (r *CustomClusterController) generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostsName, configName string) *corev1.Pod {
 	podName := customCluster.Name + "-" + string(manageAction)
 	namespace := customCluster.Namespace
 	defaultMode := int32(0o600)
@@ -548,7 +661,7 @@ func (r *CustomClusterController) generateClusterManageWorker(customCluster *v1a
 					VolumeSource: corev1.VolumeSource{
 						ConfigMap: &corev1.ConfigMapVolumeSource{
 							LocalObjectReference: corev1.LocalObjectReference{
-								Name: customCluster.Name + "-" + ClusterHostsName,
+								Name: hostsName,
 							},
 						},
 					},
@@ -558,7 +671,7 @@ func (r *CustomClusterController) generateClusterManageWorker(customCluster *v1a
 					VolumeSource: corev1.VolumeSource{
 						ConfigMap: &corev1.ConfigMapVolumeSource{
 							LocalObjectReference: corev1.LocalObjectReference{
-								Name: customCluster.Name + "-" + ClusterConfigName,
+								Name: configName,
 							},
 						},
 					},
@@ -653,6 +766,15 @@ func (r *CustomClusterController) CreateConfigMapWithTemplate(ctx context.Contex
 	return cm, nil
 }
 
+// recreateClusterHosts delete current clusterHosts configmap and create a new one with latest customMachine configuration.
+func (r *CustomClusterController) recreateClusterHosts(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (*corev1.ConfigMap, error) {
+	// Delete the configmap cluster-hosts.
+	if err := r.ensureConfigMapDeleted(ctx, generateClusterHostsKey(customCluster)); err != nil {
+		return nil, err
+	}
+	return r.CreateClusterHosts(ctx, customMachine, customCluster)
+}
+
 func (r *CustomClusterController) CreateClusterHosts(ctx context.Context, customMachine *v1alpha1.CustomMachine, customCluster *v1alpha1.CustomCluster) (*corev1.ConfigMap, error) {
 	hostsContent := GetHostsContent(customMachine)
 	hostData := &strings.Builder{}
@@ -683,7 +805,7 @@ kube_control_plane
 	if err := tmpl.Execute(hostData, hostsContent); err != nil {
 		return nil, err
 	}
-	name := fmt.Sprintf("%s-%s", customCluster.Name, ClusterHostsName)
+	name := generateClusterHostsName(customCluster)
 	namespace := customCluster.Namespace
 
 	return r.CreateConfigMapWithTemplate(ctx, name, namespace, ClusterHostsName, hostData.String())
@@ -702,21 +824,59 @@ download_localhost: true
 # network
 kube_pods_subnet: {{ .PodCIDR }}
 kube_network_plugin: {{ .CNIType }}
-kubeconfig_localhost: true
-artifacts_dir: "/root/.kube"
+
 `))
 
 	if err := tmpl.Execute(configData, configContent); err != nil {
 		return nil, err
 	}
-	name := fmt.Sprintf("%s-%s", cc.Name, ClusterConfigName)
+	name := generateClusterConfigName(cc)
 	namespace := cc.Namespace
 
 	return r.CreateConfigMapWithTemplate(ctx, name, namespace, ClusterConfigName, configData.String())
 }
 
-// updateClusterHosts. If cluster-hosts configmap does not exist, create it.
-func (r *CustomClusterController) updateClusterHosts(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (*corev1.ConfigMap, error) {
+// createScaleUpConfigMap create temporary cluster-hosts configmap for scaling.
+func (r *CustomClusterController) createScaleUpConfigMap(ctx context.Context, customCluster *v1alpha1.CustomCluster, scaleUpWorkerNodes []NodeInfo) (*corev1.ConfigMap, error) {
+	// get current cm
+	curCM := &corev1.ConfigMap{}
+	if err := r.Client.Get(ctx, generateClusterHostsKey(customCluster), curCM); err != nil {
+		return nil, err
+	}
+
+	newCM := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      generateScaleUpHostsName(customCluster),
+			Namespace: customCluster.Namespace,
+		},
+		Data: map[string]string{ClusterHostsName: strings.TrimSpace(getScaleUpConfigMapData(curCM.Data[ClusterHostsName], scaleUpWorkerNodes))},
+	}
+
+	if err := r.Client.Create(ctx, newCM); err != nil {
+		return nil, err
+	}
+	return newCM, nil
+}
+
+// ensureScaleUpHostsCreated ensure that the temporary cluster-hosts configmap for scaling up is created.
+func (r *CustomClusterController) ensureScaleUpHostsCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, scaleUpWorkerNodes []NodeInfo) (*corev1.ConfigMap, error) {
+	cmKey := generateScaleUpHostsKey(customCluster)
+	cm := &corev1.ConfigMap{}
+	if err := r.Client.Get(ctx, cmKey, cm); err != nil {
+		if apierrors.IsNotFound(err) {
+			return r.createScaleUpConfigMap(ctx, customCluster, scaleUpWorkerNodes)
+		}
+		return nil, err
+	}
+	return cm, nil
+}
+
+// ensureClusterHostsCreated ensure that the cluster-hosts configmap is created.
+func (r *CustomClusterController) ensureClusterHostsCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) (*corev1.ConfigMap, error) {
 	cmKey := generateClusterHostsKey(customCluster)
 	cm := &corev1.ConfigMap{}
 	if err := r.Client.Get(ctx, cmKey, cm); err != nil {
@@ -728,8 +888,8 @@ func (r *CustomClusterController) updateClusterHosts(ctx context.Context, custom
 	return cm, nil
 }
 
-// updateClusterConfig. If cluster-config configmap does not exist, create it.
-func (r *CustomClusterController) updateClusterConfig(ctx context.Context, customCluster *v1alpha1.CustomCluster, cc *v1alpha1.CustomCluster, cluster *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane) (*corev1.ConfigMap, error) {
+// ensureClusterConfigCreated ensure that the cluster-config configmap is created.
+func (r *CustomClusterController) ensureClusterConfigCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, cc *v1alpha1.CustomCluster, cluster *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane) (*corev1.ConfigMap, error) {
 	cmKey := generateClusterConfigKey(customCluster)
 	cm := &corev1.ConfigMap{}
 	if err := r.Client.Get(ctx, cmKey, cm); err != nil {
@@ -739,6 +899,41 @@ func (r *CustomClusterController) updateClusterConfig(ctx context.Context, custo
 		return nil, err
 	}
 	return cm, nil
+}
+
+// findScaleUpWorkerNodes find the workerNodes which need to be scale up
+func findScaleUpWorkerNodes(provisionedWorkerNodes, curWorkerNodes []NodeInfo) []NodeInfo {
+	return findAdditionalWorkerNodes(provisionedWorkerNodes, curWorkerNodes)
+}
+
+// findScaleDownWorkerNodes find the workerNodes which need to be scale down
+func findScaleDownWorkerNodes(provisionedWorkerNodes, curWorkerNodes []NodeInfo) []NodeInfo {
+	return findAdditionalWorkerNodes(curWorkerNodes, provisionedWorkerNodes)
+}
+
+// findAdditionalWorkerNodes find additional workers in secondWorkersNodes than firstWorkerNodes
+func findAdditionalWorkerNodes(firstWorkerNodes, secondWorkersNodes []NodeInfo) []NodeInfo {
+	var additionalWorkers []NodeInfo
+	if len(secondWorkersNodes) == 0 {
+		return nil
+	}
+	if len(firstWorkerNodes) == 0 {
+		additionalWorkers = append(additionalWorkers, secondWorkersNodes...)
+		return additionalWorkers
+	}
+	var set = make(map[string]struct{})
+
+	for _, firstNode := range firstWorkerNodes {
+		set[firstNode.NodeName] = struct{}{}
+	}
+
+	for _, secondNode := range secondWorkersNodes {
+		if _, ok := set[secondNode.NodeName]; !ok {
+			additionalWorkers = append(additionalWorkers, secondNode)
+		}
+	}
+
+	return additionalWorkers
 }
 
 func (r *CustomClusterController) WorkerToCustomClusterMapFunc(o client.Object) []ctrl.Request {
@@ -759,6 +954,7 @@ func (r *CustomClusterController) CustomMachineToCustomClusterMapFunc(o client.O
 	if !ok {
 		panic(fmt.Sprintf("Expected a CustomMachine but got a %T", o))
 	}
+
 	var result []ctrl.Request
 	for _, owner := range c.GetOwnerReferences() {
 		if owner.Kind == CustomClusterKind {
@@ -821,15 +1017,34 @@ func generateWorkerKey(customCluster *v1alpha1.CustomCluster, action customClust
 func generateClusterHostsKey(customCluster *v1alpha1.CustomCluster) client.ObjectKey {
 	return client.ObjectKey{
 		Namespace: customCluster.Namespace,
-		Name:      customCluster.Name + "-" + ClusterHostsName,
+		Name:      generateClusterHostsName(customCluster),
 	}
 }
 
 func generateClusterConfigKey(customCluster *v1alpha1.CustomCluster) client.ObjectKey {
 	return client.ObjectKey{
 		Namespace: customCluster.Namespace,
-		Name:      customCluster.Name + "-" + ClusterConfigName,
+		Name:      generateClusterConfigName(customCluster),
 	}
+}
+
+func generateClusterHostsName(customCluster *v1alpha1.CustomCluster) string {
+	return customCluster.Name + "-" + ClusterHostsName
+}
+
+func generateClusterConfigName(customCluster *v1alpha1.CustomCluster) string {
+	return customCluster.Name + "-" + ClusterConfigName
+}
+
+func generateScaleUpHostsKey(customCluster *v1alpha1.CustomCluster) client.ObjectKey {
+	return client.ObjectKey{
+		Namespace: customCluster.Namespace,
+		Name:      generateScaleUpHostsName(customCluster),
+	}
+}
+
+func generateScaleUpHostsName(customCluster *v1alpha1.CustomCluster) string {
+	return customCluster.Name + "-" + ClusterHostsName + "-scale-up"
 }
 
 func generateOwnerRefFromCustomCluster(customCluster *v1alpha1.CustomCluster) metav1.OwnerReference {
@@ -839,4 +1054,216 @@ func generateOwnerRefFromCustomCluster(customCluster *v1alpha1.CustomCluster) me
 		Name:       customCluster.Name,
 		UID:        customCluster.UID,
 	}
+}
+
+// generateScaleDownManageCMD generate a kubespray cmd to delete the node from the list of nodesNeedDelete
+func generateScaleDownManageCMD(nodesNeedDelete []NodeInfo) customClusterManageCMD {
+	if len(nodesNeedDelete) == 0 {
+		return ""
+	}
+	cmd := string(KubesprayScaleDownCMDPrefix) + " --extra-vars \"node=" + nodesNeedDelete[0].NodeName
+	if len(nodesNeedDelete) == 1 {
+		return customClusterManageCMD(cmd + "\" ")
+	}
+
+	for i := 1; i < len(nodesNeedDelete); i++ {
+		cmd = cmd + "," + nodesNeedDelete[i].NodeName
+	}
+
+	return customClusterManageCMD(cmd + "\" ")
+}
+
+func getClusterInfoFromCustomMachine(customMachine *v1alpha1.CustomMachine) *ClusterInfo {
+	workerNodes := getWorkerNodesFromCustomMachine(customMachine)
+
+	clusterInfo := &ClusterInfo{
+		WorkerNodes: workerNodes,
+	}
+
+	return clusterInfo
+}
+
+func getWorkerNodesFromCustomMachine(customMachine *v1alpha1.CustomMachine) []NodeInfo {
+	var workerNodes []NodeInfo
+	for i := 0; i < len(customMachine.Spec.Nodes); i++ {
+		curNode := NodeInfo{
+			NodeName:  customMachine.Spec.Nodes[i].HostName,
+			PublicIP:  customMachine.Spec.Nodes[i].PublicIP,
+			PrivateIP: customMachine.Spec.Nodes[i].PrivateIP,
+		}
+		workerNodes = append(workerNodes, curNode)
+	}
+	return workerNodes
+}
+
+// getProvisionedClusterInfo get the provisioned cluster info on VMs from current configmap.
+func (r *CustomClusterController) getProvisionedClusterInfoFromConfigmap(ctx context.Context, customCluster *v1alpha1.CustomCluster) (*ClusterInfo, error) {
+	// get current cluster-host configMap
+	clusterHost := &corev1.ConfigMap{}
+	if err := r.Client.Get(ctx, generateClusterHostsKey(customCluster), clusterHost); err != nil {
+		return nil, err
+	}
+
+	// get workerNode from cluster-host
+	workerNodes := getWorkerNodeInfoFromClusterHost(clusterHost)
+
+	// create workerNodes from cluster-host Configmap
+	clusterInfo := &ClusterInfo{
+		WorkerNodes: workerNodes,
+	}
+
+	return clusterInfo, nil
+}
+
+// getWorkerNodeInfoFromClusterHost get the provisioned workerNode info on VMs from the cluster-host configmap.
+func getWorkerNodeInfoFromClusterHost(clusterHost *corev1.ConfigMap) []NodeInfo {
+	var workerNodes []NodeInfo
+	var allNodes = make(map[string]NodeInfo)
+
+	clusterHostDate := clusterHost.Data[ClusterHostsName]
+	clusterHostDate = strings.TrimSpace(clusterHostDate)
+
+	// the regexp string depend on the template text which the function "CreateClusterHosts" use
+	sep := regexp.MustCompile(`\[all]|\[kube_control_plane]|\[kube_node]|\[k8s-cluster:children]`)
+	clusterHostDateArr := sep.Split(clusterHostDate, -1)
+
+	allNodesStr := clusterHostDateArr[1]
+	workerNodesStr := clusterHostDateArr[3]
+
+	zp := regexp.MustCompile(`[\t\n\f\r]`)
+	allNodeArr := zp.Split(allNodesStr, -1)
+	workerNodesArr := zp.Split(workerNodesStr, -1)
+
+	// get all nodes info
+	for _, nodeStr := range allNodeArr {
+		if len(nodeStr) == 0 {
+			continue
+		}
+		nodeStr = strings.TrimSpace(nodeStr)
+		curName, cruNodeInfo := getNodeInfoFromNodeStr(nodeStr)
+		// deduplication
+		allNodes[curName] = cruNodeInfo
+	}
+
+	// choose workerNode from all node
+	for _, workerNodeName := range workerNodesArr {
+		if len(workerNodeName) == 0 {
+			continue
+		}
+		workerNodeName = strings.TrimSpace(workerNodeName)
+		workerNodes = append(workerNodes, allNodes[workerNodeName])
+	}
+
+	return workerNodes
+}
+
+func getNodeInfoFromNodeStr(nodeStr string) (hostName string, nodeInfo NodeInfo) {
+	nodeStr = strings.TrimSpace(nodeStr)
+	// the sepStr depend on the template text which the function "CreateClusterHosts" use
+	sepStr := regexp.MustCompile(` ansible_host=| ip=`)
+	strArr := sepStr.Split(nodeStr, -1)
+
+	hostName = strArr[0]
+	publicIP := strArr[1]
+	privateIP := strArr[2]
+
+	return hostName, NodeInfo{
+		NodeName:  hostName,
+		PublicIP:  publicIP,
+		PrivateIP: privateIP,
+	}
+}
+
+// ensureConfigMapDeleted ensure that the configmap is deleted.
+func (r *CustomClusterController) ensureConfigMapDeleted(ctx context.Context, cmKey client.ObjectKey) error {
+	cm := &corev1.ConfigMap{}
+	errGetConfigmap := r.Client.Get(ctx, cmKey, cm)
+	// errGetConfigmap can be divided into three situation: isNotFound(no action); not isNotFound(return err); nil(start to delete cm).
+	if apierrors.IsNotFound(errGetConfigmap) {
+		return nil
+	} else if errGetConfigmap != nil && !apierrors.IsNotFound(errGetConfigmap) {
+		return fmt.Errorf("failed to get cm when it should be deleted: %v", errGetConfigmap)
+	} else if errGetConfigmap == nil {
+		controllerutil.RemoveFinalizer(cm, CustomClusterConfigMapFinalizer)
+		if err := r.Client.Update(ctx, cm); err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to remove finalizer of cm when it should be deleted: %v", err)
+		}
+		if err := r.Client.Delete(ctx, cm); err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete cm when it should be deleted: %v", err)
+		}
+	}
+	return nil
+}
+
+// ensureWorkerPodDeleted ensures that the worker pod is deleted.
+func (r *CustomClusterController) ensureWorkerPodDeleted(ctx context.Context, workerPodKey client.ObjectKey) error {
+	// Delete init worker.
+	initWorker := &corev1.Pod{}
+	errGetWorker := r.Client.Get(ctx, workerPodKey, initWorker)
+	// errGetWorker can be divided into three situation: isNotFound; not isNotFound; nil.
+	if apierrors.IsNotFound(errGetWorker) {
+		return nil
+	} else if errGetWorker != nil && !apierrors.IsNotFound(errGetWorker) {
+		return fmt.Errorf("failed to get worker pod when it should be deleted: %v", errGetWorker)
+	} else if errGetWorker == nil {
+		if err := r.Client.Delete(ctx, initWorker); err != nil && !apierrors.IsNotFound(err) {
+			return fmt.Errorf("failed to delete cm when it should be deleted: %v", err)
+		}
+	}
+	return nil
+}
+
+// ensureWorkerPodCreated ensure that the worker pod is created.
+func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostName, configName string) (*corev1.Pod, error) {
+	workerPodKey := generateWorkerKey(customCluster, manageAction)
+	workerPod := &corev1.Pod{}
+
+	if err := r.Client.Get(ctx, workerPodKey, workerPod); err != nil {
+		if apierrors.IsNotFound(err) {
+			workerPod = r.generateClusterManageWorker(customCluster, manageAction, manageCMD, hostName, configName)
+			workerPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
+			if err1 := r.Client.Create(ctx, workerPod); err1 != nil {
+				return nil, fmt.Errorf("failed to create customCluster manager worker pod: %v", err1)
+			}
+		}
+		return nil, fmt.Errorf("failed to get worker pod: %v", err)
+	}
+	return workerPod, nil
+}
+
+// updateClusterNodes update the cluster nodes info in configmap.
+func (r *CustomClusterController) updateClusterNodes(ctx context.Context, customCluster *v1alpha1.CustomCluster, scaleUpWorkerNodes []NodeInfo) error {
+	// get cm
+	cm := &corev1.ConfigMap{}
+	if err := r.Client.Get(ctx, generateClusterHostsKey(customCluster), cm); err != nil {
+		return err
+	}
+
+	// Add new nodes on the original data, instead of directly modifying it to the desired state (read from customMachine).
+	// This is the basis for the automatic execution of scaleDown after scaleUp is completed when both "scaleUpWorkerNodes" and "scaleDownWorkerNodes" are not nil.
+	cm.Data[ClusterHostsName] = getScaleUpConfigMapData(cm.Data[ClusterHostsName], scaleUpWorkerNodes)
+
+	// update cm
+	if err := r.Client.Update(ctx, cm); err != nil {
+		return err
+	}
+	return nil
+}
+
+// getScaleUpConfigMapData return a string of the configmap data that adds the scaleUp nodes to the original data.
+func getScaleUpConfigMapData(data string, scaleUpWorkerNodes []NodeInfo) string {
+	sep := regexp.MustCompile(`\[kube_control_plane]|\[k8s-cluster:children]`)
+	dateParts := sep.Split(data, -1)
+
+	nodeAndIP := "\n"
+	nodeName := "\n"
+
+	for _, node := range scaleUpWorkerNodes {
+		nodeAndIP = nodeAndIP + fmt.Sprintf("%s ansible_host=%s ip=%s\n", node.NodeName, node.PublicIP, node.PrivateIP)
+		nodeName = nodeName + fmt.Sprintf("%s\n", node.NodeName)
+	}
+
+	ans := fmt.Sprintf("%s%s[kube_control_plane]%s%s[k8s-cluster:children]%s", dateParts[0], nodeAndIP, dateParts[1], nodeName, dateParts[2])
+
+	return ans
 }
