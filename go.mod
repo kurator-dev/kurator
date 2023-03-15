@@ -1,6 +1,6 @@
 module kurator.dev/kurator
 
-go 1.19
+go 1.20
 
 // DO NOT EDIT FOLLOWING REPLACE CODE
 replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.12.3
