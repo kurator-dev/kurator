@@ -41,3 +41,9 @@ data:
       - kurator-dev
       # require_self_approval requires PR authors to explicitly approve their PRs.
       require_self_approval: true
+
+    external_plugins:
+      kurator-dev:
+      - name: cherrypicker
+        events:
+          - pull_request

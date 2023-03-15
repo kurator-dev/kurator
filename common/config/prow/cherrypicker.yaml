@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: paas-prow
+  name: cherrypicker
+  labels:
+    app: cherrypicker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cherrypicker
+  template:
+    metadata:
+      labels:
+        app: cherrypicker
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: cherrypicker
+          image: gcr.io/k8s-prow/cherrypicker:v20210513-589f3cf5e2
+          args:
+            - --create-issue-on-conflict
+            - --dry-run=false
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+            - --github-token-path=/etc/github/token
+            - --use-prow-assignments=false
+          ports:
+            - name: http
+              containerPort: 8888
+          volumeMounts:
+            - name: hmac
+              mountPath: /etc/webhook
+              readOnly: true
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: hmac
+          secret:
+            secretName: hmac-token
+        - name: github-token
+          secret:
+            secretName: github-token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cherrypicker
+  namespace: paas-prow
+  name: cherrypicker
+spec:
+  selector:
+    app: cherrypicker
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP
