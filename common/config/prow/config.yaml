@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: paas-prow
+  name: config
+data:
+  config.yaml: |
+    prowjob_namespace: paas-prow
+    pod_namespace: test-pods
+    sinker:
+      # how often the controller will perform a garbage
+      #	collection. Defaults to one hour.
+      resync_period: 1m
+      # MaxProwJobAge is how old a ProwJob can be before it is garbage-collected.
+      #	Defaults to one week.
+      max_prowjob_age: 1h
+      # MaxPodAge is how old a Pod can be before it is garbage-collected.
+      #	Defaults to one day.
+      max_pod_age: 1h
+      # TerminatedPodTTL is how long a Pod can live after termination before it is
+      #	garbage collected
+      terminated_pod_ttl: 30m
+    in_repo_config:
+      enabled:
+        "*": true
+
+    plank:
+      job_url_prefix_config:
+        "*": https://prow.kurator.dev/view/
+      report_templates:
+        '*': >-
+            [Full PR test history](https://prow.kurator.dev/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
+            [Your PR dashboard](https://prow.kurator.dev/pr?query=is:pr+state:open+author:{{with
+            index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).
+    tide:
+      # sync_period specifies how often Tide will sync jobs with GitHub. Defaults to 1m.
+      sync_period: 1m
+      # status_update_period specifies how often Tide will update GitHub status contexts. Defaults to the value of sync_period.
+      status_update_period: 1m
+      # queries specifies a list of queries(checklist). Only PR meets all the queries can be merged.
+      queries:
+      # the PR must posses all of the following labels
+      - labels:
+        - lgtm
+        - approved
+        # the PR must not posses any of the following labels
+        missingLabels:
+        - needs-rebase
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - do-not-merge/invalid-owners-file
+        - do-not-merge/release-note-label-needed
+        # the PR must comes from repos of the orgs.
+        orgs:
+        # GitHub org
+        - kurator-dev
+      # squash_label used to ask Tide to use the squash method when merging the labeled PR
+      squash_label: tide/merge-method-squash
+      # rebase_label used to ask Tide to use the rebase method when merging the labeled PR
+      rebase_label: tide/merge-method-rebase
+      # merge_label used to ask Tide to use the merge method when merging the labeled PR
+      merge_label: tide/merge-method-merge
+
+    decorate_all_jobs: true

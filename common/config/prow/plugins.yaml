@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: paas-prow
+  name: plugins
+data:
+  plugins.yaml: |
+    plugins:
+      # GitHub org
+      kurator-dev:
+        plugins:
+        - approve
+        - assign
+        - blunderbuss
+        - cat
+        - dog
+        - help
+        - heart
+        - hold
+        - invalidcommitmsg
+        - label
+        - lgtm
+        # Close, reopen, flag and/or unflag an issue or PR as frozen/stale/rotten
+        - lifecycle
+        - mergecommitblocker
+        - milestone
+        - retitle
+        - size
+        - trigger
+        - verify-owners
+        - welcome
+        - wip
+        - yuks
+      kurator:
+        plugins:
+        - release-note
+    # approve specifies configuration for the approve plugin.
+    approve:
+    - repos:
+      # GitHub Org name, means all repos under this organization using the same configuration.
+      - kurator-dev
+      # require_self_approval requires PR authors to explicitly approve their PRs.
+      require_self_approval: true
