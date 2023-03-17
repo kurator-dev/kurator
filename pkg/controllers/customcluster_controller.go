@@ -24,13 +24,17 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
+	"sigs.k8s.io/cluster-api/util/conditions"
+	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -138,7 +142,7 @@ func (r *CustomClusterController) SetupWithManager(ctx context.Context, mgr ctrl
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Fetch the customCluster instance.
@@ -157,10 +161,6 @@ func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Reques
 	// ensure customCluster status no nil
 	if len(customCluster.Status.Phase) == 0 {
 		customCluster.Status.Phase = v1alpha1.PendingPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", req)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
 	}
 
 	// Fetch the Cluster instance.
@@ -204,6 +204,30 @@ func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Reques
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
 
+	patchHelper, err1 := patch.NewHelper(cluster, r.Client)
+	if err1 != nil {
+		return ctrl.Result{RequeueAfter: RequeueAfter}, errors.Wrapf(err1, "failed to init patch helper for cluster %s", req.NamespacedName)
+	}
+
+	defer func() {
+		if err := r.Status().Update(ctx, customCluster); err != nil {
+			log.Error(err, "failed to update customCluster status", "customCluster", req)
+			reterr = err
+		}
+
+		patchOpts := []patch.Option{
+			patch.WithOwnedConditions{Conditions: []clusterv1.ConditionType{
+				v1alpha1.ReadyCondition,
+				v1alpha1.ScaledUpCondition,
+				v1alpha1.ScaledDownCondition,
+				v1alpha1.TerminatedCondition,
+			}},
+		}
+		if err := patchHelper.Patch(ctx, cluster, patchOpts...); err != nil {
+			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch cluster %s", req.NamespacedName)})
+		}
+	}()
+
 	return r.reconcile(ctx, customCluster, customMachine, cluster)
 }
 
@@ -239,7 +263,7 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 		provisionedClusterInfo, err := r.getProvisionedClusterInfoFromConfigmap(ctx, customCluster)
 		if err != nil {
 			log.Error(err, "failed to get provisioned cluster Info from configmap")
-			return ctrl.Result{}, nil
+			return ctrl.Result{RequeueAfter: RequeueAfter}, err
 		}
 		// By comparing curClusterInfo and provisionedClusterInfo to decide whether to proceed reconcileScaleUp or reconcileScaleDown.
 		scaleUpWorkerNodes := findScaleUpWorkerNodes(provisionedClusterInfo.WorkerNodes, currentClusterInfo.WorkerNodes)
@@ -273,20 +297,15 @@ func (r *CustomClusterController) reconcileHandleProvisioning(ctx context.Contex
 
 	if initWorker.Status.Phase == corev1.PodSucceeded {
 		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
+		conditions.MarkTrue(customCluster, v1alpha1.ReadyCondition)
 		log.Info("customCluster's phase changes from Provisioning to Provisioned")
 		return ctrl.Result{}, nil
 	}
 
 	if initWorker.Status.Phase == corev1.PodFailed {
 		customCluster.Status.Phase = v1alpha1.ProvisionFailedPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
+		conditions.MarkFalse(customCluster, v1alpha1.ReadyCondition, v1alpha1.InitWorkerRunFailedReason,
+			clusterv1.ConditionSeverityWarning, "init worker run failed %s/%s", customCluster.Namespace, customCluster.Name)
 		log.Info("customCluster's phase changes from Provisioning to ProvisionFailed")
 		return ctrl.Result{}, nil
 	}
@@ -306,6 +325,8 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 	// Create the scaleUp pod
 	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleUpAction, KubesprayScaleUpCMD, generateScaleUpHostsName(customCluster), generateClusterConfigName(customCluster))
 	if err1 != nil {
+		conditions.MarkFalse(customCluster, v1alpha1.ScaledUpCondition, v1alpha1.FailedCreateScaleUpWorker,
+			clusterv1.ConditionSeverityWarning, "scale up worker not ready %s/%s.", customCluster.Namespace, customCluster.Name)
 		log.Error(err1, "failed to ensure that scaleUp WorkerPod is created ", "customCluster", customCluster.Name)
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
 	}
@@ -313,11 +334,6 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 	// Check the current customCluster status
 	if customCluster.Status.Phase != v1alpha1.ScalingUpPhase {
 		customCluster.Status.Phase = v1alpha1.ScalingUpPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
-		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.ProvisionedPhase), string(v1alpha1.ScalingUpPhase)))
 	}
 
 	// Determine the progress of scaling based on the status of the workerPod
@@ -330,10 +346,6 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 
 		// The scale up process is completed by restoring the workerPod's status to "provisioned".
 		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
 		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.ProvisionedPhase)))
 
 		// Delete the temporary scaleUp cm
@@ -347,16 +359,16 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 			log.Error(err, "failed to delete scaleUp worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleUpAction))
 			return ctrl.Result{RequeueAfter: RequeueAfter}, err
 		}
-
+		conditions.MarkTrue(customCluster, v1alpha1.ScaledUpCondition)
 		return ctrl.Result{}, nil
 	}
 
 	if workerPod.Status.Phase == corev1.PodFailed {
 		customCluster.Status.Phase = v1alpha1.UnknownPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
+
+		conditions.MarkFalse(customCluster, v1alpha1.ScaledUpCondition, v1alpha1.ScaleUpWorkerRunFailedReason,
+			clusterv1.ConditionSeverityWarning, "scale up worker run failed %s/%s", customCluster.Namespace, customCluster.Name)
+
 		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.UnknownPhase)))
 		return ctrl.Result{}, nil
 	}
@@ -370,6 +382,8 @@ func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, custom
 	// Checks whether the worker node for scaling down already exists. If it does not exist, the function creates it.
 	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleDownAction, generateScaleDownManageCMD(scaleDownWorkerNodes), generateClusterHostsName(customCluster), generateClusterConfigName(customCluster))
 	if err1 != nil {
+		conditions.MarkFalse(customCluster, v1alpha1.ScaledDownCondition, v1alpha1.FailedCreateScaleDownWorker,
+			clusterv1.ConditionSeverityWarning, "scale down worker not ready %s/%s.", customCluster.Namespace, customCluster.Name)
 		log.Error(err1, "failed to ensure that scaleDown WorkerPod is created", "customCluster", customCluster.Name)
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
 	}
@@ -377,11 +391,6 @@ func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, custom
 	// Check the current customCluster status.
 	if customCluster.Status.Phase != v1alpha1.ScalingDownPhase {
 		customCluster.Status.Phase = v1alpha1.ScalingDownPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
-		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.ProvisionedPhase), string(v1alpha1.ScalingDownPhase)))
 	}
 
 	// Determine the progress of scaling based on the status of the workerPod.
@@ -394,27 +403,24 @@ func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, custom
 
 		// The scale down process is completed by restoring the workerPod's status to "provisioned".
 		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
 		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.ProvisionedPhase)))
 
 		// delete the scaleDown worker
 		if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleDownAction)); err != nil {
-			log.Error(err, "failed to delete scaleUp worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleDownAction))
+			log.Error(err, "failed to delete scaleDown worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleDownAction))
 			return ctrl.Result{RequeueAfter: RequeueAfter}, err
 		}
+		conditions.MarkTrue(customCluster, v1alpha1.ScaledDownCondition)
 
 		return ctrl.Result{}, nil
 	}
 
 	if workerPod.Status.Phase == corev1.PodFailed {
 		customCluster.Status.Phase = v1alpha1.UnknownPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
+
+		conditions.MarkFalse(customCluster, v1alpha1.ScaledDownCondition, v1alpha1.ScaleDownWorkerRunFailedReason,
+			clusterv1.ConditionSeverityWarning, "scale down worker run failed %s/%s", customCluster.Namespace, customCluster.Name)
+
 		log.Info(fmt.Sprintf("customCluster's phase changes from %s to %s", string(v1alpha1.UnknownPhase), string(v1alpha1.UnknownPhase)))
 		return ctrl.Result{}, nil
 	}
@@ -446,11 +452,12 @@ func (r *CustomClusterController) reconcileHandleDeleting(ctx context.Context, c
 
 	if terminateWorker.Status.Phase == corev1.PodFailed {
 		customCluster.Status.Phase = v1alpha1.UnknownPhase
-		if err := r.Status().Update(ctx, customCluster); err != nil {
-			log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, err
-		}
+
 		log.Info("customCluster's phase changes from Deleting to DeletingFailed")
+
+		conditions.MarkFalse(customCluster, v1alpha1.TerminatedCondition, v1alpha1.TerminateWorkerRunFailedReason,
+			clusterv1.ConditionSeverityWarning, "terminate worker run failed %s/%s.", customCluster.Namespace, customCluster.Name)
+
 		return ctrl.Result{}, nil
 	}
 	return ctrl.Result{}, nil
@@ -468,14 +475,15 @@ func (r *CustomClusterController) reconcileVMsTerminate(ctx context.Context, cus
 
 	// Create the termination worker.
 	if _, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterTerminateAction, KubesprayTerminateCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster)); err1 != nil {
+		conditions.MarkFalse(customCluster, v1alpha1.TerminatedCondition, v1alpha1.FailedCreateTerminateWorker,
+			clusterv1.ConditionSeverityWarning, "terminate worker not ready %s/%s.", customCluster.Namespace, customCluster.Name)
+
 		log.Error(err1, "failed to create terminate worker", "customCluster", customCluster.Name)
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err1
 	}
 
-	customCluster.Status.Phase = v1alpha1.DeletingPhase
-	if err := r.Status().Update(ctx, customCluster); err != nil {
-		log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, err
+	if customCluster.Status.Phase != v1alpha1.DeletingPhase {
+		customCluster.Status.Phase = v1alpha1.DeletingPhase
 	}
 	log.Info("customCluster's phase changes to Deleting")
 
@@ -556,6 +564,9 @@ func (r *CustomClusterController) reconcileCustomClusterInit(ctx context.Context
 	}
 
 	if _, err := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterInitAction, KubesprayInitCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster)); err != nil {
+		conditions.MarkFalse(customCluster, v1alpha1.ReadyCondition, v1alpha1.FailedCreateInitWorker,
+			clusterv1.ConditionSeverityWarning, "init worker not ready %s/%s", customCluster.Namespace, customCluster.Name)
+
 		log.Error(err, "failed to ensure that init WorkerPod is created ", "customCluster", customCluster.Name)
 		return ctrl.Result{RequeueAfter: RequeueAfter}, err
 	}
@@ -573,10 +584,6 @@ func (r *CustomClusterController) reconcileCustomClusterInit(ctx context.Context
 	}
 
 	customCluster.Status.Phase = v1alpha1.ProvisioningPhase
-	if err := r.Status().Update(ctx, customCluster); err != nil {
-		log.Error(err, "failed to update customCluster status", "customCluster", customCluster.Name)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, err
-	}
 	log.Info("customCluster's phase changes to Provisioning")
 
 	return ctrl.Result{}, nil
@@ -1197,16 +1204,15 @@ func (r *CustomClusterController) ensureConfigMapDeleted(ctx context.Context, cm
 
 // ensureWorkerPodDeleted ensures that the worker pod is deleted.
 func (r *CustomClusterController) ensureWorkerPodDeleted(ctx context.Context, workerPodKey client.ObjectKey) error {
-	// Delete init worker.
-	initWorker := &corev1.Pod{}
-	errGetWorker := r.Client.Get(ctx, workerPodKey, initWorker)
+	worker := &corev1.Pod{}
+	errGetWorker := r.Client.Get(ctx, workerPodKey, worker)
 	// errGetWorker can be divided into three situation: isNotFound; not isNotFound; nil.
 	if apierrors.IsNotFound(errGetWorker) {
 		return nil
 	} else if errGetWorker != nil && !apierrors.IsNotFound(errGetWorker) {
 		return fmt.Errorf("failed to get worker pod when it should be deleted: %v", errGetWorker)
 	} else if errGetWorker == nil {
-		if err := r.Client.Delete(ctx, initWorker); err != nil && !apierrors.IsNotFound(err) {
+		if err := r.Client.Delete(ctx, worker); err != nil && !apierrors.IsNotFound(err) {
 			return fmt.Errorf("failed to delete cm when it should be deleted: %v", err)
 		}
 	}
@@ -1225,6 +1231,7 @@ func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, cu
 			if err1 := r.Client.Create(ctx, workerPod); err1 != nil {
 				return nil, fmt.Errorf("failed to create customCluster manager worker pod: %v", err1)
 			}
+			return workerPod, nil
 		}
 		return nil, fmt.Errorf("failed to get worker pod: %v", err)
 	}
