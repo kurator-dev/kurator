@@ -55,7 +55,7 @@ var (
 
 const (
 	// ClusterFinalizer allows ClusterController to clean up associated resources before removing it from apiserver.
-	clusterFinalizer = "cluster.cluster.kurator.dev"
+	ClusterFinalizer = "cluster.cluster.kurator.dev"
 	KindCluster      = "Cluster"
 )
 
@@ -123,10 +123,10 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 	}
 
 	// Add finalizer if not exist to void the race condition.
-	if !controllerutil.ContainsFinalizer(cluster, clusterFinalizer) {
+	if !controllerutil.ContainsFinalizer(cluster, ClusterFinalizer) {
 		cluster.Status.Phase = string(capiv1.ClusterPhaseProvisioning)
 		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.ProvisioningReason, capiv1.ConditionSeverityError, "Provisioning")
-		controllerutil.AddFinalizer(cluster, clusterFinalizer)
+		controllerutil.AddFinalizer(cluster, ClusterFinalizer)
 		return ctrl.Result{}, nil
 	}
 
@@ -174,7 +174,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *cluste
 	}
 
 	// Remove finalizer when all related resources are deleted.
-	controllerutil.RemoveFinalizer(cluster, clusterFinalizer)
+	controllerutil.RemoveFinalizer(cluster, ClusterFinalizer)
 	return ctrl.Result{}, nil
 }
 
