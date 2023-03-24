@@ -26,12 +26,14 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
+	fleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface
+	FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface
 	InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface
 }
 
@@ -40,12 +42,18 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	clusterV1alpha1        *clusterv1alpha1.ClusterV1alpha1Client
+	fleetV1alpha1          *fleetv1alpha1.FleetV1alpha1Client
 	infrastructureV1alpha1 *infrastructurev1alpha1.InfrastructureV1alpha1Client
 }
 
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
 func (c *Clientset) ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface {
 	return c.clusterV1alpha1
+}
+
+// FleetV1alpha1 retrieves the FleetV1alpha1Client
+func (c *Clientset) FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface {
+	return c.fleetV1alpha1
 }
 
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
@@ -101,6 +109,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.fleetV1alpha1, err = fleetv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.infrastructureV1alpha1, err = infrastructurev1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -127,6 +139,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.clusterV1alpha1 = clusterv1alpha1.New(c)
+	cs.fleetV1alpha1 = fleetv1alpha1.New(c)
 	cs.infrastructureV1alpha1 = infrastructurev1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
