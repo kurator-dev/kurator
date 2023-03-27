@@ -10,7 +10,13 @@ The documentation uses `Ubuntu 20.04.4 LTS` as an example.
 
 ### Prerequisites
 
-Installing Karmada requires kubernetes clusters. setup clusters following [Setup kubernetes clusters](../../getting-started/quickstart/#setup-kubernetes-clusters)
+Deploy a kubernetes cluster using kurator's scripts. This script will create three clusters for you, one is used to host Karmada control plane and the other two will be joined as member clusters.
+
+```bash
+git clone https://github.com/kurator-dev/kurator.git
+cd kurator
+hack/local-dev-setup.sh
+```
 
 ### Deploy Karmada
 
