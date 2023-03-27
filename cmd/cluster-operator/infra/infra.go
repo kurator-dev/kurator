@@ -23,14 +23,14 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"kurator.dev/kurator/cmd/cluster-operator/options"
-	"kurator.dev/kurator/pkg/controllers/infra"
+	"kurator.dev/kurator/pkg/controllers"
 	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("infra cluster")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
-	if err := (&infra.ClusterController{
+	if err := (&controllers.ClusterController{
 		Client:       mgr.GetClient(),
 		Scheme:       mgr.GetScheme(),
 		RequeueAfter: opts.RequeueAfter,
