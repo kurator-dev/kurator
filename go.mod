@@ -19,7 +19,7 @@ require (
 	github.com/go-logr/logr v1.2.3
 	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/karmada-io/karmada v1.1.1
+	github.com/karmada-io/karmada v1.4.2
 	github.com/mitchellh/cli v1.1.3
 	github.com/onsi/ginkgo/v2 v2.5.0
 	github.com/onsi/gomega v1.24.1
@@ -39,15 +39,15 @@ require (
 	istio.io/api v0.0.0-20221109211642-7c8dc83e0555
 	istio.io/istio v0.0.0-20221110020507-c4fa0879566b
 	istio.io/pkg v0.0.0-20221031153201-960bb47e80ce
-	k8s.io/api v0.25.3
-	k8s.io/apiextensions-apiserver v0.25.2
-	k8s.io/apimachinery v0.25.3
-	k8s.io/cli-runtime v0.25.3
-	k8s.io/client-go v0.25.3
-	k8s.io/code-generator v0.25.2
-	k8s.io/component-base v0.25.3
+	k8s.io/api v0.25.4
+	k8s.io/apiextensions-apiserver v0.25.4
+	k8s.io/apimachinery v0.25.4
+	k8s.io/cli-runtime v0.25.4
+	k8s.io/client-go v0.25.4
+	k8s.io/code-generator v0.25.4
+	k8s.io/component-base v0.25.4
 	k8s.io/klog/v2 v2.80.1
-	k8s.io/kubectl v0.25.3
+	k8s.io/kubectl v0.25.4
 	sigs.k8s.io/cluster-api v1.2.5
 	sigs.k8s.io/cluster-api-provider-aws/v2 v2.0.0
 	sigs.k8s.io/controller-runtime v0.13.1
@@ -201,6 +201,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
+	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.4 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.4 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.4 // indirect
@@ -232,9 +233,10 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	istio.io/client-go v1.12.0-alpha.5.0.20221109212442-23681e5ef331 // indirect
-	k8s.io/apiserver v0.25.3 // indirect
-	k8s.io/cluster-bootstrap v0.24.0 // indirect
+	k8s.io/apiserver v0.25.4 // indirect
+	k8s.io/cluster-bootstrap v0.25.4 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
+	k8s.io/kube-aggregator v0.25.4 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221012122500-cfd413dd9e85 // indirect
 	sigs.k8s.io/gateway-api v0.5.1-0.20221021174151-21bba43681b3 // indirect

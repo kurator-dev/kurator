@@ -1,0 +1,29 @@
+# The role used for installing or uninstalling the fleet control plane
+# Fleet manager will bind the role to a service account on flight
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: fleet-worker
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - nodes
+      - namespaces
+      - secrets
+    verbs:
+      - get
+      - create
+      - update
+      - patch
+      - delete
+      - list
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - get
+      - create
