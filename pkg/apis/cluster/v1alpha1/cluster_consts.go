@@ -32,7 +32,7 @@ const (
 	CNICondition capiv1.ConditionType = "CNI"
 	// CNIProvisionFailedReason (Severity=Error) documents that the CNI provisioning failed.
 	CNIProvisionFailedReason = "CNIProvisionFailed"
-	// CNIProvisionReadyReason (Severity=Error) documents that the CNI is not ready.
+	// CNINotReadyReason (Severity=Error) documents that the CNI is not ready.
 	CNINotReadyReason = "CNINotReady"
 
 	// ReadyCondition defines the Ready condition type that summarizes the operational state of a Cluster.
@@ -42,8 +42,9 @@ const (
 	// DeletingReason (Severity=Info) documents that the cluster is being deleted.
 	DeletingReason = "Deleting"
 	// ProviderInitializeFailedReason (Severity=Error) documents that the cluster infrastructure provider initilize failed, probabily a wrong credential.
+
 	ProviderInitializeFailedReason = "ProviderInitializeFailed"
-	// ClusterResourceSetProvisionFailedReason (Severity=Error) documents that the additinal Cluster API resources (ClusterResourceSet etc.) provisioning failed.
+	// ClusterResourceSetProvisionFailedReason (Severity=Error) documents that the additional Cluster API resources (ClusterResourceSet etc.) provisioning failed.
 	ClusterResourceSetProvisionFailedReason = "ClusterResourceSetProvisionFailed"
 	// PrecheckFailedReason (Severity=Error) documents that the cluster precheck is failed.
 	PrecheckFailedReason = "PrecheckFailed"

@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
 // +genclient
@@ -49,7 +50,7 @@ type CustomClusterSpec struct {
 	// +optional
 	MachineRef *corev1.ObjectReference `json:"machineRef,omitempty"`
 
-	// CNIConfig is the configuration for the CNI of the cluster on VMs.
+	// CNIConfig is the configuration for the CNI of the cluster.
 	CNI CNIConfig `json:"cni"`
 }
 
@@ -64,30 +65,64 @@ const (
 	// PendingPhase represents the customCluster's first phase after being created
 	PendingPhase CustomClusterPhase = "Pending"
 
-	// ProvisioningPhase represents the cluster on VMs is provisioning. In this phase, the worker named ends in "init" is running to initialize the cluster on VMs
+	// ProvisioningPhase represents the cluster is provisioning. In this phase, the worker named ends in "init" is running to initialize the cluster
 	ProvisioningPhase CustomClusterPhase = "Provisioning"
 
-	// ProvisionedPhase represents the cluster on VMs has been created and configured. In this phase, the worker named ends in "init" is completed
+	// ProvisionedPhase represents the cluster has been created and configured. In this phase, the worker named ends in "init" is completed
 	ProvisionedPhase CustomClusterPhase = "Provisioned"
 
-	// DeletingPhase represents the delete request has been sent but cluster on VMs has not yet been completely deleted. In this phase, the worker named ends in "terminate" is running to clear the cluster on VMs
+	// DeletingPhase represents the delete request has been sent but cluster on has not yet been completely deleted. In this phase, the worker named ends in "terminate" is running to clear the cluster.
 	DeletingPhase CustomClusterPhase = "Deleting"
 
-	// ProvisionFailedPhase represents something is wrong when creating the cluster on VMs. In this phase, the worker named ends in "init" is in error
+	// ProvisionFailedPhase represents something is wrong when creating the cluster. In this phase, the worker named ends in "init" is in error
 	ProvisionFailedPhase CustomClusterPhase = "ProvisionFailed"
 
 	// UnknownPhase represents provisioned cluster state cannot be determined. It can be scaling failed or deleting failed.
 	UnknownPhase CustomClusterPhase = "Unknown"
 
-	// ScalingUpPhase represents the cluster on VMs is adding the worker nodes.
+	// ScalingUpPhase represents the cluster is adding the worker nodes.
 	ScalingUpPhase CustomClusterPhase = "ScalingUp"
 
-	// ScalingDownPhase represents the cluster on VMs is removing the worker nodes.
+	// ScalingDownPhase represents the cluster is removing the worker nodes.
 	ScalingDownPhase CustomClusterPhase = "ScalingDown"
+)
+
+const (
+	// ReadyCondition reports on whether the cluster is provisioned.
+	ReadyCondition capiv1.ConditionType = "Ready"
+	// FailedCreateInitWorker (Severity=Error) documents that the initialization worker failed to create.
+	FailedCreateInitWorker = "InitWorkerNotReady"
+	// InitWorkerRunFailedReason (Severity=Error) documents that the initialization worker run failed.
+	InitWorkerRunFailedReason = "InitWorkerRunFailed"
+
+	// ScaledUpCondition reports on whether the cluster worker nodes is scaled up.
+	ScaledUpCondition capiv1.ConditionType = "ScaledUp"
+	// FailedCreateScaleUpWorker (Severity=Error) documents that the scale up worker failed to create.
+	FailedCreateScaleUpWorker = "ScaleUpWorkerNotReady"
+	// ScaleUpWorkerRunFailedReason (Severity=Error) documents that the scale up worker run failed.
+	ScaleUpWorkerRunFailedReason = "ScaleUpWorkerRunFailed"
+
+	// ScaledDownCondition reports on whether the cluster worker nodes is scaled down.
+	ScaledDownCondition capiv1.ConditionType = "ScaledDown"
+	// FailedCreateScaleDownWorker (Severity=Error) documents that the scale down worker failed to create.
+	FailedCreateScaleDownWorker = "ScaleDownWorkerNotReady"
+	// ScaleDownWorkerRunFailedReason (Severity=Error) documents that the scale down worker run failed.
+	ScaleDownWorkerRunFailedReason = "ScaleDownWorkerRunFailed"
+
+	// TerminatedCondition reports on whether the cluster is terminated. If this condition meet, then the customCluster will be deleted and there won't be any marking as true.
+	TerminatedCondition capiv1.ConditionType = "Terminated"
+	// FailedCreateTerminateWorker (Severity=Error) documents that the terminal worker failed to create.
+	FailedCreateTerminateWorker = "TerminateWorkerNotReady"
+	// TerminateWorkerRunFailedReason (Severity=Error) documents that the terminal worker run failed.
+	TerminateWorkerRunFailedReason = "TerminateWorkerRunFailed"
 )
 
 // CustomClusterStatus represents the current status of the cluster.
 type CustomClusterStatus struct {
+	// Conditions defines current service state of the cluster.
+	// +optional
+	Conditions capiv1.Conditions `json:"conditions,omitempty"`
+
 	// Phase represents the current phase of customCluster actuation.
 	// E.g.  Running, Succeed, Terminating, Failed etc.
 	// +optional
@@ -101,6 +136,14 @@ type CustomClusterStatus struct {
 	// KubeconfigSecretRef represents the secret that contains the credential to access this cluster.
 	// +optional
 	KubeconfigSecretRef string `json:"kubeconfigSecretRef,omitempty"`
+}
+
+func (cc *CustomCluster) GetConditions() capiv1.Conditions {
+	return cc.Status.Conditions
+}
+
+func (cc *CustomCluster) SetConditions(conditions capiv1.Conditions) {
+	cc.Status.Conditions = conditions
 }
 
 // +kubebuilder:object:root=true
