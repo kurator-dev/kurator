@@ -198,6 +198,7 @@ kube-system   nodelocaldns-fpfxj                 1/1     Running   0          8m
 
 We can see that the cluster on VMs is installed successful.
 
+<<<<<<< HEAD
 ## Cluster Scaling
 
 With Kurator, you can declaratively add, remove, or replace multiple worker nodes on VMs.
@@ -299,7 +300,54 @@ default              cc-customcluster-scale-up                           1/1    
 default              cc-customcluster-scale-down                         1/1     Running     0          37s
 ```
 
-## Delete the k8s cluster on VMs
+## Cluster upgrading
+
+With Kurator, you can easily upgrade the Kubernetes version of your cluster using a declarative approach.
+
+All you need to do is declare the desired Kubernetes version on the kcp, and Kurator will complete the cluster upgrade without any external intervention.
+
+Since the upgrade implementation depends on kubeadm, it is recommended to avoid skipping minor versions. For example, you can upgrade from 1.22.0 to 1.23.9, but you **cannot** upgrade from 1.22.0 to 1.24.0 in one step.
+
+To declare the desired upgrading version, you can make a copy of the cc-kcp.yaml file and edit it to reflect the desired upgrading version:
+
+```console
+$ cp examples/infra/my-customcluster/cc-kcp.yaml examples/infra/my-customcluster/upgrade.yaml
+$ vi examples/infra/my-customcluster/upgrade.yaml
+apiVersion: controlplane.cluster.x-k8s.io/v1beta1
+kind: KubeadmControlPlane
+metadata:
+  name: cc-kcp
+  namespace: default
+spec:
+  kubeadmConfigSpec:
+    clusterConfiguration:
+    initConfiguration:
+    joinConfiguration:
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+      kind: customMachine
+      name: cc-custommachine
+      namespace: default
+  # edit the version to desired upgrading version
+  version: v1.24.6
+```
+
+After editing the cc-kcp.yaml file, apply the declaration:
+
+```console
+$ kubectl apply -f examples/infra/my-customcluster/upgrade.yaml
+kubeadmcontrolplane.controlplane.cluster.x-k8s.io/cc-kcp configured
+```
+
+To view the running pods, use the following command:
+
+```console
+$ kubectl get pod -A | grep -i upgrade
+default              cc-customcluster-upgrade                                1/1     Running     0               18s
+```
+
+## Delete the k8s cluster for VMs
 
 If you no longer need cluster on VMs and want to delete the cluster, you only need to delete the cluster object.
 
