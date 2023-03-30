@@ -20,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	kubescheme "k8s.io/client-go/kubernetes/scheme"
 
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
@@ -30,4 +31,5 @@ var (
 func init() {
 	_ = kubescheme.AddToScheme(Scheme)
 	_ = fleetapi.AddToScheme(Scheme)
+	_ = clusterv1alpha1.AddToScheme(Scheme)
 }

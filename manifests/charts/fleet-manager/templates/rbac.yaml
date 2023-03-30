@@ -53,6 +53,40 @@ rules:
       - update
       - patch
       - delete
+  - apiGroups:
+      - "rbac.authorization.k8s.io"
+    resources:
+      - clusterrolebindings
+    verbs:
+      - get
+      - update
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - nodes
+      - namespaces
+      - secrets
+      - serviceaccounts
+    verbs:
+      - get
+      - create
+      - update
+      - patch
+      - delete
+      - list
+  - apiGroups:
+      - "apps"
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - get
+      - create
+      - delete
+      - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

@@ -94,7 +94,6 @@ func newVersionCommand() *cobra.Command {
 }
 
 func run(ctx context.Context, opts *options.Options) error {
-
 	if opts.ProfilerAddress != "" {
 		log.Info("Profiler listening for requests", "profiler-address", opts.ProfilerAddress)
 		go func() {

@@ -1,0 +1,10 @@
+apiVersion: fleet.kurator.dev/v1alpha1
+kind: Fleet
+metadata:
+  name: quickstart
+  namespace: test
+spec:
+  clusters:
+    - name: quickstart
+
+
