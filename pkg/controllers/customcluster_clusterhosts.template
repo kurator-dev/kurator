@@ -1,0 +1,19 @@
+[all]
+{{ range $v := .NodeAndIP }}
+{{ $v }}
+{{ end }}
+[kube_control_plane]
+{{ range $v := .MasterName }}
+{{ $v }}
+{{ end }}
+[etcd]
+{{- range $v := .EtcdNodeName }}
+{{ $v }}
+{{ end }}
+[kube_node]
+{{- range $v := .NodeName }}
+{{ $v }}
+{{ end }}
+[k8s-cluster:children]
+kube_node
+kube_control_plane

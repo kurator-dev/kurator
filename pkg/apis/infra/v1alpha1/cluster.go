@@ -91,28 +91,28 @@ const (
 	// ReadyCondition reports on whether the cluster is provisioned.
 	ReadyCondition capiv1.ConditionType = "Ready"
 	// FailedCreateInitWorker (Severity=Error) documents that the initialization worker failed to create.
-	FailedCreateInitWorker = "InitWorkerNotReady"
+	FailedCreateInitWorker = "InitWorkerFailedCreate"
 	// InitWorkerRunFailedReason (Severity=Error) documents that the initialization worker run failed.
 	InitWorkerRunFailedReason = "InitWorkerRunFailed"
 
 	// ScaledUpCondition reports on whether the cluster worker nodes is scaled up.
 	ScaledUpCondition capiv1.ConditionType = "ScaledUp"
 	// FailedCreateScaleUpWorker (Severity=Error) documents that the scale up worker failed to create.
-	FailedCreateScaleUpWorker = "ScaleUpWorkerNotReady"
+	FailedCreateScaleUpWorker = "ScaleUpWorkerFailedCreate"
 	// ScaleUpWorkerRunFailedReason (Severity=Error) documents that the scale up worker run failed.
 	ScaleUpWorkerRunFailedReason = "ScaleUpWorkerRunFailed"
 
 	// ScaledDownCondition reports on whether the cluster worker nodes is scaled down.
 	ScaledDownCondition capiv1.ConditionType = "ScaledDown"
 	// FailedCreateScaleDownWorker (Severity=Error) documents that the scale down worker failed to create.
-	FailedCreateScaleDownWorker = "ScaleDownWorkerNotReady"
+	FailedCreateScaleDownWorker = "ScaleDownWorkerFailedCreate"
 	// ScaleDownWorkerRunFailedReason (Severity=Error) documents that the scale down worker run failed.
 	ScaleDownWorkerRunFailedReason = "ScaleDownWorkerRunFailed"
 
 	// TerminatedCondition reports on whether the cluster is terminated. If this condition meet, then the customCluster will be deleted and there won't be any marking as true.
 	TerminatedCondition capiv1.ConditionType = "Terminated"
 	// FailedCreateTerminateWorker (Severity=Error) documents that the terminal worker failed to create.
-	FailedCreateTerminateWorker = "TerminateWorkerNotReady"
+	FailedCreateTerminateWorker = "TerminateWorkerFailedCreate"
 	// TerminateWorkerRunFailedReason (Severity=Error) documents that the terminal worker run failed.
 	TerminateWorkerRunFailedReason = "TerminateWorkerRunFailed"
 )
