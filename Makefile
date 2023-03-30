@@ -37,7 +37,7 @@ endif
 export PATH := $(GOBIN):$(PATH)
 
 .PHONY: build
-build: tidy kurator cluster-operator
+build: tidy kurator cluster-operator fleet-manager
 
 .PHONY: tidy
 tidy:
@@ -51,13 +51,22 @@ kurator:
 cluster-operator:
 	$(GO_BUILD) -o $(OUT_PATH)/cluster-operator cmd/cluster-operator/main.go
 
+.PHONY: fleet-manager
+fleet-manager:
+	$(GO_BUILD) -o $(OUT_PATH)/fleet-manager cmd/fleet-manager/main.go
+
 .PHONY: docker
-docker: docker.cluster-operator
+docker: docker.cluster-operator docker.fleet-manager
 
 .PHONY: docker.cluster-operator
 docker.cluster-operator: cluster-operator
 	cp ./cmd/cluster-operator/Dockerfile $(OUT_PATH)/
 	cd $(OUT_PATH)/ && $(DOCKER_BUILD) -t ${IMAGE_HUB}/cluster-operator:${IMAGE_TAG} .
+
+.PHONY: docker.fleet-manager
+docker.fleet-manager: fleet-manager
+	cp ./cmd/fleet-manager/Dockerfile $(OUT_PATH)/
+	cd $(OUT_PATH)/ && $(DOCKER_BUILD) -t ${IMAGE_HUB}/fleet-manager:${IMAGE_TAG} .
 
 .PHONY: docker-push
 docker-push: docker
