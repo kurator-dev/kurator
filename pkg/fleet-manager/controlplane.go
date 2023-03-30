@@ -31,6 +31,8 @@ import (
 )
 
 const ServiceAccountName = "fleet-manager-worker"
+const KarmadaCtlImage = "ghcr.io/kurator-dev/karmadactl:v0.1.0"
+const FleetWorkerClusterRoleBindingName = "fleet-worker"
 
 func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetapi.Fleet) error {
 	podName := fleet.Name + "-init"
@@ -56,44 +58,9 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 
 	ownerref := metav1.OwnerReference{
 		APIVersion: fleetapi.GroupVersion.String(),
-		Kind:       "Fleet",
+		Kind:       FleetKind,
 		Name:       fleet.Name,
 		UID:        fleet.UID,
-	}
-
-	// create rolebinding
-	rolebingding := rbacv1.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      "fleet-worker",
-			Labels: map[string]string{
-				FleetLabel: fleet.Name,
-			},
-			OwnerReferences: []metav1.OwnerReference{ownerref},
-		},
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "RoleBinding",
-			APIVersion: "v1",
-		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     "fleet-worker",
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      ServiceAccountName,
-				Namespace: namespace,
-			},
-		},
-	}
-
-	if err = f.Create(ctx, &rolebingding); err != nil {
-		if !apierrors.IsAlreadyExists(err) {
-			ctrl.LoggerFrom(ctx).Error(err, "unable to create rolebinding", "pod", types.NamespacedName{Name: podName, Namespace: namespace})
-			return fmt.Errorf("failed to create fleet control plane init pod: %v", err)
-		}
 	}
 
 	sa := corev1.ServiceAccount{
@@ -114,8 +81,24 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 	if err = f.Create(ctx, &sa); err != nil {
 		if !apierrors.IsAlreadyExists(err) {
 			ctrl.LoggerFrom(ctx).Error(err, "unable to create sa", "pod", types.NamespacedName{Name: podName, Namespace: namespace})
-			return fmt.Errorf("failed to create fleet control plane init pod: %v", err)
+			return fmt.Errorf("failed to create sa for init pod: %v", err)
 		}
+	}
+
+	// update rolebinding
+	var clusterRolebinding rbacv1.ClusterRoleBinding
+	key := types.NamespacedName{Name: FleetWorkerClusterRoleBindingName}
+	if err = f.Get(ctx, key, &clusterRolebinding); err != nil {
+		return fmt.Errorf("failed to get clusterrolebinding for init pod: %v", err)
+	}
+	clusterRolebinding.Subjects = append(clusterRolebinding.Subjects, rbacv1.Subject{
+		Kind:      "ServiceAccount",
+		Name:      ServiceAccountName,
+		Namespace: namespace,
+	})
+	if err = f.Update(ctx, &clusterRolebinding); err != nil {
+		ctrl.LoggerFrom(ctx).Error(err, "unable to update clusterrolebinding", "pod", types.NamespacedName{Name: podName, Namespace: namespace})
+		return fmt.Errorf("failed to update clusterrolebinding for init pod: %v", err)
 	}
 
 	// pod not found, create it
@@ -137,7 +120,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 			Containers: []corev1.Container{
 				{
 					Name:    podName,
-					Image:   "place holder",
+					Image:   KarmadaCtlImage,
 					Command: []string{"/bin/sh", "-c"},
 					Args:    []string{string(initCmd)},
 				},
@@ -172,6 +155,23 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 	} else {
 		// pod already exists
 		if pod.Status.Phase == corev1.PodSucceeded {
+			// update rolebinding
+			var clusterRolebinding rbacv1.ClusterRoleBinding
+			key := types.NamespacedName{Name: FleetWorkerClusterRoleBindingName}
+			if err = f.Get(ctx, key, &clusterRolebinding); err != nil {
+				return fmt.Errorf("failed to get clusterrolebinding for init pod: %v", err)
+			}
+			for i, subject := range clusterRolebinding.Subjects {
+				if subject.Namespace == namespace {
+					clusterRolebinding.Subjects = append(clusterRolebinding.Subjects[:i], clusterRolebinding.Subjects[i+1:]...)
+					break
+				}
+			}
+			if err = f.Update(ctx, &clusterRolebinding); err != nil {
+				ctrl.LoggerFrom(ctx).Error(err, "unable to update clusterrolebinding", "pod", types.NamespacedName{Name: podName, Namespace: namespace})
+				return fmt.Errorf("failed to update clusterrolebinding: %v", err)
+			}
+
 			fleet.Status.Phase = PhaseTerminateSucceeded
 			return nil
 		}
@@ -185,13 +185,13 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 
 	ownerref := metav1.OwnerReference{
 		APIVersion: fleetapi.GroupVersion.String(),
-		Kind:       "Fleet",
+		Kind:       FleetKind,
 		Name:       fleet.Name,
 		UID:        fleet.UID,
 	}
 
 	// pod not found, create it
-	initCmd := "kubectl-karmada deinit -n " + namespace
+	initCmd := "echo y | kubectl-karmada deinit -n " + namespace
 	pod = corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -210,13 +210,13 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 			Containers: []corev1.Container{
 				{
 					Name:    podName,
-					Image:   "place holder",
+					Image:   KarmadaCtlImage,
 					Command: []string{"/bin/sh", "-c"},
 					Args:    []string{string(initCmd)},
 				},
 			},
-
-			RestartPolicy: corev1.RestartPolicyNever,
+			ServiceAccountName: ServiceAccountName,
+			RestartPolicy:      corev1.RestartPolicyNever,
 		},
 	}
 

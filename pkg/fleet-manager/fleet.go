@@ -37,10 +37,6 @@ import (
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
-var (
-	log = ctrl.Log.WithName("fleet-manager")
-)
-
 const (
 	FleetKind      = "Fleet"
 	FleetFinalizer = "fleet.kurator.dev"
@@ -120,15 +116,15 @@ func (f *FleetManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.
 
 	// Add finalizer if not exist to void the race condition.
 	if !controllerutil.ContainsFinalizer(fleet, FleetFinalizer) {
-		fleet.Status.Phase = string(PhaseRunning)
+		fleet.Status.Phase = PhaseRunning
 		controllerutil.AddFinalizer(fleet, FleetFinalizer)
 		return ctrl.Result{}, nil
 	}
 
 	// Handle deletion reconciliation loop.
 	if fleet.DeletionTimestamp != nil {
-		if fleet.Status.Phase != string(PhaseTerminating) {
-			fleet.Status.Phase = string(PhaseTerminating)
+		if fleet.Status.Phase != PhaseTerminating {
+			fleet.Status.Phase = PhaseTerminating
 		}
 
 		return f.reconcileDelete(ctx, fleet)
@@ -145,7 +141,7 @@ func (f *FleetManager) reconcile(ctx context.Context, fleet *fleetapi.Fleet) (ct
 	// Install fleet control plane
 	if err := f.reconcileControlPlane(ctx, fleet); err != nil {
 		log.Error(err, "controlplane reconcile failed")
-		fleet.Status.Phase = string(PhaseFailed)
+		fleet.Status.Phase = PhaseFailed
 		fleet.Status.Reason = err.Error()
 		return ctrl.Result{}, err
 	}

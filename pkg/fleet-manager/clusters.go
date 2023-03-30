@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	join "github.com/karmada-io/karmada/pkg/karmadactl/join"
+	"github.com/karmada-io/karmada/pkg/karmadactl/join"
 	"github.com/karmada-io/karmada/pkg/karmadactl/options"
 	"github.com/karmada-io/karmada/pkg/karmadactl/unjoin"
 	corev1 "k8s.io/api/core/v1"
@@ -42,8 +42,10 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	var unreadyClusters int32
 	var result ctrl.Result
 	var readyClusters []clusterv1alpha1.Cluster
+	clusterMap := make(map[string]struct{}, len(fleet.Spec.Clusters))
 	// Loop over cluster, and add labels to the cluster
 	for _, cluster := range fleet.Spec.Clusters {
+		clusterMap[cluster.Name] = struct{}{}
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
 		var cluster clusterv1alpha1.Cluster
@@ -81,7 +83,8 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	fleet.Status.UnReadyClusters = unreadyClusters
 
 	var kubeconfig corev1.Secret
-	err := f.Get(ctx, fleetKey, &kubeconfig)
+	controPlaneSecretKey := types.NamespacedName{Name: "kubeconfig", Namespace: fleet.Namespace}
+	err := f.Get(ctx, controPlaneSecretKey, &kubeconfig)
 	if err != nil {
 		return result, err
 	}
@@ -99,7 +102,24 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 		}
 	}
 
-	// TODO: cleanup labels once the cluster is removed from the fleet
+	// Handle cluster unjoin
+	var clusterList clusterv1alpha1.ClusterList
+	err = f.Client.List(ctx, &clusterList,
+		client.InNamespace(fleet.Namespace),
+		client.MatchingLabels{FleetLabel: fleet.Name})
+	if err != nil {
+		return result, err
+	}
+
+	for _, cluster := range clusterList.Items {
+		if _, ok := clusterMap[cluster.Name]; !ok {
+			err := f.unjoinCluster(ctx, controlplaneRestConfig, &cluster)
+			if err != nil {
+				log.Error(err, "Unjoin cluster failed")
+				return result, err
+			}
+		}
+	}
 
 	return result, nil
 }
@@ -135,6 +155,7 @@ func (f *FleetManager) reconcileClustersOnDelete(ctx context.Context, fleet *fle
 }
 
 // ClusterKubeconfigDataName is the key used to store a Kubeconfig in the secret's data field.
+// This is derived from cluster api
 const ClusterKubeconfigDataName = "value"
 
 func (f *FleetManager) joinCluster(ctx context.Context, controlPlane *restclient.Config, cluster *clusterv1alpha1.Cluster) error {
