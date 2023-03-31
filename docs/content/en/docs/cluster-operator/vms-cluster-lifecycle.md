@@ -1,9 +1,9 @@
 ---
-title: "Deploy Cluster on VMs"
-linkTitle: "Deploy Cluster on VMs"
+title: " Lifecycle management of cluster on VMs "
+linkTitle: "Lifecycle management of cluster on VMs"
 weight: 20
 description: >
-  The easiest way to deploy cluster on VMs with Kurator.
+  The easiest way to deploy a cluster on VMs, and manage the cluster lifecycle with Kurator.
 ---
 
 You can easily manage the VMs cluster with Kurator, including the installation, deletion, upgrade and scale of the VMs cluster.
@@ -174,7 +174,7 @@ kubectl logs cc-customcluster-init
 
 When the installation of cluster is done, the status of the init worker will change from "running" to "complete". The phase of customCluster will also change into "succeeded".
 
-You can login the master node and confirm your installation. Here is an example using cilium as CNI plugin.
+You can log in the master node and confirm your installation. Here is an example using cilium as CNI plugin.
 
 ```console
 $ kubectl get po -A
@@ -198,10 +198,9 @@ kube-system   nodelocaldns-fpfxj                 1/1     Running   0          8m
 
 We can see that the cluster on VMs is installed successful.
 
-<<<<<<< HEAD
 ## Cluster Scaling
 
-With Kurator, you can declaratively add, remove, or replace multiple worker nodes on VMs.
+With Kurator, you can declarative add, remove, or replace multiple worker nodes on VMs.
 
 When performing scaling, you should avoid modifying the hostname in case the same VM has multiple names configured.
 
@@ -276,7 +275,7 @@ $ kubectl get pod -A | grep -i scale-up
 default              cc-customcluster-scale-up                               1/1     Running     0          103s
 ```
 
-### scaling down
+### Scaling down
 
 Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove the worker nodes on VMs.
 
@@ -288,7 +287,7 @@ default              cc-customcluster-scale-down                           1/1  
 ```
 
 
-### Repalcing the worker nodes
+### Replacing the worker nodes
 
 If the desired state includes both adding and deleting nodes, Kurator will automatically create the pod for adding nodes first, wait for it to complete, and then automatically create the pod for deleting nodes, ultimately achieving the desired state.
 
