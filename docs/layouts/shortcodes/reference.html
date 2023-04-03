@@ -1,0 +1,21 @@
+{{- /* This will try to find a resource in the "references"  top-level content directory */ -}}
+{{- $name := .Get 0 -}}
+{{- $position := .Position }}
+
+{{- if $name -}}
+    {{- $bundle := .Page.GetPage "/references" -}}
+    {{- with $bundle -}}
+        {{- $name := printf "%s.md" $name -}}
+        {{- $pattern := printf "%s*" $name -}}
+        {{- $resource := $bundle.Resources.GetMatch $pattern -}}
+        {{- with $resource -}}
+            {{- .Content | safeHTML  -}}
+        {{- else -}}
+            {{- errorf "Could not find references '%s' (%s)" $name $position -}}
+        {{- end -}}
+    {{- else -}}
+        {{- errorf "'references' directory was not found (%s)" $position -}}
+    {{- end -}}
+{{- else -}}
+    {{- errorf "Missing name in references (%s)" $position -}}
+{{- end -}}
