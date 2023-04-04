@@ -15,6 +15,7 @@ require (
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/bramvdbogaerde/go-scp v1.2.0
 	github.com/cert-manager/cert-manager v1.10.0
+	github.com/coreos/go-semver v0.3.0
 	github.com/go-logr/logr v1.2.3
 	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
@@ -95,7 +96,6 @@ require (
 	github.com/cncf/xds/go v0.0.0-20220520190051-1e77728a1eaa // indirect
 	github.com/coredns/caddy v1.1.0 // indirect
 	github.com/coredns/corefile-migration v1.0.17 // indirect
-	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect

@@ -62,6 +62,7 @@ type NodeInfo struct {
 // ClusterInfo represents the information of the cluster on VMs.
 type ClusterInfo struct {
 	WorkerNodes []NodeInfo
+	KubeVersion string
 }
 
 const (
@@ -84,13 +85,23 @@ const (
 	CustomClusterScaleDownAction customClusterManageAction = "scale-down"
 	KubesprayScaleDownCMDPrefix  customClusterManageCMD    = KubesprayCMDPrefix + "remove-node.yml -vvv -e skip_confirmation=yes"
 
-	// TODO: support custom this in CustomCluster/CustomMachine
-	DefaultKubesprayImage = "quay.io/kubespray/kubespray:v2.20.0"
+	CustomClusterUpgradeAction customClusterManageAction = "upgrade"
+	KubesprayUpgradeCMDPrefix  customClusterManageCMD    = KubesprayCMDPrefix + "upgrade-cluster.yml -vvv "
 
 	// CustomClusterFinalizer is the finalizer applied to crd.
 	CustomClusterFinalizer = "customcluster.cluster.kurator.dev"
 	// custom configmap finalizer requires at least one slash.
 	CustomClusterConfigMapFinalizer = CustomClusterFinalizer + "/configmap"
+
+	// KubeVersionPrefix is the prefix string of version of kubernetes
+	KubeVersionPrefix = "kube_version: "
+	// DefaultKubesprayVersion is the version of Kubespray used by the customCluster manager worker pod.
+	DefaultKubesprayVersion = "v2.20.0"
+	// DefaultMaxVersion is the max version of Kubernetes that is supported by DefaultKubesprayVersion.
+	DefaultMaxVersion = "v1.24.6"
+	// DefaultMinVersion is the min version of Kubernetes that is supported by DefaultKubesprayVersion.
+	DefaultMinVersion = "v1.22.0"
+	// TODO: support more version to remove limited DefaultMaxVersion and DefaultMinVersion
 )
 
 // SetupWithManager sets up the controller with the Manager.
@@ -253,21 +264,30 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 	log := ctrl.LoggerFrom(ctx)
 	phase := customCluster.Status.Phase
 
+	// desiredClusterInfo contains information retrieved from configured CRDs such as "customMachine" and "kcp".
+	desiredClusterInfo := getDesiredClusterInfo(customMachine, kcp)
+	// desiredVersion is the one recorded in kcp.version.
+	desiredVersion := desiredClusterInfo.KubeVersion
+	// If the desired version is not within a specified range of versions, return directly.
+	if !isSupportedVersion(desiredVersion, DefaultMinVersion, DefaultMaxVersion) {
+		log.Error(fmt.Errorf("the kubespray image version is %s. Then the minimum supported version of Kubernetes is %s, and the maximum is %s. However, the desired version of Kubernetes is %s ", DefaultKubesprayVersion, DefaultMinVersion, DefaultMaxVersion, desiredVersion), "")
+		return ctrl.Result{}, nil
+	}
+
 	// Handle cluster provision.
 	if phase == v1alpha1.PendingPhase || phase == v1alpha1.ProvisionFailedPhase || phase == v1alpha1.ProvisioningPhase {
 		return r.reconcileProvision(ctx, customCluster, customMachine, cluster, kcp)
 	}
 
-	// desiredClusterInfo contains information retrieved from configured CRDs such as "customMachine" and "kcp".
-	var desiredClusterInfo *ClusterInfo
 	// provisionedClusterInfo contains information retrieved from configmap that represent provisioned cluster.
 	var provisionedClusterInfo *ClusterInfo
 	// scaleUpWorkerNodes is the nodes where desiredCluster is more than provisionedCluster.
 	var scaleUpWorkerNodes []NodeInfo
 	// scaleUpWorkerNodes is the nodes where desiredCluster is less than provisionedCluster.
 	var scaleDownWorkerNodes []NodeInfo
+	// provisionedVersion is the one recorded in configmap cluster-config.data.kube_version.
+	var provisionedVersion string
 	if phase == v1alpha1.ProvisionedPhase {
-		desiredClusterInfo = getDesiredClusterInfo(customMachine, kcp)
 		var err error
 		provisionedClusterInfo, err = r.getProvisionedClusterInfo(ctx, customCluster)
 		if err != nil {
@@ -276,6 +296,7 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 		}
 		scaleUpWorkerNodes = findScaleUpWorkerNodes(provisionedClusterInfo.WorkerNodes, desiredClusterInfo.WorkerNodes)
 		scaleDownWorkerNodes = findScaleDownWorkerNodes(provisionedClusterInfo.WorkerNodes, desiredClusterInfo.WorkerNodes)
+		provisionedVersion = provisionedClusterInfo.KubeVersion
 	}
 
 	// Handle worker nodes scaling.
@@ -285,6 +306,19 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 	}
 	if (phase == v1alpha1.ProvisionedPhase && len(scaleDownWorkerNodes) != 0) || phase == v1alpha1.ScalingDownPhase {
 		return r.reconcileScaleDown(ctx, customCluster, customMachine, scaleDownWorkerNodes)
+	}
+
+	// Handle cluster upgrade.
+	if desiredVersion != provisionedVersion {
+		// If the desired version upgrade is not supported by Kubeadm, return directly.
+		if !isKubeadmUpgradeSupported(provisionedVersion, desiredVersion) {
+			log.Error(fmt.Errorf(" skipping MINOR versions when upgrading is unsupported with kubeadm, you can not upgrade kubernetes version from %s to %s. ", provisionedVersion, desiredVersion), "")
+			return ctrl.Result{}, nil
+		}
+		// Start reconcileUpgrade.
+		if phase == v1alpha1.ProvisionedPhase || phase == v1alpha1.UpgradingPhase {
+			return r.reconcileUpgrade(ctx, customCluster, desiredVersion)
+		}
 	}
 
 	return ctrl.Result{}, nil
