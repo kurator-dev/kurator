@@ -162,3 +162,8 @@ gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and D
 .PHONY: gen-api-doc
 gen-api-doc: ## Generate API documentation
 	hack/gen-api-doc.sh
+
+.PHONY: release-artifacts
+release-artifacts: ## Release artifacts
+release-artifacts: build docker gen-chart
+	VERSION=$(VERSION) OUT_BASE_PATH=$(OUT_BASE_PATH) hack/release-artifacts.sh
