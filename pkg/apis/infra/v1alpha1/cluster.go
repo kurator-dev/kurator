@@ -52,6 +52,17 @@ type CustomClusterSpec struct {
 
 	// CNIConfig is the configuration for the CNI of the cluster.
 	CNI CNIConfig `json:"cni"`
+
+	// ControlPlaneConfig contains control plane configuration.
+	ControlPlaneConfig ControlPlaneConfig `json:"controlPlaneConfig,omitempty"`
+}
+
+type ControlPlaneConfig struct {
+	// same as `ControlPlaneEndpoint`
+	Address string `json:"address"`
+	// CertSANs sets extra Subject Alternative Names for the API Server signing cert.
+	// +optional
+	CertSANs []string `json:"certSANs,omitempty"`
 }
 
 type CNIConfig struct {

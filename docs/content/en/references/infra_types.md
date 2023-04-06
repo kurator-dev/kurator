@@ -28,6 +28,21 @@ _Appears in:_
 | `type` _string_ | Type is the type of CNI. The default value is calico and can be ["calico", "cilium", "canal", "flannel"] |
 
 
+#### ControlPlaneConfig
+
+
+
+
+
+_Appears in:_
+- [CustomClusterSpec](#customclusterspec)
+
+| Field | Description |
+| --- | --- |
+| `address` _string_ | same as `ControlPlaneEndpoint` |
+| `certSANs` _string array_ | CertSANs sets extra Subject Alternative Names for the API Server signing cert. |
+
+
 #### CustomCluster
 
 
@@ -68,6 +83,7 @@ _Appears in:_
 | --- | --- |
 | `machineRef` _[ObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectreference-v1-core)_ | MachineRef is the reference of nodes for provisioning a kurator cluster. |
 | `cni` _[CNIConfig](#cniconfig)_ | CNIConfig is the configuration for the CNI of the cluster. |
+| `controlPlaneConfig` _[ControlPlaneConfig](#controlplaneconfig)_ | ControlPlaneConfig contains control plane configuration. |
 
 
 

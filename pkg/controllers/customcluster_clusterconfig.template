@@ -5,3 +5,18 @@ download_localhost: true
 # network
 kube_pods_subnet: {{ .PodCIDR }}
 kube_network_plugin: {{ .CNIType }}
+
+{{if .ControlPlaneAddress}}
+kube_vip_enabled: true
+kube_proxy_strict_arp: true
+kube_vip_controlplane_enabled: true
+kube_vip_address: {{ .ControlPlaneAddress }}
+loadbalancer_apiserver:
+  address: {{ .ControlPlaneAddress }}
+  port: 6443
+kube_vip_services_enabled: false
+kube_vip_arp_enabled: true
+apiserver_loadbalancer_domain_name: {{ .ControlPlaneAddress }}
+supplementary_addresses_in_ssl_keys: [{{ .ControlPlaneCertSANs }}]
+kube_vip_lb_enable: true
+{{end}}
