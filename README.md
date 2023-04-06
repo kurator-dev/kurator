@@ -1,5 +1,7 @@
 # Kurator
 
+## Overview
+
 Kurator is an open source distributed cloud native platform that helps users to build their own distributed cloud native infrastructure and facilitates enterprise digital transformation.
 
 Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](https://github.com/prometheus/prometheus), etc.
@@ -11,113 +13,28 @@ It provides powerful capabilities to multi-cloud and multi-cluster, including:
 - Unified Traffic Management
 - Unified Telemetry
 
-## Quick start
+## Advantages
 
-This guide will cover:
+- Infrastructure-as-Code: declarative way of infrastructure(cluster, node, vpc, etc) management on cloud, edge or on premises.
+- Out of box: one button to install cloud native software stacks
+- Unified management of clusters with fleet
 
-- Install Kurator
-- Install Karmada and join a Kubernetes member cluster
-- Install Istio
-- Install KubeEdge and join an edge node
-- Install Volcano
-- Install Prometheus
+## Architecture
 
-### Install Kurator
+<div  align="center">
+    <img src="./docs/images/kurator.png" width = "85%" align="center">
+</div>
 
-**Clone this repo to your machine:**
+## Documentation
 
-```console
-git clone https://github.com/kurator-dev/kurator.git
-```
+Please visit [kurator website](https://kurator.dev/docs/) for our documentation.
 
-**Change to the Kurator directory:**
+## Contact
 
-```console
-cd kurator
-```
+If you have any question, feel free to reach out to us in the following ways:
 
-**Build Kurator:**
-
-```console
-make kurator
-```
-
-An executable file named `kurator` will be created at out/$(GOOS)-$(GOARCH)/ 
-
-**Put the `kurator`  to the executable directory:**
-
-```console
-cp out/linux-amd64/kurator /usr/bin/
-```
-
-### Local env setup
-
-```console
-hack/local-dev-setup.sh
-```
-
-This script will create three clusters for you, one is used to host Karmada control plane and the other two will be joined as member clusters.
-
-
-### Install Karmada
-
-**Install Karmada control plane:**
-
-```console
-kurator install karmada --kubeconfig=/root/.kube/kurator-host.config
-```
-
-**Join cluster `member1`:**
-
-```console
-kurator join karmada member1 \
-    --cluster-kubeconfig=/root/.kube/kurator-members.config \
-    --cluster-context=kurator-member1
-```
-
-**Join cluster `member2`:**
-
-```console
-kurator join karmada member2 \
-    --cluster-kubeconfig=/root/.kube/kurator-members.config \
-    --cluster-context=kurator-member2
-```
-
-### Install Istio
-
-```console
-kurator install istio --primary member1 --remote member2
-```
-
-### Install KubeEdge
-
-**Install KubeEdge control plane:**
-
-```console
-kurator install kubeedge --cluster member1 --advertise-address=<ip>
-```
-
-**Join edge node:**
-
-```console
-kurator join edge  --cluster member1 \
-    --cloudcore-address=<ip:port> \
-    --node-ip= <node ip>\
-    -p="${NODE_PWD}"
-```
-
-### Install Volcano
-
-```console
-kurator install volcano
-```
-
-### Install Prometheus
-
-```console
-kurator install prometheus --primary member1
-```
-
+- [mailing group](https://groups.google.com/g/kuator-dev)
+- [slack](https://join.slack.com/t/kurator-hq/shared_invite/zt-1sowqzfnl-Vu1AhxgAjSr1XnaFoogq0A)
 
 ## Contributing
 
