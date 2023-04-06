@@ -102,7 +102,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 	}
 
 	// pod not found, create it
-	initCmd := "kubectl-karmada init -n " + namespace
+	initCmd := "karmadactl init -n " + namespace
 	pod = corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -191,7 +191,7 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 	}
 
 	// pod not found, create it
-	initCmd := "echo y | kubectl-karmada deinit -n " + namespace
+	initCmd := "echo y | karmadactl deinit -n " + namespace
 	pod = corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
