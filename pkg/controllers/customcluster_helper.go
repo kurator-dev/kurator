@@ -125,6 +125,8 @@ type ConfigTemplateContent struct {
 	PodCIDR     string
 	// CNIType is the CNI plugin of the cluster on VMs. The default plugin is calico and can be ["calico", "cilium", "canal", "flannel"]
 	CNIType string
+	// VIPConfig is the config of VIP for HA when the EnableVIP is set to "true".
+	VIPConfig string
 	// TODO: support other kubernetes configs
 }
 
@@ -135,7 +137,29 @@ func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPl
 		KubeVersion: kcp.Spec.Version,
 		CNIType:     cc.Spec.CNI.Type,
 	}
+	// Using kube-vip as HA config
+	if cc.Spec.EnableVIP {
+		configContent.VIPConfig = generateVIPConfig(cc)
+	}
 	return configContent
+}
+
+func generateVIPConfig(cc *v1alpha1.CustomCluster) string {
+	vipAddress := cc.Spec.VIP.Address
+	vipPort := cc.Spec.VIP.Port
+	lbDomain := cc.Spec.VIP.LBDomain
+	tml := "kube_proxy_strict_arp: true\n" +
+		"kube_vip_enabled: true\n" +
+		"kube_vip_controlplane_enabled: true\n" +
+		"kube_vip_address: %s\n" +
+		"loadbalancer_apiserver:\n" +
+		"  address: %s\n" +
+		"  port: %s\n" +
+		"kube_vip_services_enabled: false\n" +
+		"kube_vip_arp_enabled: true\n" +
+		"apiserver_loadbalancer_domain_name: %s"
+	VIPConfigStr := fmt.Sprintf(tml, vipAddress, vipAddress, vipPort, lbDomain)
+	return VIPConfigStr
 }
 
 func GetHostsContent(customMachine *v1alpha1.CustomMachine) *HostTemplateContent {
