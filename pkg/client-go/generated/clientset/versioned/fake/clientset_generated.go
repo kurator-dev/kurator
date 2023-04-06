@@ -27,6 +27,8 @@ import (
 	clientset "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
 	fakeclusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1/fake"
+	fleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1"
+	fakefleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1/fake"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
 	fakeinfrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1/fake"
 )
@@ -84,6 +86,11 @@ var (
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
 func (c *Clientset) ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface {
 	return &fakeclusterv1alpha1.FakeClusterV1alpha1{Fake: &c.Fake}
+}
+
+// FleetV1alpha1 retrieves the FleetV1alpha1Client
+func (c *Clientset) FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface {
+	return &fakefleetv1alpha1.FakeFleetV1alpha1{Fake: &c.Fake}
 }
 
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client

@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: kurator-fleet-manager
+  name: kurator-fleet-manager
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kurator-fleet-manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kurator-fleet-manager
+    spec:
+      containers:
+      - args:
+        - --leader-elect
+        - --v={{ .Values.logging.level }}
+        image: {{ .Values.image.hub }}/fleet-manager:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: manager
+        ports:
+        - containerPort: 9440
+          name: healthz
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: healthz
+      serviceAccountName: kurator-fleet-manager
+      terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
