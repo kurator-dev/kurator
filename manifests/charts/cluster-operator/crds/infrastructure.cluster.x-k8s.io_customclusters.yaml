@@ -49,10 +49,21 @@ spec:
                 required:
                 - type
                 type: object
-              enableVIP:
-                description: EnableVIP setting to "true" indicates the selection of
-                  kube-vip for achieving High Availability (HA).
-                type: boolean
+              controlPlaneConfig:
+                description: ControlPlaneConfig contains control plane configuration.
+                properties:
+                  address:
+                    description: same as `ControlPlaneEndpoint`
+                    type: string
+                  certSANs:
+                    description: CertSANs sets extra Subject Alternative Names for
+                      the API Server signing cert.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - address
+                type: object
               machineRef:
                 description: MachineRef is the reference of nodes for provisioning
                   a kurator cluster.
@@ -88,21 +99,6 @@ spec:
                     type: string
                   uid:
                     description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
-                    type: string
-                type: object
-              vip:
-                description: VIPConfig is the config of VIP for HA when the EnableVIP
-                  is set to "true".
-                properties:
-                  address:
-                    description: Address is the VIP address for kube-vip.
-                    type: string
-                  lbDomain:
-                    description: LBDomain is the domain name of API server loadBalancer.
-                      Default value is "lb-apiserver.kubernetes.local"
-                    type: string
-                  port:
-                    description: Port is the VIP Port for kube-vip.
                     type: string
                 type: object
             required:

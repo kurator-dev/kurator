@@ -53,22 +53,16 @@ type CustomClusterSpec struct {
 	// CNIConfig is the configuration for the CNI of the cluster.
 	CNI CNIConfig `json:"cni"`
 
-	// EnableVIP setting to "true" indicates the selection of kube-vip for achieving High Availability (HA).
-	EnableVIP bool `json:"enableVIP,omitempty"`
-
-	// VIPConfig is the config of VIP for HA when the EnableVIP is set to "true".
-	VIP VIPConfig `json:"vip,omitempty"`
+	// ControlPlaneConfig contains control plane configuration.
+	ControlPlaneConfig ControlPlaneConfig `json:"controlPlaneConfig,omitempty"`
 }
 
-type VIPConfig struct {
-	// Address is the VIP address for kube-vip.
-	Address string `json:"address,omitempty"`
-
-	// Port is the VIP Port for kube-vip.
-	Port string `json:"port,omitempty"`
-
-	// LBDomain is the domain name of API server loadBalancer. Default value is "lb-apiserver.kubernetes.local"
-	LBDomain string `json:"lbDomain,omitempty"`
+type ControlPlaneConfig struct {
+	// same as `ControlPlaneEndpoint`
+	Address string `json:"address"`
+	// CertSANs sets extra Subject Alternative Names for the API Server signing cert.
+	// +optional
+	CertSANs []string `json:"certSANs,omitempty"`
 }
 
 type CNIConfig struct {

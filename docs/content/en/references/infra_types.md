@@ -28,6 +28,21 @@ _Appears in:_
 | `type` _string_ | Type is the type of CNI. The default value is calico and can be ["calico", "cilium", "canal", "flannel"] |
 
 
+#### ControlPlaneConfig
+
+
+
+
+
+_Appears in:_
+- [CustomClusterSpec](#customclusterspec)
+
+| Field | Description |
+| --- | --- |
+| `address` _string_ | same as `ControlPlaneEndpoint` |
+| `certSANs` _string array_ | CertSANs sets extra Subject Alternative Names for the API Server signing cert. |
+
+
 #### CustomCluster
 
 
@@ -68,8 +83,7 @@ _Appears in:_
 | --- | --- |
 | `machineRef` _[ObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectreference-v1-core)_ | MachineRef is the reference of nodes for provisioning a kurator cluster. |
 | `cni` _[CNIConfig](#cniconfig)_ | CNIConfig is the configuration for the CNI of the cluster. |
-| `enableVIP` _boolean_ | EnableVIP setting to "true" indicates the selection of kube-vip for achieving High Availability (HA). |
-| `vip` _[VIPConfig](#vipconfig)_ | VIPConfig is the config of VIP for HA when the EnableVIP is set to "true". |
+| `controlPlaneConfig` _[ControlPlaneConfig](#controlplaneconfig)_ | ControlPlaneConfig contains control plane configuration. |
 
 
 
@@ -125,21 +139,5 @@ _Appears in:_
 | `zone` _string_ | Region specifies the zone where the machine resides. |
 | `sshKey` _[ObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.26/#objectreference-v1-core)_ | SSHKeyName is the name of the ssh key to attach to the instance. Valid values are empty string (do not use SSH keys), a valid SSH key name, or omitted (use the default SSH key name) |
 | `labels` _object (keys:string, values:string)_ | AdditionalTags is an optional set of tags to add to an instance. |
-
-
-#### VIPConfig
-
-
-
-
-
-_Appears in:_
-- [CustomClusterSpec](#customclusterspec)
-
-| Field | Description |
-| --- | --- |
-| `address` _string_ | Address is the VIP address for kube-vip. |
-| `port` _string_ | Port is the VIP Port for kube-vip. |
-| `lbDomain` _string_ | LBDomain is the domain name of API server loadBalancer. Default value is "lb-apiserver.kubernetes.local" |
 
 
