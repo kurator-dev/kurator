@@ -5,3 +5,5 @@ download_localhost: true
 # network
 kube_pods_subnet: {{ .PodCIDR }}
 kube_network_plugin: {{ .CNIType }}
+
+{{ .VIPConfig }}
