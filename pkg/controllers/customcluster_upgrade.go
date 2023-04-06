@@ -172,22 +172,22 @@ func (r *CustomClusterController) updateKubeVersion(ctx context.Context, customC
 
 // getUpdatedKubeVersionConfigData get the configuration data that represents the upgraded version of Kubernetes.
 func getUpdatedKubeVersionConfigData(clusterConfig *corev1.ConfigMap, newKubeVersion string) string {
-	clusterConfigDate := strings.TrimSpace(clusterConfig.Data[ClusterConfigName])
+	clusterConfigData := strings.TrimSpace(clusterConfig.Data[ClusterConfigName])
 
 	// add KubeVersionPrefix to avoid confusion with other configurations.
 	oldStr := KubeVersionPrefix + getKubeVersionFromCM(clusterConfig)
 	newStr := KubeVersionPrefix + newKubeVersion
 
-	return strings.TrimSpace(strings.Replace(clusterConfigDate, oldStr, newStr, -1))
+	return strings.TrimSpace(strings.Replace(clusterConfigData, oldStr, newStr, -1))
 }
 
 // getKubeVersionFromCM get the provisioned k8s version from the cluster-config configmap.
 func getKubeVersionFromCM(clusterConfig *corev1.ConfigMap) string {
-	clusterConfigDate := clusterConfig.Data[ClusterConfigName]
-	clusterConfigDate = strings.TrimSpace(clusterConfigDate)
+	clusterConfigData := clusterConfig.Data[ClusterConfigName]
+	clusterConfigData = strings.TrimSpace(clusterConfigData)
 
 	zp := regexp.MustCompile(`[\t\n\f\r]`)
-	clusterHostDateArr := zp.Split(clusterConfigDate, -1)
+	clusterHostDateArr := zp.Split(clusterConfigData, -1)
 
 	for _, configStr := range clusterHostDateArr {
 		if strings.HasPrefix(configStr, KubeVersionPrefix) {
