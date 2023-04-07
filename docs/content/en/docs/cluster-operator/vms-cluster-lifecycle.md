@@ -1,5 +1,5 @@
 ---
-title: " Lifecycle management of cluster on VMs "
+title: "Lifecycle management of cluster on VMs"
 linkTitle: "Lifecycle management of cluster on VMs"
 weight: 20
 description: >
@@ -200,7 +200,7 @@ We can see that the cluster on VMs is installed successful.
 
 ## Cluster Scaling
 
-With Kurator, you can declarative add, remove, or replace multiple worker nodes on VMs.
+With Kurator, you can declaratively add, remove, or replace multiple worker nodes on VMs.
 
 When performing scaling, you should avoid modifying the hostname in case the same VM has multiple names configured.
 
@@ -301,45 +301,41 @@ default              cc-customcluster-scale-down                         1/1    
 
 ## Cluster upgrading
 
-With Kurator, you can easily upgrade the Kubernetes version of your cluster using a declarative approach.
+With Kurator, you can easily upgrade the Kubernetes version of your cluster with a declarative approach.
 
-All you need to do is declare the desired Kubernetes version on the kcp, and Kurator will complete the cluster upgrade without any external intervention.
+All you need to do is declaring the desired Kubernetes version on the kcp, and Kurator will complete the cluster upgrade without any external intervention.
 
-Since the upgrade implementation depends on kubeadm, it is recommended to avoid skipping minor versions. For example, you can upgrade from 1.22.0 to 1.23.9, but you **cannot** upgrade from 1.22.0 to 1.24.0 in one step.
+Since the upgrade implementation depends on kubeadm, it is recommended to avoid skipping minor versions. For example, you can upgrade from v1.22.0 to v1.23.9, but you **cannot** upgrade from v1.22.0 to v1.24.0 in one step.
 
-To declare the desired upgrading version, you can make a copy of the cc-kcp.yaml file and edit it to reflect the desired upgrading version:
+To declare the desired upgrading version, you can just edit the CRD of kcp to reflect the desired upgrading version:
 
 ```console
-$ cp examples/infra/my-customcluster/cc-kcp.yaml examples/infra/my-customcluster/upgrade.yaml
-$ vi examples/infra/my-customcluster/upgrade.yaml
-apiVersion: controlplane.cluster.x-k8s.io/v1beta1
-kind: KubeadmControlPlane
-metadata:
-  name: cc-kcp
-  namespace: default
+# you may need replace "cc-kcp" to your kcp crd
+$ kubectl edit kcp cc-kcp 
+  ...
 spec:
   kubeadmConfigSpec:
-    clusterConfiguration:
-    initConfiguration:
-    joinConfiguration:
+    format: cloud-config
   machineTemplate:
     infrastructureRef:
       apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
       kind: customMachine
       name: cc-custommachine
       namespace: default
+    metadata: {}
+  replicas: 1
+  rolloutStrategy:
+    rollingUpdate:
+      maxSurge: 1
+    type: RollingUpdate
   # edit the version to desired upgrading version
   version: v1.24.6
+status:
+  conditions:
+  ...
 ```
 
-After editing the cc-kcp.yaml file, apply the declaration:
-
-```console
-$ kubectl apply -f examples/infra/my-customcluster/upgrade.yaml
-kubeadmcontrolplane.controlplane.cluster.x-k8s.io/cc-kcp configured
-```
-
-To view the running pods, use the following command:
+To confirm the upgrade worker is running, use the following command:
 
 ```console
 $ kubectl get pod -A | grep -i upgrade
