@@ -117,7 +117,6 @@ func run(ctx context.Context, opts *options.Options) error {
 		LeaderElectionID:           "kurator-fleet-manager-leader-elect",
 		LeaderElectionNamespace:    opts.LeaderElectionNamespace,
 		EventBroadcaster:           broadcaster,
-		HealthProbeBindAddress:     opts.HealthAddr,
 	})
 	if err != nil {
 		log.Error(err, "unable to create manager")
