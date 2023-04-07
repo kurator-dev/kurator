@@ -206,7 +206,7 @@ If you **don't** want to use pre-installed local nginx and hope to achieve bette
 
 In this mode, Kurator utilizes the capabilities of [kube-vip](https://github.com/kube-vip/kube-vip) to enable load-balancing of incoming traffic across multiple control-plane replicas using VIP.
 
-With Kurator, you only need to add a few additional variables in the CRD, then you will get to a high-availability cluster based on kube-vip. The remaining part of this section will explain how to achieve this.
+With Kurator, you only need to add a few additional variables in the CRD, then you will get a high-availability cluster based on kube-vip after init worker finished. The remaining part of this section will explain how to achieve this.
 
 
 Before proceeding, make sure that you have multiple control plane nodes and have configured them in examples/infra/my-customcluster/cc-custommachine.yaml.
@@ -240,7 +240,7 @@ spec:
 After editing the cc-customcluster.yaml file, you can apply the configuration by executing the following command, just like above cluster deploying:
 
 ```console
-$ kubectl apply -f examples/infra/my-customcluster/
+kubectl apply -f examples/infra/my-customcluster/
 ```
 
 To confirm your kube-vip installation, you can log into one of the master nodes and view the kube-vip initialization by running the following command:
