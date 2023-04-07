@@ -198,6 +198,61 @@ kube-system   nodelocaldns-fpfxj                 1/1     Running   0          8m
 
 We can see that the cluster on VMs is installed successful.
 
+## HA for control plane
+
+The cluster installed by Kurator based on kubespray includes a [pre-installed local nginx](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/ha-mode.md) on every non-master Kubernetes node.
+
+If you **don't** want to use pre-installed local nginx and hope to achieve better HA effects, you can also choose to use Kurator to create a cluster bounded with VIP (virtual IPAddress).
+
+In this mode, Kurator utilizes the capabilities of [kube-vip](https://github.com/kube-vip/kube-vip) to enable load-balancing of incoming traffic across multiple control-plane replicas using VIP.
+
+With Kurator, you only need to add a few additional variables in the CRD, then you will get a high-availability cluster based on kube-vip after init worker finished. The remaining part of this section will explain how to achieve this.
+
+
+Before proceeding, make sure that you have multiple control plane nodes and have configured them in examples/infra/my-customcluster/cc-custommachine.yaml.
+
+Then, declare the VIP configuration in the customcluster.yaml file. You can edit your configuration as follows.
+
+```console
+$ vi examples/infra/my-customcluster/cc-customcluster.yaml
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: CustomCluster
+metadata:
+  name: cc-customcluster
+  namespace: default
+spec:
+  cni:
+    type: cilium
+  # add config
+  controlPlaneConfig:
+    # address is your VIP, assume your VIP is 192.x.x.0
+    address: 192.x.x.0
+    # optional, sets extra Subject Alternative Names for the API Server signing cert. 
+    # If you don't have any want to add, you can directly remove this field.
+    certSANs: [200.x.x.1,200.x.x.2]
+  machineRef:
+    apiVersion: cluster.kurator.dev/v1alpha1
+    kind: CustomMachine
+    name: cc-custommachine
+    namespace: default
+```
+
+After editing the cc-customcluster.yaml file, you can apply the configuration by executing the following command, just like above cluster deploying:
+
+```console
+kubectl apply -f examples/infra/my-customcluster/
+```
+
+To confirm your kube-vip installation, you can log into one of the master nodes and view the kube-vip initialization by running the following command:
+
+```console
+$ kubectl get po -A | grep kube-vip
+kube-system   kube-vip-master1                  1/1     Running   0               13m
+kube-system   kube-vip-master2                  1/1     Running   0               9m51s
+kube-system   kube-vip-master3                  1/1     Running   0               9m6s
+```
+
+
 ## Cluster Scaling
 
 With Kurator, you can declaratively add, remove, or replace multiple worker nodes on VMs.
