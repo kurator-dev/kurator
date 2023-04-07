@@ -1,9 +1,9 @@
 ---
-title: "Deploy Cluster on VMs"
-linkTitle: "Deploy Cluster on VMs"
+title: "Lifecycle management of cluster on VMs"
+linkTitle: "Lifecycle management of cluster on VMs"
 weight: 20
 description: >
-  The easiest way to deploy cluster on VMs with Kurator.
+  The easiest way to deploy a cluster on VMs, and manage the cluster lifecycle with Kurator.
 ---
 
 You can easily manage the VMs cluster with Kurator, including the installation, deletion, upgrade and scale of the VMs cluster.
@@ -174,7 +174,7 @@ kubectl logs cc-customcluster-init
 
 When the installation of cluster is done, the status of the init worker will change from "running" to "complete". The phase of customCluster will also change into "succeeded".
 
-You can login the master node and confirm your installation. Here is an example using cilium as CNI plugin.
+You can log in the master node and confirm your installation. Here is an example using cilium as CNI plugin.
 
 ```console
 $ kubectl get po -A
@@ -275,7 +275,7 @@ $ kubectl get pod -A | grep -i scale-up
 default              cc-customcluster-scale-up                               1/1     Running     0          103s
 ```
 
-### scaling down
+### Scaling down
 
 Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove the worker nodes on VMs.
 
@@ -287,7 +287,7 @@ default              cc-customcluster-scale-down                           1/1  
 ```
 
 
-### Repalcing the worker nodes
+### Replacing the worker nodes
 
 If the desired state includes both adding and deleting nodes, Kurator will automatically create the pod for adding nodes first, wait for it to complete, and then automatically create the pod for deleting nodes, ultimately achieving the desired state.
 
@@ -299,7 +299,50 @@ default              cc-customcluster-scale-up                           1/1    
 default              cc-customcluster-scale-down                         1/1     Running     0          37s
 ```
 
-## Delete the k8s cluster on VMs
+## Cluster upgrading
+
+With Kurator, you can easily upgrade the Kubernetes version of your cluster with a declarative approach.
+
+All you need to do is declaring the desired Kubernetes version on the kcp, and Kurator will complete the cluster upgrade without any external intervention.
+
+Since the upgrade implementation depends on kubeadm, it is recommended to avoid skipping minor versions. For example, you can upgrade from v1.22.0 to v1.23.9, but you **cannot** upgrade from v1.22.0 to v1.24.0 in one step.
+
+To declare the desired upgrading version, you can just edit the CRD of kcp to reflect the desired upgrading version:
+
+```console
+# you may need replace "cc-kcp" to your kcp crd
+$ kubectl edit kcp cc-kcp 
+  ...
+spec:
+  kubeadmConfigSpec:
+    format: cloud-config
+  machineTemplate:
+    infrastructureRef:
+      apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+      kind: customMachine
+      name: cc-custommachine
+      namespace: default
+    metadata: {}
+  replicas: 1
+  rolloutStrategy:
+    rollingUpdate:
+      maxSurge: 1
+    type: RollingUpdate
+  # edit the version to desired upgrading version
+  version: v1.24.6
+status:
+  conditions:
+  ...
+```
+
+To confirm the upgrade worker is running, use the following command:
+
+```console
+$ kubectl get pod -A | grep -i upgrade
+default              cc-customcluster-upgrade                                1/1     Running     0               18s
+```
+
+## Delete the k8s cluster for VMs
 
 If you no longer need cluster on VMs and want to delete the cluster, you only need to delete the cluster object.
 
