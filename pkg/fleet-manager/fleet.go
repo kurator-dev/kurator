@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
@@ -69,7 +70,14 @@ func (f *FleetManager) SetupWithManager(mgr ctrl.Manager) error {
 
 	if err := c.Watch(
 		&source.Kind{Type: &corev1.Pod{}},
-		handler.EnqueueRequestsFromMapFunc(f.PodToFleetFunc),
+		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
+	); err != nil {
+		return fmt.Errorf("failed adding Watch for Secret to controller manager: %v", err)
+	}
+
+	if err := c.Watch(
+		&source.Kind{Type: &clusterv1alpha1.Cluster{}},
+		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for Secret to controller manager: %v", err)
 	}
@@ -77,7 +85,7 @@ func (f *FleetManager) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-func (f *FleetManager) PodToFleetFunc(o client.Object) []ctrl.Request {
+func (f *FleetManager) objectToFleetFunc(o client.Object) []ctrl.Request {
 	labels := o.GetLabels()
 	if labels[FleetLabel] != "" {
 		return []ctrl.Request{

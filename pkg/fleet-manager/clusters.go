@@ -95,6 +95,7 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 		return result, fmt.Errorf("build restconfig for controlplane failed %v", err)
 	}
 	for _, cluster := range readyClusters {
+		// TODO: check if the cluster is already joined
 		err := f.joinCluster(ctx, controlplaneRestConfig, &cluster)
 		if err != nil {
 			log.Error(err, "Join cluster failed")
