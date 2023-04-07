@@ -87,6 +87,7 @@ var targetWorkerNodesSingle = []NodeInfo{
 
 var targetClusterInfoSingle = &ClusterInfo{
 	WorkerNodes: targetWorkerNodesSingle,
+	KubeVersion: "v1.20.0",
 }
 
 var targetWorkerNodesMulti = []NodeInfo{
@@ -104,6 +105,7 @@ var targetWorkerNodesMulti = []NodeInfo{
 
 var targetClusterInfoMulti = &ClusterInfo{
 	WorkerNodes: targetWorkerNodesMulti,
+	KubeVersion: "v1.25.0",
 }
 
 func TestGetWorkerNodesFromCustomMachine(t *testing.T) {
