@@ -25,7 +25,6 @@ type Options struct {
 	EnableLeaderElection    bool
 	LeaderElectionNamespace string
 	ProfilerAddress         string
-	HealthAddr              string
 	Concurrency             int
 }
 
@@ -58,12 +57,6 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 		"Bind address to expose the pprof profiler (e.g. localhost:6060)",
 	)
 
-	fs.StringVar(
-		&opt.HealthAddr,
-		"health-addr",
-		":9440",
-		"The address the health endpoint binds to.",
-	)
 	fs.IntVar(
 		&opt.Concurrency,
 		"concurrency",
