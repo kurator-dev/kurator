@@ -77,7 +77,7 @@ lint: golangci-lint lint-copyright lint-markdown lint-shellcheck
 
 .PHONY: lint-markdown
 lint-markdown:
-	markdownlint docs --ignore docs/install-components --ignore docs/node_modules -c common/config/mdl.json
+	markdownlint docs --ignore docs/content/en/references --ignore docs/node_modules -c common/config/mdl.json
 	markdownlint ./README.md -c common/config/mdl.json
 
 lint-copyright:
@@ -132,6 +132,7 @@ clean:
 .PHONY: gen
 gen: clean \
 	gen-code \
+	gen-api-doc \
 	tidy \
 	fix-copyright \
 	gen-thanos \
@@ -157,7 +158,7 @@ init-codegen:
 	hack/init-codegen.sh
 
 .PHONY: gen-api
-gen-api: gen-code gen-crd
+gen-api: gen-code gen-crd gen-api-doc
 
 .PHONY: gen-crd
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
@@ -166,3 +167,7 @@ gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomRe
 .PHONY: gen-code
 gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	hack/update-codegen.sh
+
+.PHONY: gen-api-doc
+gen-api-doc: ## Generate API documentation
+	hack/gen-api-doc.sh
