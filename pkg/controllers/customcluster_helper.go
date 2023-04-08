@@ -405,3 +405,11 @@ func getKubesprayImage(kubesprayVersion string) string {
 	imagePath := "quay.io/kubespray/kubespray:" + kubesprayVersion
 	return imagePath
 }
+
+// hasProvisionClusterInfo is used to determine if the current phase is valid for retrieving ProvisionClusterInfo.
+func hasProvisionClusterInfo(phase v1alpha1.CustomClusterPhase) bool {
+	if phase == v1alpha1.ProvisionedPhase || phase == v1alpha1.ScalingDownPhase || phase == v1alpha1.ScalingUpPhase || phase == v1alpha1.UpgradingPhase {
+		return true
+	}
+	return false
+}
