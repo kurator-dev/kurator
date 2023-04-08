@@ -49,6 +49,21 @@ spec:
                 required:
                 - type
                 type: object
+              controlPlaneConfig:
+                description: ControlPlaneConfig contains control plane configuration.
+                properties:
+                  address:
+                    description: same as `ControlPlaneEndpoint`
+                    type: string
+                  certSANs:
+                    description: CertSANs sets extra Subject Alternative Names for
+                      the API Server signing cert.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - address
+                type: object
               machineRef:
                 description: MachineRef is the reference of nodes for provisioning
                   a kurator cluster.

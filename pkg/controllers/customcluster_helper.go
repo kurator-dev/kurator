@@ -125,15 +125,21 @@ type ConfigTemplateContent struct {
 	PodCIDR     string
 	// CNIType is the CNI plugin of the cluster on VMs. The default plugin is calico and can be ["calico", "cilium", "canal", "flannel"]
 	CNIType string
+	// ControlPlaneConfigAddress same as `ControlPlaneEndpoint`.
+	ControlPlaneAddress string
+	// ControlPlaneConfigCertSANs sets extra Subject Alternative Names for the API Server signing cert.
+	ControlPlaneCertSANs string
 	// TODO: support other kubernetes configs
 }
 
 func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane, cc *v1alpha1.CustomCluster) *ConfigTemplateContent {
 	// Add kubespray init config here
 	configContent := &ConfigTemplateContent{
-		PodCIDR:     c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
-		KubeVersion: kcp.Spec.Version,
-		CNIType:     cc.Spec.CNI.Type,
+		PodCIDR:              c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
+		KubeVersion:          kcp.Spec.Version,
+		CNIType:              cc.Spec.CNI.Type,
+		ControlPlaneAddress:  cc.Spec.ControlPlaneConfig.Address,
+		ControlPlaneCertSANs: strings.Join(cc.Spec.ControlPlaneConfig.CertSANs, ","),
 	}
 	return configContent
 }
