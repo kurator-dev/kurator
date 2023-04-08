@@ -287,7 +287,7 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 	var scaleDownWorkerNodes []NodeInfo
 	// provisionedVersion is the one recorded in configmap cluster-config.data.kube_version.
 	var provisionedVersion string
-	if phase == v1alpha1.ProvisionedPhase {
+	if hasProvisionClusterInfo(phase) {
 		var err error
 		provisionedClusterInfo, err = r.getProvisionedClusterInfo(ctx, customCluster)
 		if err != nil {
