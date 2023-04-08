@@ -18,7 +18,7 @@ if ! [ -x "$(command -v crd-ref-docs)" ]; then
     util::install_tools github.com/elastic/crd-ref-docs v0.0.8
 fi
 
-API_GROUPS=("cluster" "infra")
+API_GROUPS=("cluster" "infra" "fleet")
 
 for APIGROUP in "${API_GROUPS[@]}"
 do
