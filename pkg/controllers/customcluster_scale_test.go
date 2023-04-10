@@ -23,51 +23,120 @@ import (
 )
 
 func TestFindScaleUpWorkerNodes(t *testing.T) {
-	scaleUpNodes1 := findScaleUpWorkerNodes(provisionedNodes, curNodes1)
-	assert.Equal(t, []NodeInfo{workerNode2}, scaleUpNodes1)
+	test := []struct {
+		name             string
+		provisionedNodes []NodeInfo
+		desiredNodes     []NodeInfo
+		expected         []NodeInfo
+	}{
+		{
+			name:             "one node same",
+			provisionedNodes: []NodeInfo{workerNode1, workerNode3},
+			desiredNodes:     []NodeInfo{workerNode2, workerNode3},
+			expected:         []NodeInfo{workerNode2},
+		},
+		{
+			name:             "one node more",
+			provisionedNodes: []NodeInfo{workerNode3},
+			desiredNodes:     []NodeInfo{workerNode2, workerNode3},
+			expected:         []NodeInfo{workerNode2},
+		},
+		{
+			name:             "one node less",
+			provisionedNodes: []NodeInfo{workerNode1, workerNode3},
+			desiredNodes:     []NodeInfo{workerNode3},
+			expected:         nil,
+		},
+	}
 
-	scaleUpNodes2 := findScaleUpWorkerNodes(provisionedNodes, curNodes2)
-	assert.Equal(t, []NodeInfo{workerNode2}, scaleUpNodes2)
-
-	scaleUpNodes3 := findScaleUpWorkerNodes(provisionedNodes, curNodes3)
-	assert.Equal(t, 0, len(scaleUpNodes3))
-
-	scaleUpNodes4 := findScaleUpWorkerNodes(nil, curNodes2)
-	assert.Equal(t, curNodes2, scaleUpNodes4)
-
-	scaleUpNodes5 := findScaleUpWorkerNodes(curNodes2, nil)
-	assert.Equal(t, 0, len(scaleUpNodes5))
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := findScaleUpWorkerNodes(tc.provisionedNodes, tc.desiredNodes)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }
 
 func TestFindScaleDownWorkerNodes(t *testing.T) {
-	scaleDoneNodes1 := findScaleDownWorkerNodes(provisionedNodes, curNodes1)
-	assert.Equal(t, []NodeInfo{workerNode1}, scaleDoneNodes1)
+	test := []struct {
+		name             string
+		provisionedNodes []NodeInfo
+		desiredNodes     []NodeInfo
+		expected         []NodeInfo
+	}{
+		{
+			name:             "one node same",
+			provisionedNodes: []NodeInfo{workerNode1, workerNode3},
+			desiredNodes:     []NodeInfo{workerNode2, workerNode3},
+			expected:         []NodeInfo{workerNode1},
+		},
+		{
+			name:             "one node more",
+			provisionedNodes: []NodeInfo{workerNode3},
+			desiredNodes:     []NodeInfo{workerNode2, workerNode3},
+			expected:         nil,
+		},
+		{
+			name:             "one node less",
+			provisionedNodes: []NodeInfo{workerNode1, workerNode3},
+			desiredNodes:     []NodeInfo{workerNode3},
+			expected:         []NodeInfo{workerNode1},
+		},
+	}
 
-	scaleDoneNodes2 := findScaleDownWorkerNodes(provisionedNodes, curNodes2)
-	assert.Equal(t, 0, len(scaleDoneNodes2))
-
-	scaleDoneNodes3 := findScaleDownWorkerNodes(provisionedNodes, curNodes3)
-	assert.Equal(t, []NodeInfo{workerNode3}, scaleDoneNodes3)
-
-	scaleDoneNodes4 := findScaleDownWorkerNodes(nil, curNodes2)
-	assert.Equal(t, 0, len(scaleDoneNodes4))
-
-	scaleDoneNodes5 := findScaleDownWorkerNodes(curNodes2, nil)
-	assert.Equal(t, curNodes2, scaleDoneNodes5)
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := findScaleDownWorkerNodes(tc.provisionedNodes, tc.desiredNodes)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }
 
 func TestGenerateScaleDownManageCMD(t *testing.T) {
-	scaleDownCMD1 := generateScaleDownManageCMD(nodeNeedDelete1)
-	assert.Equal(t, customClusterManageCMD(""), scaleDownCMD1)
+	test := []struct {
+		name           string
+		nodeNeedDelete []NodeInfo
+		expected       customClusterManageCMD
+	}{
+		{
+			name:           "single node",
+			nodeNeedDelete: []NodeInfo{workerNode1},
+			expected:       customClusterManageCMD("ansible-playbook -i inventory/cluster-hosts --private-key /root/.ssh/ssh-privatekey remove-node.yml -vvv -e skip_confirmation=yes --extra-vars \"node=node1\" "),
+		},
+		{
+			name:           "muilti node",
+			nodeNeedDelete: []NodeInfo{workerNode1, workerNode2, workerNode3},
+			expected:       customClusterManageCMD("ansible-playbook -i inventory/cluster-hosts --private-key /root/.ssh/ssh-privatekey remove-node.yml -vvv -e skip_confirmation=yes --extra-vars \"node=node1,node2,node3\" "),
+		},
+	}
 
-	scaleDownCMD2 := generateScaleDownManageCMD(nodeNeedDelete2)
-	assert.Equal(t, customClusterManageCMD("ansible-playbook -i inventory/cluster-hosts --private-key /root/.ssh/ssh-privatekey remove-node.yml -vvv -e skip_confirmation=yes --extra-vars \"node=node1\" "), scaleDownCMD2)
-
-	scaleDownCMD3 := generateScaleDownManageCMD(nodeNeedDelete3)
-	assert.Equal(t, customClusterManageCMD("ansible-playbook -i inventory/cluster-hosts --private-key /root/.ssh/ssh-privatekey remove-node.yml -vvv -e skip_confirmation=yes --extra-vars \"node=node1,node2,node3\" "), scaleDownCMD3)
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := generateScaleDownManageCMD(tc.nodeNeedDelete)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }
 
 func TestGetScaleUpConfigMapData(t *testing.T) {
-	ans := getScaleUpConfigMapData(clusterHostDataStr1, curNodes1)
-	assert.Equal(t, clusterHostDataStr3, ans)
+	test := []struct {
+		name               string
+		clusterHostDataStr string
+		curNodes           []NodeInfo
+		expected           string
+	}{
+		{
+			name:               "add node: workerNode2, workerNode3",
+			clusterHostDataStr: clusterHostDataStr1,
+			curNodes:           []NodeInfo{workerNode2, workerNode3},
+			expected:           clusterHostDataStr3,
+		},
+	}
+
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := getScaleUpConfigMapData(tc.clusterHostDataStr, tc.curNodes)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }

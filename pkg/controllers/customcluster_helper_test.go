@@ -59,22 +59,38 @@ var curCustomMachineMulti = &v1alpha1.CustomMachine{
 }
 
 func TestGetHostsContent(t *testing.T) {
-	expectHost1 := &HostTemplateContent{
-		NodeAndIP:    []string{"master1 ansible_host=2.2.2.2 ip=1.1.1.1", "node1 ansible_host=4.4.4.4 ip=3.3.3.3"},
-		MasterName:   []string{"master1"},
-		NodeName:     []string{"node1"},
-		EtcdNodeName: []string{"master1"},
+	tests := []struct {
+		name          string
+		customMachine *v1alpha1.CustomMachine
+		expected      *HostTemplateContent
+	}{
+		{
+			name:          "Single Node",
+			customMachine: curCustomMachineSingle,
+			expected: &HostTemplateContent{
+				NodeAndIP:    []string{"master1 ansible_host=2.2.2.2 ip=1.1.1.1", "node1 ansible_host=4.4.4.4 ip=3.3.3.3"},
+				MasterName:   []string{"master1"},
+				NodeName:     []string{"node1"},
+				EtcdNodeName: []string{"master1"},
+			},
+		},
+		{
+			name:          "Multi Node",
+			customMachine: curCustomMachineMulti,
+			expected: &HostTemplateContent{
+				NodeAndIP:    []string{"master1 ansible_host=2.2.2.2 ip=1.1.1.1", "node1 ansible_host=4.4.4.4 ip=3.3.3.3", "node2 ansible_host=6.6.6.6 ip=5.5.5.5"},
+				MasterName:   []string{"master1"},
+				NodeName:     []string{"node1", "node2"},
+				EtcdNodeName: []string{"master1"},
+			},
+		},
 	}
-	assert.Equal(t, expectHost1, GetHostsContent(curCustomMachineSingle))
-
-	expectHost2 := &HostTemplateContent{
-		NodeAndIP:    []string{"master1 ansible_host=2.2.2.2 ip=1.1.1.1", "node1 ansible_host=4.4.4.4 ip=3.3.3.3", "node2 ansible_host=6.6.6.6 ip=5.5.5.5"},
-		MasterName:   []string{"master1"},
-		NodeName:     []string{"node1", "node2"},
-		EtcdNodeName: []string{"master1"},
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := GetHostsContent(tc.customMachine)
+			assert.Equal(t, tc.expected, got)
+		})
 	}
-
-	assert.Equal(t, expectHost2, GetHostsContent(curCustomMachineMulti))
 }
 
 var targetWorkerNodesSingle = []NodeInfo{
@@ -83,11 +99,6 @@ var targetWorkerNodesSingle = []NodeInfo{
 		PrivateIP: "3.3.3.3",
 		PublicIP:  "4.4.4.4",
 	},
-}
-
-var targetClusterInfoSingle = &ClusterInfo{
-	WorkerNodes: targetWorkerNodesSingle,
-	KubeVersion: "v1.20.0",
 }
 
 var targetWorkerNodesMulti = []NodeInfo{
@@ -103,36 +114,73 @@ var targetWorkerNodesMulti = []NodeInfo{
 	},
 }
 
-var targetClusterInfoMulti = &ClusterInfo{
-	WorkerNodes: targetWorkerNodesMulti,
-	KubeVersion: "v1.25.0",
-}
-
 func TestGetWorkerNodesFromCustomMachine(t *testing.T) {
-	workerNodes1 := getWorkerNodesFromCustomMachine(curCustomMachineSingle)
-	assert.Equal(t, targetWorkerNodesSingle, workerNodes1)
+	test := []struct {
+		name          string
+		customMachine *v1alpha1.CustomMachine
+		expected      []NodeInfo
+	}{
+		{
+			name:          "single node",
+			customMachine: curCustomMachineSingle,
+			expected:      targetWorkerNodesSingle,
+		},
+		{
+			name:          "multi node",
+			customMachine: curCustomMachineMulti,
+			expected:      targetWorkerNodesMulti,
+		},
+	}
 
-	workerNodes2 := getWorkerNodesFromCustomMachine(curCustomMachineMulti)
-	assert.Equal(t, targetWorkerNodesMulti, workerNodes2)
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := getWorkerNodesFromCustomMachine(tc.customMachine)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }
 
-func TestDesiredClusterInfo(t *testing.T) {
-	kcp1 := &controlplanev1.KubeadmControlPlane{
-		Spec: controlplanev1.KubeadmControlPlaneSpec{
-			Version: "v1.20.0",
+func TestGetDesiredClusterInfo(t *testing.T) {
+	test := []struct {
+		name          string
+		customMachine *v1alpha1.CustomMachine
+		kcp           *controlplanev1.KubeadmControlPlane
+		expected      *ClusterInfo
+	}{
+		{
+			name:          "single node cluster",
+			customMachine: curCustomMachineSingle,
+			kcp: &controlplanev1.KubeadmControlPlane{
+				Spec: controlplanev1.KubeadmControlPlaneSpec{
+					Version: "v1.20.0",
+				},
+			},
+			expected: &ClusterInfo{
+				WorkerNodes: targetWorkerNodesSingle,
+				KubeVersion: "v1.20.0",
+			},
 		},
-	}
-	kcp2 := &controlplanev1.KubeadmControlPlane{
-		Spec: controlplanev1.KubeadmControlPlaneSpec{
-			Version: "v1.25.0",
+		{
+			name:          "multi node cluster",
+			customMachine: curCustomMachineMulti,
+			kcp: &controlplanev1.KubeadmControlPlane{
+				Spec: controlplanev1.KubeadmControlPlaneSpec{
+					Version: "v1.25.0",
+				},
+			},
+			expected: &ClusterInfo{
+				WorkerNodes: targetWorkerNodesMulti,
+				KubeVersion: "v1.25.0",
+			},
 		},
 	}
 
-	clusterInfo1 := getDesiredClusterInfo(curCustomMachineSingle, kcp1)
-	assert.Equal(t, targetClusterInfoSingle, clusterInfo1)
-
-	clusterInfo2 := getDesiredClusterInfo(curCustomMachineMulti, kcp2)
-	assert.Equal(t, targetClusterInfoMulti, clusterInfo2)
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := getDesiredClusterInfo(tc.customMachine, tc.kcp)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }
 
 var workerNode1 = NodeInfo{
@@ -152,18 +200,6 @@ var workerNode3 = NodeInfo{
 	PublicIP:  "200.1.1.3",
 	PrivateIP: "127.1.1.3",
 }
-
-var provisionedNodes = []NodeInfo{workerNode1, workerNode3}
-
-var curNodes1 = []NodeInfo{workerNode2, workerNode3}
-
-var curNodes2 = []NodeInfo{workerNode2, workerNode3, workerNode1}
-
-var curNodes3 = []NodeInfo{workerNode1}
-
-var nodeNeedDelete1 []NodeInfo
-var nodeNeedDelete2 = []NodeInfo{workerNode1}
-var nodeNeedDelete3 = []NodeInfo{workerNode1, workerNode2, workerNode3}
 
 var clusterHostDataStr1 = "[all]\n\nmaster1 ansible_host=200.1.1.0 ip=127.1.1.0\n\nnode1 ansible_host=200.1.1.1 ip=127.1.1.1\n\n[kube_control_plane]\n\nmaster1\n\n[etcd]\nmaster1\n[kube_node]\nnode1\n[k8s-cluster:children]\nkube_node\nkube_control_plane"
 var clusterHostDataStr2 = "[all]\n\nmaster1 ansible_host=200.1.1.0 ip=127.1.1.0\n\nnode1 ansible_host=200.1.1.1 ip=127.1.1.1\n\n[kube_control_plane]\n\nmaster1\n\n[etcd]\nmaster1\n[kube_node]\n\n[k8s-cluster:children]\nkube_node\nkube_control_plane"
@@ -194,25 +230,65 @@ var masterNode = NodeInfo{
 }
 
 func TestGetWorkerNodeInfoFromClusterHost(t *testing.T) {
-	nodeInfoArr1 := getWorkerNodeInfoFromClusterHosts(clusterHost1)
-	assert.Equal(t, []NodeInfo{workerNode1}, nodeInfoArr1)
+	test := []struct {
+		name        string
+		clusterHost *corev1.ConfigMap
+		expected    []NodeInfo
+	}{
+		{
+			name:        "single node",
+			clusterHost: clusterHost1,
+			expected:    []NodeInfo{workerNode1},
+		},
+		{
+			name:        "zero node",
+			clusterHost: clusterHost2,
+			expected:    nil,
+		},
+		{
+			name:        "multi nodes",
+			clusterHost: clusterHost3,
+			expected:    []NodeInfo{workerNode1, workerNode2, workerNode3},
+		},
+	}
 
-	nodeInfoArr2 := getWorkerNodeInfoFromClusterHosts(clusterHost2)
-	assert.Equal(t, 0, len(nodeInfoArr2))
-
-	nodeInfoArr3 := getWorkerNodeInfoFromClusterHosts(clusterHost3)
-	assert.Equal(t, []NodeInfo{workerNode1, workerNode2, workerNode3}, nodeInfoArr3)
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			got := getWorkerNodeInfoFromClusterHosts(tc.clusterHost)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
 }
 
 var nodeStr1 = "master1 ansible_host=200.1.1.0 ip=127.1.1.0"
 var nodeStr2 = "node1 ansible_host=200.1.1.1 ip=127.1.1.1"
 
 func TestGetNodeInfoFromNodeStr(t *testing.T) {
-	hostName1, nodeInfo1 := getNodeInfoFromNodeStr(nodeStr1)
-	assert.Equal(t, "master1", hostName1)
-	assert.Equal(t, masterNode, nodeInfo1)
+	test := []struct {
+		name             string
+		nodeStr          string
+		expectedHostName string
+		expectedNodeInfo NodeInfo
+	}{
+		{
+			name:             "master node",
+			nodeStr:          nodeStr1,
+			expectedHostName: "master1",
+			expectedNodeInfo: masterNode,
+		},
+		{
+			name:             "worker node",
+			nodeStr:          nodeStr2,
+			expectedHostName: "node1",
+			expectedNodeInfo: workerNode1,
+		},
+	}
 
-	hostName2, nodeInfo2 := getNodeInfoFromNodeStr(nodeStr2)
-	assert.Equal(t, "node1", hostName2)
-	assert.Equal(t, workerNode1, nodeInfo2)
+	for _, tc := range test {
+		t.Run(tc.name, func(t *testing.T) {
+			hostName, nodeInfo := getNodeInfoFromNodeStr(tc.nodeStr)
+			assert.Equal(t, tc.expectedHostName, hostName)
+			assert.Equal(t, tc.expectedNodeInfo, nodeInfo)
+		})
+	}
 }
