@@ -27,7 +27,7 @@ Fleet allows you manage clusters distributed in any cloud easily and consistentl
 The overall architecture of Kurator fleet manager is shown as below:
 
 {{< image width="100%"
-    link="./image/fleet-manager.png"
+    link="./image/fleet-manager.svg"
     >}}
 
 
