@@ -119,6 +119,9 @@ sync-crds: gen-crd
 gen-chart: sync-crds
 	HELM_CHART_VERSION=$(HELM_CHART_VERSION) IMAGE_TAG=$(IMAGE_TAG) hack/gen-chart.sh
 
+release-chart: gen-chart
+	rm -rf $(OUT_BASE_PATH)/charts/*.
+
 .PHONY: test
 test: clean tidy
 	go test ./...
