@@ -1,0 +1,3 @@
+git-repo: helm-charts
+pages-branch: main
+package-path: out/charts
