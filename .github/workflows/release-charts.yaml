@@ -24,6 +24,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: "${{ github.repository_owner }}/helm-charts"
+          # use token for helm-charts repo
           token: "${{ secrets.HELM_CHARTER_TOKEN }}"
           path: "helm-charts"
           fetch-depth: 0
@@ -43,17 +44,17 @@ jobs:
         with:
           install_only: true
 
+      # upload charts to helm-charts repos's release
       - name: Upload charts
         shell: bash
         working-directory: kurator
         run: |
           cr upload -o ${{ github.repository_owner }} --config ./common/config/.cr.yaml
-          rm -rf .cr-index
-          mkdir -p .cr-index
-          cr index -o ${{ github.repository_owner }} --config ./common/config/.cr.yaml
         env:
+          # use token for helm-charts repo
           CR_TOKEN: "${{ secrets.HELM_CHARTER_TOKEN }}"
 
+      # copy artifacts to helm-charts repo, we need those for update index
       - name: Copy artifacts
         run: |
           cp -r kurator/out/ helm-charts/
@@ -65,11 +66,14 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      # this step will directly push to the main branch, so make sure you have the right permissions
       - name: Update index
         working-directory: helm-charts
         run: |
+          rm -rf index.yaml
           rm -rf .cr-index
           mkdir -p .cr-index
           cr index -o ${{ github.repository_owner }} --config .cr.yaml --push
         env:
+          # use token for helm-charts repo
           CR_TOKEN: "${{ secrets.HELM_CHARTER_TOKEN }}"
