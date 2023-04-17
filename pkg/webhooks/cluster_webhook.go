@@ -197,13 +197,24 @@ func (wh *ClusterWebhook) validate(in *v1.Cluster) error {
 	return nil
 }
 
-func (wh *ClusterWebhook) ValidateUpdate(_ context.Context, obj runtime.Object, _ runtime.Object) error {
-	in, ok := obj.(*v1.Cluster)
+func (wh *ClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) error {
+	oldCluster, ok := oldObj.(*v1.Cluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", obj))
+		return apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", oldObj))
 	}
 
-	return wh.validate(in)
+	newCluster, ok := newObj.(*v1.Cluster)
+	if !ok {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", newObj))
+	}
+
+	if oldCluster.Spec.InfraType != newCluster.Spec.InfraType {
+		return apierrors.NewInvalid(v1.SchemeGroupVersion.WithKind("Cluster").GroupKind(), newCluster.Name, field.ErrorList{
+			field.Forbidden(field.NewPath("spec", "infraType"), "field is immutable"),
+		})
+	}
+
+	return wh.validate(newCluster)
 }
 
 func (wh *ClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) error {
