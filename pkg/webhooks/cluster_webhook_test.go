@@ -17,6 +17,7 @@ limitations under the License.
 package webhooks
 
 import (
+	"context"
 	"io/fs"
 	"os"
 	"path"
@@ -25,6 +26,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/yaml"
 
 	v1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
@@ -83,6 +85,20 @@ func TestInvalidClusterValidation(t *testing.T) {
 			g.Expect(err).To(HaveOccurred())
 			t.Logf("%v", err)
 		})
+	}
+}
+
+func TestUpdateClusterInfraType(t *testing.T) {
+	wh := &ClusterWebhook{}
+	oldCluster, err := readCluster("../../examples/cluster/quickstart.yaml")
+	assert.NoError(t, err)
+
+	newCluster := oldCluster.DeepCopy()
+	newCluster.Spec.InfraType = "aws1"
+
+	err = wh.ValidateUpdate(context.TODO(), oldCluster, newCluster)
+	if !apierrors.IsInvalid(err) {
+		t.Errorf("Expect an invalid error, got %v", err)
 	}
 }
 
