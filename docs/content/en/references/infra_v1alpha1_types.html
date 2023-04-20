@@ -1,0 +1,637 @@
+<p>Packages:</p>
+<ul class="simple">
+<li>
+<a href="#infrastructure.cluster.x-k8s.io%2fv1alpha1">infrastructure.cluster.x-k8s.io/v1alpha1</a>
+</li>
+</ul>
+<h2 id="infrastructure.cluster.x-k8s.io/v1alpha1">infrastructure.cluster.x-k8s.io/v1alpha1</h2>
+<p>Package v1alpha1 contains API Schema definitions for the cluster v1alpha1 API group</p>
+Resource Types:
+<ul class="simple"><li>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomCluster">CustomCluster</a>
+</li><li>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachine">CustomMachine</a>
+</li></ul>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomCluster">CustomCluster
+</h3>
+<p>CustomCluster represents the parameters for a cluster in supplement of Cluster API.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+string</td>
+<td>
+<code>infrastructure.cluster.x-k8s.io/v1alpha1</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+string
+</td>
+<td>
+<code>CustomCluster</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterSpec">
+CustomClusterSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of the desired behavior of the kurator cluster.</p>
+<table>
+<tr>
+<td>
+<code>machineRef</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectreference-v1-core">
+Kubernetes core/v1.ObjectReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MachineRef is the reference of nodes for provisioning a kurator cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cni</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CNIConfig">
+CNIConfig
+</a>
+</em>
+</td>
+<td>
+<p>CNIConfig is the configuration for the CNI of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>controlPlaneConfig</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ControlPlaneConfig">
+ControlPlaneConfig
+</a>
+</em>
+</td>
+<td>
+<p>ControlPlaneConfig contains control plane configuration.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterStatus">
+CustomClusterStatus
+</a>
+</em>
+</td>
+<td>
+<p>Current status of the kurator cluster</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachine">CustomMachine
+</h3>
+<p>CustomMachine is the schema for kubernetes nodes.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+string</td>
+<td>
+<code>infrastructure.cluster.x-k8s.io/v1alpha1</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+string
+</td>
+<td>
+<code>CustomMachine</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachineSpec">
+CustomMachineSpec
+</a>
+</em>
+</td>
+<td>
+<p>Specification of the desired behavior of the kurator cluster.</p>
+<table>
+<tr>
+<td>
+<code>master</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.Machine">
+[]Machine
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>node</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.Machine">
+[]Machine
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachineStatus">
+CustomMachineStatus
+</a>
+</em>
+</td>
+<td>
+<p>Current status of the machine.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CNIConfig">CNIConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterSpec">CustomClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type is the type of CNI. The default value is calico and can be [&ldquo;calico&rdquo;, &ldquo;cilium&rdquo;, &ldquo;canal&rdquo;, &ldquo;flannel&rdquo;]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.ControlPlaneConfig">ControlPlaneConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterSpec">CustomClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>address</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>same as <code>ControlPlaneEndpoint</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>certSANs</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CertSANs sets extra Subject Alternative Names for the API Server signing cert.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterPhase">CustomClusterPhase
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterStatus">CustomClusterStatus</a>)
+</p>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterSpec">CustomClusterSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomCluster">CustomCluster</a>)
+</p>
+<p>CustomClusterSpec defines the desired state of a kurator cluster.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>machineRef</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectreference-v1-core">
+Kubernetes core/v1.ObjectReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MachineRef is the reference of nodes for provisioning a kurator cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cni</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CNIConfig">
+CNIConfig
+</a>
+</em>
+</td>
+<td>
+<p>CNIConfig is the configuration for the CNI of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>controlPlaneConfig</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.ControlPlaneConfig">
+ControlPlaneConfig
+</a>
+</em>
+</td>
+<td>
+<p>ControlPlaneConfig contains control plane configuration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterStatus">CustomClusterStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomCluster">CustomCluster</a>)
+</p>
+<p>CustomClusterStatus represents the current status of the cluster.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code><br>
+<em>
+<a href="https://godoc.org/sigs.k8s.io/cluster-api/api/v1beta1#Conditions">
+Cluster API /v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions defines current service state of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomClusterPhase">
+CustomClusterPhase
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase represents the current phase of customCluster actuation.
+E.g.  Running, Succeed, Terminating, Failed etc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiEndpoint</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>APIEndpoint is the endpoint to communicate with the apiserver.
+Format should be: <code>https://host:port</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kubeconfigSecretRef</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubeconfigSecretRef represents the secret that contains the credential to access this cluster.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachineSpec">CustomMachineSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachine">CustomMachine</a>)
+</p>
+<p>CustomMachineSpec defines kubernetes cluster master and nodes.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>master</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.Machine">
+[]Machine
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>node</code><br>
+<em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.Machine">
+[]Machine
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachineStatus">CustomMachineStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachine">CustomMachine</a>)
+</p>
+<p>CustomMachineStatus represents the current status of the machine.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>ready</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>TODO: add state.
+TODO: display with kubectl
+Indicate whether the machines are ready.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="infrastructure.cluster.x-k8s.io/v1alpha1.Machine">Machine
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#infrastructure.cluster.x-k8s.io/v1alpha1.CustomMachineSpec">CustomMachineSpec</a>)
+</p>
+<p>Machine defines a node.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>hostName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HostName is the hostname of the machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>privateIP</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PrivateIP is the private ip address of the machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>publicIP</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PublicIP specifies the public IP.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Region specifies the region where the machine resides.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>zone</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Region specifies the zone where the machine resides.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sshKey</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectreference-v1-core">
+Kubernetes core/v1.ObjectReference
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SSHKeyName is the name of the ssh key to attach to the instance. Valid values are empty string (do not use SSH keys), a valid SSH key name, or omitted (use the default SSH key name)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AdditionalTags is an optional set of tags to add to an instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="admonition note">
+<p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
+</div>
