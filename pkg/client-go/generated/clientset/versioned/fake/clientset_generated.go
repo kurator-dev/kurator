@@ -31,6 +31,8 @@ import (
 	fakefleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1/fake"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
 	fakeinfrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1/fake"
+	telemetryv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/telemetry/v1alpha1"
+	faketelemetryv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/telemetry/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -96,4 +98,9 @@ func (c *Clientset) FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface {
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
 func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface {
 	return &fakeinfrastructurev1alpha1.FakeInfrastructureV1alpha1{Fake: &c.Fake}
+}
+
+// TelemetryV1alpha1 retrieves the TelemetryV1alpha1Client
+func (c *Clientset) TelemetryV1alpha1() telemetryv1alpha1.TelemetryV1alpha1Interface {
+	return &faketelemetryv1alpha1.FakeTelemetryV1alpha1{Fake: &c.Fake}
 }

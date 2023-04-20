@@ -32,6 +32,7 @@ import (
 	fleet "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/fleet"
 	infra "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/infra"
 	internalinterfaces "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/internalinterfaces"
+	telemetry "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/telemetry"
 )
 
 // SharedInformerOption defines the functional option type for SharedInformerFactory.
@@ -177,6 +178,7 @@ type SharedInformerFactory interface {
 	Cluster() cluster.Interface
 	Fleet() fleet.Interface
 	Infrastructure() infra.Interface
+	Telemetry() telemetry.Interface
 }
 
 func (f *sharedInformerFactory) Cluster() cluster.Interface {
@@ -189,4 +191,8 @@ func (f *sharedInformerFactory) Fleet() fleet.Interface {
 
 func (f *sharedInformerFactory) Infrastructure() infra.Interface {
 	return infra.New(f, f.namespace, f.tweakListOptions)
+}
+
+func (f *sharedInformerFactory) Telemetry() telemetry.Interface {
+	return telemetry.New(f, f.namespace, f.tweakListOptions)
 }
