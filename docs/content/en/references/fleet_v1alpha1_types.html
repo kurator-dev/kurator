@@ -1,0 +1,220 @@
+<p>Packages:</p>
+<ul class="simple">
+<li>
+<a href="#fleet.kurator.dev%2fv1alpha1">fleet.kurator.dev/v1alpha1</a>
+</li>
+</ul>
+<h2 id="fleet.kurator.dev/v1alpha1">fleet.kurator.dev/v1alpha1</h2>
+<p>Package v1alpha1 contains API Schema definitions for the fleet v1alpha1 API group</p>
+Resource Types:
+<ul class="simple"><li>
+<a href="#fleet.kurator.dev/v1alpha1.Fleet">Fleet</a>
+</li></ul>
+<h3 id="fleet.kurator.dev/v1alpha1.Fleet">Fleet
+</h3>
+<p>Fleet represents a group of clusters, it is to consistently manage a group of clusters.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+string</td>
+<td>
+<code>fleet.kurator.dev/v1alpha1</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+string
+</td>
+<td>
+<code>Fleet</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.FleetSpec">
+FleetSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>clusters</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectreference-v1-core">
+[]Kubernetes core/v1.ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>Clusters represents the clusters that would be registered to the fleet.
+Note: only kurator cluster is supported now
+TODO: add attached cluster support?</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.FleetStatus">
+FleetStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.FleetSpec">FleetSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.Fleet">Fleet</a>)
+</p>
+<p>FleetSpec defines the desired state of the fleet</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clusters</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectreference-v1-core">
+[]Kubernetes core/v1.ObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>Clusters represents the clusters that would be registered to the fleet.
+Note: only kurator cluster is supported now
+TODO: add attached cluster support?</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.FleetStatus">FleetStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.Fleet">Fleet</a>)
+</p>
+<p>FleetStatus defines the observed state of the fleet</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>credentialSecret</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>CredentialSecret is the secret name that holds credentials used for accessing the fleet control plane.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase represents the current phase of fleet.
+E.g. Pending, Running, Terminating, Failed, Ready, etc.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reason</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>A brief CamelCase message indicating details about why the fleet is in this state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>readyClusters</code><br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>TODO: healthy/unhealthy members cluster
+Total number of ready clusters, ready to deploy .</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>unReadyClusters</code><br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Total number of unready clusters, not ready for use.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="admonition note">
+<p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
+</div>

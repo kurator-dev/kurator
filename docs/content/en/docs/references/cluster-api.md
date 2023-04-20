@@ -5,4 +5,4 @@ weight: 10
 description: "Detailed docuementation on the clusters API"
 ---
 
-{{< reference cluster_types >}}
+{{< reference cluster_v1alpha1_types >}}

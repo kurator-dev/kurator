@@ -5,7 +5,7 @@
 {{- if $name -}}
     {{- $bundle := .Page.GetPage "/references" -}}
     {{- with $bundle -}}
-        {{- $name := printf "%s.md" $name -}}
+        {{- $name := printf "%s.html" $name -}}
         {{- $pattern := printf "%s*" $name -}}
         {{- $resource := $bundle.Resources.GetMatch $pattern -}}
         {{- with $resource -}}

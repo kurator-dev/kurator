@@ -5,4 +5,4 @@ weight: 20
 description: "Detailed docuementation on the infras API"
 ---
 
-{{< reference infra_types >}}
+{{< reference infra_v1alpha1_types >}}

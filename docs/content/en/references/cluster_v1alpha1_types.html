@@ -1,0 +1,1176 @@
+<p>Packages:</p>
+<ul class="simple">
+<li>
+<a href="#cluster.kurator.dev%2fv1alpha1">cluster.kurator.dev/v1alpha1</a>
+</li>
+</ul>
+<h2 id="cluster.kurator.dev/v1alpha1">cluster.kurator.dev/v1alpha1</h2>
+<p>Package v1alpha1 contains API Schema definitions for the cluster v1alpha1 API group</p>
+Resource Types:
+<ul class="simple"><li>
+<a href="#cluster.kurator.dev/v1alpha1.Cluster">Cluster</a>
+</li></ul>
+<h3 id="cluster.kurator.dev/v1alpha1.Cluster">Cluster
+</h3>
+<p>Cluster is the schema for the cluster&rsquo;s API</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+string</td>
+<td>
+<code>cluster.kurator.dev/v1alpha1</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+string
+</td>
+<td>
+<code>Cluster</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">
+ClusterSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>infraType</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterInfraType">
+ClusterInfraType
+</a>
+</em>
+</td>
+<td>
+<p>InfraType is the infra type of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>credential</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.CredentialConfig">
+CredentialConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Credential is the credential used to access the cloud provider.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version is the Kubernetes version to use for the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region is the region to deploy the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>network</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NetworkConfig">
+NetworkConfig
+</a>
+</em>
+</td>
+<td>
+<p>Network is the network configuration for the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>master</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.MasterConfig">
+MasterConfig
+</a>
+</em>
+</td>
+<td>
+<p>Master is the configuration for the master node.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workers</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.WorkerConfig">
+[]WorkerConfig
+</a>
+</em>
+</td>
+<td>
+<p>Workers is the list of worker nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podIdentity</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.PodIdentityConfig">
+PodIdentityConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodIdentity is the configuration for the pod identity.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalResources</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.ResourceRef">
+[]ResourceRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AdditionalResources provides a way to automatically apply a set of resouces to cluster after it&rsquo;s ready.
+Note: the resouces will only apply once.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterStatus">
+ClusterStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.CIDRBlocks">CIDRBlocks
+(<code>[]string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<h3 id="cluster.kurator.dev/v1alpha1.CNIConfig">CNIConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type is the type of CNI.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for CNI.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.ClusterInfraType">ClusterInfraType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<h3 id="cluster.kurator.dev/v1alpha1.ClusterPhase">ClusterPhase
+(<code>string</code> alias)</h3>
+<p>ClusterPhase is a string representation of the cluster&rsquo;s phase.</p>
+<h3 id="cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.Cluster">Cluster</a>)
+</p>
+<p>ClusterSpec defines the desired state of the Cluster</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>infraType</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterInfraType">
+ClusterInfraType
+</a>
+</em>
+</td>
+<td>
+<p>InfraType is the infra type of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>credential</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.CredentialConfig">
+CredentialConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Credential is the credential used to access the cloud provider.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Version is the Kubernetes version to use for the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region is the region to deploy the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>network</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NetworkConfig">
+NetworkConfig
+</a>
+</em>
+</td>
+<td>
+<p>Network is the network configuration for the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>master</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.MasterConfig">
+MasterConfig
+</a>
+</em>
+</td>
+<td>
+<p>Master is the configuration for the master node.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workers</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.WorkerConfig">
+[]WorkerConfig
+</a>
+</em>
+</td>
+<td>
+<p>Workers is the list of worker nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podIdentity</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.PodIdentityConfig">
+PodIdentityConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodIdentity is the configuration for the pod identity.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>additionalResources</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.ResourceRef">
+[]ResourceRef
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AdditionalResources provides a way to automatically apply a set of resouces to cluster after it&rsquo;s ready.
+Note: the resouces will only apply once.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.ClusterStatus">ClusterStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.Cluster">Cluster</a>)
+</p>
+<p>ClusterStatus defines the observed state of Cluster</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code><br>
+<em>
+<a href="https://godoc.org/sigs.k8s.io/cluster-api/api/v1beta1#Conditions">
+Cluster API /v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions defines current service state of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase is the current lifecycle phase of the cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>apiEndpoint</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>APIEndpoint is the endpoint to communicate with the apiserver.
+Format should be: <code>https://host:port</code></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kubeconfigSecretRef</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubeconfigSecretRef represents the secret that contains the credential to access this cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountIssuer</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServiceAccountIssuer is the URL of the service account issuer.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.CredentialConfig">CredentialConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretRef</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.MachineConfig">MachineConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeConfig">NodeConfig</a>)
+</p>
+<p>MachineConfig defines the configuration for the machine.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>replicas</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>Replicas is the number of replicas of the machine.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>instanceType</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>InstanceType is the type of instance to use for the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sshKeyName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SSHKeyName is the name of the SSH key to use for the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>imageOS</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ImageOS is the OS of the image to use for the instance.
+Defaults to &ldquo;ubuntu-20.04&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rootVolumeSize</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.Volume">
+Volume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RootVolume is the root volume to attach to the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nonRootVolumes</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.Volume">
+[]Volume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NonRootVolumes is the list of non-root volumes to attach to the instance.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments to create Machine on different infra.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.MasterConfig">MasterConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>NodeConfig</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeConfig">
+NodeConfig
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>NodeConfig</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.NetworkConfig">NetworkConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>vpc</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.VPCConfig">
+VPCConfig
+</a>
+</em>
+</td>
+<td>
+<p>VPC is the configuration for the VPC.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podCIDRs</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.CIDRBlocks">
+CIDRBlocks
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodCIDRs is the CIDR block for pods in this cluster.
+Defaults to 192.168.0.0/16.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceCIDRs</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.CIDRBlocks">
+CIDRBlocks
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ServiceCIDRs is the CIDR block for services in this cluster.
+Defaults to 10.96.0.0/12.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cni</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.CNIConfig">
+CNIConfig
+</a>
+</em>
+</td>
+<td>
+<p>CNI is the configuration for the CNI.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.NodeConfig">NodeConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.MasterConfig">MasterConfig</a>, 
+<a href="#cluster.kurator.dev/v1alpha1.WorkerConfig">WorkerConfig</a>)
+</p>
+<p>NodeConfig defines the configuration for the node.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>MachineConfig</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.MachineConfig">
+MachineConfig
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>MachineConfig</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>NodeRegistrationConfig</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeRegistrationConfig">
+NodeRegistrationConfig
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>NodeRegistrationConfig</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.NodeRegistrationConfig">NodeRegistrationConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeConfig">NodeConfig</a>)
+</p>
+<p>NodeRegistrationConfig defines the configuration for the node registration.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Labels is the set of labels to apply to the nodes.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>taints</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#taint-v1-core">
+[]Kubernetes core/v1.Taint
+</a>
+</em>
+</td>
+<td>
+<p>Taints is the set of taints to apply to the nodes.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.NodeUpgradeStrategy">NodeUpgradeStrategy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.WorkerConfig">WorkerConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeUpgradeStrategyType">
+NodeUpgradeStrategyType
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Type of node replacement strategy.
+Default is RollingUpdate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rollingUpdate</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.RollingUpdateNodeUpgradeStrategy">
+RollingUpdateNodeUpgradeStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RollingUpdate config params. Present only if NodeUpgradeStrategyType = RollingUpdate.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.NodeUpgradeStrategyType">NodeUpgradeStrategyType
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeUpgradeStrategy">NodeUpgradeStrategy</a>)
+</p>
+<h3 id="cluster.kurator.dev/v1alpha1.PodIdentityConfig">PodIdentityConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<p>PodIdentityConfig defines the configuration for the pod identity.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enabled is true when the pod identity is enabled.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.ResourceRef">ResourceRef
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Kind Of the resource. e.g. ConfigMap, Secret, etc.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.RollingUpdateNodeUpgradeStrategy">RollingUpdateNodeUpgradeStrategy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeUpgradeStrategy">NodeUpgradeStrategy</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxUnavailable</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/util/intstr#IntOrString">
+Kubernetes intstr.IntOrString
+</a>
+</em>
+</td>
+<td>
+<p>MaxUnavailable is the maximum number of nodes that can be unavailable during the update.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxSurge</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/util/intstr#IntOrString">
+Kubernetes intstr.IntOrString
+</a>
+</em>
+</td>
+<td>
+<p>MaxSurge is the maximum number of nodes that can be created above the desired number of nodes during the update.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>deletePolicy</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DeletePolicy defines the policy used to identify nodes to delete when downscaling.
+Valid values are &ldquo;Random&rdquo;, &ldquo;Newest&rdquo; and &ldquo;Oldest&rdquo;.
+Defaults to &ldquo;Newest&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.VPCConfig">VPCConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ID defines a unique identifier to reference this resource.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name is the name of the VPC.
+if not set, the name will be generated from cluster name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cidrBlock</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CIDRBlock is the CIDR block to be used when the provider creates a managed VPC.
+Defaults to 10.0.0.0/16.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.Volume">Volume
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.MachineConfig">MachineConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Type is the type of the volume (e.g. gp2, io1, etc&hellip;).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>size</code><br>
+<em>
+int64
+</em>
+</td>
+<td>
+<p>Size specifies size (in Gi) of the storage device.
+Must be greater than the image snapshot size or 8 (whichever is greater).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.WorkerConfig">WorkerConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.ClusterSpec">ClusterSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>NodeConfig</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeConfig">
+NodeConfig
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>NodeConfig</code> are embedded into this type.)
+</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>strategy</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.NodeUpgradeStrategy">
+NodeUpgradeStrategy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Strategy to use to replace existing nodes with new ones.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="admonition note">
+<p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
+</div>

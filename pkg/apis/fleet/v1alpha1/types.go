@@ -32,13 +32,14 @@ const (
 	ReadyPhase = "Ready"
 )
 
-// Fleet represents a group of clusters, it is to consistently manage a group of clusters.
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Phase of the fleet"
+
+// Fleet represents a group of clusters, it is to consistently manage a group of clusters.
 type Fleet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

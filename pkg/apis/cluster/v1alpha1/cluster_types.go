@@ -24,7 +24,6 @@ import (
 	capiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
 
-// Cluster is the schema for the cluster's API
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
@@ -33,6 +32,8 @@ import (
 // +kubebuilder:printcolumn:name="InfraType",type="string",JSONPath=".spec.infraType",description="Infra type of the cluster"
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".spec.version",description="Kubernetes version of the cluster"
 // +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Phase of the cluster"
+
+// Cluster is the schema for the cluster's API
 type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

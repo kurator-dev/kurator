@@ -5,4 +5,4 @@ weight: 30
 description: "Detailed docuementation on the fleet API"
 ---
 
-{{< reference fleet_types >}}
+{{< reference fleet_v1alpha1_types >}}
