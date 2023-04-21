@@ -54,6 +54,8 @@ const (
 	AccessKeyDataKey       = "AccessKeyID"     // keep this in sync with https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/master/pkg/cloud/identity/identity.go#L47
 	SecretAccessKeyDataKey = "SecretAccessKey" // keep this in sync with https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/master/pkg/cloud/identity/identity.go#L48
 	SessionTokenDataKey    = "SessionToken"    // keep this in sync with https://github.com/kubernetes-sigs/cluster-api-provider-aws/blob/master/pkg/cloud/identity/identity.go#L49
+
+	AWSResourceNameTag = "Name"
 )
 
 type AWSCredentials struct {
@@ -280,7 +282,11 @@ func (p *AWSProvider) reconcileAWSCluster(ctx context.Context) (*awsinfrav1.AWSC
 				},
 				NetworkSpec: awsinfrav1.NetworkSpec{
 					VPC: awsinfrav1.VPCSpec{
+						ID:        scopeCluster.VpcID,
 						CidrBlock: scopeCluster.VpcCIDR,
+						Tags: map[string]string{
+							AWSResourceNameTag: scopeCluster.VpcName,
+						},
 					},
 				},
 			}
@@ -295,6 +301,13 @@ func (p *AWSProvider) reconcileAWSCluster(ctx context.Context) (*awsinfrav1.AWSC
 	}
 
 	awsCluster.Spec.NetworkSpec.VPC.CidrBlock = scopeCluster.VpcCIDR
+
+	tags := awsCluster.Spec.NetworkSpec.VPC.Tags.DeepCopy()
+	if tags[AWSResourceNameTag] != scopeCluster.VpcName {
+		tags[AWSResourceNameTag] = scopeCluster.VpcName
+	}
+	awsCluster.Spec.NetworkSpec.VPC.Tags = tags
+
 	awsCluster.Spec.IdentityRef = &awsinfrav1.AWSIdentityReference{
 		Kind: awsinfrav1.ClusterStaticIdentityKind,
 		Name: scopeCluster.SecretName(),

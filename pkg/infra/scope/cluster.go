@@ -43,7 +43,9 @@ type Cluster struct {
 	CredentialSecretRef string
 	Version             string
 	Region              string
+	VpcID               string
 	VpcCIDR             string
+	VpcName             string
 	PodCIDR             []string
 	ServiceCIDR         []string
 	CNIType             string
@@ -85,7 +87,9 @@ func NewCluster(cluster *clusterv1alpha1.Cluster) *Cluster {
 		NamespacedName:    nn,
 		Version:           cluster.Spec.Version,
 		Region:            cluster.Spec.Region,
+		VpcID:             cluster.Spec.Network.VPC.ID,
 		VpcCIDR:           cluster.Spec.Network.VPC.CIDRBlock,
+		VpcName:           cluster.Spec.Network.VPC.Name,
 		PodCIDR:           cluster.Spec.Network.PodCIDRs,
 		ServiceCIDR:       cluster.Spec.Network.ServiceCIDRs,
 		ControlPlane:      NewInstance(cluster.Spec.InfraType, cluster.Spec.Master.MachineConfig),
