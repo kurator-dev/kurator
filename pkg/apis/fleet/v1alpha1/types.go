@@ -21,15 +21,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type FleetPhase string
+
 const (
 	// PendingPhase is the phase when the fleet is not processed.
-	PendingPhase = "Pending"
+	PendingPhase FleetPhase = "Pending"
 	// RunningPhase is the phase when fleet control plane is being installed.
-	RunningPhase = "Running"
+	RunningPhase FleetPhase = "Running"
 	// FailedPhase is the phase when fleet control plane installation installed.
-	FailedPhase = "Failed"
+	FailedPhase FleetPhase = "Failed"
 	// ReadyPhase is the phase when fleet control plane installation finished successfully.
-	ReadyPhase = "Ready"
+	ReadyPhase FleetPhase = "Ready"
+	// TerminatingPhase is the phase when fleet control plane is terminating.
+	TerminatingPhase FleetPhase = "Terminating"
+	// TerminateFailedPhase is the phase when fleet control plane terminate failed.
+	TerminateFailedPhase FleetPhase = "TerminateFailed"
+	// TerminateSucceededPhase is the phase when fleet control plane is terminated successfully.
+	TerminateSucceededPhase FleetPhase = "TerminateSucceeded"
 )
 
 // +genclient
@@ -66,7 +74,7 @@ type FleetStatus struct {
 	// Phase represents the current phase of fleet.
 	// E.g. Pending, Running, Terminating, Failed, Ready, etc.
 	// +optional
-	Phase string `json:"phase,omitempty"`
+	Phase FleetPhase `json:"phase,omitempty"`
 
 	// TODO: add conditions fields if needed
 

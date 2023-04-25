@@ -49,8 +49,9 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 		// pod already exists
 		if pod.Status.Phase == corev1.PodSucceeded {
 			// pod is done, update the fleet status
-			fleet.Status.Phase = PhaseReady
+			fleet.Status.Phase = fleetapi.ReadyPhase
 			// TODO: update the kubeconfig api endpoint?
+			// "kubeconfig" is the name of the kubeconfig to access karmada apiserver.
 			fleet.Status.CredentialSecret = "kubeconfig"
 		}
 		return nil
@@ -137,7 +138,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 		}
 	}
 
-	fleet.Status.Phase = PhaseRunning
+	fleet.Status.Phase = fleetapi.RunningPhase
 	return nil
 }
 
@@ -172,11 +173,11 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 				return fmt.Errorf("failed to update clusterrolebinding: %v", err)
 			}
 
-			fleet.Status.Phase = PhaseTerminateSucceeded
+			fleet.Status.Phase = fleetapi.TerminateSucceededPhase
 			return nil
 		}
 		if pod.Status.Phase == corev1.PodFailed {
-			fleet.Status.Phase = PhaseTerminateFailed
+			fleet.Status.Phase = fleetapi.TerminateFailedPhase
 			ctrl.LoggerFrom(ctx).Info("pod failed", "pod", types.NamespacedName{Name: podName, Namespace: namespace})
 			return nil
 		}
@@ -225,6 +226,6 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 		return fmt.Errorf("failed to create fleet control plane init pod: %v", err)
 	}
 
-	fleet.Status.Phase = PhaseTerminating
+	fleet.Status.Phase = fleetapi.TerminatingPhase
 	return nil
 }

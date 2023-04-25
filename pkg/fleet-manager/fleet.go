@@ -41,13 +41,6 @@ import (
 const (
 	FleetKind      = "Fleet"
 	FleetFinalizer = "fleet.kurator.dev"
-
-	PhaseRunning            = "Running"
-	PhaseFailed             = "Failed"
-	PhaseReady              = "Ready"
-	PhaseTerminating        = "Terminating"
-	PhaseTerminateSucceeded = "TerminateSucceeded"
-	PhaseTerminateFailed    = "TerminateFailed"
 )
 
 const RequeueAfter = 5 * time.Second
@@ -124,15 +117,15 @@ func (f *FleetManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.
 
 	// Add finalizer if not exist to void the race condition.
 	if !controllerutil.ContainsFinalizer(fleet, FleetFinalizer) {
-		fleet.Status.Phase = PhaseRunning
+		fleet.Status.Phase = fleetapi.RunningPhase
 		controllerutil.AddFinalizer(fleet, FleetFinalizer)
 		return ctrl.Result{}, nil
 	}
 
 	// Handle deletion reconciliation loop.
 	if fleet.DeletionTimestamp != nil {
-		if fleet.Status.Phase != PhaseTerminating {
-			fleet.Status.Phase = PhaseTerminating
+		if fleet.Status.Phase != fleetapi.TerminatingPhase {
+			fleet.Status.Phase = fleetapi.TerminatingPhase
 		}
 
 		return f.reconcileDelete(ctx, fleet)
@@ -149,12 +142,12 @@ func (f *FleetManager) reconcile(ctx context.Context, fleet *fleetapi.Fleet) (ct
 	// Install fleet control plane
 	if err := f.reconcileControlPlane(ctx, fleet); err != nil {
 		log.Error(err, "controlplane reconcile failed")
-		fleet.Status.Phase = PhaseFailed
+		fleet.Status.Phase = fleetapi.FailedPhase
 		fleet.Status.Reason = err.Error()
 		return ctrl.Result{}, err
 	}
 
-	if fleet.Status.Phase != PhaseReady {
+	if fleet.Status.Phase != fleetapi.ReadyPhase {
 		return ctrl.Result{}, nil
 	}
 
@@ -177,7 +170,7 @@ func (f *FleetManager) reconcileDelete(ctx context.Context, fleet *fleetapi.Flee
 		return ctrl.Result{}, err
 	}
 
-	if fleet.Status.Phase == PhaseTerminateSucceeded {
+	if fleet.Status.Phase == fleetapi.TerminateSucceededPhase {
 		// Remove finalizer when all related resources are deleted.
 		controllerutil.RemoveFinalizer(fleet, FleetFinalizer)
 	}
