@@ -201,6 +201,138 @@ ClusterStatus
 </table>
 </div>
 </div>
+<h3 id="cluster.kurator.dev/v1alpha1.AttachedCluster">AttachedCluster
+</h3>
+<p>AttachedCluster is the schema for the external cluster that are not created by kurator.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.AttachedClusterSpec">
+AttachedClusterSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>kubeconfig</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Kubeconfig represents the secret that contains the credential to access this cluster.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#cluster.kurator.dev/v1alpha1.AttachedClusterStatus">
+AttachedClusterStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.AttachedClusterSpec">AttachedClusterSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.AttachedCluster">AttachedCluster</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>kubeconfig</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Kubeconfig represents the secret that contains the credential to access this cluster.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.AttachedClusterStatus">AttachedClusterStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.AttachedCluster">AttachedCluster</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>accepted</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Accepted indicates whether the cluster is resgitered to kurator fleet.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="cluster.kurator.dev/v1alpha1.CIDRBlocks">CIDRBlocks
 (<code>[]string</code> alias)</h3>
 <p>
@@ -1014,6 +1146,46 @@ string
 <p>DeletePolicy defines the policy used to identify nodes to delete when downscaling.
 Valid values are &ldquo;Random&rdquo;, &ldquo;Newest&rdquo; and &ldquo;Oldest&rdquo;.
 Defaults to &ldquo;Newest&rdquo;.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="cluster.kurator.dev/v1alpha1.SecretKeyRef">SecretKeyRef
+</h3>
+<p>SecretKeyRef holds the reference to a secret key.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the secret.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key is the key of the secret.
+If no key is specified, the secret&rsquo;s default key is <code>value</code>.</p>
 </td>
 </tr>
 </tbody>

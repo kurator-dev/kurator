@@ -18,6 +18,14 @@ limitations under the License.
 
 package v1alpha1
 
+// AttachedClusterListerExpansion allows custom methods to be added to
+// AttachedClusterLister.
+type AttachedClusterListerExpansion interface{}
+
+// AttachedClusterNamespaceListerExpansion allows custom methods to be added to
+// AttachedClusterNamespaceLister.
+type AttachedClusterNamespaceListerExpansion interface{}
+
 // ClusterListerExpansion allows custom methods to be added to
 // ClusterLister.
 type ClusterListerExpansion interface{}
