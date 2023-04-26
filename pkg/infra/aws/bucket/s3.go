@@ -72,11 +72,32 @@ func (c *s3Client) BucketExists() bool {
 func (c *s3Client) MakeBucket() error {
 	svc := s3.New(c.sess)
 	_, err := svc.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(c.bucketName),
+		Bucket:          aws.String(c.bucketName),
+		ObjectOwnership: aws.String(s3.ObjectOwnershipObjectWriter),
 	})
 	if err != nil {
 		return errors.Wrapf(err, "failed to create bucket %s", c.bucketName)
 	}
+
+	// Starting in April 2023, Amazon S3 will change the default settings for S3 Block Public Access and
+	// Object Ownership (ACLs disabled) for all new S3 buckets. For new buckets created after this update,
+	// all S3 Block Public Access settings will be enabled, and S3 access control lists (ACLs) will be disabled.
+	// These defaults are the recommended best practices for securing data in Amazon S3.
+	// You can adjust these settings after creating your bucket.
+	// For more information, see https://docs.aws.amazon.com/AmazonS3/latest/userguide/create-bucket-faq.html
+	_, err = svc.PutPublicAccessBlock(&s3.PutPublicAccessBlockInput{
+		Bucket: aws.String(c.bucketName),
+		PublicAccessBlockConfiguration: &s3.PublicAccessBlockConfiguration{
+			BlockPublicAcls:       aws.Bool(false),
+			BlockPublicPolicy:     aws.Bool(false),
+			IgnorePublicAcls:      aws.Bool(false),
+			RestrictPublicBuckets: aws.Bool(false),
+		},
+	})
+	if err != nil {
+		return errors.Wrapf(err, "failed to update public access block %s", c.bucketName)
+	}
+
 	return nil
 }
 
@@ -134,11 +155,6 @@ func (c *s3Client) cleanBucket(svc *s3.S3) error {
 	return nil
 }
 
-const (
-	PublicReadACL = "public-read"
-	PrivateACL    = "private"
-)
-
 func S3Files(issuerHost string) ([]*File, error) {
 	cert, err := openid.NewCert()
 	if err != nil {
@@ -151,7 +167,7 @@ func S3Files(issuerHost string) ([]*File, error) {
 	files = append(files, &File{
 		Filename: ".well-known/openid-configuration",
 		Buffer:   bytes.NewBufferString(discovery),
-		ACL:      PublicReadACL,
+		ACL:      s3.BucketCannedACLPublicRead,
 	})
 
 	// upload keys.json
@@ -162,21 +178,21 @@ func S3Files(issuerHost string) ([]*File, error) {
 	files = append(files, &File{
 		Filename: "keys.json",
 		Buffer:   bytes.NewBuffer(keysJSONBuff),
-		ACL:      PublicReadACL,
+		ACL:      s3.BucketCannedACLPublicRead,
 	})
 
 	// sa-signer.key
 	files = append(files, &File{
 		Filename: "sa-signer.key",
 		Buffer:   bytes.NewBuffer(cert.PrivateKey),
-		ACL:      PrivateACL,
+		ACL:      s3.BucketCannedACLPrivate,
 	})
 
 	// sa-signer-pkcs8.pub
 	files = append(files, &File{
 		Filename: "sa-signer-pkcs8.pub",
 		Buffer:   bytes.NewBuffer(cert.PublicKey),
-		ACL:      PrivateACL,
+		ACL:      s3.BucketCannedACLPrivate,
 	})
 
 	return files, nil
