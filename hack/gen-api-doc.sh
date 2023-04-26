@@ -15,7 +15,7 @@ TEMPLATE_DIR="${REPO_ROOT}/hack/api-docs/template"
 OUT_DIR="${REPO_ROOT}/docs/content/en/references"
 API_DIR="./pkg/apis"
 
-if ! [ -x "$(command -v crd-ref-docs)" ]; then
+if ! [ -x "$(command -v gen-crd-api-reference-docs)" ]; then
     util::install_tools github.com/ahmetb/gen-crd-api-reference-docs 45bac9a # 2023-03-28
 fi
 
