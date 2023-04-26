@@ -130,7 +130,7 @@ type ConfigTemplateContent struct {
 	CNIType string
 	// ControlPlaneConfigAddress same as `ControlPlaneEndpoint`.
 	ControlPlaneAddress string
-	// ControlPlaneConfigCertSANs sets extra Subject Alternative Names for the API Server signing cert.
+	// ControlPlaneCertSANs sets extra Subject Alternative Names for the API Server signing cert.
 	ControlPlaneCertSANs string
 	ClusterName          string
 	DnsDomain            string
@@ -139,6 +139,9 @@ type ConfigTemplateContent struct {
 	// The keys of the map are the names of the feature gates, and the values are boolean values that indicate whether
 	// the feature gate is enabled (true) or disabled (false).
 	FeatureGates map[string]bool
+	// LBDomainName is a variable used to set the endpoint for a Kubernetes cluster when a load balancer is enabled.
+	LBDomainName string
+	// TODO: support other kubernetes configs
 }
 
 func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane, cc *v1alpha1.CustomCluster) *ConfigTemplateContent {
@@ -154,6 +157,7 @@ func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPl
 		DnsDomain:            c.Spec.ClusterNetwork.ServiceDomain,
 		KubeImageRepo:        kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository,
 		FeatureGates:         kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.FeatureGates,
+		LBDomainName:         cc.Spec.ControlPlaneConfig.LBDomainName,
 	}
 	return configContent
 }

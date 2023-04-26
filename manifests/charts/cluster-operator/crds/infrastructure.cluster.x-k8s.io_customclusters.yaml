@@ -61,6 +61,11 @@ spec:
                     items:
                       type: string
                     type: array
+                  lbDomainName:
+                    description: LBDomainName is a variable used to set the endpoint
+                      for a Kubernetes cluster when a load balancer (LB) is enabled.
+                      The default value is "lb-apiserver.kubernetes.local".
+                    type: string
                 required:
                 - address
                 type: object
