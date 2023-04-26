@@ -28,12 +28,17 @@ import (
 
 type ClusterV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	AttachedClustersGetter
 	ClustersGetter
 }
 
 // ClusterV1alpha1Client is used to interact with features provided by the cluster.kurator.dev group.
 type ClusterV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *ClusterV1alpha1Client) AttachedClusters(namespace string) AttachedClusterInterface {
+	return newAttachedClusters(c, namespace)
 }
 
 func (c *ClusterV1alpha1Client) Clusters(namespace string) ClusterInterface {

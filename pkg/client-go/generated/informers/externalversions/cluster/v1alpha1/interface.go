@@ -24,6 +24,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// AttachedClusters returns a AttachedClusterInformer.
+	AttachedClusters() AttachedClusterInformer
 	// Clusters returns a ClusterInformer.
 	Clusters() ClusterInformer
 }
@@ -37,6 +39,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// AttachedClusters returns a AttachedClusterInformer.
+func (v *version) AttachedClusters() AttachedClusterInformer {
+	return &attachedClusterInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // Clusters returns a ClusterInformer.

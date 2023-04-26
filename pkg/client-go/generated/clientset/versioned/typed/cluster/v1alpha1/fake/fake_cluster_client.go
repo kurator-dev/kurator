@@ -28,6 +28,10 @@ type FakeClusterV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeClusterV1alpha1) AttachedClusters(namespace string) v1alpha1.AttachedClusterInterface {
+	return &FakeAttachedClusters{c, namespace}
+}
+
 func (c *FakeClusterV1alpha1) Clusters(namespace string) v1alpha1.ClusterInterface {
 	return &FakeClusters{c, namespace}
 }
