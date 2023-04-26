@@ -51,3 +51,12 @@ type AttachedClusterStatus struct {
 	// Accepted indicates whether the cluster is resgitered to kurator fleet.
 	Accepted bool `json:"accepted"`
 }
+
+// AttachedClusterList contains a list of AttachedCluster.
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type AttachedClusterList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []AttachedCluster `json:"items"`
+}
