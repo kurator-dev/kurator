@@ -6,6 +6,11 @@ metadata:
 spec:
   kubeadmConfigSpec:
     clusterConfiguration:
+      clusterName: kurator-cluster
+      imageRepository: registry.aliyuncs.com
+      featureGates:
+        PodOverhead: true
+        NodeSwap: true
     initConfiguration:
     joinConfiguration:
   machineTemplate:

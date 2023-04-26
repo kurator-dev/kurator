@@ -129,11 +129,13 @@ If you just modify the IP and apply the manifest directly, you will get a kubern
 
 Here are some optional parameters you may care about and the setting position:
 
-| parameters | setting-position                            |
-| :-----|:--------------------------------------------| 
-| KubeVersion | KubeadmControlPlane.Spec.Version            | 
-| PodCIDR | Cluster.Spec.ClusterNetwork.Pods.CidrBlocks | 
-| CNIPlugin | CustomCluster.CNI.Type                      | 
+| parameters    | setting-position                                                |
+|:--------------|:----------------------------------------------------------------| 
+| KubeVersion   | KubeadmControlPlane.Spec.Version                                | 
+| PodCIDR       | Cluster.Spec.ClusterNetwork.Pods.CidrBlocks                     | 
+| ServiceCIDR   | Cluster.Spec.ClusterNetwork.Services.CidrBlocks                 |
+| CNIPlugin     | CustomCluster.CNI.Type                                          | 
+| KubeImageRepo | kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository |
 
 ## Deploy a k8s cluster on VMs
 
