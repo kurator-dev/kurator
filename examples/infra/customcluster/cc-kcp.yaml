@@ -7,7 +7,7 @@ spec:
   kubeadmConfigSpec:
     clusterConfiguration:
       clusterName: kurator-cluster
-      imageRepository: registry.aliyuncs.com
+      imageRepository:
       featureGates:
         PodOverhead: true
         NodeSwap: true
