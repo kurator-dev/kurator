@@ -39,6 +39,7 @@ kube_feature_gates:
 {{if .ServiceCIDR}}
 kube_service_addresses: {{ .ServiceCIDR }}
 {{end}}
-{{if .LBDomainName}}
-apiserver_loadbalancer_domain_name: {{ .LBDomainName }}
+
+{{if .LoadBalancerDomainName}}
+apiserver_loadbalancer_domain_name: {{ .LoadBalancerDomainName }}
 {{end}}

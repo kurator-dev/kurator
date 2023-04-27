@@ -139,25 +139,25 @@ type ConfigTemplateContent struct {
 	// The keys of the map are the names of the feature gates, and the values are boolean values that indicate whether
 	// the feature gate is enabled (true) or disabled (false).
 	FeatureGates map[string]bool
-	// LBDomainName is a variable used to set the endpoint for a Kubernetes cluster when a load balancer is enabled.
-	LBDomainName string
+	// LoadBalancerDomainName is a variable used to set the endpoint for a Kubernetes cluster when a load balancer is enabled.
+	LoadBalancerDomainName string
 	// TODO: support other kubernetes configs
 }
 
 func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane, cc *v1alpha1.CustomCluster) *ConfigTemplateContent {
 	// Add kubespray init config here
 	configContent := &ConfigTemplateContent{
-		PodCIDR:              c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
-		ServiceCIDR:          c.Spec.ClusterNetwork.Services.CIDRBlocks[0],
-		KubeVersion:          kcp.Spec.Version,
-		CNIType:              cc.Spec.CNI.Type,
-		ControlPlaneAddress:  cc.Spec.ControlPlaneConfig.Address,
-		ControlPlaneCertSANs: strings.Join(cc.Spec.ControlPlaneConfig.CertSANs, ","),
-		ClusterName:          kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ClusterName,
-		DnsDomain:            c.Spec.ClusterNetwork.ServiceDomain,
-		KubeImageRepo:        kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository,
-		FeatureGates:         kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.FeatureGates,
-		LBDomainName:         cc.Spec.ControlPlaneConfig.LBDomainName,
+		PodCIDR:                c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
+		ServiceCIDR:            c.Spec.ClusterNetwork.Services.CIDRBlocks[0],
+		KubeVersion:            kcp.Spec.Version,
+		CNIType:                cc.Spec.CNI.Type,
+		ControlPlaneAddress:    cc.Spec.ControlPlaneConfig.Address,
+		ControlPlaneCertSANs:   strings.Join(cc.Spec.ControlPlaneConfig.CertSANs, ","),
+		ClusterName:            kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ClusterName,
+		DnsDomain:              c.Spec.ClusterNetwork.ServiceDomain,
+		KubeImageRepo:          kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository,
+		FeatureGates:           kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.FeatureGates,
+		LoadBalancerDomainName: cc.Spec.ControlPlaneConfig.LoadBalancerDomainName,
 	}
 	return configContent
 }

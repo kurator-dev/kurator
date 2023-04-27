@@ -63,9 +63,9 @@ type ControlPlaneConfig struct {
 	// CertSANs sets extra Subject Alternative Names for the API Server signing cert.
 	// +optional
 	CertSANs []string `json:"certSANs,omitempty"`
-	// LBDomainName is a variable used to set the endpoint for a Kubernetes cluster
+	// LoadBalancerDomainName is a variable used to set the endpoint for a Kubernetes cluster
 	// when a load balancer (LB) is enabled. The default value is "lb-apiserver.kubernetes.local".
-	LBDomainName string `json:"lbDomainName,omitempty"`
+	LoadBalancerDomainName string `json:"loadBalancerDomainName,omitempty"`
 }
 
 type CNIConfig struct {
