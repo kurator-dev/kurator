@@ -21,6 +21,7 @@ package bucket
 
 import (
 	"bytes"
+	"net/http"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -35,7 +36,7 @@ func TestS3ClientMakeBucket(t *testing.T) {
 	}
 	awsConfig = awsConfig.WithCredentials(credentials.NewSharedCredentials("", ""))
 
-	bucket := "kurator-lacal-test"
+	bucket := "kurator-local-test"
 	client, err := NewS3Client(awsConfig, bucket)
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
@@ -62,30 +63,47 @@ func TestS3Client(t *testing.T) {
 	}
 	awsConfig = awsConfig.WithCredentials(credentials.NewSharedCredentials("", ""))
 
-	bucket := "kurator-lacal-test"
+	bucket := "kurator-local-test"
 	client, err := NewS3Client(awsConfig, bucket)
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 
 	exist := client.BucketExists()
-	assert.Equal(t, exist, false)
+	assert.Equal(t, false, exist)
 
 	err = client.MakeBucket()
 	assert.NoError(t, err)
 
 	err = client.PutObject(&File{
-		Filename: "test.json",
+		Filename: "public.json",
 		Buffer:   bytes.NewBufferString("123456"),
 		ACL:      "public-read",
 	})
 	assert.NoError(t, err)
 
+	resp, err := http.Get("https://s3.us-east-2.amazonaws.com/kurator-local-test/public.json")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, 200, resp.StatusCode)
+
+	err = client.PutObject(&File{
+		Filename: "private.json",
+		Buffer:   bytes.NewBufferString("123456"),
+		ACL:      "private",
+	})
+	assert.NoError(t, err)
+
+	resp, err = http.Get("https://s3.us-east-2.amazonaws.com/kurator-local-test/private.json")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, 403, resp.StatusCode)
+
 	exist = client.BucketExists()
-	assert.Equal(t, exist, true)
+	assert.Equal(t, true, exist)
 
 	err = client.DeleteBucket()
 	assert.NoError(t, err)
 
 	exist = client.BucketExists()
-	assert.Equal(t, exist, false)
+	assert.Equal(t, false, exist)
 }
