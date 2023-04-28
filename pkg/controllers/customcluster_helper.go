@@ -17,12 +17,12 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
-	"strings"
-	"text/template"
-
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +30,8 @@ import (
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"strings"
+	"text/template"
 
 	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
@@ -412,4 +414,127 @@ func hasProvisionClusterInfo(phase v1alpha1.CustomClusterPhase) bool {
 		return true
 	}
 	return false
+}
+
+// fetchProvisionedClusterKubeConfig fetch provisioned cluster’s kubeConfig file, and create a secret named "provisionedClusterKubeConfigSecretPrefix + customCluster.name" with the data of kube-config file.
+func (r *CustomClusterController) fetchProvisionedClusterKubeConfig(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) error {
+	remoteMachineSSHKey := customMachine.Spec.Master[0].SSHKey
+	controlPlaneHost := customMachine.Spec.Master[0].PublicIP
+
+	sshKeySecret, err := r.getSSHKeySecret(ctx, customMachine.Namespace, remoteMachineSSHKey.Name)
+	if err != nil {
+		return err
+	}
+
+	sshConfig, err := r.buildSSHClientConfig(sshKeySecret)
+	if err != nil {
+		return err
+	}
+
+	sftpClient, err := r.connectSFTPClient(controlPlaneHost+":22", sshConfig)
+	if err != nil {
+		return err
+	}
+	defer sftpClient.Close()
+
+	kubeConfigData, err := r.fetchRemoteKubeConfig(sftpClient, getProvisionedKubeConfigPath())
+	if err != nil {
+		return err
+	}
+
+	err = r.createKubeConfigSecret(ctx, generateProvisionedClusterSecretName(customCluster), customCluster.Namespace, kubeConfigData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *CustomClusterController) getSSHKeySecret(ctx context.Context, namespace, name string) (*corev1.Secret, error) {
+	sshKeySecret := &corev1.Secret{}
+	key := client.ObjectKey{Namespace: namespace, Name: name}
+	if err := r.Client.Get(ctx, key, sshKeySecret); err != nil {
+		return nil, err
+	}
+	return sshKeySecret, nil
+}
+
+func (r *CustomClusterController) buildSSHClientConfig(sshKeySecret *corev1.Secret) (*ssh.ClientConfig, error) {
+	sshPrivateKeyData, ok := sshKeySecret.Data["ssh-privatekey"]
+	if !ok {
+		return nil, fmt.Errorf("ssh-privatekey not found in secret")
+	}
+
+	signer, err := ssh.ParsePrivateKey(sshPrivateKeyData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse SSH private key: %v", err)
+	}
+
+	sshConfig := &ssh.ClientConfig{
+		User: "root",
+		Auth: []ssh.AuthMethod{
+			ssh.PublicKeys(signer),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	return sshConfig, nil
+}
+
+func (r *CustomClusterController) connectSFTPClient(addr string, sshConfig *ssh.ClientConfig) (*sftp.Client, error) {
+	conn, err := ssh.Dial("tcp", addr, sshConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect: %v", err)
+	}
+
+	sftpClient, err := sftp.NewClient(conn)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed to create SFTP client: %v", err)
+	}
+
+	return sftpClient, nil
+}
+
+func (r *CustomClusterController) fetchRemoteKubeConfig(sftpClient *sftp.Client, path string) ([]byte, error) {
+	remoteFile, err := sftpClient.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open remote file: %v", err)
+	}
+	defer remoteFile.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(remoteFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read remote file: %v", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+func (r *CustomClusterController) createKubeConfigSecret(ctx context.Context, name, namespace string, kubeConfigData []byte) error {
+	newSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Type: corev1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"admin.conf": kubeConfigData,
+		},
+	}
+
+	if err := r.Client.Create(ctx, newSecret); err != nil {
+		return fmt.Errorf("failed to create new secret: %v", err)
+	}
+
+	return nil
+}
+
+func getProvisionedKubeConfigPath() string {
+	return "/etc/kubernetes/admin.conf"
+}
+
+func generateProvisionedClusterSecretName(customCluster *v1alpha1.CustomCluster) string {
+	return provisionedClusterKubeConfigSecretPrefix + customCluster.Name
 }
