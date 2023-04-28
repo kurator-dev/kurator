@@ -230,7 +230,7 @@ spec:
     # address is your VIP, assume your VIP is 192.x.x.0
     address: 192.x.x.0
     # loadBalancerDomainName is an optional field that sets the load balancer domain name. 
-    # If not specified, the default name, "lb-apiserver.kubernetes.local" is used. 
+    # If not specified, the default name, controlPlaneConfig.address is used. 
     loadBalancerDomainName: my-apiserver-lb.kurator.com
     # optional, sets extra Subject Alternative Names for the API Server signing cert. 
     # If you don't have any want to add, you can directly remove this field.
