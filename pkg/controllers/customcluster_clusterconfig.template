@@ -20,3 +20,23 @@ apiserver_loadbalancer_domain_name: {{ .ControlPlaneAddress }}
 supplementary_addresses_in_ssl_keys: [{{ .ControlPlaneCertSANs }}]
 kube_vip_lb_enable: true
 {{end}}
+
+{{if .ClusterName}}
+cluster_name: {{ .ClusterName }}
+{{end}}
+
+{{if .DnsDomain}}
+dns_domain: {{ .DnsDomain }}
+{{end}}
+
+{{if .KubeImageRepo}}
+kube_image_repo: {{ .KubeImageRepo }}
+{{end}}
+
+kube_feature_gates:
+{{ range $key, $value := .FeatureGates }}- {{ $key }}={{ $value }}
+{{end}}
+
+{{if .ServiceCIDR}}
+kube_service_addresses: {{ .ServiceCIDR }}
+{{end}}

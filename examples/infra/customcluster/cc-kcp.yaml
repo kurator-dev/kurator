@@ -6,6 +6,11 @@ metadata:
 spec:
   kubeadmConfigSpec:
     clusterConfiguration:
+      clusterName: kurator-cluster
+      imageRepository:
+      featureGates:
+        PodOverhead: true
+        NodeSwap: true
     initConfiguration:
     joinConfiguration:
   machineTemplate:

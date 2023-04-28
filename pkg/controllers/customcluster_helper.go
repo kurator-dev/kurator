@@ -122,24 +122,38 @@ type HostTemplateContent struct {
 
 type ConfigTemplateContent struct {
 	KubeVersion string
-	PodCIDR     string
+	// The default value is 10.233.0.0/18, must be unused block of space.
+	ServiceCIDR string
+	// The default value is 10.233.64.0/18, must be unused in your network infrastructure.
+	PodCIDR string
 	// CNIType is the CNI plugin of the cluster on VMs. The default plugin is calico and can be ["calico", "cilium", "canal", "flannel"]
 	CNIType string
 	// ControlPlaneConfigAddress same as `ControlPlaneEndpoint`.
 	ControlPlaneAddress string
 	// ControlPlaneConfigCertSANs sets extra Subject Alternative Names for the API Server signing cert.
 	ControlPlaneCertSANs string
-	// TODO: support other kubernetes configs
+	ClusterName          string
+	DnsDomain            string
+	KubeImageRepo        string
+	// FeatureGates is a map that stores the names and boolean values of Kubernetes feature gates.
+	// The keys of the map are the names of the feature gates, and the values are boolean values that indicate whether
+	// the feature gate is enabled (true) or disabled (false).
+	FeatureGates map[string]bool
 }
 
 func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane, cc *v1alpha1.CustomCluster) *ConfigTemplateContent {
 	// Add kubespray init config here
 	configContent := &ConfigTemplateContent{
 		PodCIDR:              c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
+		ServiceCIDR:          c.Spec.ClusterNetwork.Services.CIDRBlocks[0],
 		KubeVersion:          kcp.Spec.Version,
 		CNIType:              cc.Spec.CNI.Type,
 		ControlPlaneAddress:  cc.Spec.ControlPlaneConfig.Address,
 		ControlPlaneCertSANs: strings.Join(cc.Spec.ControlPlaneConfig.CertSANs, ","),
+		ClusterName:          kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ClusterName,
+		DnsDomain:            c.Spec.ClusterNetwork.ServiceDomain,
+		KubeImageRepo:        kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository,
+		FeatureGates:         kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.FeatureGates,
 	}
 	return configContent
 }
