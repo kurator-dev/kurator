@@ -66,10 +66,11 @@ type ClusterInfo struct {
 }
 
 const (
-	ClusterHostsName                         = "cluster-hosts"
-	ClusterConfigName                        = "cluster-config"
-	SecreteName                              = "cluster-secret"
-	provisionedClusterKubeConfigSecretPrefix = "provisioned-cluster-kube-config-"
+	ClusterHostsName            = "cluster-hosts"
+	ClusterConfigName           = "cluster-config"
+	SecreteName                 = "cluster-secret"
+	provisionedKubeConfigPrefix = "provisioned-cluster-kube-config-"
+	ProvisionedKubeConfigPath   = "/etc/kubernetes/admin.conf"
 
 	ClusterKind       = "Cluster"
 	CustomClusterKind = "CustomCluster"

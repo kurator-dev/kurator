@@ -21,6 +21,9 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"strings"
+	"text/template"
+
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
@@ -30,8 +33,6 @@ import (
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"strings"
-	"text/template"
 
 	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
@@ -431,18 +432,18 @@ func (r *CustomClusterController) fetchProvisionedClusterKubeConfig(ctx context.
 		return err
 	}
 
-	sftpClient, err := r.connectSFTPClient(controlPlaneHost+":22", sshConfig)
+	sftpClient, err := r.buildSFTPClient(controlPlaneHost+":22", sshConfig)
 	if err != nil {
 		return err
 	}
 	defer sftpClient.Close()
 
-	kubeConfigData, err := r.fetchRemoteKubeConfig(sftpClient, getProvisionedKubeConfigPath())
+	kubeConfigData, err := r.fetchRemoteKubeConfig(sftpClient, ProvisionedKubeConfigPath)
 	if err != nil {
 		return err
 	}
 
-	err = r.createKubeConfigSecret(ctx, generateProvisionedClusterSecretName(customCluster), customCluster.Namespace, kubeConfigData)
+	err = r.createKubeConfigSecret(ctx, getKubeConfigSecretName(customCluster), customCluster.Namespace, kubeConfigData)
 	if err != nil {
 		return err
 	}
@@ -481,7 +482,7 @@ func (r *CustomClusterController) buildSSHClientConfig(sshKeySecret *corev1.Secr
 	return sshConfig, nil
 }
 
-func (r *CustomClusterController) connectSFTPClient(addr string, sshConfig *ssh.ClientConfig) (*sftp.Client, error) {
+func (r *CustomClusterController) buildSFTPClient(addr string, sshConfig *ssh.ClientConfig) (*sftp.Client, error) {
 	conn, err := ssh.Dial("tcp", addr, sshConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect: %v", err)
@@ -531,10 +532,6 @@ func (r *CustomClusterController) createKubeConfigSecret(ctx context.Context, na
 	return nil
 }
 
-func getProvisionedKubeConfigPath() string {
-	return "/etc/kubernetes/admin.conf"
-}
-
-func generateProvisionedClusterSecretName(customCluster *v1alpha1.CustomCluster) string {
-	return provisionedClusterKubeConfigSecretPrefix + customCluster.Name
+func getKubeConfigSecretName(customCluster *v1alpha1.CustomCluster) string {
+	return provisionedKubeConfigPrefix + customCluster.Name
 }
