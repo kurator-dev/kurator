@@ -64,7 +64,7 @@ spec:
                   loadBalancerDomainName:
                     description: LoadBalancerDomainName is a variable used to set
                       the endpoint for a Kubernetes cluster when a load balancer (LB)
-                      is enabled. The default value is "lb-apiserver.kubernetes.local".
+                      is enabled. The default value is ControlPlaneConfig.Address.
                     type: string
                 required:
                 - address
