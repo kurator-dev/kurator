@@ -18,6 +18,11 @@ kube_vip_services_enabled: false
 kube_vip_arp_enabled: true
 supplementary_addresses_in_ssl_keys: [{{ .ControlPlaneCertSANs }}]
 kube_vip_lb_enable: true
+{{if .LoadBalancerDomainName}}
+apiserver_loadbalancer_domain_name: {{ .LoadBalancerDomainName }}
+{{else}}
+apiserver_loadbalancer_domain_name: {{ .ControlPlaneAddress }}
+{{end}}
 {{end}}
 
 {{if .ClusterName}}
@@ -38,8 +43,4 @@ kube_feature_gates:
 
 {{if .ServiceCIDR}}
 kube_service_addresses: {{ .ServiceCIDR }}
-{{end}}
-
-{{if .LoadBalancerDomainName}}
-apiserver_loadbalancer_domain_name: {{ .LoadBalancerDomainName }}
 {{end}}

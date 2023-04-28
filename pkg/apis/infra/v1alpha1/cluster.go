@@ -64,7 +64,7 @@ type ControlPlaneConfig struct {
 	// +optional
 	CertSANs []string `json:"certSANs,omitempty"`
 	// LoadBalancerDomainName is a variable used to set the endpoint for a Kubernetes cluster
-	// when a load balancer (LB) is enabled. The default value is "lb-apiserver.kubernetes.local".
+	// when a load balancer (LB) is enabled. The default value is ControlPlaneConfig.Address.
 	LoadBalancerDomainName string `json:"loadBalancerDomainName,omitempty"`
 }
 
