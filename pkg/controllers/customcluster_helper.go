@@ -533,5 +533,6 @@ func (r *CustomClusterController) createKubeConfigSecret(ctx context.Context, na
 }
 
 func getKubeConfigSecretName(customCluster *v1alpha1.CustomCluster) string {
-	return ProvisionedKubeConfigPrefix + customCluster.Name
+	// todo: Enhance the robustness of naming.
+	return customCluster.Name
 }

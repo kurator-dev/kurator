@@ -66,11 +66,10 @@ type ClusterInfo struct {
 }
 
 const (
-	ClusterHostsName            = "cluster-hosts"
-	ClusterConfigName           = "cluster-config"
-	SecreteName                 = "cluster-secret"
-	ProvisionedKubeConfigPrefix = "provisioned-cluster-kube-config-"
-	ProvisionedKubeConfigPath   = "/etc/kubernetes/admin.conf"
+	ClusterHostsName          = "cluster-hosts"
+	ClusterConfigName         = "cluster-config"
+	SecreteName               = "cluster-secret"
+	ProvisionedKubeConfigPath = "/etc/kubernetes/admin.conf"
 
 	ClusterKind       = "Cluster"
 	CustomClusterKind = "CustomCluster"
@@ -363,6 +362,7 @@ func (r *CustomClusterController) reconcileProvision(ctx context.Context, custom
 
 	// The provisioning process will be successfully completed if the init worker is finished successfully.
 	if initWorker.Status.Phase == corev1.PodSucceeded {
+		// todo: Add a status to inform users where the kubeconfig for the current customcluster is located.
 		if err := r.fetchProvisionedClusterKubeConfig(ctx, customCluster, customMachine); err != nil {
 			log.Error(err, "failed to fetch provisioned cluster kubeConfig")
 			return ctrl.Result{}, err
