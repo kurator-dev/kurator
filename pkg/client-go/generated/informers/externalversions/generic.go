@@ -23,7 +23,8 @@ import (
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
-	v1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	v1alpha1 "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
@@ -54,10 +55,14 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=cluster.kurator.dev, Version=v1alpha1
-	case v1alpha1.SchemeGroupVersion.WithResource("attachedclusters"):
+	// Group=apps.kurator.dev, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1alpha1().Applications().Informer()}, nil
+
+		// Group=cluster.kurator.dev, Version=v1alpha1
+	case clusterv1alpha1.SchemeGroupVersion.WithResource("attachedclusters"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().AttachedClusters().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("clusters"):
+	case clusterv1alpha1.SchemeGroupVersion.WithResource("clusters"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Cluster().V1alpha1().Clusters().Informer()}, nil
 
 		// Group=fleet.kurator.dev, Version=v1alpha1

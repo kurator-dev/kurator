@@ -1,0 +1,1204 @@
+<p>Packages:</p>
+<ul class="simple">
+<li>
+<a href="#apps.kurator.dev%2fv1alpha1">apps.kurator.dev/v1alpha1</a>
+</li>
+</ul>
+<h2 id="apps.kurator.dev/v1alpha1">apps.kurator.dev/v1alpha1</h2>
+<p>Package v1alpha1 contains API Schema definitions for the apps v1alpha1 API group</p>
+Resource Types:
+<ul class="simple"></ul>
+<h3 id="apps.kurator.dev/v1alpha1.Application">Application
+</h3>
+<p>Application is the schema for the application&rsquo;s API.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">
+ApplicationSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>source</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSource">
+ApplicationSource
+</a>
+</em>
+</td>
+<td>
+<p>Source defines the artifact source.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>syncPolicy</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">
+[]ApplicationSyncPolicy
+</a>
+</em>
+</td>
+<td>
+<p>SyncPolicy controls how the artifact will be synced.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationStatus">
+ApplicationStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationDestination">ApplicationDestination
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
+</p>
+<p>ApplicationDestination defines the configuration to dispatch an artifact to a fleet or specific clusters.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>fleet</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Fleet defines the fleet to dispatch the artifact.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterSelector</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ClusterSelector defines the label selectors to select the clusters of the fleet.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationSource">ApplicationSource
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec</a>)
+</p>
+<p>ApplicationSource defines the configuration to produce an artifact for git, helm or OCI repository.
+Note only one source can be specified</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>gitRepo</code><br>
+<em>
+github.com/fluxcd/source-controller/api/v1.GitRepositorySpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>helmRepo</code><br>
+<em>
+github.com/fluxcd/source-controller/api/v1beta2.HelmRepositorySpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>ociRepo</code><br>
+<em>
+github.com/fluxcd/source-controller/api/v1beta2.OCIRepositorySpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationSourceStatus">ApplicationSourceStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationStatus">ApplicationStatus</a>)
+</p>
+<p>applicationSourceStatus defines the observed state of the artifact source.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>gitRepoStatus</code><br>
+<em>
+github.com/fluxcd/source-controller/api/v1.GitRepositoryStatus
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>helmRepoStatus</code><br>
+<em>
+github.com/fluxcd/source-controller/api/v1beta2.HelmRepositoryStatus
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>ociRepoStatus</code><br>
+<em>
+github.com/fluxcd/source-controller/api/v1beta2.OCIRepositoryStatus
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.Application">Application</a>)
+</p>
+<p>ApplicationSpec defines the configuration to produce an artifact and how to dispatch it.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>source</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSource">
+ApplicationSource
+</a>
+</em>
+</td>
+<td>
+<p>Source defines the artifact source.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>syncPolicy</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">
+[]ApplicationSyncPolicy
+</a>
+</em>
+</td>
+<td>
+<p>SyncPolicy controls how the artifact will be synced.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationStatus">ApplicationStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.Application">Application</a>)
+</p>
+<p>ApplicationStatus defines the observed state of Application.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>sourceStatus</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSourceStatus">
+ApplicationSourceStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>syncStatus</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncStatus">
+[]ApplicationSyncStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec</a>)
+</p>
+<p>ApplicationSyncPolicy defines the configuration to sync an artifact.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name defines the name of the sync policy.
+If unspecified, a name of format <code>&lt;application name&gt;-&lt;index&gt;</code> will be generated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kustomization</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.Kustomization">
+Kustomization
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>helm</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.HelmReleaseSpec">
+HelmReleaseSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>destination</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationDestination">
+ApplicationDestination
+</a>
+</em>
+</td>
+<td>
+<p>Destination defines the destination for the artifact.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ApplicationSyncStatus">ApplicationSyncStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationStatus">ApplicationStatus</a>)
+</p>
+<p>ApplicationSyncStatus defines the observed state of Application sync.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>kustomizationStatus</code><br>
+<em>
+github.com/fluxcd/kustomize-controller/api/v1.KustomizationStatus
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>HelmReleaseStatus</code><br>
+<em>
+github.com/fluxcd/helm-controller/api/v2beta1.HelmReleaseStatus
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.CommonMetadata">CommonMetadata
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.Kustomization">Kustomization</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>annotations</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Annotations to be added to the object&rsquo;s metadata.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Labels to be added to the object&rsquo;s metadata.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.HelmChartTemplate">HelmChartTemplate
+</h3>
+<p>HelmChartTemplate defines the template from which the controller will
+generate a v1beta2.HelmChart object in the same namespace as the referenced
+v1beta2.Source.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.HelmChartTemplateObjectMeta">
+HelmChartTemplateObjectMeta
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ObjectMeta holds the template for metadata like labels and annotations.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.HelmChartTemplateSpec">
+HelmChartTemplateSpec
+</a>
+</em>
+</td>
+<td>
+<p>Spec holds the template for the v1beta2.HelmChartSpec for this HelmRelease.</p>
+<table>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name or path the Helm chart is available at in the SourceRef.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Version semver expression, ignored for charts from v1beta2.GitRepository and
+v1beta2.Bucket sources. Defaults to latest when omitted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>interval</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Interval at which to check the v1beta2.Source for updates. Defaults to
+&lsquo;HelmReleaseSpec.Interval&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reconcileStrategy</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Determines what enables the creation of a new artifact. Valid values are
+(&lsquo;ChartVersion&rsquo;, &lsquo;Revision&rsquo;).
+See the documentation of the values for an explanation on their behavior.
+Defaults to ChartVersion when omitted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>valuesFiles</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Alternative list of values files to use as the chart values (values.yaml
+is not included by default), expected to be a relative path in the SourceRef.
+Values files are merged in the order of this list with the last file overriding
+the first. Ignored when omitted.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.HelmChartTemplateObjectMeta">HelmChartTemplateObjectMeta
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.HelmChartTemplate">HelmChartTemplate</a>)
+</p>
+<p>HelmChartTemplateObjectMeta defines the template for the ObjectMeta of a
+v1beta2.HelmChart.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Map of string keys and values that can be used to organize and categorize
+(scope and select) objects.
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Annotations is an unstructured key value map stored with a resource that may be
+set by external tools to store and retrieve arbitrary metadata. They are not
+queryable and should be preserved when modifying objects.
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/">https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.HelmChartTemplateSpec">HelmChartTemplateSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.HelmChartTemplate">HelmChartTemplate</a>)
+</p>
+<p>HelmChartTemplateSpec defines the template from which the controller will
+generate a v1beta2.HelmChartSpec object.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>The name or path the Helm chart is available at in the SourceRef.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Version semver expression, ignored for charts from v1beta2.GitRepository and
+v1beta2.Bucket sources. Defaults to latest when omitted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>interval</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Interval at which to check the v1beta2.Source for updates. Defaults to
+&lsquo;HelmReleaseSpec.Interval&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>reconcileStrategy</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Determines what enables the creation of a new artifact. Valid values are
+(&lsquo;ChartVersion&rsquo;, &lsquo;Revision&rsquo;).
+See the documentation of the values for an explanation on their behavior.
+Defaults to ChartVersion when omitted.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>valuesFiles</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Alternative list of values files to use as the chart values (values.yaml
+is not included by default), expected to be a relative path in the SourceRef.
+Values files are merged in the order of this list with the last file overriding
+the first. Ignored when omitted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.HelmReleaseSpec">HelmReleaseSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
+</p>
+<p>Note: copied from <a href="https://github.com/fluxcd/helm-controller/blob/main/api/v2beta1/helmrelease_types.go">https://github.com/fluxcd/helm-controller/blob/main/api/v2beta1/helmrelease_types.go</a>
+KustomizationSpec defines the configuration to calculate the desired state
+from a Source using Kustomize.
+HelmReleaseSpec defines the desired state of a Helm release.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+github.com/fluxcd/helm-controller/api/v2beta1.HelmChartTemplate
+</em>
+</td>
+<td>
+<p>Chart defines the template of the v1beta2.HelmChart that should be created
+for this HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>interval</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<p>Interval at which to reconcile the Helm release.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>suspend</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Suspend tells the controller to suspend reconciliation for this HelmRelease,
+it does not apply to already started reconciliations. Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>releaseName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ReleaseName used for the Helm release. Defaults to a composition of
+&lsquo;[TargetNamespace-]Name&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetNamespace</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetNamespace to target when performing operations for the HelmRelease.
+Defaults to the namespace of the HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dependsOn</code><br>
+<em>
+[]github.com/fluxcd/pkg/apis/meta.NamespacedObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DependsOn may contain a meta.NamespacedObjectReference slice with
+references to HelmRelease resources that must be ready before this HelmRelease
+can be reconciled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeout</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Timeout is the time to wait for any individual Kubernetes operation (like Jobs
+for hooks) during the performance of a Helm action. Defaults to &lsquo;5m0s&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxHistory</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MaxHistory is the number of revisions saved by Helm for this HelmRelease.
+Use &lsquo;0&rsquo; for an unlimited number of revisions; defaults to &lsquo;10&rsquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceAccountName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The name of the Kubernetes service account to impersonate
+when reconciling this HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>persistentClient</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PersistentClient tells the controller to use a persistent Kubernetes
+client for this release. When enabled, the client will be reused for the
+duration of the reconciliation, instead of being created and destroyed
+for each (step of a) Helm action.</p>
+<p>This can improve performance, but may cause issues with some Helm charts
+that for example do create Custom Resource Definitions during installation
+outside Helm&rsquo;s CRD lifecycle hooks, which are then not observed to be
+available by e.g. post-install hooks.</p>
+<p>If not set, it defaults to true.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>install</code><br>
+<em>
+github.com/fluxcd/helm-controller/api/v2beta1.Install
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Install holds the configuration for Helm install actions for this HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>upgrade</code><br>
+<em>
+github.com/fluxcd/helm-controller/api/v2beta1.Upgrade
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Upgrade holds the configuration for Helm upgrade actions for this HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rollback</code><br>
+<em>
+github.com/fluxcd/helm-controller/api/v2beta1.Rollback
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Rollback holds the configuration for Helm rollback actions for this HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>uninstall</code><br>
+<em>
+github.com/fluxcd/helm-controller/api/v2beta1.Uninstall
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Uninstall holds the configuration for Helm uninstall actions for this HelmRelease.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>valuesFrom</code><br>
+<em>
+[]github.com/fluxcd/helm-controller/api/v2beta1.ValuesReference
+</em>
+</td>
+<td>
+<p>ValuesFrom holds references to resources containing Helm values for this HelmRelease,
+and information about how they should be merged.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>values</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Values holds the values for this Helm release.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.Kustomization">Kustomization
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
+</p>
+<p>Note: copied from <a href="https://github.com/fluxcd/kustomize-controller/blob/main/api/v1/kustomization_types.go">https://github.com/fluxcd/kustomize-controller/blob/main/api/v1/kustomization_types.go</a>
+KustomizationSpec defines the configuration to calculate the desired state
+from a Source using Kustomize.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>commonMetadata</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.CommonMetadata">
+CommonMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CommonMetadata specifies the common labels and annotations that are
+applied to all resources. Any existing label or annotation will be
+overridden if its key matches a common one.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>dependsOn</code><br>
+<em>
+[]github.com/fluxcd/pkg/apis/meta.NamespacedObjectReference
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>DependsOn may contain a meta.NamespacedObjectReference slice
+with references to Kustomization resources that must be ready before this
+Kustomization can be reconciled.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>interval</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<p>The interval at which to reconcile the Kustomization.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retryInterval</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The interval at which to retry a previously failed reconciliation.
+When not specified, the controller uses the KustomizationSpec.Interval
+value to retry failures.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>path</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Path to the directory containing the kustomization.yaml file, or the
+set of plain YAMLs a kustomization.yaml should be generated for.
+Defaults to &lsquo;None&rsquo;, which translates to the root path of the SourceRef.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>prune</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Prune enables garbage collection.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>patches</code><br>
+<em>
+[]github.com/fluxcd/pkg/apis/kustomize.Patch
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Strategic merge and JSON patches, defined as inline YAML objects,
+capable of targeting objects based on kind, label and annotation selectors.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>images</code><br>
+<em>
+[]github.com/fluxcd/pkg/apis/kustomize.Image
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Images is a list of (image name, new name, new tag or digest)
+for changing image names, tags or digests. This can also be achieved with a
+patch, but this operator is simpler to specify.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>suspend</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>This flag tells the controller to suspend subsequent kustomize executions,
+it does not apply to already started executions. Defaults to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetNamespace</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TargetNamespace sets or overrides the namespace in the
+kustomization.yaml file.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>timeout</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Timeout for validation, apply and health checking operations.
+Defaults to &lsquo;Interval&rsquo; duration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>force</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Force instructs the controller to recreate resources
+when patching fails due to an immutable field change.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>components</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Components specifies relative paths to specifications of other Components.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="admonition note">
+<p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
+</div>

@@ -28,6 +28,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	versioned "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
+	apps "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/apps"
 	cluster "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/cluster"
 	fleet "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/fleet"
 	infra "kurator.dev/kurator/pkg/client-go/generated/informers/externalversions/infra"
@@ -174,9 +175,14 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Apps() apps.Interface
 	Cluster() cluster.Interface
 	Fleet() fleet.Interface
 	Infrastructure() infra.Interface
+}
+
+func (f *sharedInformerFactory) Apps() apps.Interface {
+	return apps.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Cluster() cluster.Interface {
