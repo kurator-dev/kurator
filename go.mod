@@ -16,7 +16,10 @@ require (
 	github.com/bramvdbogaerde/go-scp v1.2.0
 	github.com/cert-manager/cert-manager v1.10.0
 	github.com/coreos/go-semver v0.3.0
+	github.com/fluxcd/helm-controller/api v0.32.2
 	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.1
+	github.com/fluxcd/pkg/apis/kustomize v1.0.0
+	github.com/fluxcd/pkg/apis/meta v1.0.0
 	github.com/fluxcd/source-controller/api v1.0.0-rc.1
 	github.com/go-logr/logr v1.2.3
 	github.com/gosuri/uitable v0.0.4
@@ -111,10 +114,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/flatcar/container-linux-config-transpiler v0.9.4 // indirect
 	github.com/flatcar/ignition v0.36.2 // indirect
-	github.com/fluxcd/helm-controller/api v0.32.2 // indirect
 	github.com/fluxcd/pkg/apis/acl v0.1.0 // indirect
-	github.com/fluxcd/pkg/apis/kustomize v1.0.0 // indirect
-	github.com/fluxcd/pkg/apis/meta v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
 	github.com/go-errors/errors v1.0.1 // indirect
