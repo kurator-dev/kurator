@@ -24,10 +24,8 @@ import (
 )
 
 // Note: copied from https://github.com/fluxcd/helm-controller/blob/main/api/v2beta1/helmrelease_types.go
-// KustomizationSpec defines the configuration to calculate the desired state
-// from a Source using Kustomize.
-// HelmReleaseSpec defines the desired state of a Helm release.
-type HelmReleaseSpec struct {
+// HelmRelease defines the desired state of a Helm release.
+type HelmRelease struct {
 	// Chart defines the template of the v1beta2.HelmChart that should be created
 	// for this HelmRelease.
 	// +required

@@ -426,7 +426,8 @@ spec:
                 description: SyncPolicy controls how the artifact will be synced.
                 items:
                   description: ApplicationSyncPolicy defines the configuration to
-                    sync an artifact.
+                    sync an artifact. Only `kustomization` or `helm` can be specified
+                    to manage application sync.
                   properties:
                     destination:
                       description: Destination defines the destination for the artifact.
@@ -484,10 +485,8 @@ spec:
                       - fleet
                       type: object
                     helm:
-                      description: 'Note: copied from https://github.com/fluxcd/helm-controller/blob/main/api/v2beta1/helmrelease_types.go
-                        KustomizationSpec defines the configuration to calculate the
-                        desired state from a Source using Kustomize. HelmReleaseSpec
-                        defines the desired state of a Helm release.'
+                      description: HelmRelease defines the desired state of a Helm
+                        release.
                       properties:
                         chart:
                           description: Chart defines the template of the v1beta2.HelmChart
@@ -999,9 +998,8 @@ spec:
                       - interval
                       type: object
                     kustomization:
-                      description: 'Note: copied from https://github.com/fluxcd/kustomize-controller/blob/main/api/v1/kustomization_types.go
-                        KustomizationSpec defines the configuration to calculate the
-                        desired state from a Source using Kustomize.'
+                      description: Kustomization defines the configuration to calculate
+                        the desired state from a Source using Kustomize.
                       properties:
                         commonMetadata:
                           description: CommonMetadata specifies the common labels

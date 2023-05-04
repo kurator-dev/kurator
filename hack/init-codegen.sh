@@ -14,9 +14,6 @@ if ! [ -x "$(command -v kustomize)" ]; then
     util::install_tools sigs.k8s.io/kustomize/kustomize/v4 v4.5.5
 fi
 
-if ! [ -x "$(command -v setup-envtest)" ]; then
-    util::install_tools sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220706151251-15154aaa6767
-fi
 
 if ! [ -x "$(command -v ginkgo)" ]; then
     util::install_tools github.com/onsi/ginkgo/v2/ginkgo v2.0.0

@@ -68,15 +68,19 @@ type ApplicationDestination struct {
 }
 
 // ApplicationSyncPolicy defines the configuration to sync an artifact.
+// Only `kustomization` or `helm` can be specified to manage application sync.
 type ApplicationSyncPolicy struct {
 	// Name defines the name of the sync policy.
 	// If unspecified, a name of format `<application name>-<index>` will be generated.
 	// +optional
 	Name string `json:"name,omitempty"`
+	// Kustomization defines the configuration to calculate the desired state
+	// from a Source using Kustomize.
 	// +optional
 	Kustomization *Kustomization `json:"kustomization,omitempty"`
+	// HelmRelease defines the desired state of a Helm release.
 	// +optional
-	Helm *HelmReleaseSpec `json:"helm,omitempty"`
+	Helm *HelmRelease `json:"helm,omitempty"`
 	// Destination defines the destination for the artifact.
 	// +required
 	Destination ApplicationDestination `json:"destination"`
@@ -100,4 +104,13 @@ type ApplicationSyncStatus struct {
 	Name                string                           `json:"name,omitempty"`
 	KustomizationStatus *kustomizev1.KustomizationStatus `json:"kustomizationStatus,omitempty"`
 	HelmReleaseStatus   *helmv2beta1.HelmReleaseStatus   `json:"HelmReleaseStatus,omitempty"`
+}
+
+// ApplicationList contains a list of Application.
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type ApplicationList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Application `json:"items"`
 }

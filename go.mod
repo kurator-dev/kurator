@@ -5,6 +5,12 @@ go 1.20
 // DO NOT EDIT FOLLOWING REPLACE CODE
 replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.12.3
 
+replace k8s.io/client-go => k8s.io/client-go v0.25.9
+
+replace k8s.io/api => k8s.io/api v0.25.9
+
+replace k8s.io/apimachinery => k8s.io/apimachinery v0.25.9
+
 replace github.com/elastic/crd-ref-docs => github.com/zirain/crd-ref-docs v0.0.0-20230403084159-e8e051398dc2
 
 require github.com/elastic/crd-ref-docs v0.0.8
@@ -26,7 +32,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/karmada-io/karmada v1.4.2
 	github.com/mitchellh/cli v1.1.3
-	github.com/onsi/ginkgo/v2 v2.5.0
 	github.com/onsi/gomega v1.24.1
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.5
@@ -45,23 +50,19 @@ require (
 	istio.io/api v0.0.0-20221109211642-7c8dc83e0555
 	istio.io/istio v0.0.0-20221110020507-c4fa0879566b
 	istio.io/pkg v0.0.0-20221031153201-960bb47e80ce
-	k8s.io/api v0.25.4
-	k8s.io/apiextensions-apiserver v0.25.4
-	k8s.io/apimachinery v0.25.4
-	k8s.io/apiserver v0.25.4
 	k8s.io/api v0.26.3
 	k8s.io/apiextensions-apiserver v0.26.3
 	k8s.io/apimachinery v0.26.3
-	k8s.io/cli-runtime v0.25.4
+	k8s.io/apiserver v0.26.3
+	k8s.io/cli-runtime v0.25.9
 	k8s.io/client-go v0.26.3
 	k8s.io/code-generator v0.26.3
 	k8s.io/component-base v0.26.3
 	k8s.io/klog/v2 v2.80.1
-	k8s.io/kubectl v0.25.4
+	k8s.io/kubectl v0.25.9
 	sigs.k8s.io/cluster-api v1.2.5
 	sigs.k8s.io/cluster-api-provider-aws/v2 v2.0.0
 	sigs.k8s.io/controller-runtime v0.14.6
-	sigs.k8s.io/controller-runtime/tools/setup-envtest v0.0.0-20220706151251-15154aaa6767
 	sigs.k8s.io/controller-tools v0.10.0
 	sigs.k8s.io/kustomize/kustomize/v4 v4.5.7
 	sigs.k8s.io/yaml v1.3.0
@@ -74,6 +75,12 @@ require (
 	cloud.google.com/go/logging v1.5.0 // indirect
 	cloud.google.com/go/longrunning v0.1.1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
+	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
+	github.com/Azure/go-autorest/autorest v0.11.28 // indirect
+	github.com/Azure/go-autorest/autorest/adal v0.9.21 // indirect
+	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
+	github.com/Azure/go-autorest/logger v0.2.1 // indirect
+	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -129,6 +136,7 @@ require (
 	github.com/goccy/go-json v0.9.7 // indirect
 	github.com/goccy/go-yaml v1.1.5 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.0.1 // indirect
@@ -195,7 +203,6 @@ require (
 	github.com/sanathkr/go-yaml v0.0.0-20170819195128-ed9d249f429b // indirect
 	github.com/sanathkr/yaml v0.0.0-20170819201035-0056894fa522 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
 	github.com/valyala/fastjson v1.6.3 // indirect
@@ -236,10 +243,9 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	istio.io/client-go v1.12.0-alpha.5.0.20221109212442-23681e5ef331 // indirect
-	k8s.io/apiserver v0.26.3 // indirect
-	k8s.io/cluster-bootstrap v0.25.4 // indirect
+	k8s.io/cluster-bootstrap v0.25.9 // indirect
 	k8s.io/gengo v0.0.0-20220902162205-c0856e24416d // indirect
-	k8s.io/kube-aggregator v0.25.4 // indirect
+	k8s.io/kube-aggregator v0.25.9 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 // indirect
 	sigs.k8s.io/gateway-api v0.5.1-0.20221021174151-21bba43681b3 // indirect

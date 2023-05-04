@@ -159,7 +159,9 @@ Note only one source can be specified</p>
 <td>
 <code>gitRepo</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#GitRepositorySpec">
 github.com/fluxcd/source-controller/api/v1.GitRepositorySpec
+</a>
 </em>
 </td>
 <td>
@@ -170,7 +172,9 @@ github.com/fluxcd/source-controller/api/v1.GitRepositorySpec
 <td>
 <code>helmRepo</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#HelmRepositorySpec">
 github.com/fluxcd/source-controller/api/v1beta2.HelmRepositorySpec
+</a>
 </em>
 </td>
 <td>
@@ -181,7 +185,9 @@ github.com/fluxcd/source-controller/api/v1beta2.HelmRepositorySpec
 <td>
 <code>ociRepo</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#OCIRepositorySpec">
 github.com/fluxcd/source-controller/api/v1beta2.OCIRepositorySpec
+</a>
 </em>
 </td>
 <td>
@@ -213,7 +219,9 @@ github.com/fluxcd/source-controller/api/v1beta2.OCIRepositorySpec
 <td>
 <code>gitRepoStatus</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#GitRepositoryStatus">
 github.com/fluxcd/source-controller/api/v1.GitRepositoryStatus
+</a>
 </em>
 </td>
 <td>
@@ -223,7 +231,9 @@ github.com/fluxcd/source-controller/api/v1.GitRepositoryStatus
 <td>
 <code>helmRepoStatus</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#HelmRepositoryStatus">
 github.com/fluxcd/source-controller/api/v1beta2.HelmRepositoryStatus
+</a>
 </em>
 </td>
 <td>
@@ -233,7 +243,9 @@ github.com/fluxcd/source-controller/api/v1beta2.HelmRepositoryStatus
 <td>
 <code>ociRepoStatus</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#OCIRepositoryStatus">
 github.com/fluxcd/source-controller/api/v1beta2.OCIRepositoryStatus
+</a>
 </em>
 </td>
 <td>
@@ -341,7 +353,8 @@ ApplicationSourceStatus
 (<em>Appears on:</em>
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec</a>)
 </p>
-<p>ApplicationSyncPolicy defines the configuration to sync an artifact.</p>
+<p>ApplicationSyncPolicy defines the configuration to sync an artifact.
+Only <code>kustomization</code> or <code>helm</code> can be specified to manage application sync.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
 <table>
@@ -376,19 +389,22 @@ Kustomization
 </td>
 <td>
 <em>(Optional)</em>
+<p>Kustomization defines the configuration to calculate the desired state
+from a Source using Kustomize.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>helm</code><br>
 <em>
-<a href="#apps.kurator.dev/v1alpha1.HelmReleaseSpec">
-HelmReleaseSpec
+<a href="#apps.kurator.dev/v1alpha1.HelmRelease">
+HelmRelease
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
+<p>HelmRelease defines the desired state of a Helm release.</p>
 </td>
 </tr>
 <tr>
@@ -439,7 +455,9 @@ string
 <td>
 <code>kustomizationStatus</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/kustomize-controller/api/v1#KustomizationStatus">
 github.com/fluxcd/kustomize-controller/api/v1.KustomizationStatus
+</a>
 </em>
 </td>
 <td>
@@ -449,7 +467,9 @@ github.com/fluxcd/kustomize-controller/api/v1.KustomizationStatus
 <td>
 <code>HelmReleaseStatus</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#HelmReleaseStatus">
 github.com/fluxcd/helm-controller/api/v2beta1.HelmReleaseStatus
+</a>
 </em>
 </td>
 <td>
@@ -762,16 +782,14 @@ the first. Ignored when omitted.</p>
 </table>
 </div>
 </div>
-<h3 id="apps.kurator.dev/v1alpha1.HelmReleaseSpec">HelmReleaseSpec
+<h3 id="apps.kurator.dev/v1alpha1.HelmRelease">HelmRelease
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
 </p>
 <p>Note: copied from <a href="https://github.com/fluxcd/helm-controller/blob/main/api/v2beta1/helmrelease_types.go">https://github.com/fluxcd/helm-controller/blob/main/api/v2beta1/helmrelease_types.go</a>
-KustomizationSpec defines the configuration to calculate the desired state
-from a Source using Kustomize.
-HelmReleaseSpec defines the desired state of a Helm release.</p>
+HelmRelease defines the desired state of a Helm release.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
 <table>
@@ -786,7 +804,9 @@ HelmReleaseSpec defines the desired state of a Helm release.</p>
 <td>
 <code>chart</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#HelmChartTemplate">
 github.com/fluxcd/helm-controller/api/v2beta1.HelmChartTemplate
+</a>
 </em>
 </td>
 <td>
@@ -850,7 +870,9 @@ Defaults to the namespace of the HelmRelease.</p>
 <td>
 <code>dependsOn</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/pkg/apis/meta#NamespacedObjectReference">
 []github.com/fluxcd/pkg/apis/meta.NamespacedObjectReference
+</a>
 </em>
 </td>
 <td>
@@ -925,7 +947,9 @@ available by e.g. post-install hooks.</p>
 <td>
 <code>install</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#Install">
 github.com/fluxcd/helm-controller/api/v2beta1.Install
+</a>
 </em>
 </td>
 <td>
@@ -937,7 +961,9 @@ github.com/fluxcd/helm-controller/api/v2beta1.Install
 <td>
 <code>upgrade</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#Upgrade">
 github.com/fluxcd/helm-controller/api/v2beta1.Upgrade
+</a>
 </em>
 </td>
 <td>
@@ -949,7 +975,9 @@ github.com/fluxcd/helm-controller/api/v2beta1.Upgrade
 <td>
 <code>rollback</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#Rollback">
 github.com/fluxcd/helm-controller/api/v2beta1.Rollback
+</a>
 </em>
 </td>
 <td>
@@ -961,7 +989,9 @@ github.com/fluxcd/helm-controller/api/v2beta1.Rollback
 <td>
 <code>uninstall</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#Uninstall">
 github.com/fluxcd/helm-controller/api/v2beta1.Uninstall
+</a>
 </em>
 </td>
 <td>
@@ -973,7 +1003,9 @@ github.com/fluxcd/helm-controller/api/v2beta1.Uninstall
 <td>
 <code>valuesFrom</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#ValuesReference">
 []github.com/fluxcd/helm-controller/api/v2beta1.ValuesReference
+</a>
 </em>
 </td>
 <td>
@@ -1006,7 +1038,7 @@ Kubernetes /apiextensions/v1.JSON
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
 </p>
 <p>Note: copied from <a href="https://github.com/fluxcd/kustomize-controller/blob/main/api/v1/kustomization_types.go">https://github.com/fluxcd/kustomize-controller/blob/main/api/v1/kustomization_types.go</a>
-KustomizationSpec defines the configuration to calculate the desired state
+Kustomization defines the configuration to calculate the desired state
 from a Source using Kustomize.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
@@ -1038,7 +1070,9 @@ overridden if its key matches a common one.</p>
 <td>
 <code>dependsOn</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/pkg/apis/meta#NamespacedObjectReference">
 []github.com/fluxcd/pkg/apis/meta.NamespacedObjectReference
+</a>
 </em>
 </td>
 <td>
@@ -1106,7 +1140,9 @@ bool
 <td>
 <code>patches</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/pkg/apis/kustomize#Patch">
 []github.com/fluxcd/pkg/apis/kustomize.Patch
+</a>
 </em>
 </td>
 <td>
@@ -1119,7 +1155,9 @@ capable of targeting objects based on kind, label and annotation selectors.</p>
 <td>
 <code>images</code><br>
 <em>
+<a href="https://pkg.go.dev/github.com/fluxcd/pkg/apis/kustomize#Image">
 []github.com/fluxcd/pkg/apis/kustomize.Image
+</a>
 </em>
 </td>
 <td>

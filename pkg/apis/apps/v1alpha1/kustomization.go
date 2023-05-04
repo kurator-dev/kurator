@@ -23,7 +23,7 @@ import (
 )
 
 // Note: copied from https://github.com/fluxcd/kustomize-controller/blob/main/api/v1/kustomization_types.go
-// KustomizationSpec defines the configuration to calculate the desired state
+// Kustomization defines the configuration to calculate the desired state
 // from a Source using Kustomize.
 type Kustomization struct {
 	// CommonMetadata specifies the common labels and annotations that are
