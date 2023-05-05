@@ -62,8 +62,8 @@ func (r *CustomClusterController) reconcileUpgrade(ctx context.Context, customCl
 		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
 
 		// Delete the upgrading worker.
-		if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterUpgradeAction)); err != nil {
-			log.Error(err, "failed to delete upgrade worker pod", "worker", generateWorkerKey(customCluster, CustomClusterUpgradeAction))
+		if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterUpgradeAction); err != nil {
+			log.Error(err, "failed to delete upgrade worker pod", "customCluster", customCluster.Name)
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.UpgradeCondition)
