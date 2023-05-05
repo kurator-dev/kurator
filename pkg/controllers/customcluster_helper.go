@@ -29,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/storage/names"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,7 +40,8 @@ import (
 
 // generateClusterManageWorker generate a kubespray manage worker pod from configmap.
 func generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostsName, configName string) *corev1.Pod {
-	podName := customCluster.Name + "-" + string(manageAction)
+	basePodName := customCluster.Name + "-" + string(manageAction)
+	podName := names.SimpleNameGenerator.GenerateName(basePodName + "-")
 	namespace := customCluster.Namespace
 	defaultMode := int32(0o600)
 	kubesprayImage := getKubesprayImage(DefaultKubesprayVersion)
@@ -570,6 +572,5 @@ func (r *CustomClusterController) createKubeConfigSecret(ctx context.Context, na
 }
 
 func getKubeConfigSecretName(customCluster *v1alpha1.CustomCluster) string {
-	// todo: Enhance the robustness of naming.
-	return customCluster.Name
+	return names.SimpleNameGenerator.GenerateName(customCluster.Name + "-kubeconfig-")
 }
