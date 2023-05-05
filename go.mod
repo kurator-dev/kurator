@@ -43,6 +43,7 @@ require (
 	k8s.io/api v0.25.4
 	k8s.io/apiextensions-apiserver v0.25.4
 	k8s.io/apimachinery v0.25.4
+	k8s.io/apiserver v0.25.4
 	k8s.io/cli-runtime v0.25.4
 	k8s.io/client-go v0.25.4
 	k8s.io/code-generator v0.25.4
@@ -235,7 +236,6 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	istio.io/client-go v1.12.0-alpha.5.0.20221109212442-23681e5ef331 // indirect
-	k8s.io/apiserver v0.25.4 // indirect
 	k8s.io/cluster-bootstrap v0.25.4 // indirect
 	k8s.io/gengo v0.0.0-20211129171323-c02415ce4185 // indirect
 	k8s.io/kube-aggregator v0.25.4 // indirect
