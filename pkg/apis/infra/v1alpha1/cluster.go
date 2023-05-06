@@ -139,6 +139,9 @@ const (
 	FailedCreateTerminateWorker = "TerminateWorkerFailedCreate"
 	// TerminateWorkerRunFailedReason (Severity=Error) documents that the terminal worker run failed.
 	TerminateWorkerRunFailedReason = "TerminateWorkerRunFailed"
+
+	// ObtainedKubeConfigCondition reports on whether the kubeConfig of the provisioned cluster has been obtained. Once this condition is met, the kubeConfig secret will be created.
+	ObtainedKubeConfigCondition capiv1.ConditionType = "ObtainedKubeConfig"
 )
 
 // CustomClusterStatus represents the current status of the cluster.
