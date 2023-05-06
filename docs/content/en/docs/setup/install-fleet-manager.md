@@ -27,7 +27,7 @@ kind load docker-image ghcr.io/kurator-dev/fleet-manager:{{< kurator-version >}}
 
 Install fleet manager into the management cluster.
 
-{{< boilerplate install-cluster-operator >}}
+{{< boilerplate install-fleet-manager >}}
 
 ## Install cluster operator from release package
 
@@ -47,7 +47,7 @@ Install fleet manager into the management cluster.
 
 1. Install cluster operator into the management cluster.
 
-    {{< boilerplate install-cluster-operator >}}
+    {{< boilerplate install-fleet-manager >}}
 
 ## Try to deploy a cluster with cluster operator
 
