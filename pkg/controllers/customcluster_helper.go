@@ -416,7 +416,6 @@ func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, cu
 		return nil, fmt.Errorf("failed to create customCluster manager worker pod: %v", err)
 	}
 	return newWorkerPod, nil
-
 }
 
 // findManageWorkerPod locates the worker pod that has the given manageAction label and input OwnerReferences.
