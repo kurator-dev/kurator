@@ -34,7 +34,7 @@ type AttachedCluster struct {
 type AttachedClusterSpec struct {
 	// Kubeconfig represents the secret that contains the credential to access this cluster.
 	// +optional
-	Kubeconfig string `json:"kubeconfig,omitempty"`
+	Kubeconfig SecretKeyRef `json:"kubeconfig,omitempty"`
 }
 
 // SecretKeyRef holds the reference to a secret key.
@@ -48,7 +48,7 @@ type SecretKeyRef struct {
 }
 
 type AttachedClusterStatus struct {
-	// Accepted indicates whether the cluster is resgitered to kurator fleet.
+	// Accepted indicates whether the cluster is registered to kurator fleet.
 	Accepted bool `json:"accepted"`
 }
 
