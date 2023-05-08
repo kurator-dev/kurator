@@ -8,11 +8,11 @@ description: >
 
 ## Prerequisites
 
-Fleet manager depends on cluster operator, so refer to [Cluster operator installation guide](/docs/setup/install-fleet-manager).
+Fleet manager depends on cluster operator, so refer to [Cluster operator installation guide](/docs/setup/install-cluster-operator).
 
-## Install from source
+## Install fleet manager from source
 
-Build cluster operator image and helm chart:
+Build fleet manager image and helm chart:
 
 ```console
 VERSION={{< kurator-version >}} make docker
@@ -27,9 +27,9 @@ kind load docker-image ghcr.io/kurator-dev/fleet-manager:{{< kurator-version >}}
 
 Install fleet manager into the management cluster.
 
-{{< boilerplate install-cluster-operator >}}
+{{< boilerplate install-fleet-manager >}}
 
-## Install cluster operator from release package
+## Install fleet manager from release package
 
 
 1. Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
@@ -45,16 +45,17 @@ Install fleet manager into the management cluster.
     cd kurator-{{< kurator-version >}}
     ```
 
-1. Install cluster operator into the management cluster.
+1. Install fleet manager into the management cluster.
 
-    {{< boilerplate install-cluster-operator >}}
+    {{< boilerplate install-fleet-manager >}}
 
-## Try to deploy a cluster with cluster operator
+## Try to create a fleet with fleet manager
 
-[Deploy cluster with kurator cluster operator](/docs/setup/install-fleet-manager).
+[Get Started with Kurator Fleet](/docs/fleet-manager/create-fleet).
 
 ## Cleanup
 
 ```bash
-helm uninstall cluster-operator
+helm uninstall kurator-cluster-operator -n kurator-system
+helm uninstall kurator-fleet-manager -n kurator-system
 ```
