@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	capiv1beta1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // +genclient
@@ -245,6 +246,8 @@ type ClusterStatus struct {
 	// ServiceAccountIssuer is the URL of the service account issuer.
 	// +optional
 	ServiceAccountIssuer string `json:"serviceAccountIssuer"`
+	// Accepted indicates whether the cluster is registered to kurator fleet.
+	Accepted bool `json:"accepted"`
 }
 
 func (c *Cluster) GetConditions() capiv1beta1.Conditions {
@@ -262,4 +265,28 @@ type ClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Cluster `json:"items"`
+}
+
+func (c *Cluster) IsReady() bool {
+	return c.Status.Phase == string(ClusterPhaseReady)
+}
+
+func (c *Cluster) GetObject() client.Object {
+	return c
+}
+
+func (c *Cluster) GetSecretName() string {
+	return c.Spec.Credential.SecretRef
+}
+
+// ClusterKubeconfigDataName is the key used to store a Kubeconfig in the secret's data field.
+// This is derived from cluster api
+const ClusterKubeconfigDataName = "value"
+
+func (c *Cluster) GetSecretKey() string {
+	return ClusterKubeconfigDataName
+}
+
+func (c *Cluster) SetAccepted(accepted bool) {
+	c.Status.Accepted = accepted
 }

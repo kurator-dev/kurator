@@ -370,7 +370,6 @@ func (r *CustomClusterController) reconcileProvision(ctx context.Context, custom
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.ObtainedKubeConfigCondition)
-
 		log.Info("phase changes", "prevPhase", customCluster.Status.Phase, "currentPhase", v1alpha1.ProvisionedPhase)
 		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
 		conditions.MarkTrue(customCluster, v1alpha1.ReadyCondition)
