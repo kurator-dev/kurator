@@ -45,5 +45,5 @@ Install cluster operator into the management cluster.
 ## Cleanup
 
 ```bash
-helm uninstall cluster-operator
+helm uninstall kurator-cluster-operator -n kurator-system
 ```
