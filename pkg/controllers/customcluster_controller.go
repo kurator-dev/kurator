@@ -364,6 +364,8 @@ func (r *CustomClusterController) reconcileProvision(ctx context.Context, custom
 	if initWorker.Status.Phase == corev1.PodSucceeded {
 		if err := r.fetchProvisionedClusterKubeConfig(ctx, customCluster, customMachine); err != nil {
 			log.Error(err, "failed to fetch provisioned cluster kubeConfig")
+			conditions.MarkFalse(customCluster, v1alpha1.ObtainedKubeConfigCondition, v1alpha1.FailedFetchKubeConfigReason,
+				clusterv1.ConditionSeverityWarning, "failed to fetch provisioned cluster KubeConfig %s/%s", customCluster.Namespace, customCluster.Name)
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.ObtainedKubeConfigCondition)

@@ -142,6 +142,8 @@ const (
 
 	// ObtainedKubeConfigCondition reports on whether the kubeConfig of the provisioned cluster has been obtained. Once this condition is met, the kubeConfig secret will be created.
 	ObtainedKubeConfigCondition capiv1.ConditionType = "ObtainedKubeConfig"
+	// FailedFetchKubeConfigReason (Severity=Error) documents failed to fetch provisioned cluster kubeConfig.
+	FailedFetchKubeConfigReason = "FailedFetchKubeConfig"
 )
 
 // CustomClusterStatus represents the current status of the cluster.
