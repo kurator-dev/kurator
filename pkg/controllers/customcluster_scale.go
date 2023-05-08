@@ -77,8 +77,8 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 		}
 
 		// Delete the scaleUp worker.
-		if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleUpAction)); err != nil {
-			log.Error(err, "failed to delete scaleUp worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleUpAction))
+		if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterScaleUpAction); err != nil {
+			log.Error(err, "failed to delete scaleUp worker pod", "customCluster", customCluster.Name)
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.ScaledUpCondition)
@@ -129,8 +129,8 @@ func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, custom
 		customCluster.Status.Phase = v1alpha1.ProvisionedPhase
 
 		// Delete the scaleDown worker
-		if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleDownAction)); err != nil {
-			log.Error(err, "failed to delete scaleDown worker pod", "worker", generateWorkerKey(customCluster, CustomClusterScaleDownAction))
+		if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterScaleDownAction); err != nil {
+			log.Error(err, "failed to delete scaleDown worker pod", "worker", customCluster.Name)
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.ScaledDownCondition)

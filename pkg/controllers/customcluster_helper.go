@@ -29,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/storage/names"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,7 +40,8 @@ import (
 
 // generateClusterManageWorker generate a kubespray manage worker pod from configmap.
 func generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostsName, configName string) *corev1.Pod {
-	podName := customCluster.Name + "-" + string(manageAction)
+	basePodName := customCluster.Name + "-" + string(manageAction)
+	podName := names.SimpleNameGenerator.GenerateName(basePodName + "-")
 	namespace := customCluster.Namespace
 	defaultMode := int32(0o600)
 	kubesprayImage := getKubesprayImage(DefaultKubesprayVersion)
@@ -47,6 +49,7 @@ func generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAc
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      podName,
+			Labels:    map[string]string{ManageActionLabel: string(manageAction)},
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -260,13 +263,6 @@ func (r *CustomClusterController) CreateClusterConfig(ctx context.Context, c *cl
 	return r.CreateConfigMapWithTemplate(ctx, name, namespace, ClusterConfigName, configTemplate)
 }
 
-func generateWorkerKey(customCluster *v1alpha1.CustomCluster, action customClusterManageAction) client.ObjectKey {
-	return client.ObjectKey{
-		Namespace: customCluster.Namespace,
-		Name:      customCluster.Name + "-" + string(action),
-	}
-}
-
 func generateClusterHostsKey(customCluster *v1alpha1.CustomCluster) client.ObjectKey {
 	return client.ObjectKey{
 		Namespace: customCluster.Namespace,
@@ -386,39 +382,63 @@ func (r *CustomClusterController) ensureConfigMapDeleted(ctx context.Context, cm
 }
 
 // ensureWorkerPodDeleted ensures that the worker pod is deleted.
-func (r *CustomClusterController) ensureWorkerPodDeleted(ctx context.Context, workerPodKey client.ObjectKey) error {
-	worker := &corev1.Pod{}
-	errGetWorker := r.Client.Get(ctx, workerPodKey, worker)
-	// errGetWorker can be divided into three situation: isNotFound; not isNotFound; nil.
-	if apierrors.IsNotFound(errGetWorker) {
-		return nil
-	} else if errGetWorker != nil && !apierrors.IsNotFound(errGetWorker) {
-		return fmt.Errorf("failed to get worker pod when it should be deleted: %v", errGetWorker)
-	} else if errGetWorker == nil {
-		if err := r.Client.Delete(ctx, worker); err != nil && !apierrors.IsNotFound(err) {
-			return fmt.Errorf("failed to delete cm when it should be deleted: %v", err)
-		}
+func (r *CustomClusterController) ensureWorkerPodDeleted(ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction) error {
+	workerPod, err := r.findManageWorkerPod(ctx, customCluster, manageAction)
+
+	if err != nil {
+		return fmt.Errorf("failed find customCluster manager worker pod: %v", err)
 	}
+	if workerPod == nil {
+		return nil
+	}
+
+	if err := r.Client.Delete(ctx, workerPod); err != nil {
+		return fmt.Errorf("failed to delete workerPod: %v", err)
+	}
+
 	return nil
 }
 
 // ensureWorkerPodCreated ensure that the worker pod is created.
 func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostName, configName string) (*corev1.Pod, error) {
-	workerPodKey := generateWorkerKey(customCluster, manageAction)
-	workerPod := &corev1.Pod{}
+	workerPod, err := r.findManageWorkerPod(ctx, customCluster, manageAction)
 
-	if err := r.Client.Get(ctx, workerPodKey, workerPod); err != nil {
-		if apierrors.IsNotFound(err) {
-			workerPod = generateClusterManageWorker(customCluster, manageAction, manageCMD, hostName, configName)
-			workerPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
-			if err1 := r.Client.Create(ctx, workerPod); err1 != nil {
-				return nil, fmt.Errorf("failed to create customCluster manager worker pod: %v", err1)
-			}
-			return workerPod, nil
-		}
-		return nil, fmt.Errorf("failed to get worker pod: %v", err)
+	if err != nil {
+		return nil, fmt.Errorf("failed find customCluster manager worker pod: %v", err)
 	}
-	return workerPod, nil
+	if workerPod != nil {
+		return workerPod, nil
+	}
+
+	newWorkerPod := generateClusterManageWorker(customCluster, manageAction, manageCMD, hostName, configName)
+	newWorkerPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
+	if err := r.Client.Create(ctx, newWorkerPod); err != nil {
+		return nil, fmt.Errorf("failed to create customCluster manager worker pod: %v", err)
+	}
+	return newWorkerPod, nil
+}
+
+// findManageWorkerPod locates the worker pod that has the given manageAction label and input OwnerReferences.
+func (r *CustomClusterController) findManageWorkerPod(ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction) (*corev1.Pod, error) {
+	labelSelector := client.MatchingLabels{ManageActionLabel: string(manageAction)}
+	PodList := &corev1.PodList{}
+
+	errGetWorker := r.Client.List(ctx, PodList, labelSelector)
+
+	if errGetWorker != nil && !apierrors.IsNotFound(errGetWorker) {
+		return nil, fmt.Errorf("failed to get worker pod when it should be deleted: %v", errGetWorker)
+	}
+
+	if errGetWorker == nil {
+		// find the pod with an ownerRef that references this customCluster.
+		for _, pod := range PodList.Items {
+			// the current customCluster's worker has only one ownerRef.
+			if pod.OwnerReferences[0].UID == customCluster.UID {
+				return &pod, nil
+			}
+		}
+	}
+	return nil, nil
 }
 
 // getKubesprayImage take in kubesprayVersion return the kubespray image url of this version.
@@ -551,6 +571,5 @@ func (r *CustomClusterController) createKubeConfigSecret(ctx context.Context, na
 }
 
 func getKubeConfigSecretName(customCluster *v1alpha1.CustomCluster) string {
-	// todo: Enhance the robustness of naming.
-	return customCluster.Name
+	return names.SimpleNameGenerator.GenerateName(customCluster.Name + "-kubeconfig-")
 }

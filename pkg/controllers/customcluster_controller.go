@@ -73,6 +73,7 @@ const (
 
 	ClusterKind       = "Cluster"
 	CustomClusterKind = "CustomCluster"
+	ManageActionLabel = "customcluster.kurator.dev/action"
 
 	KubesprayCMDPrefix                                     = "ansible-playbook -i inventory/" + ClusterHostsName + " --private-key /root/.ssh/ssh-privatekey "
 	CustomClusterInitAction      customClusterManageAction = "init"
@@ -428,19 +429,19 @@ func (r *CustomClusterController) reconcileDelete(ctx context.Context, customClu
 // deleteWorkerPods delete all the manage worker pods, including those for initialization, scaling up, scaling down, and other related tasks.
 func (r *CustomClusterController) deleteWorkerPods(ctx context.Context, customCluster *v1alpha1.CustomCluster) error {
 	// Delete the init worker.
-	if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterInitAction)); err != nil {
+	if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterInitAction); err != nil {
 		log.Error(err, "failed to delete init worker", "name", customCluster.Name, "namespace", customCluster.Namespace)
 		return err
 	}
 
 	// Delete the scale up worker.
-	if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleUpAction)); err != nil {
+	if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterScaleUpAction); err != nil {
 		log.Error(err, "failed to delete scale up worker", "name", customCluster.Name, "namespace", customCluster.Namespace)
 		return err
 	}
 
 	// Delete the scale down worker.
-	if err := r.ensureWorkerPodDeleted(ctx, generateWorkerKey(customCluster, CustomClusterScaleDownAction)); err != nil {
+	if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterScaleDownAction); err != nil {
 		log.Error(err, "failed to delete scale down worker", "name", customCluster.Name, "namespace", customCluster.Namespace)
 		return err
 	}
