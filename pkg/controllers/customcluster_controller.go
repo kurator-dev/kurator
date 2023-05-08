@@ -73,7 +73,7 @@ const (
 
 	ClusterKind       = "Cluster"
 	CustomClusterKind = "CustomCluster"
-	ManageActionLabel = "manage-action"
+	ManageActionLabel = "customcluster.kurator.dev/action"
 
 	KubesprayCMDPrefix                                     = "ansible-playbook -i inventory/" + ClusterHostsName + " --private-key /root/.ssh/ssh-privatekey "
 	CustomClusterInitAction      customClusterManageAction = "init"
