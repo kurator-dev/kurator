@@ -108,6 +108,180 @@ spec:
                       type: string
                   type: object
                 type: array
+              plugin:
+                description: Plugin defines the plugins that would be installed in
+                  the fleet.
+                properties:
+                  grafana:
+                    description: Grafana defines the configuration for the grafana
+                      installation and observation.
+                    properties:
+                      chart:
+                        description: "Chart defines the helm chart config of the grafana.
+                          default values is \n chart: repository: oci://registry-1.docker.io/bitnamicharts
+                          name: grafana version: 8.2.33"
+                        properties:
+                          name:
+                            description: Name defines the name of the chart. Default
+                              value depends on the kind of the component.
+                            type: string
+                          repository:
+                            description: Repository defines the repository of chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          version:
+                            description: Version defines the version of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                        type: object
+                      extraArgs:
+                        description: "ExtraArgs is the set of extra arguments for
+                          Grafana chart. \n For Example, using following configuration
+                          to change replica count. extraArgs: grafana: replicaCount:
+                          2"
+                        x-kubernetes-preserve-unknown-fields: true
+                    type: object
+                  metric:
+                    description: Metric defines the configuration for the monitoring
+                      system installation and metrics collection..
+                    properties:
+                      prometheus:
+                        description: Prometheus defines the configuration for the
+                          prometheus installation in the clusters observed by the
+                          thanos, by default thanos sidecar will be installed in thanos
+                          sidecar mode.
+                        properties:
+                          chart:
+                            description: "Chart defines the helm chart config of the
+                              prometheus. default values is \n chart: repository:
+                              oci://registry-1.docker.io/bitnamicharts name: kube-prometheus
+                              version: 8.9.1"
+                            properties:
+                              name:
+                                description: Name defines the name of the chart. Default
+                                  value depends on the kind of the component.
+                                type: string
+                              repository:
+                                description: Repository defines the repository of
+                                  chart. Default value depends on the kind of the
+                                  component.
+                                type: string
+                              version:
+                                description: Version defines the version of the chart.
+                                  Default value depends on the kind of the component.
+                                type: string
+                            type: object
+                          extraArgs:
+                            description: "ExtraArgs is the set of extra arguments
+                              for Prometheus chart. \n For Example, using following
+                              configuration to create a ServiceMonitor to monitor
+                              prometheus itself. extraArgs: prometheus: serviceMonitor:
+                              enabled: true"
+                            x-kubernetes-preserve-unknown-fields: true
+                          kubeStateMetrics:
+                            description: KubeStateMetrics defines the configuration
+                              for the kube-state-metrics.
+                            properties:
+                              enabled:
+                                description: Enabled indicates whether the exporters
+                                  are enabled.
+                                type: boolean
+                            type: object
+                          nodeExporter:
+                            description: NodeExporter defines the configuration for
+                              the node exporter.
+                            properties:
+                              enabled:
+                                description: Enabled indicates whether the exporters
+                                  are enabled.
+                                type: boolean
+                            type: object
+                        type: object
+                      thanos:
+                        description: Thanos defines the configuration for the thanos
+                          querier and store gateway.
+                        properties:
+                          chart:
+                            description: "Chart defines the helm chart config of the
+                              thanos. default values is \n chart: repository: oci://registry-1.docker.io/bitnamicharts
+                              name: thanos version: 12.5.1"
+                            properties:
+                              name:
+                                description: Name defines the name of the chart. Default
+                                  value depends on the kind of the component.
+                                type: string
+                              repository:
+                                description: Repository defines the repository of
+                                  chart. Default value depends on the kind of the
+                                  component.
+                                type: string
+                              version:
+                                description: Version defines the version of the chart.
+                                  Default value depends on the kind of the component.
+                                type: string
+                            type: object
+                          extraArgs:
+                            description: "ExtraArgs is the set of extra arguments
+                              for Thanos chart. \n For Example, using following configuration
+                              to enable query frontend. extraArgs: queryFrontend:
+                              enabled: true"
+                            x-kubernetes-preserve-unknown-fields: true
+                          mode:
+                            description: Mode defines the mode of the Thanos. The
+                              default is sidecar.
+                            enum:
+                            - sidecar
+                            - reciever
+                            type: string
+                          objectStore:
+                            description: ObjectStoreConfig defines the configuration
+                              for the object store.
+                            properties:
+                              s3:
+                                description: S3 defines the configuration for the
+                                  S3 object store. For more information, see https://thanos.io/tip/thanos/storage.md/#s3
+                                  This field is required if the type is s3.
+                                properties:
+                                  bucket:
+                                    description: Bucket defines the name of the bucket.
+                                    type: string
+                                  credential:
+                                    description: 'Credential is the credential used
+                                      to access the bukcet. Make sure the credential
+                                      is in the same namespace as the monitoring.
+                                      The secret must have following keys: AccessKeyID,
+                                      SecretAccessKey. SessionToken is optional.'
+                                    properties:
+                                      secretRef:
+                                        type: string
+                                    required:
+                                    - secretRef
+                                    type: object
+                                  endpoint:
+                                    description: Endpoint defines the endpoint of
+                                      the bucket.
+                                    type: string
+                                  region:
+                                    description: Region defines the region of the
+                                      bucket.
+                                    type: string
+                                required:
+                                - bucket
+                                - credential
+                                - endpoint
+                                - region
+                                type: object
+                              type:
+                                description: Type defines the type of the object store.
+                                  Now only support s3, which means S3-compatible object
+                                  storages, e.g. MinIO.
+                                type: string
+                            required:
+                            - type
+                            type: object
+                        type: object
+                    type: object
+                type: object
             type: object
           status:
             description: FleetStatus defines the observed state of the fleet
