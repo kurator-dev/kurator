@@ -60,8 +60,10 @@ spec:
                 description: Accepted indicates whether the cluster is registered
                   to kurator fleet.
                 type: boolean
-            required:
-            - accepted
+              ready:
+                description: Ready indicates whether the cluster is ready to be registered
+                  with Kurator Fleet.
+                type: boolean
             type: object
         type: object
     served: true

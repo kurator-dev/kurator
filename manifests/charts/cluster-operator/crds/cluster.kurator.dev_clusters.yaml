@@ -397,6 +397,10 @@ spec:
           status:
             description: ClusterStatus defines the observed state of Cluster
             properties:
+              accepted:
+                description: Accepted indicates whether the cluster is registered
+                  to kurator fleet.
+                type: boolean
               apiEndpoint:
                 description: 'APIEndpoint is the endpoint to communicate with the
                   apiserver. Format should be: `https://host:port`'

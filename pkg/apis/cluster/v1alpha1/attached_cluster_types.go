@@ -52,7 +52,11 @@ type SecretKeyRef struct {
 
 type AttachedClusterStatus struct {
 	// Accepted indicates whether the cluster is registered to kurator fleet.
+	// +optional
 	Accepted bool `json:"accepted"`
+	// Ready indicates whether the cluster is ready to be registered with Kurator Fleet.
+	// +optional
+	Ready bool `json:"ready"`
 }
 
 // AttachedClusterList contains a list of AttachedCluster.
@@ -65,7 +69,7 @@ type AttachedClusterList struct {
 }
 
 func (ac *AttachedCluster) IsReady() bool {
-	return true
+	return ac.Status.Ready
 }
 
 func (ac *AttachedCluster) GetObject() client.Object {

@@ -19,14 +19,18 @@ package fleet
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	"github.com/karmada-io/karmada/pkg/karmadactl/join"
 	"github.com/karmada-io/karmada/pkg/karmadactl/options"
 	"github.com/karmada-io/karmada/pkg/karmadactl/unjoin"
+	"github.com/karmada-io/karmada/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	kubeclient "k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -73,7 +77,7 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 			err = f.Get(ctx, clusterKey, &attachedCluster)
 			currentCLuster = &attachedCluster
 		} else {
-			log.Error(nil, "unsupported cluster kind", "cluster", clusterKey, "kind", cluster.Kind)
+			log.Error(fmt.Errorf("unsupported cluster kind"), "cluster kind in fleet spec is unsupported", "cluster", clusterKey, "kind", cluster.Kind)
 			return result, nil
 		}
 
@@ -125,7 +129,6 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 		return result, fmt.Errorf("build restconfig for controlplane failed %v", err)
 	}
 	for _, cluster := range readyClusters {
-		// TODO: check if the cluster is already joined
 		err := f.joinCluster(ctx, controlplaneRestConfig, cluster)
 		if err != nil {
 			log.Error(err, "Join cluster failed")
@@ -216,14 +219,45 @@ func (f *FleetManager) joinCluster(ctx context.Context, controlPlane *restclient
 
 	option := join.CommandJoinOption{
 		ClusterNamespace: options.DefaultKarmadaClusterNamespace,
-		// TODO: how to distinguish different kind with same name
-		ClusterName: cluster.GetObject().GetName(),
+		ClusterName:      generateClusterNameInKarmada(cluster),
 	}
+
+	// check if already joined.
+	alreadyJoined, err := isClusterAlreadyJoined(controlPlane, clusterRestConfig)
+
+	if err != nil {
+		return err
+	}
+	// if already joined, return directly.
+	if alreadyJoined {
+		return nil
+	}
+
 	err = option.RunJoinCluster(controlPlane, clusterRestConfig)
 	if err != nil {
 		return fmt.Errorf("join cluster %v failed %v", client.ObjectKeyFromObject(cluster.GetObject()), err)
 	}
 	return nil
+}
+
+// isClusterAlreadyJoined check if current cluster is already joined.
+func isClusterAlreadyJoined(controlPlaneRestConfig, clusterConfig *restclient.Config) (bool, error) {
+	karmadaClient := karmadaclientset.NewForConfigOrDie(controlPlaneRestConfig)
+	clusterKubeClient := kubeclient.NewForConfigOrDie(clusterConfig)
+	id, err := util.ObtainClusterID(clusterKubeClient)
+	if err != nil {
+		return false, err
+	}
+
+	ok, _, err := util.IsClusterIdentifyUnique(karmadaClient, id)
+	if err != nil {
+		return false, err
+	}
+
+	if !ok {
+		return true, nil
+	}
+	return false, nil
 }
 
 func (f *FleetManager) unjoinCluster(ctx context.Context, controlPlane *restclient.Config, cluster ClusterInterface) error {
@@ -241,13 +275,22 @@ func (f *FleetManager) unjoinCluster(ctx context.Context, controlPlane *restclie
 
 	option := unjoin.CommandUnjoinOption{
 		ClusterNamespace: options.DefaultKarmadaClusterNamespace,
-		// TODO: how to distinguish different kind with same name
-		ClusterName: cluster.GetObject().GetName(),
-		Wait:        60 * time.Second,
+		ClusterName:      generateClusterNameInKarmada(cluster),
+		Wait:             60 * time.Second,
 	}
 	err = option.RunUnJoinCluster(controlPlane, clusterRestConfig)
 	if err != nil {
 		return fmt.Errorf("unjoin cluster %v failed %v", client.ObjectKeyFromObject(cluster.GetObject()), err)
 	}
 	return nil
+}
+
+// generateClusterNameInKarmada generate the name for karmada
+func generateClusterNameInKarmada(cluster ClusterInterface) string {
+	// to ensure a unique name in Karmada, add the suffix of the kind to avoid the possibility of different kind clusters having the same name.
+	name := cluster.GetObject().GetName() + "-" + strings.ToLower(cluster.GetObject().GetObjectKind().GroupVersionKind().Kind)
+	if len(name) > 63 {
+		name = name[:63]
+	}
+	return name
 }

@@ -247,6 +247,7 @@ type ClusterStatus struct {
 	// +optional
 	ServiceAccountIssuer string `json:"serviceAccountIssuer"`
 	// Accepted indicates whether the cluster is registered to kurator fleet.
+	// +optional
 	Accepted bool `json:"accepted"`
 }
 
