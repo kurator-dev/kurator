@@ -61,10 +61,8 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	clusterMap := make(map[string]struct{}, len(fleet.Spec.Clusters))
 	// Loop over cluster, and add labels to the cluster
 	for _, cluster := range fleet.Spec.Clusters {
-		clusterMap[cluster.Name] = struct{}{}
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
-
 		var currentCLuster ClusterInterface
 		var err error
 		if cluster.Kind == ClusterKind {
@@ -79,6 +77,9 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 			log.Error(fmt.Errorf("unsupported cluster kind"), "cluster kind in fleet spec is unsupported", "cluster", clusterKey, "kind", cluster.Kind)
 			return result, nil
 		}
+
+		// In case multiple clusters of different kinds have the same name.
+		clusterMap[generateClusterNameInKarmada(currentCLuster)] = struct{}{}
 
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
@@ -158,15 +159,26 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	}
 
 	for _, attachedCluster := range attachedClusterList.Items {
+		log.Info("a attachedCluster added ", "attachedCluster", attachedCluster.Name)
 		labeledCluster = append(labeledCluster, &attachedCluster)
 	}
 
 	for _, cluster := range labeledCluster {
-		if _, ok := clusterMap[cluster.GetObject().GetName()]; !ok {
+		if _, ok := clusterMap[generateClusterNameInKarmada(cluster)]; !ok {
 			err := f.unjoinCluster(ctx, controlplaneRestConfig, cluster)
 			if err != nil {
 				log.Error(err, "Unjoin cluster failed")
 				return result, err
+			}
+
+			// remove label after unjoined
+			if cluster.GetObject().GetLabels()[FleetLabel] == fleet.Name {
+				delete(cluster.GetObject().GetLabels(), FleetLabel)
+				err = f.Update(ctx, cluster.GetObject())
+				if err != nil {
+					log.Error(err, "unable to remove cluster label", "cluster", cluster.GetObject().GetName())
+					return result, err
+				}
 			}
 		}
 	}
