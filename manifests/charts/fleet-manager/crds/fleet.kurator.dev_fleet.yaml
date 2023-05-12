@@ -294,6 +294,13 @@ spec:
                 description: Phase represents the current phase of fleet. E.g. Pending,
                   Running, Terminating, Failed, Ready, etc.
                 type: string
+              pluginEndpoints:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: PluginEndpoints is the endpoints of the plugins.
+                type: object
               readyClusters:
                 description: 'TODO: healthy/unhealthy members cluster Total number
                   of ready clusters, ready to deploy .'

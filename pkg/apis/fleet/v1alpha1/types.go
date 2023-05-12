@@ -231,6 +231,9 @@ type FleetStatus struct {
 	// +optional
 	Reason string `json:"reason,omitempty"`
 
+	// PluginEndpoints is the endpoints of the plugins.
+	PluginEndpoints map[string]Endpoints `json:"pluginEndpoints,omitempty"`
+
 	// TODO: healthy/unhealthy members cluster
 	// Total number of ready clusters, ready to deploy .
 	ReadyClusters int32 `json:"readyClusters,omitempty"`
@@ -238,6 +241,8 @@ type FleetStatus struct {
 	// Total number of unready clusters, not ready for use.
 	UnReadyClusters int32 `json:"unReadyClusters,omitempty"`
 }
+
+type Endpoints []string
 
 // FleetList contains a list of fleets.
 // +kubebuilder:object:root=true

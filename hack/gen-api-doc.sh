@@ -23,10 +23,11 @@ API_GROUPS=("cluster" "infra" "fleet")
 
 for APIGROUP in "${API_GROUPS[@]}"
 do
-    echo "Generating docs for ${APIGROUP}/v1alpha1 to ${OUT_DIR}/${APIGROUP}_types.md"
+    OUT_FILE="${OUT_DIR}/${APIGROUP}_v1alpha1_types.html"
+    echo "Generating docs for ${APIGROUP}/v1alpha1 to ${OUT_FILE}"
     gen-crd-api-reference-docs \
       --api-dir="${API_DIR}/${APIGROUP}/v1alpha1" \
       --config="${CONFIG_FILE}" \
       --template-dir="${TEMPLATE_DIR}" \
-      --out-file="${OUT_DIR}/${APIGROUP}_v1alpha1_types.html"
+      --out-file="${OUT_FILE}"
 done
