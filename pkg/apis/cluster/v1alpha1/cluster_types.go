@@ -246,9 +246,6 @@ type ClusterStatus struct {
 	// ServiceAccountIssuer is the URL of the service account issuer.
 	// +optional
 	ServiceAccountIssuer string `json:"serviceAccountIssuer"`
-	// Accepted indicates whether the cluster is registered to kurator fleet.
-	// +optional
-	Accepted bool `json:"accepted"`
 }
 
 func (c *Cluster) GetConditions() capiv1beta1.Conditions {
@@ -286,8 +283,4 @@ const ClusterKubeconfigDataName = "value"
 
 func (c *Cluster) GetSecretKey() string {
 	return ClusterKubeconfigDataName
-}
-
-func (c *Cluster) SetAccepted(accepted bool) {
-	c.Status.Accepted = accepted
 }

@@ -85,7 +85,6 @@ func (a *AttachedClusterController) Reconcile(ctx context.Context, req ctrl.Requ
 
 func (a *AttachedClusterController) reconcile(ctx context.Context, attachedCluster *clusterv1alpha1.AttachedCluster) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-	attachedCluster.Status.Accepted = false
 	attachedCluster.Status.Ready = false
 
 	var secret corev1.Secret
@@ -111,5 +110,5 @@ func (a *AttachedClusterController) reconcile(ctx context.Context, attachedClust
 	}
 	attachedCluster.Status.Ready = true
 
-	return ctrl.Result{}, err
+	return ctrl.Result{}, nil
 }

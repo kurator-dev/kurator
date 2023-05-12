@@ -45,7 +45,6 @@ type ClusterInterface interface {
 	GetObject() client.Object
 	GetSecretName() string
 	GetSecretKey() string
-	SetAccepted(accepted bool)
 }
 
 const (
@@ -97,7 +96,6 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 				labels := currentCLuster.GetObject().GetLabels()
 				labels[FleetLabel] = fleet.Name
 				currentCLuster.GetObject().SetLabels(labels)
-				currentCLuster.SetAccepted(true)
 				err = f.Update(ctx, currentCLuster.GetObject())
 				if err != nil {
 					log.Error(err, "unable to label cluster", "cluster", clusterKey)
@@ -208,7 +206,6 @@ func (f *FleetManager) reconcileClustersOnDelete(ctx context.Context, fleet *fle
 		} else {
 			if currentCLuster.GetObject().GetLabels()[FleetLabel] == fleet.Name {
 				delete(currentCLuster.GetObject().GetLabels(), FleetLabel)
-				currentCLuster.SetAccepted(false)
 				err = f.Update(ctx, currentCLuster.GetObject())
 				if err != nil {
 					log.Error(err, "unable to remove cluster label", "cluster", clusterKey)

@@ -51,9 +51,6 @@ type SecretKeyRef struct {
 }
 
 type AttachedClusterStatus struct {
-	// Accepted indicates whether the cluster is registered to kurator fleet.
-	// +optional
-	Accepted bool `json:"accepted"`
 	// Ready indicates whether the cluster is ready to be registered with Kurator Fleet.
 	// +optional
 	Ready bool `json:"ready"`
@@ -82,8 +79,4 @@ func (ac *AttachedCluster) GetSecretName() string {
 
 func (ac *AttachedCluster) GetSecretKey() string {
 	return ac.Spec.Kubeconfig.Key
-}
-
-func (ac *AttachedCluster) SetAccepted(accepted bool) {
-	ac.Status.Accepted = accepted
 }
