@@ -145,9 +145,27 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 		return result, err
 	}
 
+	var attachedClusterList clusterv1alpha1.AttachedClusterList
+	err = f.Client.List(ctx, &attachedClusterList,
+		client.InNamespace(fleet.Namespace),
+		client.MatchingLabels{FleetLabel: fleet.Name})
+	if err != nil {
+		return result, err
+	}
+
+	var labeledCluster []ClusterInterface
+
 	for _, cluster := range clusterList.Items {
-		if _, ok := clusterMap[cluster.Name]; !ok {
-			err := f.unjoinCluster(ctx, controlplaneRestConfig, &cluster)
+		labeledCluster = append(labeledCluster, &cluster)
+	}
+
+	for _, attachedCluster := range attachedClusterList.Items {
+		labeledCluster = append(labeledCluster, &attachedCluster)
+	}
+
+	for _, cluster := range labeledCluster {
+		if _, ok := clusterMap[cluster.GetObject().GetName()]; !ok {
+			err := f.unjoinCluster(ctx, controlplaneRestConfig, cluster)
 			if err != nil {
 				log.Error(err, "Unjoin cluster failed")
 				return result, err
