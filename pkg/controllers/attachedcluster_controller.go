@@ -102,7 +102,6 @@ func (a *AttachedClusterController) reconcile(ctx context.Context, attachedClust
 	}
 	controlPlaneKubeClient := kubeclient.NewForConfigOrDie(attachedClusterConfig)
 
-	// The default cluster ID for Karmada is the UID of the NamespaceSystem in the cluster.
 	// If this NamespaceSystem cannot be obtained, the cluster will not be ready for registration with Karmada Fleet.
 	if _, err := controlPlaneKubeClient.CoreV1().Namespaces().Get(context.TODO(), metav1.NamespaceSystem, metav1.GetOptions{}); err != nil {
 		log.Error(err, "failed to get attached cluster id")

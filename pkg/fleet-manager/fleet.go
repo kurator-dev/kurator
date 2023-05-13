@@ -72,7 +72,14 @@ func (f *FleetManager) SetupWithManager(mgr ctrl.Manager) error {
 		&source.Kind{Type: &clusterv1alpha1.Cluster{}},
 		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
 	); err != nil {
-		return fmt.Errorf("failed adding Watch for Secret to controller manager: %v", err)
+		return fmt.Errorf("failed adding Watch for Cluster: %v", err)
+	}
+
+	if err := c.Watch(
+		&source.Kind{Type: &clusterv1alpha1.AttachedCluster{}},
+		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
+	); err != nil {
+		return fmt.Errorf("failed adding Watch for AttachedCluster: %v", err)
 	}
 
 	return nil
