@@ -164,6 +164,16 @@ func (f *FleetManager) reconcile(ctx context.Context, fleet *fleetapi.Fleet) (ct
 		return res, err
 	}
 
+	fleetClusters, err := f.buildFleetClusters(ctx, fleet)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to build cluster clients: %w", err)
+	}
+
+	res, err = f.reconcilePlugins(ctx, fleet, fleetClusters)
+	if err != nil || res.RequeueAfter > 0 {
+		return res, err
+	}
+
 	return ctrl.Result{}, nil
 }
 

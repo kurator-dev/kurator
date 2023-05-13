@@ -40,6 +40,7 @@ import (
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
+// TODO: rename to FleetCluster?
 type ClusterInterface interface {
 	IsReady() bool
 	GetObject() client.Object
@@ -60,21 +61,13 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	var readyClusters []ClusterInterface
 	clusterMap := make(map[string]struct{}, len(fleet.Spec.Clusters))
 	// Loop over cluster, and add labels to the cluster
-	for _, cluster := range fleet.Spec.Clusters {
+	for _, c := range fleet.Spec.Clusters {
+		cluster := c
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
-		var currentCLuster ClusterInterface
-		var err error
-		if cluster.Kind == ClusterKind {
-			var cluster clusterv1alpha1.Cluster
-			err = f.Get(ctx, clusterKey, &cluster)
-			currentCLuster = &cluster
-		} else if cluster.Kind == AttachedClusterKind {
-			var attachedCluster clusterv1alpha1.AttachedCluster
-			err = f.Get(ctx, clusterKey, &attachedCluster)
-			currentCLuster = &attachedCluster
-		} else {
-			log.Error(fmt.Errorf("unsupported cluster kind"), "cluster kind in fleet spec is unsupported", "cluster", clusterKey, "kind", cluster.Kind)
+		currentCLuster, err := f.getFleetClusterInterface(ctx, cluster.Kind, clusterKey)
+		if err != nil {
+			log.Error(err, "fail to get fleet cluster", "cluster", clusterKey, "kind", cluster.Kind)
 			return result, nil
 		}
 

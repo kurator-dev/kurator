@@ -226,59 +226,21 @@ spec:
                               to enable query frontend. extraArgs: queryFrontend:
                               enabled: true"
                             x-kubernetes-preserve-unknown-fields: true
-                          mode:
-                            description: Mode defines the mode of the Thanos. The
-                              default is sidecar.
-                            enum:
-                            - sidecar
-                            - reciever
-                            type: string
-                          objectStore:
-                            description: ObjectStoreConfig defines the configuration
-                              for the object store.
+                          objectStoreConfig:
+                            description: 'ObjectStoreConfig is the secret reference
+                              of the object store. Configuration must follow the definition
+                              of the thanos: https://thanos.io/tip/thanos/storage.md/.'
                             properties:
-                              s3:
-                                description: S3 defines the configuration for the
-                                  S3 object store. For more information, see https://thanos.io/tip/thanos/storage.md/#s3
-                                  This field is required if the type is s3.
-                                properties:
-                                  bucket:
-                                    description: Bucket defines the name of the bucket.
-                                    type: string
-                                  credential:
-                                    description: 'Credential is the credential used
-                                      to access the bukcet. Make sure the credential
-                                      is in the same namespace as the monitoring.
-                                      The secret must have following keys: AccessKeyID,
-                                      SecretAccessKey. SessionToken is optional.'
-                                    properties:
-                                      secretRef:
-                                        type: string
-                                    required:
-                                    - secretRef
-                                    type: object
-                                  endpoint:
-                                    description: Endpoint defines the endpoint of
-                                      the bucket.
-                                    type: string
-                                  region:
-                                    description: Region defines the region of the
-                                      bucket.
-                                    type: string
-                                required:
-                                - bucket
-                                - credential
-                                - endpoint
-                                - region
-                                type: object
-                              type:
-                                description: Type defines the type of the object store.
-                                  Now only support s3, which means S3-compatible object
-                                  storages, e.g. MinIO.
+                              secretName:
+                                description: SecretName is the name of the secret
+                                  that holds the object store configuration. The path
+                                  of object store configuration must be `objstore.yml`
                                 type: string
                             required:
-                            - type
+                            - secretName
                             type: object
+                        required:
+                        - objectStoreConfig
                         type: object
                     type: object
                 type: object

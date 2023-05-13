@@ -438,6 +438,38 @@ by default thanos sidecar will be installed in thanos sidecar mode.</p>
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.ObjectStoreConfig">ObjectStoreConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SecretName is the name of the secret that holds the object store configuration.
+The path of object store configuration must be <code>objstore.yml</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig
 </h3>
 <p>
@@ -603,75 +635,6 @@ bool
 </table>
 </div>
 </div>
-<h3 id="fleet.kurator.dev/v1alpha1.S3Config">S3Config
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#fleet.kurator.dev/v1alpha1.ThanosObjectStoreConfig">ThanosObjectStoreConfig</a>)
-</p>
-<div class="md-typeset__scrollwrap">
-<div class="md-typeset__table td-content">
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>bucket</code><br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Bucket defines the name of the bucket.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>region</code><br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Region defines the region of the bucket.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>endpoint</code><br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Endpoint defines the endpoint of the bucket.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>credential</code><br>
-<em>
-<a href="https://kurator.dev/docs/references/cluster-api/#cluster.kurator.dev/v1alpha1.CredentialConfig">
-Kurator cluster/v1alpha1.CredentialConfig
-</a>
-</em>
-</td>
-<td>
-<p>Credential is the credential used to access the bukcet.
-Make sure the credential is in the same namespace as the monitoring.
-The secret must have following keys: AccessKeyID, SecretAccessKey.
-SessionToken is optional.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
 <h3 id="fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig
 </h3>
 <p>
@@ -709,28 +672,16 @@ version: 12.5.1</p>
 </tr>
 <tr>
 <td>
-<code>mode</code><br>
+<code>objectStoreConfig</code><br>
 <em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Mode defines the mode of the Thanos.
-The default is sidecar.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>objectStore</code><br>
-<em>
-<a href="#fleet.kurator.dev/v1alpha1.ThanosObjectStoreConfig">
-ThanosObjectStoreConfig
+<a href="#fleet.kurator.dev/v1alpha1.ObjectStoreConfig">
+ObjectStoreConfig
 </a>
 </em>
 </td>
 <td>
-<p>ObjectStoreConfig defines the configuration for the object store.</p>
+<p>ObjectStoreConfig is the secret reference of the object store.
+Configuration must follow the definition of the thanos: <a href="https://thanos.io/tip/thanos/storage.md/">https://thanos.io/tip/thanos/storage.md/</a>.</p>
 </td>
 </tr>
 <tr>
@@ -749,54 +700,6 @@ Kubernetes /apiextensions/v1.JSON
 extraArgs:
 queryFrontend:
 enabled: true</p>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<h3 id="fleet.kurator.dev/v1alpha1.ThanosObjectStoreConfig">ThanosObjectStoreConfig
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
-</p>
-<div class="md-typeset__scrollwrap">
-<div class="md-typeset__table td-content">
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>type</code><br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Type defines the type of the object store.
-Now only support s3, which means S3-compatible object storages, e.g. MinIO.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>s3</code><br>
-<em>
-<a href="#fleet.kurator.dev/v1alpha1.S3Config">
-S3Config
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>S3 defines the configuration for the S3 object store.
-For more information, see <a href="https://thanos.io/tip/thanos/storage.md/#s3">https://thanos.io/tip/thanos/storage.md/#s3</a>
-This field is required if the type is s3.</p>
 </td>
 </tr>
 </tbody>

@@ -1,0 +1,31 @@
+type: oci
+repo: oci://registry-1.docker.io/bitnamicharts
+name: kube-prometheus
+version: 8.9.1
+targetNamespace: monitoring
+values:
+  fullnameOverride: prometheus
+  alertmanager:
+    enabled: false
+  exporters:
+    enabled: false
+    node-exporter:
+      enabled: false
+    kube-state-metrics:
+      enabled: false
+  blackboxExporter:
+    enabled: false
+  operator:
+    service:
+      type: ClusterIP
+  prometheus:
+    disableCompaction: true
+    thanos:
+      create: true
+      service:
+        type: LoadBalancer
+      objectStorageConfig:
+        secretKey: objstore.yml
+        secretName: thanos-objstore
+    service:
+      type: ClusterIP

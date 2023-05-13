@@ -17,6 +17,8 @@ limitations under the License.
 package scheme
 
 import (
+	hrapiv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
 	"k8s.io/apimachinery/pkg/runtime"
 	kubescheme "k8s.io/client-go/kubernetes/scheme"
 
@@ -32,4 +34,6 @@ func init() {
 	_ = kubescheme.AddToScheme(Scheme)
 	_ = fleetapi.AddToScheme(Scheme)
 	_ = clusterv1alpha1.AddToScheme(Scheme)
+	_ = hrapiv2b1.AddToScheme(Scheme)
+	_ = sourcev1.AddToScheme(Scheme)
 }

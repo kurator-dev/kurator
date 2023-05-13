@@ -45,7 +45,7 @@ func PatchResources(b []byte) (kube.ResourceList, error) {
 	}
 	target, err := c.HelmClient().Build(bytes.NewBuffer(b), false)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to build resources")
+		return nil, errors.Wrapf(err, "failed to build resources: %s", string(b))
 	}
 	if _, err := c.HelmClient().Update(target, target, true); err != nil {
 		return nil, errors.Wrapf(err, "failed to update resources")
