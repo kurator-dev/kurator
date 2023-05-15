@@ -38,6 +38,30 @@
     {
       "typeMatchPrefix": "^kurator\\.dev/kurator/pkg/apis/cluster/v1alpha1\\.CredentialConfig",
       "docsURLTemplate": "https://kurator.dev/docs/references/cluster-api/#cluster.kurator.dev/v1alpha1.CredentialConfig"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/fluxcd/source-controller/api/v1",
+      "docsURLTemplate": "https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#{{.TypeIdentifier}}"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/fluxcd/source-controller/api/v1beta2",
+      "docsURLTemplate": "https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1beta#{{.TypeIdentifier}}"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/fluxcd/kustomize-controller/api/v1",
+      "docsURLTemplate": "https://pkg.go.dev/github.com/fluxcd/kustomize-controller/api/v1#{{.TypeIdentifier}}"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/fluxcd/helm-controller/api/v2beta1",
+      "docsURLTemplate": "https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#{{.TypeIdentifier}}"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/fluxcd/pkg/apis/meta",
+      "docsURLTemplate": "https://pkg.go.dev/github.com/fluxcd/pkg/apis/meta#{{.TypeIdentifier}}"
+    },
+    {
+      "typeMatchPrefix": "^github\\.com/fluxcd/pkg/apis/kustomize",
+      "docsURLTemplate": "https://pkg.go.dev/github.com/fluxcd/pkg/apis/kustomize#{{.TypeIdentifier}}"
     }
   ],
   "typeDisplayNamePrefixOverrides": {

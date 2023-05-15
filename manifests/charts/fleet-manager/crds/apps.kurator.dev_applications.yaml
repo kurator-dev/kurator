@@ -1,0 +1,2018 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.8.0
+  creationTimestamp: null
+  name: applications.apps.kurator.dev
+spec:
+  group: apps.kurator.dev
+  names:
+    categories:
+    - kurator-dev
+    kind: Application
+    listKind: ApplicationList
+    plural: applications
+    singular: application
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Application is the schema for the application's API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ApplicationSpec defines the configuration to produce an artifact
+              and how to dispatch it.
+            properties:
+              source:
+                description: Source defines the artifact source.
+                properties:
+                  gitRepo:
+                    description: GitRepositorySpec specifies the required configuration
+                      to produce an Artifact for a Git repository.
+                    properties:
+                      ignore:
+                        description: Ignore overrides the set of excluded patterns
+                          in the .sourceignore format (which is the same as .gitignore).
+                          If not provided, a default will be used, consult the documentation
+                          for your version to find out what those are.
+                        type: string
+                      include:
+                        description: Include specifies a list of GitRepository resources
+                          which Artifacts should be included in the Artifact produced
+                          for this GitRepository.
+                        items:
+                          description: GitRepositoryInclude specifies a local reference
+                            to a GitRepository which Artifact (sub-)contents must
+                            be included, and where they should be placed.
+                          properties:
+                            fromPath:
+                              description: FromPath specifies the path to copy contents
+                                from, defaults to the root of the Artifact.
+                              type: string
+                            repository:
+                              description: GitRepositoryRef specifies the GitRepository
+                                which Artifact contents must be included.
+                              properties:
+                                name:
+                                  description: Name of the referent.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            toPath:
+                              description: ToPath specifies the path to copy contents
+                                to, defaults to the name of the GitRepositoryRef.
+                              type: string
+                          required:
+                          - repository
+                          type: object
+                        type: array
+                      interval:
+                        description: Interval at which to check the GitRepository
+                          for updates.
+                        pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                        type: string
+                      recurseSubmodules:
+                        description: RecurseSubmodules enables the initialization
+                          of all submodules within the GitRepository as cloned from
+                          the URL, using their default settings.
+                        type: boolean
+                      ref:
+                        description: Reference specifies the Git reference to resolve
+                          and monitor for changes, defaults to the 'master' branch.
+                        properties:
+                          branch:
+                            description: Branch to check out, defaults to 'master'
+                              if no other field is defined.
+                            type: string
+                          commit:
+                            description: "Commit SHA to check out, takes precedence
+                              over all reference fields. \n This can be combined with
+                              Branch to shallow clone the branch, in which the commit
+                              is expected to exist."
+                            type: string
+                          name:
+                            description: "Name of the reference to check out; takes
+                              precedence over Branch, Tag and SemVer. \n It must be
+                              a valid Git reference: https://git-scm.com/docs/git-check-ref-format#_description
+                              Examples: \"refs/heads/main\", \"refs/tags/v0.1.0\",
+                              \"refs/pull/420/head\", \"refs/merge-requests/1/head\""
+                            type: string
+                          semver:
+                            description: SemVer tag expression to check out, takes
+                              precedence over Tag.
+                            type: string
+                          tag:
+                            description: Tag to check out, takes precedence over Branch.
+                            type: string
+                        type: object
+                      secretRef:
+                        description: SecretRef specifies the Secret containing authentication
+                          credentials for the GitRepository. For HTTPS repositories
+                          the Secret must contain 'username' and 'password' fields
+                          for basic auth or 'bearerToken' field for token auth. For
+                          SSH repositories the Secret must contain 'identity' and
+                          'known_hosts' fields.
+                        properties:
+                          name:
+                            description: Name of the referent.
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      suspend:
+                        description: Suspend tells the controller to suspend the reconciliation
+                          of this GitRepository.
+                        type: boolean
+                      timeout:
+                        default: 60s
+                        description: Timeout for Git operations like cloning, defaults
+                          to 60s.
+                        pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m))+$
+                        type: string
+                      url:
+                        description: URL specifies the Git repository URL, it can
+                          be an HTTP/S or SSH address.
+                        pattern: ^(http|https|ssh)://.*$
+                        type: string
+                      verify:
+                        description: Verification specifies the configuration to verify
+                          the Git commit signature(s).
+                        properties:
+                          mode:
+                            description: Mode specifies what Git object should be
+                              verified, currently ('head').
+                            enum:
+                            - head
+                            type: string
+                          secretRef:
+                            description: SecretRef specifies the Secret containing
+                              the public keys of trusted Git authors.
+                            properties:
+                              name:
+                                description: Name of the referent.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - mode
+                        - secretRef
+                        type: object
+                    required:
+                    - interval
+                    - url
+                    type: object
+                  helmRepo:
+                    description: HelmRepositorySpec specifies the required configuration
+                      to produce an Artifact for a Helm repository index YAML.
+                    properties:
+                      accessFrom:
+                        description: 'AccessFrom specifies an Access Control List
+                          for allowing cross-namespace references to this object.
+                          NOTE: Not implemented, provisional as of https://github.com/fluxcd/flux2/pull/2092'
+                        properties:
+                          namespaceSelectors:
+                            description: NamespaceSelectors is the list of namespace
+                              selectors to which this ACL applies. Items in this list
+                              are evaluated using a logical OR operation.
+                            items:
+                              description: NamespaceSelector selects the namespaces
+                                to which this ACL applies. An empty map of MatchLabels
+                                matches all namespaces in a cluster.
+                              properties:
+                                matchLabels:
+                                  additionalProperties:
+                                    type: string
+                                  description: MatchLabels is a map of {key,value}
+                                    pairs. A single {key,value} in the matchLabels
+                                    map is equivalent to an element of matchExpressions,
+                                    whose key field is "key", the operator is "In",
+                                    and the values array contains only "value". The
+                                    requirements are ANDed.
+                                  type: object
+                              type: object
+                            type: array
+                        required:
+                        - namespaceSelectors
+                        type: object
+                      interval:
+                        description: Interval at which to check the URL for updates.
+                        pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                        type: string
+                      passCredentials:
+                        description: PassCredentials allows the credentials from the
+                          SecretRef to be passed on to a host that does not match
+                          the host as defined in URL. This may be required if the
+                          host of the advertised chart URLs in the index differ from
+                          the defined URL. Enabling this should be done with caution,
+                          as it can potentially result in credentials getting stolen
+                          in a MITM-attack.
+                        type: boolean
+                      provider:
+                        default: generic
+                        description: Provider used for authentication, can be 'aws',
+                          'azure', 'gcp' or 'generic'. This field is optional, and
+                          only taken into account if the .spec.type field is set to
+                          'oci'. When not specified, defaults to 'generic'.
+                        enum:
+                        - generic
+                        - aws
+                        - azure
+                        - gcp
+                        type: string
+                      secretRef:
+                        description: SecretRef specifies the Secret containing authentication
+                          credentials for the HelmRepository. For HTTP/S basic auth
+                          the secret must contain 'username' and 'password' fields.
+                          For TLS the secret must contain a 'certFile' and 'keyFile',
+                          and/or 'caFile' fields.
+                        properties:
+                          name:
+                            description: Name of the referent.
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      suspend:
+                        description: Suspend tells the controller to suspend the reconciliation
+                          of this HelmRepository.
+                        type: boolean
+                      timeout:
+                        default: 60s
+                        description: Timeout is used for the index fetch operation
+                          for an HTTPS helm repository, and for remote OCI Repository
+                          operations like pulling for an OCI helm repository. Its
+                          default value is 60s.
+                        pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m))+$
+                        type: string
+                      type:
+                        description: Type of the HelmRepository. When this field is
+                          set to  "oci", the URL field value must be prefixed with
+                          "oci://".
+                        enum:
+                        - default
+                        - oci
+                        type: string
+                      url:
+                        description: URL of the Helm repository, a valid URL contains
+                          at least a protocol and host.
+                        type: string
+                    required:
+                    - interval
+                    - url
+                    type: object
+                  ociRepo:
+                    description: OCIRepositorySpec defines the desired state of OCIRepository
+                    properties:
+                      certSecretRef:
+                        description: "CertSecretRef can be given the name of a secret
+                          containing either or both of \n - a PEM-encoded client certificate
+                          (`certFile`) and private key (`keyFile`); - a PEM-encoded
+                          CA certificate (`caFile`) \n and whichever are supplied,
+                          will be used for connecting to the registry. The client
+                          cert and key are useful if you are authenticating with a
+                          certificate; the CA cert is useful if you are using a self-signed
+                          server certificate."
+                        properties:
+                          name:
+                            description: Name of the referent.
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      ignore:
+                        description: Ignore overrides the set of excluded patterns
+                          in the .sourceignore format (which is the same as .gitignore).
+                          If not provided, a default will be used, consult the documentation
+                          for your version to find out what those are.
+                        type: string
+                      insecure:
+                        description: Insecure allows connecting to a non-TLS HTTP
+                          container registry.
+                        type: boolean
+                      interval:
+                        description: The interval at which to check for image updates.
+                        pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                        type: string
+                      layerSelector:
+                        description: LayerSelector specifies which layer should be
+                          extracted from the OCI artifact. When not specified, the
+                          first layer found in the artifact is selected.
+                        properties:
+                          mediaType:
+                            description: MediaType specifies the OCI media type of
+                              the layer which should be extracted from the OCI Artifact.
+                              The first layer matching this type is selected.
+                            type: string
+                          operation:
+                            description: Operation specifies how the selected layer
+                              should be processed. By default, the layer compressed
+                              content is extracted to storage. When the operation
+                              is set to 'copy', the layer compressed content is persisted
+                              to storage as it is.
+                            enum:
+                            - extract
+                            - copy
+                            type: string
+                        type: object
+                      provider:
+                        default: generic
+                        description: The provider used for authentication, can be
+                          'aws', 'azure', 'gcp' or 'generic'. When not specified,
+                          defaults to 'generic'.
+                        enum:
+                        - generic
+                        - aws
+                        - azure
+                        - gcp
+                        type: string
+                      ref:
+                        description: The OCI reference to pull and monitor for changes,
+                          defaults to the latest tag.
+                        properties:
+                          digest:
+                            description: Digest is the image digest to pull, takes
+                              precedence over SemVer. The value should be in the format
+                              'sha256:<HASH>'.
+                            type: string
+                          semver:
+                            description: SemVer is the range of tags to pull selecting
+                              the latest within the range, takes precedence over Tag.
+                            type: string
+                          tag:
+                            description: Tag is the image tag to pull, defaults to
+                              latest.
+                            type: string
+                        type: object
+                      secretRef:
+                        description: SecretRef contains the secret name containing
+                          the registry login credentials to resolve image metadata.
+                          The secret must be of type kubernetes.io/dockerconfigjson.
+                        properties:
+                          name:
+                            description: Name of the referent.
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      serviceAccountName:
+                        description: 'ServiceAccountName is the name of the Kubernetes
+                          ServiceAccount used to authenticate the image pull if the
+                          service account has attached pull secrets. For more information:
+                          https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account'
+                        type: string
+                      suspend:
+                        description: This flag tells the controller to suspend the
+                          reconciliation of this source.
+                        type: boolean
+                      timeout:
+                        default: 60s
+                        description: The timeout for remote OCI Repository operations
+                          like pulling, defaults to 60s.
+                        pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m))+$
+                        type: string
+                      url:
+                        description: URL is a reference to an OCI artifact repository
+                          hosted on a remote container registry.
+                        pattern: ^oci://.*$
+                        type: string
+                      verify:
+                        description: Verify contains the secret name containing the
+                          trusted public keys used to verify the signature and specifies
+                          which provider to use to check whether OCI image is authentic.
+                        properties:
+                          provider:
+                            default: cosign
+                            description: Provider specifies the technology used to
+                              sign the OCI Artifact.
+                            enum:
+                            - cosign
+                            type: string
+                          secretRef:
+                            description: SecretRef specifies the Kubernetes Secret
+                              containing the trusted public keys.
+                            properties:
+                              name:
+                                description: Name of the referent.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                        required:
+                        - provider
+                        type: object
+                    required:
+                    - interval
+                    - url
+                    type: object
+                type: object
+              syncPolicy:
+                description: SyncPolicy controls how the artifact will be synced.
+                items:
+                  description: ApplicationSyncPolicy defines the configuration to
+                    sync an artifact. Only `kustomization` or `helm` can be specified
+                    to manage application sync.
+                  properties:
+                    destination:
+                      description: Destination defines the destination for the artifact.
+                      properties:
+                        clusterSelector:
+                          description: ClusterSelector defines the label selectors
+                            to select the clusters of the fleet.
+                          properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: A label selector requirement is a selector
+                                  that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: operator represents a key's relationship
+                                      to a set of values. Valid operators are In,
+                                      NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: values is an array of string values.
+                                      If the operator is In or NotIn, the values array
+                                      must be non-empty. If the operator is Exists
+                                      or DoesNotExist, the values array must be empty.
+                                      This array is replaced during a strategic merge
+                                      patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - key
+                                - operator
+                                type: object
+                              type: array
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              description: matchLabels is a map of {key,value} pairs.
+                                A single {key,value} in the matchLabels map is equivalent
+                                to an element of matchExpressions, whose key field
+                                is "key", the operator is "In", and the values array
+                                contains only "value". The requirements are ANDed.
+                              type: object
+                          type: object
+                        fleet:
+                          description: Fleet defines the fleet to dispatch the artifact.
+                          type: string
+                      required:
+                      - fleet
+                      type: object
+                    helm:
+                      description: HelmRelease defines the desired state of a Helm
+                        release.
+                      properties:
+                        chart:
+                          description: Chart defines the template of the v1beta2.HelmChart
+                            that should be created for this HelmRelease.
+                          properties:
+                            metadata:
+                              description: ObjectMeta holds the template for metadata
+                                like labels and annotations.
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: 'Annotations is an unstructured key
+                                    value map stored with a resource that may be set
+                                    by external tools to store and retrieve arbitrary
+                                    metadata. They are not queryable and should be
+                                    preserved when modifying objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/'
+                                  type: object
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: 'Map of string keys and values that
+                                    can be used to organize and categorize (scope
+                                    and select) objects. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/'
+                                  type: object
+                              type: object
+                            spec:
+                              description: Spec holds the template for the v1beta2.HelmChartSpec
+                                for this HelmRelease.
+                              properties:
+                                chart:
+                                  description: The name or path the Helm chart is
+                                    available at in the SourceRef.
+                                  type: string
+                                interval:
+                                  description: Interval at which to check the v1beta2.Source
+                                    for updates. Defaults to 'HelmReleaseSpec.Interval'.
+                                  pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                                  type: string
+                                reconcileStrategy:
+                                  default: ChartVersion
+                                  description: Determines what enables the creation
+                                    of a new artifact. Valid values are ('ChartVersion',
+                                    'Revision'). See the documentation of the values
+                                    for an explanation on their behavior. Defaults
+                                    to ChartVersion when omitted.
+                                  enum:
+                                  - ChartVersion
+                                  - Revision
+                                  type: string
+                                sourceRef:
+                                  description: The name and namespace of the v1beta2.Source
+                                    the chart is available at.
+                                  properties:
+                                    apiVersion:
+                                      description: APIVersion of the referent.
+                                      type: string
+                                    kind:
+                                      description: Kind of the referent.
+                                      enum:
+                                      - HelmRepository
+                                      - GitRepository
+                                      - Bucket
+                                      type: string
+                                    name:
+                                      description: Name of the referent.
+                                      maxLength: 253
+                                      minLength: 1
+                                      type: string
+                                    namespace:
+                                      description: Namespace of the referent.
+                                      maxLength: 63
+                                      minLength: 1
+                                      type: string
+                                  required:
+                                  - name
+                                  type: object
+                                valuesFile:
+                                  description: Alternative values file to use as the
+                                    default chart values, expected to be a relative
+                                    path in the SourceRef. Deprecated in favor of
+                                    ValuesFiles, for backwards compatibility the file
+                                    defined here is merged before the ValuesFiles
+                                    items. Ignored when omitted.
+                                  type: string
+                                valuesFiles:
+                                  description: Alternative list of values files to
+                                    use as the chart values (values.yaml is not included
+                                    by default), expected to be a relative path in
+                                    the SourceRef. Values files are merged in the
+                                    order of this list with the last file overriding
+                                    the first. Ignored when omitted.
+                                  items:
+                                    type: string
+                                  type: array
+                                verify:
+                                  description: Verify contains the secret name containing
+                                    the trusted public keys used to verify the signature
+                                    and specifies which provider to use to check whether
+                                    OCI image is authentic. This field is only supported
+                                    for OCI sources. Chart dependencies, which are
+                                    not bundled in the umbrella chart artifact, are
+                                    not verified.
+                                  properties:
+                                    provider:
+                                      default: cosign
+                                      description: Provider specifies the technology
+                                        used to sign the OCI Helm chart.
+                                      enum:
+                                      - cosign
+                                      type: string
+                                    secretRef:
+                                      description: SecretRef specifies the Kubernetes
+                                        Secret containing the trusted public keys.
+                                      properties:
+                                        name:
+                                          description: Name of the referent.
+                                          type: string
+                                      required:
+                                      - name
+                                      type: object
+                                  required:
+                                  - provider
+                                  type: object
+                                version:
+                                  default: '*'
+                                  description: Version semver expression, ignored
+                                    for charts from v1beta2.GitRepository and v1beta2.Bucket
+                                    sources. Defaults to latest when omitted.
+                                  type: string
+                              required:
+                              - chart
+                              - sourceRef
+                              type: object
+                          required:
+                          - spec
+                          type: object
+                        dependsOn:
+                          description: DependsOn may contain a meta.NamespacedObjectReference
+                            slice with references to HelmRelease resources that must
+                            be ready before this HelmRelease can be reconciled.
+                          items:
+                            description: NamespacedObjectReference contains enough
+                              information to locate the referenced Kubernetes resource
+                              object in any namespace.
+                            properties:
+                              name:
+                                description: Name of the referent.
+                                type: string
+                              namespace:
+                                description: Namespace of the referent, when not specified
+                                  it acts as LocalObjectReference.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                        install:
+                          description: Install holds the configuration for Helm install
+                            actions for this HelmRelease.
+                          properties:
+                            crds:
+                              description: "CRDs upgrade CRDs from the Helm Chart's
+                                crds directory according to the CRD upgrade policy
+                                provided here. Valid values are `Skip`, `Create` or
+                                `CreateReplace`. Default is `Create` and if omitted
+                                CRDs are installed but not updated. \n Skip: do neither
+                                install nor replace (update) any CRDs. \n Create:
+                                new CRDs are created, existing CRDs are neither updated
+                                nor deleted. \n CreateReplace: new CRDs are created,
+                                existing CRDs are updated (replaced) but not deleted.
+                                \n By default, CRDs are applied (installed) during
+                                Helm install action. With this option users can opt-in
+                                to CRD replace existing CRDs on Helm install actions,
+                                which is not (yet) natively supported by Helm. https://helm.sh/docs/chart_best_practices/custom_resource_definitions."
+                              enum:
+                              - Skip
+                              - Create
+                              - CreateReplace
+                              type: string
+                            createNamespace:
+                              description: CreateNamespace tells the Helm install
+                                action to create the HelmReleaseSpec.TargetNamespace
+                                if it does not exist yet. On uninstall, the namespace
+                                will not be garbage collected.
+                              type: boolean
+                            disableHooks:
+                              description: DisableHooks prevents hooks from running
+                                during the Helm install action.
+                              type: boolean
+                            disableOpenAPIValidation:
+                              description: DisableOpenAPIValidation prevents the Helm
+                                install action from validating rendered templates
+                                against the Kubernetes OpenAPI Schema.
+                              type: boolean
+                            disableWait:
+                              description: DisableWait disables the waiting for resources
+                                to be ready after a Helm install has been performed.
+                              type: boolean
+                            disableWaitForJobs:
+                              description: DisableWaitForJobs disables waiting for
+                                jobs to complete after a Helm install has been performed.
+                              type: boolean
+                            remediation:
+                              description: Remediation holds the remediation configuration
+                                for when the Helm install action for the HelmRelease
+                                fails. The default is to not perform any action.
+                              properties:
+                                ignoreTestFailures:
+                                  description: IgnoreTestFailures tells the controller
+                                    to skip remediation when the Helm tests are run
+                                    after an install action but fail. Defaults to
+                                    'Test.IgnoreFailures'.
+                                  type: boolean
+                                remediateLastFailure:
+                                  description: RemediateLastFailure tells the controller
+                                    to remediate the last failure, when no retries
+                                    remain. Defaults to 'false'.
+                                  type: boolean
+                                retries:
+                                  description: Retries is the number of retries that
+                                    should be attempted on failures before bailing.
+                                    Remediation, using an uninstall, is performed
+                                    between each attempt. Defaults to '0', a negative
+                                    integer equals to unlimited retries.
+                                  type: integer
+                              type: object
+                            replace:
+                              description: Replace tells the Helm install action to
+                                re-use the 'ReleaseName', but only if that name is
+                                a deleted release which remains in the history.
+                              type: boolean
+                            skipCRDs:
+                              description: "SkipCRDs tells the Helm install action
+                                to not install any CRDs. By default, CRDs are installed
+                                if not already present. \n Deprecated use CRD policy
+                                (`crds`) attribute with value `Skip` instead."
+                              type: boolean
+                            timeout:
+                              description: Timeout is the time to wait for any individual
+                                Kubernetes operation (like Jobs for hooks) during
+                                the performance of a Helm install action. Defaults
+                                to 'HelmReleaseSpec.Timeout'.
+                              pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                              type: string
+                          type: object
+                        interval:
+                          description: Interval at which to reconcile the Helm release.
+                          pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                          type: string
+                        maxHistory:
+                          description: MaxHistory is the number of revisions saved
+                            by Helm for this HelmRelease. Use '0' for an unlimited
+                            number of revisions; defaults to '10'.
+                          type: integer
+                        persistentClient:
+                          description: "PersistentClient tells the controller to use
+                            a persistent Kubernetes client for this release. When
+                            enabled, the client will be reused for the duration of
+                            the reconciliation, instead of being created and destroyed
+                            for each (step of a) Helm action. \n This can improve
+                            performance, but may cause issues with some Helm charts
+                            that for example do create Custom Resource Definitions
+                            during installation outside Helm's CRD lifecycle hooks,
+                            which are then not observed to be available by e.g. post-install
+                            hooks. \n If not set, it defaults to true."
+                          type: boolean
+                        releaseName:
+                          description: ReleaseName used for the Helm release. Defaults
+                            to a composition of '[TargetNamespace-]Name'.
+                          maxLength: 53
+                          minLength: 1
+                          type: string
+                        rollback:
+                          description: Rollback holds the configuration for Helm rollback
+                            actions for this HelmRelease.
+                          properties:
+                            cleanupOnFail:
+                              description: CleanupOnFail allows deletion of new resources
+                                created during the Helm rollback action when it fails.
+                              type: boolean
+                            disableHooks:
+                              description: DisableHooks prevents hooks from running
+                                during the Helm rollback action.
+                              type: boolean
+                            disableWait:
+                              description: DisableWait disables the waiting for resources
+                                to be ready after a Helm rollback has been performed.
+                              type: boolean
+                            disableWaitForJobs:
+                              description: DisableWaitForJobs disables waiting for
+                                jobs to complete after a Helm rollback has been performed.
+                              type: boolean
+                            force:
+                              description: Force forces resource updates through a
+                                replacement strategy.
+                              type: boolean
+                            recreate:
+                              description: Recreate performs pod restarts for the
+                                resource if applicable.
+                              type: boolean
+                            timeout:
+                              description: Timeout is the time to wait for any individual
+                                Kubernetes operation (like Jobs for hooks) during
+                                the performance of a Helm rollback action. Defaults
+                                to 'HelmReleaseSpec.Timeout'.
+                              pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                              type: string
+                          type: object
+                        serviceAccountName:
+                          description: The name of the Kubernetes service account
+                            to impersonate when reconciling this HelmRelease.
+                          type: string
+                        suspend:
+                          description: Suspend tells the controller to suspend reconciliation
+                            for this HelmRelease, it does not apply to already started
+                            reconciliations. Defaults to false.
+                          type: boolean
+                        targetNamespace:
+                          description: TargetNamespace to target when performing operations
+                            for the HelmRelease. Defaults to the namespace of the
+                            HelmRelease.
+                          maxLength: 63
+                          minLength: 1
+                          type: string
+                        timeout:
+                          description: Timeout is the time to wait for any individual
+                            Kubernetes operation (like Jobs for hooks) during the
+                            performance of a Helm action. Defaults to '5m0s'.
+                          pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                          type: string
+                        uninstall:
+                          description: Uninstall holds the configuration for Helm
+                            uninstall actions for this HelmRelease.
+                          properties:
+                            disableHooks:
+                              description: DisableHooks prevents hooks from running
+                                during the Helm rollback action.
+                              type: boolean
+                            disableWait:
+                              description: DisableWait disables waiting for all the
+                                resources to be deleted after a Helm uninstall is
+                                performed.
+                              type: boolean
+                            keepHistory:
+                              description: KeepHistory tells Helm to remove all associated
+                                resources and mark the release as deleted, but retain
+                                the release history.
+                              type: boolean
+                            timeout:
+                              description: Timeout is the time to wait for any individual
+                                Kubernetes operation (like Jobs for hooks) during
+                                the performance of a Helm uninstall action. Defaults
+                                to 'HelmReleaseSpec.Timeout'.
+                              pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                              type: string
+                          type: object
+                        upgrade:
+                          description: Upgrade holds the configuration for Helm upgrade
+                            actions for this HelmRelease.
+                          properties:
+                            cleanupOnFail:
+                              description: CleanupOnFail allows deletion of new resources
+                                created during the Helm upgrade action when it fails.
+                              type: boolean
+                            crds:
+                              description: "CRDs upgrade CRDs from the Helm Chart's
+                                crds directory according to the CRD upgrade policy
+                                provided here. Valid values are `Skip`, `Create` or
+                                `CreateReplace`. Default is `Skip` and if omitted
+                                CRDs are neither installed nor upgraded. \n Skip:
+                                do neither install nor replace (update) any CRDs.
+                                \n Create: new CRDs are created, existing CRDs are
+                                neither updated nor deleted. \n CreateReplace: new
+                                CRDs are created, existing CRDs are updated (replaced)
+                                but not deleted. \n By default, CRDs are not applied
+                                during Helm upgrade action. With this option users
+                                can opt-in to CRD upgrade, which is not (yet) natively
+                                supported by Helm. https://helm.sh/docs/chart_best_practices/custom_resource_definitions."
+                              enum:
+                              - Skip
+                              - Create
+                              - CreateReplace
+                              type: string
+                            disableHooks:
+                              description: DisableHooks prevents hooks from running
+                                during the Helm upgrade action.
+                              type: boolean
+                            disableOpenAPIValidation:
+                              description: DisableOpenAPIValidation prevents the Helm
+                                upgrade action from validating rendered templates
+                                against the Kubernetes OpenAPI Schema.
+                              type: boolean
+                            disableWait:
+                              description: DisableWait disables the waiting for resources
+                                to be ready after a Helm upgrade has been performed.
+                              type: boolean
+                            disableWaitForJobs:
+                              description: DisableWaitForJobs disables waiting for
+                                jobs to complete after a Helm upgrade has been performed.
+                              type: boolean
+                            force:
+                              description: Force forces resource updates through a
+                                replacement strategy.
+                              type: boolean
+                            preserveValues:
+                              description: PreserveValues will make Helm reuse the
+                                last release's values and merge in overrides from
+                                'Values'. Setting this flag makes the HelmRelease
+                                non-declarative.
+                              type: boolean
+                            remediation:
+                              description: Remediation holds the remediation configuration
+                                for when the Helm upgrade action for the HelmRelease
+                                fails. The default is to not perform any action.
+                              properties:
+                                ignoreTestFailures:
+                                  description: IgnoreTestFailures tells the controller
+                                    to skip remediation when the Helm tests are run
+                                    after an upgrade action but fail. Defaults to
+                                    'Test.IgnoreFailures'.
+                                  type: boolean
+                                remediateLastFailure:
+                                  description: RemediateLastFailure tells the controller
+                                    to remediate the last failure, when no retries
+                                    remain. Defaults to 'false' unless 'Retries' is
+                                    greater than 0.
+                                  type: boolean
+                                retries:
+                                  description: Retries is the number of retries that
+                                    should be attempted on failures before bailing.
+                                    Remediation, using 'Strategy', is performed between
+                                    each attempt. Defaults to '0', a negative integer
+                                    equals to unlimited retries.
+                                  type: integer
+                                strategy:
+                                  description: Strategy to use for failure remediation.
+                                    Defaults to 'rollback'.
+                                  enum:
+                                  - rollback
+                                  - uninstall
+                                  type: string
+                              type: object
+                            timeout:
+                              description: Timeout is the time to wait for any individual
+                                Kubernetes operation (like Jobs for hooks) during
+                                the performance of a Helm upgrade action. Defaults
+                                to 'HelmReleaseSpec.Timeout'.
+                              pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                              type: string
+                          type: object
+                        values:
+                          description: Values holds the values for this Helm release.
+                          x-kubernetes-preserve-unknown-fields: true
+                        valuesFrom:
+                          description: ValuesFrom holds references to resources containing
+                            Helm values for this HelmRelease, and information about
+                            how they should be merged.
+                          items:
+                            description: ValuesReference contains a reference to a
+                              resource containing Helm values, and optionally the
+                              key they can be found at.
+                            properties:
+                              kind:
+                                description: Kind of the values referent, valid values
+                                  are ('Secret', 'ConfigMap').
+                                enum:
+                                - Secret
+                                - ConfigMap
+                                type: string
+                              name:
+                                description: Name of the values referent. Should reside
+                                  in the same namespace as the referring resource.
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              optional:
+                                description: Optional marks this ValuesReference as
+                                  optional. When set, a not found error for the values
+                                  reference is ignored, but any ValuesKey, TargetPath
+                                  or transient error will still result in a reconciliation
+                                  failure.
+                                type: boolean
+                              targetPath:
+                                description: TargetPath is the YAML dot notation path
+                                  the value should be merged at. When set, the ValuesKey
+                                  is expected to be a single flat value. Defaults
+                                  to 'None', which results in the values getting merged
+                                  at the root.
+                                maxLength: 250
+                                pattern: ^([a-zA-Z0-9_\-.\\\/]|\[[0-9]{1,5}\])+$
+                                type: string
+                              valuesKey:
+                                description: ValuesKey is the data key where the values.yaml
+                                  or a specific value can be found at. Defaults to
+                                  'values.yaml'. When set, must be a valid Data Key,
+                                  consisting of alphanumeric characters, '-', '_'
+                                  or '.'.
+                                maxLength: 253
+                                pattern: ^[\-._a-zA-Z0-9]+$
+                                type: string
+                            required:
+                            - kind
+                            - name
+                            type: object
+                          type: array
+                      required:
+                      - chart
+                      - interval
+                      type: object
+                    kustomization:
+                      description: Kustomization defines the configuration to calculate
+                        the desired state from a Source using Kustomize.
+                      properties:
+                        commonMetadata:
+                          description: CommonMetadata specifies the common labels
+                            and annotations that are applied to all resources. Any
+                            existing label or annotation will be overridden if its
+                            key matches a common one.
+                          properties:
+                            annotations:
+                              additionalProperties:
+                                type: string
+                              description: Annotations to be added to the object's
+                                metadata.
+                              type: object
+                            labels:
+                              additionalProperties:
+                                type: string
+                              description: Labels to be added to the object's metadata.
+                              type: object
+                          type: object
+                        components:
+                          description: Components specifies relative paths to specifications
+                            of other Components.
+                          items:
+                            type: string
+                          type: array
+                        dependsOn:
+                          description: DependsOn may contain a meta.NamespacedObjectReference
+                            slice with references to Kustomization resources that
+                            must be ready before this Kustomization can be reconciled.
+                          items:
+                            description: NamespacedObjectReference contains enough
+                              information to locate the referenced Kubernetes resource
+                              object in any namespace.
+                            properties:
+                              name:
+                                description: Name of the referent.
+                                type: string
+                              namespace:
+                                description: Namespace of the referent, when not specified
+                                  it acts as LocalObjectReference.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                        force:
+                          default: false
+                          description: Force instructs the controller to recreate
+                            resources when patching fails due to an immutable field
+                            change.
+                          type: boolean
+                        images:
+                          description: Images is a list of (image name, new name,
+                            new tag or digest) for changing image names, tags or digests.
+                            This can also be achieved with a patch, but this operator
+                            is simpler to specify.
+                          items:
+                            description: Image contains an image name, a new name,
+                              a new tag or digest, which will replace the original
+                              name and tag.
+                            properties:
+                              digest:
+                                description: Digest is the value used to replace the
+                                  original image tag. If digest is present NewTag
+                                  value is ignored.
+                                type: string
+                              name:
+                                description: Name is a tag-less image name.
+                                type: string
+                              newName:
+                                description: NewName is the value used to replace
+                                  the original name.
+                                type: string
+                              newTag:
+                                description: NewTag is the value used to replace the
+                                  original tag.
+                                type: string
+                            required:
+                            - name
+                            type: object
+                          type: array
+                        interval:
+                          description: The interval at which to reconcile the Kustomization.
+                          pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                          type: string
+                        patches:
+                          description: Strategic merge and JSON patches, defined as
+                            inline YAML objects, capable of targeting objects based
+                            on kind, label and annotation selectors.
+                          items:
+                            description: Patch contains an inline StrategicMerge or
+                              JSON6902 patch, and the target the patch should be applied
+                              to.
+                            properties:
+                              patch:
+                                description: Patch contains an inline StrategicMerge
+                                  patch or an inline JSON6902 patch with an array
+                                  of operation objects.
+                                type: string
+                              target:
+                                description: Target points to the resources that the
+                                  patch document should be applied to.
+                                properties:
+                                  annotationSelector:
+                                    description: AnnotationSelector is a string that
+                                      follows the label selection expression https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#api
+                                      It matches with the resource annotations.
+                                    type: string
+                                  group:
+                                    description: Group is the API group to select
+                                      resources from. Together with Version and Kind
+                                      it is capable of unambiguously identifying and/or
+                                      selecting resources. https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/api-group.md
+                                    type: string
+                                  kind:
+                                    description: Kind of the API Group to select resources
+                                      from. Together with Group and Version it is
+                                      capable of unambiguously identifying and/or
+                                      selecting resources. https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/api-group.md
+                                    type: string
+                                  labelSelector:
+                                    description: LabelSelector is a string that follows
+                                      the label selection expression https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#api
+                                      It matches with the resource labels.
+                                    type: string
+                                  name:
+                                    description: Name to match resources with.
+                                    type: string
+                                  namespace:
+                                    description: Namespace to select resources from.
+                                    type: string
+                                  version:
+                                    description: Version of the API Group to select
+                                      resources from. Together with Group and Kind
+                                      it is capable of unambiguously identifying and/or
+                                      selecting resources. https://github.com/kubernetes/community/blob/master/contributors/design-proposals/api-machinery/api-group.md
+                                    type: string
+                                type: object
+                            required:
+                            - patch
+                            type: object
+                          type: array
+                        path:
+                          description: Path to the directory containing the kustomization.yaml
+                            file, or the set of plain YAMLs a kustomization.yaml should
+                            be generated for. Defaults to 'None', which translates
+                            to the root path of the SourceRef.
+                          type: string
+                        prune:
+                          description: Prune enables garbage collection.
+                          type: boolean
+                        retryInterval:
+                          description: The interval at which to retry a previously
+                            failed reconciliation. When not specified, the controller
+                            uses the KustomizationSpec.Interval value to retry failures.
+                          pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                          type: string
+                        suspend:
+                          description: This flag tells the controller to suspend subsequent
+                            kustomize executions, it does not apply to already started
+                            executions. Defaults to false.
+                          type: boolean
+                        targetNamespace:
+                          description: TargetNamespace sets or overrides the namespace
+                            in the kustomization.yaml file.
+                          maxLength: 63
+                          minLength: 1
+                          type: string
+                        timeout:
+                          description: Timeout for validation, apply and health checking
+                            operations. Defaults to 'Interval' duration.
+                          pattern: ^([0-9]+(\.[0-9]+)?(ms|s|m|h))+$
+                          type: string
+                      required:
+                      - interval
+                      - prune
+                      type: object
+                    name:
+                      description: Name defines the name of the sync policy. If unspecified,
+                        a name of format `<application name>-<index>` will be generated.
+                      type: string
+                  required:
+                  - destination
+                  type: object
+                type: array
+            type: object
+          status:
+            description: ApplicationStatus defines the observed state of Application.
+            properties:
+              sourceStatus:
+                description: applicationSourceStatus defines the observed state of
+                  the artifact source.
+                properties:
+                  gitRepoStatus:
+                    description: GitRepositoryStatus records the observed state of
+                      a Git repository.
+                    properties:
+                      artifact:
+                        description: Artifact represents the last successful GitRepository
+                          reconciliation.
+                        properties:
+                          digest:
+                            description: Digest is the digest of the file in the form
+                              of '<algorithm>:<checksum>'.
+                            pattern: ^[a-z0-9]+(?:[.+_-][a-z0-9]+)*:[a-zA-Z0-9=_-]+$
+                            type: string
+                          lastUpdateTime:
+                            description: LastUpdateTime is the timestamp corresponding
+                              to the last update of the Artifact.
+                            format: date-time
+                            type: string
+                          metadata:
+                            additionalProperties:
+                              type: string
+                            description: Metadata holds upstream information such
+                              as OCI annotations.
+                            type: object
+                          path:
+                            description: Path is the relative file path of the Artifact.
+                              It can be used to locate the file in the root of the
+                              Artifact storage on the local file system of the controller
+                              managing the Source.
+                            type: string
+                          revision:
+                            description: Revision is a human-readable identifier traceable
+                              in the origin source system. It can be a Git commit
+                              SHA, Git tag, a Helm chart version, etc.
+                            type: string
+                          size:
+                            description: Size is the number of bytes in the file.
+                            format: int64
+                            type: integer
+                          url:
+                            description: URL is the HTTP address of the Artifact as
+                              exposed by the controller managing the Source. It can
+                              be used to retrieve the Artifact for consumption, e.g.
+                              by another controller applying the Artifact contents.
+                            type: string
+                        required:
+                        - lastUpdateTime
+                        - path
+                        - revision
+                        - url
+                        type: object
+                      conditions:
+                        description: Conditions holds the conditions for the GitRepository.
+                        items:
+                          description: "Condition contains details for one aspect
+                            of the current state of this API Resource. --- This struct
+                            is intended for direct use as an array at the field path
+                            .status.conditions.  For example, \n type FooStatus struct{
+                            // Represents the observations of a foo's current state.
+                            // Known .status.conditions.type are: \"Available\", \"Progressing\",
+                            and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                            // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                            `json:\"conditions,omitempty\" patchStrategy:\"merge\"
+                            patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                            \n // other fields }"
+                          properties:
+                            lastTransitionTime:
+                              description: lastTransitionTime is the last time the
+                                condition transitioned from one status to another.
+                                This should be when the underlying condition changed.  If
+                                that is not known, then using the time when the API
+                                field changed is acceptable.
+                              format: date-time
+                              type: string
+                            message:
+                              description: message is a human readable message indicating
+                                details about the transition. This may be an empty
+                                string.
+                              maxLength: 32768
+                              type: string
+                            observedGeneration:
+                              description: observedGeneration represents the .metadata.generation
+                                that the condition was set based upon. For instance,
+                                if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration
+                                is 9, the condition is out of date with respect to
+                                the current state of the instance.
+                              format: int64
+                              minimum: 0
+                              type: integer
+                            reason:
+                              description: reason contains a programmatic identifier
+                                indicating the reason for the condition's last transition.
+                                Producers of specific condition types may define expected
+                                values and meanings for this field, and whether the
+                                values are considered a guaranteed API. The value
+                                should be a CamelCase string. This field may not be
+                                empty.
+                              maxLength: 1024
+                              minLength: 1
+                              pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                              type: string
+                            status:
+                              description: status of the condition, one of True, False,
+                                Unknown.
+                              enum:
+                              - "True"
+                              - "False"
+                              - Unknown
+                              type: string
+                            type:
+                              description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                                --- Many .condition.type values are consistent across
+                                resources like Available, but because arbitrary conditions
+                                can be useful (see .node.status.conditions), the ability
+                                to deconflict is important. The regex it matches is
+                                (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                              maxLength: 316
+                              pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                              type: string
+                          required:
+                          - lastTransitionTime
+                          - message
+                          - reason
+                          - status
+                          - type
+                          type: object
+                        type: array
+                      includedArtifacts:
+                        description: IncludedArtifacts contains a list of the last
+                          successfully included Artifacts as instructed by GitRepositorySpec.Include.
+                        items:
+                          description: Artifact represents the output of a Source
+                            reconciliation.
+                          properties:
+                            digest:
+                              description: Digest is the digest of the file in the
+                                form of '<algorithm>:<checksum>'.
+                              pattern: ^[a-z0-9]+(?:[.+_-][a-z0-9]+)*:[a-zA-Z0-9=_-]+$
+                              type: string
+                            lastUpdateTime:
+                              description: LastUpdateTime is the timestamp corresponding
+                                to the last update of the Artifact.
+                              format: date-time
+                              type: string
+                            metadata:
+                              additionalProperties:
+                                type: string
+                              description: Metadata holds upstream information such
+                                as OCI annotations.
+                              type: object
+                            path:
+                              description: Path is the relative file path of the Artifact.
+                                It can be used to locate the file in the root of the
+                                Artifact storage on the local file system of the controller
+                                managing the Source.
+                              type: string
+                            revision:
+                              description: Revision is a human-readable identifier
+                                traceable in the origin source system. It can be a
+                                Git commit SHA, Git tag, a Helm chart version, etc.
+                              type: string
+                            size:
+                              description: Size is the number of bytes in the file.
+                              format: int64
+                              type: integer
+                            url:
+                              description: URL is the HTTP address of the Artifact
+                                as exposed by the controller managing the Source.
+                                It can be used to retrieve the Artifact for consumption,
+                                e.g. by another controller applying the Artifact contents.
+                              type: string
+                          required:
+                          - lastUpdateTime
+                          - path
+                          - revision
+                          - url
+                          type: object
+                        type: array
+                      lastHandledReconcileAt:
+                        description: LastHandledReconcileAt holds the value of the
+                          most recent reconcile request value, so a change of the
+                          annotation value can be detected.
+                        type: string
+                      observedGeneration:
+                        description: ObservedGeneration is the last observed generation
+                          of the GitRepository object.
+                        format: int64
+                        type: integer
+                      observedIgnore:
+                        description: ObservedIgnore is the observed exclusion patterns
+                          used for constructing the source artifact.
+                        type: string
+                      observedInclude:
+                        description: ObservedInclude is the observed list of GitRepository
+                          resources used to produce the current Artifact.
+                        items:
+                          description: GitRepositoryInclude specifies a local reference
+                            to a GitRepository which Artifact (sub-)contents must
+                            be included, and where they should be placed.
+                          properties:
+                            fromPath:
+                              description: FromPath specifies the path to copy contents
+                                from, defaults to the root of the Artifact.
+                              type: string
+                            repository:
+                              description: GitRepositoryRef specifies the GitRepository
+                                which Artifact contents must be included.
+                              properties:
+                                name:
+                                  description: Name of the referent.
+                                  type: string
+                              required:
+                              - name
+                              type: object
+                            toPath:
+                              description: ToPath specifies the path to copy contents
+                                to, defaults to the name of the GitRepositoryRef.
+                              type: string
+                          required:
+                          - repository
+                          type: object
+                        type: array
+                      observedRecurseSubmodules:
+                        description: ObservedRecurseSubmodules is the observed resource
+                          submodules configuration used to produce the current Artifact.
+                        type: boolean
+                    type: object
+                  helmRepoStatus:
+                    description: HelmRepositoryStatus records the observed state of
+                      the HelmRepository.
+                    properties:
+                      artifact:
+                        description: Artifact represents the last successful HelmRepository
+                          reconciliation.
+                        properties:
+                          digest:
+                            description: Digest is the digest of the file in the form
+                              of '<algorithm>:<checksum>'.
+                            pattern: ^[a-z0-9]+(?:[.+_-][a-z0-9]+)*:[a-zA-Z0-9=_-]+$
+                            type: string
+                          lastUpdateTime:
+                            description: LastUpdateTime is the timestamp corresponding
+                              to the last update of the Artifact.
+                            format: date-time
+                            type: string
+                          metadata:
+                            additionalProperties:
+                              type: string
+                            description: Metadata holds upstream information such
+                              as OCI annotations.
+                            type: object
+                          path:
+                            description: Path is the relative file path of the Artifact.
+                              It can be used to locate the file in the root of the
+                              Artifact storage on the local file system of the controller
+                              managing the Source.
+                            type: string
+                          revision:
+                            description: Revision is a human-readable identifier traceable
+                              in the origin source system. It can be a Git commit
+                              SHA, Git tag, a Helm chart version, etc.
+                            type: string
+                          size:
+                            description: Size is the number of bytes in the file.
+                            format: int64
+                            type: integer
+                          url:
+                            description: URL is the HTTP address of the Artifact as
+                              exposed by the controller managing the Source. It can
+                              be used to retrieve the Artifact for consumption, e.g.
+                              by another controller applying the Artifact contents.
+                            type: string
+                        required:
+                        - lastUpdateTime
+                        - path
+                        - revision
+                        - url
+                        type: object
+                      conditions:
+                        description: Conditions holds the conditions for the HelmRepository.
+                        items:
+                          description: "Condition contains details for one aspect
+                            of the current state of this API Resource. --- This struct
+                            is intended for direct use as an array at the field path
+                            .status.conditions.  For example, \n type FooStatus struct{
+                            // Represents the observations of a foo's current state.
+                            // Known .status.conditions.type are: \"Available\", \"Progressing\",
+                            and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                            // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                            `json:\"conditions,omitempty\" patchStrategy:\"merge\"
+                            patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                            \n // other fields }"
+                          properties:
+                            lastTransitionTime:
+                              description: lastTransitionTime is the last time the
+                                condition transitioned from one status to another.
+                                This should be when the underlying condition changed.  If
+                                that is not known, then using the time when the API
+                                field changed is acceptable.
+                              format: date-time
+                              type: string
+                            message:
+                              description: message is a human readable message indicating
+                                details about the transition. This may be an empty
+                                string.
+                              maxLength: 32768
+                              type: string
+                            observedGeneration:
+                              description: observedGeneration represents the .metadata.generation
+                                that the condition was set based upon. For instance,
+                                if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration
+                                is 9, the condition is out of date with respect to
+                                the current state of the instance.
+                              format: int64
+                              minimum: 0
+                              type: integer
+                            reason:
+                              description: reason contains a programmatic identifier
+                                indicating the reason for the condition's last transition.
+                                Producers of specific condition types may define expected
+                                values and meanings for this field, and whether the
+                                values are considered a guaranteed API. The value
+                                should be a CamelCase string. This field may not be
+                                empty.
+                              maxLength: 1024
+                              minLength: 1
+                              pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                              type: string
+                            status:
+                              description: status of the condition, one of True, False,
+                                Unknown.
+                              enum:
+                              - "True"
+                              - "False"
+                              - Unknown
+                              type: string
+                            type:
+                              description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                                --- Many .condition.type values are consistent across
+                                resources like Available, but because arbitrary conditions
+                                can be useful (see .node.status.conditions), the ability
+                                to deconflict is important. The regex it matches is
+                                (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                              maxLength: 316
+                              pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                              type: string
+                          required:
+                          - lastTransitionTime
+                          - message
+                          - reason
+                          - status
+                          - type
+                          type: object
+                        type: array
+                      lastHandledReconcileAt:
+                        description: LastHandledReconcileAt holds the value of the
+                          most recent reconcile request value, so a change of the
+                          annotation value can be detected.
+                        type: string
+                      observedGeneration:
+                        description: ObservedGeneration is the last observed generation
+                          of the HelmRepository object.
+                        format: int64
+                        type: integer
+                      url:
+                        description: URL is the dynamic fetch link for the latest
+                          Artifact. It is provided on a "best effort" basis, and using
+                          the precise HelmRepositoryStatus.Artifact data is recommended.
+                        type: string
+                    type: object
+                  ociRepoStatus:
+                    description: OCIRepositoryStatus defines the observed state of
+                      OCIRepository
+                    properties:
+                      artifact:
+                        description: Artifact represents the output of the last successful
+                          OCI Repository sync.
+                        properties:
+                          digest:
+                            description: Digest is the digest of the file in the form
+                              of '<algorithm>:<checksum>'.
+                            pattern: ^[a-z0-9]+(?:[.+_-][a-z0-9]+)*:[a-zA-Z0-9=_-]+$
+                            type: string
+                          lastUpdateTime:
+                            description: LastUpdateTime is the timestamp corresponding
+                              to the last update of the Artifact.
+                            format: date-time
+                            type: string
+                          metadata:
+                            additionalProperties:
+                              type: string
+                            description: Metadata holds upstream information such
+                              as OCI annotations.
+                            type: object
+                          path:
+                            description: Path is the relative file path of the Artifact.
+                              It can be used to locate the file in the root of the
+                              Artifact storage on the local file system of the controller
+                              managing the Source.
+                            type: string
+                          revision:
+                            description: Revision is a human-readable identifier traceable
+                              in the origin source system. It can be a Git commit
+                              SHA, Git tag, a Helm chart version, etc.
+                            type: string
+                          size:
+                            description: Size is the number of bytes in the file.
+                            format: int64
+                            type: integer
+                          url:
+                            description: URL is the HTTP address of the Artifact as
+                              exposed by the controller managing the Source. It can
+                              be used to retrieve the Artifact for consumption, e.g.
+                              by another controller applying the Artifact contents.
+                            type: string
+                        required:
+                        - lastUpdateTime
+                        - path
+                        - revision
+                        - url
+                        type: object
+                      conditions:
+                        description: Conditions holds the conditions for the OCIRepository.
+                        items:
+                          description: "Condition contains details for one aspect
+                            of the current state of this API Resource. --- This struct
+                            is intended for direct use as an array at the field path
+                            .status.conditions.  For example, \n type FooStatus struct{
+                            // Represents the observations of a foo's current state.
+                            // Known .status.conditions.type are: \"Available\", \"Progressing\",
+                            and \"Degraded\" // +patchMergeKey=type // +patchStrategy=merge
+                            // +listType=map // +listMapKey=type Conditions []metav1.Condition
+                            `json:\"conditions,omitempty\" patchStrategy:\"merge\"
+                            patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                            \n // other fields }"
+                          properties:
+                            lastTransitionTime:
+                              description: lastTransitionTime is the last time the
+                                condition transitioned from one status to another.
+                                This should be when the underlying condition changed.  If
+                                that is not known, then using the time when the API
+                                field changed is acceptable.
+                              format: date-time
+                              type: string
+                            message:
+                              description: message is a human readable message indicating
+                                details about the transition. This may be an empty
+                                string.
+                              maxLength: 32768
+                              type: string
+                            observedGeneration:
+                              description: observedGeneration represents the .metadata.generation
+                                that the condition was set based upon. For instance,
+                                if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration
+                                is 9, the condition is out of date with respect to
+                                the current state of the instance.
+                              format: int64
+                              minimum: 0
+                              type: integer
+                            reason:
+                              description: reason contains a programmatic identifier
+                                indicating the reason for the condition's last transition.
+                                Producers of specific condition types may define expected
+                                values and meanings for this field, and whether the
+                                values are considered a guaranteed API. The value
+                                should be a CamelCase string. This field may not be
+                                empty.
+                              maxLength: 1024
+                              minLength: 1
+                              pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                              type: string
+                            status:
+                              description: status of the condition, one of True, False,
+                                Unknown.
+                              enum:
+                              - "True"
+                              - "False"
+                              - Unknown
+                              type: string
+                            type:
+                              description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                                --- Many .condition.type values are consistent across
+                                resources like Available, but because arbitrary conditions
+                                can be useful (see .node.status.conditions), the ability
+                                to deconflict is important. The regex it matches is
+                                (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                              maxLength: 316
+                              pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                              type: string
+                          required:
+                          - lastTransitionTime
+                          - message
+                          - reason
+                          - status
+                          - type
+                          type: object
+                        type: array
+                      contentConfigChecksum:
+                        description: "ContentConfigChecksum is a checksum of all the
+                          configurations related to the content of the source artifact:
+                          - .spec.ignore - .spec.layerSelector observed in .status.observedGeneration
+                          version of the object. This can be used to determine if
+                          the content configuration has changed and the artifact needs
+                          to be rebuilt. It has the format of `<algo>:<checksum>`,
+                          for example: `sha256:<checksum>`. \n Deprecated: Replaced
+                          with explicit fields for observed artifact content config
+                          in the status."
+                        type: string
+                      lastHandledReconcileAt:
+                        description: LastHandledReconcileAt holds the value of the
+                          most recent reconcile request value, so a change of the
+                          annotation value can be detected.
+                        type: string
+                      observedGeneration:
+                        description: ObservedGeneration is the last observed generation.
+                        format: int64
+                        type: integer
+                      observedIgnore:
+                        description: ObservedIgnore is the observed exclusion patterns
+                          used for constructing the source artifact.
+                        type: string
+                      observedLayerSelector:
+                        description: ObservedLayerSelector is the observed layer selector
+                          used for constructing the source artifact.
+                        properties:
+                          mediaType:
+                            description: MediaType specifies the OCI media type of
+                              the layer which should be extracted from the OCI Artifact.
+                              The first layer matching this type is selected.
+                            type: string
+                          operation:
+                            description: Operation specifies how the selected layer
+                              should be processed. By default, the layer compressed
+                              content is extracted to storage. When the operation
+                              is set to 'copy', the layer compressed content is persisted
+                              to storage as it is.
+                            enum:
+                            - extract
+                            - copy
+                            type: string
+                        type: object
+                      url:
+                        description: URL is the download link for the artifact output
+                          of the last OCI Repository sync.
+                        type: string
+                    type: object
+                type: object
+              syncStatus:
+                items:
+                  description: ApplicationSyncStatus defines the observed state of
+                    Application sync.
+                  properties:
+                    HelmReleaseStatus:
+                      description: HelmReleaseStatus defines the observed state of
+                        a HelmRelease.
+                      properties:
+                        conditions:
+                          description: Conditions holds the conditions for the HelmRelease.
+                          items:
+                            description: "Condition contains details for one aspect
+                              of the current state of this API Resource. --- This
+                              struct is intended for direct use as an array at the
+                              field path .status.conditions.  For example, \n type
+                              FooStatus struct{ // Represents the observations of
+                              a foo's current state. // Known .status.conditions.type
+                              are: \"Available\", \"Progressing\", and \"Degraded\"
+                              // +patchMergeKey=type // +patchStrategy=merge // +listType=map
+                              // +listMapKey=type Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                              patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                              \n // other fields }"
+                            properties:
+                              lastTransitionTime:
+                                description: lastTransitionTime is the last time the
+                                  condition transitioned from one status to another.
+                                  This should be when the underlying condition changed.  If
+                                  that is not known, then using the time when the
+                                  API field changed is acceptable.
+                                format: date-time
+                                type: string
+                              message:
+                                description: message is a human readable message indicating
+                                  details about the transition. This may be an empty
+                                  string.
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                description: observedGeneration represents the .metadata.generation
+                                  that the condition was set based upon. For instance,
+                                  if .metadata.generation is currently 12, but the
+                                  .status.conditions[x].observedGeneration is 9, the
+                                  condition is out of date with respect to the current
+                                  state of the instance.
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                description: reason contains a programmatic identifier
+                                  indicating the reason for the condition's last transition.
+                                  Producers of specific condition types may define
+                                  expected values and meanings for this field, and
+                                  whether the values are considered a guaranteed API.
+                                  The value should be a CamelCase string. This field
+                                  may not be empty.
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                description: status of the condition, one of True,
+                                  False, Unknown.
+                                enum:
+                                - "True"
+                                - "False"
+                                - Unknown
+                                type: string
+                              type:
+                                description: type of condition in CamelCase or in
+                                  foo.example.com/CamelCase. --- Many .condition.type
+                                  values are consistent across resources like Available,
+                                  but because arbitrary conditions can be useful (see
+                                  .node.status.conditions), the ability to deconflict
+                                  is important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                            - lastTransitionTime
+                            - message
+                            - reason
+                            - status
+                            - type
+                            type: object
+                          type: array
+                        failures:
+                          description: Failures is the reconciliation failure count
+                            against the latest desired state. It is reset after a
+                            successful reconciliation.
+                          format: int64
+                          type: integer
+                        helmChart:
+                          description: HelmChart is the namespaced name of the HelmChart
+                            resource created by the controller for the HelmRelease.
+                          type: string
+                        installFailures:
+                          description: InstallFailures is the install failure count
+                            against the latest desired state. It is reset after a
+                            successful reconciliation.
+                          format: int64
+                          type: integer
+                        lastAppliedRevision:
+                          description: LastAppliedRevision is the revision of the
+                            last successfully applied source.
+                          type: string
+                        lastAttemptedRevision:
+                          description: LastAttemptedRevision is the revision of the
+                            last reconciliation attempt.
+                          type: string
+                        lastAttemptedValuesChecksum:
+                          description: LastAttemptedValuesChecksum is the SHA1 checksum
+                            of the values of the last reconciliation attempt.
+                          type: string
+                        lastHandledReconcileAt:
+                          description: LastHandledReconcileAt holds the value of the
+                            most recent reconcile request value, so a change of the
+                            annotation value can be detected.
+                          type: string
+                        lastReleaseRevision:
+                          description: LastReleaseRevision is the revision of the
+                            last successful Helm release.
+                          type: integer
+                        observedGeneration:
+                          description: ObservedGeneration is the last observed generation.
+                          format: int64
+                          type: integer
+                        upgradeFailures:
+                          description: UpgradeFailures is the upgrade failure count
+                            against the latest desired state. It is reset after a
+                            successful reconciliation.
+                          format: int64
+                          type: integer
+                      type: object
+                    kustomizationStatus:
+                      description: KustomizationStatus defines the observed state
+                        of a kustomization.
+                      properties:
+                        conditions:
+                          items:
+                            description: "Condition contains details for one aspect
+                              of the current state of this API Resource. --- This
+                              struct is intended for direct use as an array at the
+                              field path .status.conditions.  For example, \n type
+                              FooStatus struct{ // Represents the observations of
+                              a foo's current state. // Known .status.conditions.type
+                              are: \"Available\", \"Progressing\", and \"Degraded\"
+                              // +patchMergeKey=type // +patchStrategy=merge // +listType=map
+                              // +listMapKey=type Conditions []metav1.Condition `json:\"conditions,omitempty\"
+                              patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`
+                              \n // other fields }"
+                            properties:
+                              lastTransitionTime:
+                                description: lastTransitionTime is the last time the
+                                  condition transitioned from one status to another.
+                                  This should be when the underlying condition changed.  If
+                                  that is not known, then using the time when the
+                                  API field changed is acceptable.
+                                format: date-time
+                                type: string
+                              message:
+                                description: message is a human readable message indicating
+                                  details about the transition. This may be an empty
+                                  string.
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                description: observedGeneration represents the .metadata.generation
+                                  that the condition was set based upon. For instance,
+                                  if .metadata.generation is currently 12, but the
+                                  .status.conditions[x].observedGeneration is 9, the
+                                  condition is out of date with respect to the current
+                                  state of the instance.
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                description: reason contains a programmatic identifier
+                                  indicating the reason for the condition's last transition.
+                                  Producers of specific condition types may define
+                                  expected values and meanings for this field, and
+                                  whether the values are considered a guaranteed API.
+                                  The value should be a CamelCase string. This field
+                                  may not be empty.
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                description: status of the condition, one of True,
+                                  False, Unknown.
+                                enum:
+                                - "True"
+                                - "False"
+                                - Unknown
+                                type: string
+                              type:
+                                description: type of condition in CamelCase or in
+                                  foo.example.com/CamelCase. --- Many .condition.type
+                                  values are consistent across resources like Available,
+                                  but because arbitrary conditions can be useful (see
+                                  .node.status.conditions), the ability to deconflict
+                                  is important. The regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                            - lastTransitionTime
+                            - message
+                            - reason
+                            - status
+                            - type
+                            type: object
+                          type: array
+                        inventory:
+                          description: Inventory contains the list of Kubernetes resource
+                            object references that have been successfully applied.
+                          properties:
+                            entries:
+                              description: Entries of Kubernetes resource object references.
+                              items:
+                                description: ResourceRef contains the information
+                                  necessary to locate a resource within a cluster.
+                                properties:
+                                  id:
+                                    description: ID is the string representation of
+                                      the Kubernetes resource object's metadata, in
+                                      the format '<namespace>_<name>_<group>_<kind>'.
+                                    type: string
+                                  v:
+                                    description: Version is the API version of the
+                                      Kubernetes resource object's kind.
+                                    type: string
+                                required:
+                                - id
+                                - v
+                                type: object
+                              type: array
+                          required:
+                          - entries
+                          type: object
+                        lastAppliedRevision:
+                          description: The last successfully applied revision. Equals
+                            the Revision of the applied Artifact from the referenced
+                            Source.
+                          type: string
+                        lastAttemptedRevision:
+                          description: LastAttemptedRevision is the revision of the
+                            last reconciliation attempt.
+                          type: string
+                        lastHandledReconcileAt:
+                          description: LastHandledReconcileAt holds the value of the
+                            most recent reconcile request value, so a change of the
+                            annotation value can be detected.
+                          type: string
+                        observedGeneration:
+                          description: ObservedGeneration is the last reconciled generation.
+                          format: int64
+                          type: integer
+                      type: object
+                    name:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

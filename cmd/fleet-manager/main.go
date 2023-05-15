@@ -36,7 +36,7 @@ import (
 
 	"kurator.dev/kurator/cmd/fleet-manager/options"
 	"kurator.dev/kurator/cmd/fleet-manager/scheme"
-	"kurator.dev/kurator/pkg/fleet-manager"
+	fleet "kurator.dev/kurator/pkg/fleet-manager"
 	"kurator.dev/kurator/pkg/util"
 	"kurator.dev/kurator/pkg/version"
 )
