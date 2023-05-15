@@ -16,7 +16,10 @@ limitations under the License.
 
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -34,7 +37,7 @@ type AttachedCluster struct {
 type AttachedClusterSpec struct {
 	// Kubeconfig represents the secret that contains the credential to access this cluster.
 	// +optional
-	Kubeconfig string `json:"kubeconfig,omitempty"`
+	Kubeconfig SecretKeyRef `json:"kubeconfig,omitempty"`
 }
 
 // SecretKeyRef holds the reference to a secret key.
@@ -48,8 +51,9 @@ type SecretKeyRef struct {
 }
 
 type AttachedClusterStatus struct {
-	// Accepted indicates whether the cluster is resgitered to kurator fleet.
-	Accepted bool `json:"accepted"`
+	// Ready indicates whether the cluster is ready to be registered with Kurator Fleet.
+	// +optional
+	Ready bool `json:"ready"`
 }
 
 // AttachedClusterList contains a list of AttachedCluster.
@@ -59,4 +63,20 @@ type AttachedClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []AttachedCluster `json:"items"`
+}
+
+func (ac *AttachedCluster) IsReady() bool {
+	return ac.Status.Ready
+}
+
+func (ac *AttachedCluster) GetObject() client.Object {
+	return ac
+}
+
+func (ac *AttachedCluster) GetSecretName() string {
+	return ac.Spec.Kubeconfig.Name
+}
+
+func (ac *AttachedCluster) GetSecretKey() string {
+	return ac.Spec.Kubeconfig.Key
 }

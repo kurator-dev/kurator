@@ -243,7 +243,9 @@ AttachedClusterSpec
 <td>
 <code>kubeconfig</code><br>
 <em>
-string
+<a href="#cluster.kurator.dev/v1alpha1.SecretKeyRef">
+SecretKeyRef
+</a>
 </em>
 </td>
 <td>
@@ -290,7 +292,9 @@ AttachedClusterStatus
 <td>
 <code>kubeconfig</code><br>
 <em>
-string
+<a href="#cluster.kurator.dev/v1alpha1.SecretKeyRef">
+SecretKeyRef
+</a>
 </em>
 </td>
 <td>
@@ -320,13 +324,14 @@ string
 <tbody>
 <tr>
 <td>
-<code>accepted</code><br>
+<code>ready</code><br>
 <em>
 bool
 </em>
 </td>
 <td>
-<p>Accepted indicates whether the cluster is resgitered to kurator fleet.</p>
+<em>(Optional)</em>
+<p>Ready indicates whether the cluster is ready to be registered with Kurator Fleet.</p>
 </td>
 </tr>
 </tbody>
@@ -1154,6 +1159,10 @@ Defaults to &ldquo;Newest&rdquo;.</p>
 </div>
 <h3 id="cluster.kurator.dev/v1alpha1.SecretKeyRef">SecretKeyRef
 </h3>
+<p>
+(<em>Appears on:</em>
+<a href="#cluster.kurator.dev/v1alpha1.AttachedClusterSpec">AttachedClusterSpec</a>)
+</p>
 <p>SecretKeyRef holds the reference to a secret key.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">

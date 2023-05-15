@@ -40,16 +40,26 @@ spec:
               kubeconfig:
                 description: Kubeconfig represents the secret that contains the credential
                   to access this cluster.
-                type: string
+                properties:
+                  key:
+                    default: value
+                    description: Key is the key of the secret. If no key is specified,
+                      the secret's default key is `value`.
+                    type: string
+                  name:
+                    description: Name is the name of the secret.
+                    type: string
+                required:
+                - key
+                - name
+                type: object
             type: object
           status:
             properties:
-              accepted:
-                description: Accepted indicates whether the cluster is resgitered
-                  to kurator fleet.
+              ready:
+                description: Ready indicates whether the cluster is ready to be registered
+                  with Kurator Fleet.
                 type: boolean
-            required:
-            - accepted
             type: object
         type: object
     served: true

@@ -35,6 +35,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"kurator.dev/kurator/cmd/cluster-operator/attachedcluster"
 	"kurator.dev/kurator/cmd/cluster-operator/aws"
 	"kurator.dev/kurator/cmd/cluster-operator/capi"
 	"kurator.dev/kurator/cmd/cluster-operator/customcluster"
@@ -150,6 +151,10 @@ func run(ctx context.Context, opts *options.Options) error {
 
 	if err = customcluster.InitControllers(ctx, opts, mgr); err != nil {
 		return err
+	}
+
+	if err = attachedcluster.InitControllers(ctx, opts, mgr); err != nil {
+		return fmt.Errorf("attachedcluster init fail, %w", err)
 	}
 
 	if err = infra.InitControllers(ctx, opts, mgr); err != nil {
