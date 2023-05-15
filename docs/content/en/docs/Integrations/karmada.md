@@ -31,7 +31,7 @@ make kurator
 Install karmada control plane
 
 ```bash
-./kurator install karmada --kubeconfig=/root/.kube/config
+kurator install karmada --kubeconfig=/root/.kube/config
 ```
 
 > When deploying kubernetes using a script, the kubeconfig is kurator-host.config
@@ -39,13 +39,13 @@ Install karmada control plane
 karmada installation parameters can be set with `--set`, e.g.
 
 ```bash
-./kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --kubeconfig .kube/config
+kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --kubeconfig .kube/config
 ```
 
 ### Add kubernetes cluster to karmada control plane
 
 ```bash
-./kurator join karmada member1 \
+kurator join karmada member1 \
     --cluster-kubeconfig=/root/.kube/kurator-members.config \
     --cluster-context=kurator-member1
 ```
