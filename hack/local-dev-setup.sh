@@ -14,8 +14,8 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
 KIND_CONFIGS_ROOT=${REPO_ROOT}/kind-configs
 source "${REPO_ROOT}"/util.sh
 
-METALLB_VERSION=${METALLB_VERSION:-"v0.10.2"}
-KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.23.4"}
+METALLB_VERSION=${METALLB_VERSION:-"v0.13.5"}
+KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.25.3"}
 
 # variable define
 KUBECONFIG_PATH=${KUBECONFIG_PATH:-"${HOME}/.kube"}
@@ -62,7 +62,7 @@ echo "cluster networks connected"
 echo "install metallb in host cluster"
 kubectl create ns metallb-system --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
 util::install_metallb ${MAIN_KUBECONFIG} ${HOST_CLUSTER_NAME}
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/manifests/metallb.yaml --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
 
 echo "starting install metallb in member clusters"
 MEMBER_CLUSTERS=(${MEMBER_CLUSTER_1_NAME} ${MEMBER_CLUSTER_2_NAME})
@@ -71,7 +71,7 @@ do
   echo "install metallb in $c"
   kubectl create ns metallb-system --kubeconfig="${MEMBER_CLUSTER_KUBECONFIG}" --context="${c}"
   util::install_metallb ${MEMBER_CLUSTER_KUBECONFIG} ${c}
-  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/manifests/metallb.yaml --kubeconfig="${MEMBER_CLUSTER_KUBECONFIG}" --context="${c}"
+  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="${MEMBER_CLUSTER_KUBECONFIG}" --context="${c}"
 done
 
 
