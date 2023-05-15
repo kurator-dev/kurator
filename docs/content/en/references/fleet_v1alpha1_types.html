@@ -80,6 +80,20 @@ Note: only kurator cluster is supported now
 TODO: add attached cluster support?</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>plugin</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">
+PluginConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Plugin defines the plugins that would be installed in the fleet.</p>
+</td>
+</tr>
 </table>
 </td>
 </tr>
@@ -99,6 +113,73 @@ FleetStatus
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.ChartConfig">ChartConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>repository</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Repository defines the repository of chart.
+Default value depends on the kind of the component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name defines the name of the chart.
+Default value depends on the kind of the component.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>version</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Version defines the version of the chart.
+Default value depends on the kind of the component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.Endpoints">Endpoints
+(<code>[]string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.FleetStatus">FleetStatus</a>)
+</p>
 <h3 id="fleet.kurator.dev/v1alpha1.FleetPhase">FleetPhase
 (<code>string</code> alias)</h3>
 <p>
@@ -135,6 +216,20 @@ FleetStatus
 <p>Clusters represents the clusters that would be registered to the fleet.
 Note: only kurator cluster is supported now
 TODO: add attached cluster support?</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>plugin</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">
+PluginConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Plugin defines the plugins that would be installed in the fleet.</p>
 </td>
 </tr>
 </tbody>
@@ -198,6 +293,21 @@ string
 </tr>
 <tr>
 <td>
+<code>pluginEndpoints</code><br>
+<em>
+map[<a href="">
+string
+</a>][<a href="#fleet.kurator.dev/v1alpha1.Endpoints">
+Endpoints
+</a>]
+</em>
+</td>
+<td>
+<p>PluginEndpoints is the endpoints of the plugins.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>readyClusters</code><br>
 <em>
 int32
@@ -217,6 +327,476 @@ int32
 </td>
 <td>
 <p>Total number of unready clusters, not ready for use.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart config of the grafana.
+default values is</p>
+<p>chart:
+repository: oci://registry-1.docker.io/bitnamicharts
+name: grafana
+version: 8.2.33</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for Grafana chart.</p>
+<p>For Example, using following configuration to change replica count.
+extraArgs:
+grafana:
+replicaCount: 2</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.MetricConfig">MetricConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>thanos</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">
+ThanosConfig
+</a>
+</em>
+</td>
+<td>
+<p>Thanos defines the configuration for the thanos querier and store gateway.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>prometheus</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">
+PrometheusConfig
+</a>
+</em>
+</td>
+<td>
+<p>Prometheus defines the configuration for the prometheus installation
+in the clusters observed by the thanos,
+by default thanos sidecar will be installed in thanos sidecar mode.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.FleetSpec">FleetSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metric</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.MetricConfig">
+MetricConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metric defines the configuration for the monitoring system installation and metrics collection..</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>grafana</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">
+GrafanaConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Grafana defines the configuration for the grafana installation and observation.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.MetricConfig">MetricConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart config of the prometheus.
+default values is</p>
+<p>chart:
+repository: oci://registry-1.docker.io/bitnamicharts
+name: kube-prometheus
+version: 8.9.1</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>nodeExporter</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PrometheusExporterConfig">
+PrometheusExporterConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeExporter defines the configuration for the node exporter.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kubeStateMetrics</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PrometheusExporterConfig">
+PrometheusExporterConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KubeStateMetrics defines the configuration for the kube-state-metrics.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for Prometheus chart.</p>
+<p>For Example, using following configuration to create a ServiceMonitor to monitor prometheus itself.
+extraArgs:
+prometheus:
+serviceMonitor:
+enabled: true</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PrometheusExporterConfig">PrometheusExporterConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enabled indicates whether the exporters are enabled.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.S3Config">S3Config
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.ThanosObjectStoreConfig">ThanosObjectStoreConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>bucket</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket defines the name of the bucket.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region defines the region of the bucket.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint defines the endpoint of the bucket.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>credential</code><br>
+<em>
+<a href="https://kurator.dev/docs/references/cluster-api/#cluster.kurator.dev/v1alpha1.CredentialConfig">
+Kurator cluster/v1alpha1.CredentialConfig
+</a>
+</em>
+</td>
+<td>
+<p>Credential is the credential used to access the bukcet.
+Make sure the credential is in the same namespace as the monitoring.
+The secret must have following keys: AccessKeyID, SecretAccessKey.
+SessionToken is optional.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.MetricConfig">MetricConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart config of the thanos.
+default values is</p>
+<p>chart:
+repository: oci://registry-1.docker.io/bitnamicharts
+name: thanos
+version: 12.5.1</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>mode</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Mode defines the mode of the Thanos.
+The default is sidecar.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>objectStore</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ThanosObjectStoreConfig">
+ThanosObjectStoreConfig
+</a>
+</em>
+</td>
+<td>
+<p>ObjectStoreConfig defines the configuration for the object store.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for Thanos chart.</p>
+<p>For Example, using following configuration to enable query frontend.
+extraArgs:
+queryFrontend:
+enabled: true</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.ThanosObjectStoreConfig">ThanosObjectStoreConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>type</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Type defines the type of the object store.
+Now only support s3, which means S3-compatible object storages, e.g. MinIO.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>s3</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.S3Config">
+S3Config
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>S3 defines the configuration for the S3 object store.
+For more information, see <a href="https://thanos.io/tip/thanos/storage.md/#s3">https://thanos.io/tip/thanos/storage.md/#s3</a>
+This field is required if the type is s3.</p>
 </td>
 </tr>
 </tbody>

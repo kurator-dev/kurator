@@ -34,6 +34,10 @@
     {
       "typeMatchPrefix": "^k8s\\.io/apiextensions-apiserver/pkg/apis/apiextensions/v1\\.JSON$",
       "docsURLTemplate": "https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON"
+    },
+    {
+      "typeMatchPrefix": "^kurator\\.dev/kurator/pkg/apis/cluster/v1alpha1\\.CredentialConfig",
+      "docsURLTemplate": "https://kurator.dev/docs/references/cluster-api/#cluster.kurator.dev/v1alpha1.CredentialConfig"
     }
   ],
   "typeDisplayNamePrefixOverrides": {
@@ -41,7 +45,8 @@
     "k8s.io/apimachinery/pkg/apis/": "Kubernetes ",
     "k8s.io/apimachinery/pkg/util/": "Kubernetes ",
     "k8s.io/apiextensions-apiserver/pkg/apis": "Kubernetes ",
-    "sigs.k8s.io/cluster-api/api": "Cluster API "
+    "sigs.k8s.io/cluster-api/api": "Cluster API ",
+    "kurator.dev/kurator/pkg/apis/": "Kurator "
   },
   "markdownDisabled": false
 }
