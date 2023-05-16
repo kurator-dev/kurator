@@ -1,0 +1,9 @@
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: AttachedCluster
+metadata:
+  name: ac4
+  namespace: app-helmrepo
+spec:
+  kubeconfig:
+    name: ac4
+    key: kubeconfig

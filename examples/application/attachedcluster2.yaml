@@ -1,0 +1,11 @@
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: AttachedCluster
+metadata:
+  name: ac2
+  namespace: app-gitrepo
+spec:
+  kubeconfig:
+    name: ac2
+    key: kubeconfig
+
+

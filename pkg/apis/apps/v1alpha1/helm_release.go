@@ -29,7 +29,7 @@ type HelmRelease struct {
 	// Chart defines the template of the v1beta2.HelmChart that should be created
 	// for this HelmRelease.
 	// +required
-	Chart helmv2beta1.HelmChartTemplate `json:"chart"`
+	Chart HelmChartTemplate `json:"chart"`
 
 	// Interval at which to reconcile the Helm release.
 	// +kubebuilder:validation:Type=string

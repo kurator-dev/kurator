@@ -22,8 +22,7 @@ require (
 	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.1
 	github.com/fluxcd/pkg/apis/kustomize v1.0.0
 	github.com/fluxcd/pkg/apis/meta v1.0.0
-	github.com/fluxcd/pkg/runtime v0.24.0
-	github.com/fluxcd/source-controller/api v1.0.0-rc.1
+	github.com/fluxcd/source-controller/api v1.0.0-rc.3
 	github.com/go-logr/logr v1.2.3
 	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1

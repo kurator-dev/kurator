@@ -521,10 +521,15 @@ github.com/fluxcd/pkg/apis/kustomize v1.0.0 h1:5T2b/mRZiGWtP7fvSU8gZOApIc06H6SdL
 github.com/fluxcd/pkg/apis/kustomize v1.0.0/go.mod h1:XaDYlKxrf9D2zZWcZ0BnSIqGtcm8mdNtJGzZWYjCnQo=
 github.com/fluxcd/pkg/apis/meta v1.0.0 h1:i9IGHd/VNEZELX7mepkiYFbJxs2J5znaB4cN9z2nPm8=
 github.com/fluxcd/pkg/apis/meta v1.0.0/go.mod h1:04ZdpZYm1x+aL93K4daNHW1UX6E8K7Gyf5za9OhrE+U=
+<<<<<<< HEAD
 github.com/fluxcd/pkg/runtime v0.24.0 h1:rQmm5Xq8K7f8xcPj1oNOInM1x4YwmgTucZJOP51Xmr4=
 github.com/fluxcd/pkg/runtime v0.24.0/go.mod h1:I2T+HWVNzX0cxm9TgH+SVNHTwqlmEDiSke43JXsq9iY=
 github.com/fluxcd/source-controller/api v1.0.0-rc.1 h1:MZaP5utClMG95Aw/AVu1l05WEfmpEw/RIlCLnkCQl14=
 github.com/fluxcd/source-controller/api v1.0.0-rc.1/go.mod h1:CvGNdS8g/MqwpERUK6aJp4lndsrm+JBzGpoyyZ4u0c8=
+=======
+github.com/fluxcd/source-controller/api v1.0.0-rc.3 h1:zfCUEJDN0VxHRoJGjnqlTyVe61ZmImVBOzn14tepzSU=
+github.com/fluxcd/source-controller/api v1.0.0-rc.3/go.mod h1:CvGNdS8g/MqwpERUK6aJp4lndsrm+JBzGpoyyZ4u0c8=
+>>>>>>> 7160023 (application: add controller)
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/form3tech-oss/jwt-go v3.2.3+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
 github.com/frankban/quicktest v1.11.3/go.mod h1:wRf/ReqHper53s+kmmSZizM8NamnL3IM0I9ntUbOk+k=
