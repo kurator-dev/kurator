@@ -46,8 +46,14 @@ kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --
 
 ```bash
 kurator join karmada member1 \
-    --cluster-kubeconfig=/root/.kube/kurator-members.config \
+    --cluster-kubeconfig=/root/.kube/kurator-member1.config \
     --cluster-context=kurator-member1
+```
+
+```bash
+kurator join karmada member2 \
+    --cluster-kubeconfig=/root/.kube/kurator-member2.config \
+    --cluster-context=kurator-member2
 ```
 
 Show members of karmada 

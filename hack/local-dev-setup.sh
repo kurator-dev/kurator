@@ -20,9 +20,10 @@ KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.25.3"}
 # variable define
 KUBECONFIG_PATH=${KUBECONFIG_PATH:-"${HOME}/.kube"}
 MAIN_KUBECONFIG=${MAIN_KUBECONFIG:-"${KUBECONFIG_PATH}/kurator-host.config"}
-MEMBER_CLUSTER_KUBECONFIG=${MEMBER_CLUSTER_KUBECONFIG:-"${KUBECONFIG_PATH}/kurator-members.config"}
 HOST_CLUSTER_NAME=${HOST_CLUSTER_NAME:-"kurator-host"}
+MEMBER_CLUSTER_1_KUBECONFIG=${MEMBER_CLUSTER_1_KUBECONFIG:-"${KUBECONFIG_PATH}/kurator-member1.config"}
 MEMBER_CLUSTER_1_NAME=${MEMBER_CLUSTER_1_NAME:-"kurator-member1"}
+MEMBER_CLUSTER_2_KUBECONFIG=${MEMBER_CLUSTER_2_KUBECONFIG:-"${KUBECONFIG_PATH}/kurator-member2.config"}
 MEMBER_CLUSTER_2_NAME=${MEMBER_CLUSTER_2_NAME:-"kurator-member2"}
 ENABLE_KIND_WITH_WORKER=${ENABLE_KIND_WITH_WORKER:-"false"}
 
@@ -37,25 +38,25 @@ else
 fi
 
 util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/host.yaml
-util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1.yaml
-util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member2.yaml
+util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_1_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1.yaml
+util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_2_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member2.yaml
 
 util::check_clusters_ready "${MAIN_KUBECONFIG}" "${HOST_CLUSTER_NAME}"
 sleep 5s
-util::check_clusters_ready "${MEMBER_CLUSTER_KUBECONFIG}" "${MEMBER_CLUSTER_1_NAME}"
+util::check_clusters_ready "${MEMBER_CLUSTER_1_KUBECONFIG}" "${MEMBER_CLUSTER_1_NAME}"
 sleep 5s
-util::check_clusters_ready "${MEMBER_CLUSTER_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}"
+util::check_clusters_ready "${MEMBER_CLUSTER_2_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}"
 sleep 5s
 
 # connecting networks between primary, remote1 and remote2 clusters
 echo "connect remote1 <-> remote2"
-util::connect_kind_clusters "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" 1
+util::connect_kind_clusters "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_1_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_2_KUBECONFIG}" 1
 
 echo "connect primary <-> remote1"
-util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" 1
+util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_1_KUBECONFIG}" 1
 
 echo "connect primary <-> remote2"
-util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" 1
+util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_2_KUBECONFIG}" 1
 
 echo "cluster networks connected"
 
@@ -66,12 +67,13 @@ kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VER
 
 echo "starting install metallb in member clusters"
 MEMBER_CLUSTERS=(${MEMBER_CLUSTER_1_NAME} ${MEMBER_CLUSTER_2_NAME})
-for c in "${MEMBER_CLUSTERS[@]}"
+MEMBER_KUBECONFIGS=(${MEMBER_CLUSTER_1_KUBECONFIG} ${MEMBER_CLUSTER_2_KUBECONFIG})
+for i in "${!MEMBER_CLUSTERS[@]}"
 do
-  echo "install metallb in $c"
-  kubectl create ns metallb-system --kubeconfig="${MEMBER_CLUSTER_KUBECONFIG}" --context="${c}"
-  util::install_metallb ${MEMBER_CLUSTER_KUBECONFIG} ${c}
-  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="${MEMBER_CLUSTER_KUBECONFIG}" --context="${c}"
+  echo "install metallb in ${MEMBER_CLUSTERS[i]}"
+  kubectl create ns metallb-system --kubeconfig="${MEMBER_KUBECONFIGS[i]}" --context="${MEMBER_CLUSTERS[i]}"
+  util::install_metallb ${MEMBER_KUBECONFIGS[i]} ${MEMBER_CLUSTERS[i]}
+  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="${MEMBER_KUBECONFIGS[i]}" --context="${MEMBER_CLUSTERS[i]}"
 done
 
 
@@ -81,8 +83,7 @@ function print_success() {
   echo -e "\nTo start using your host cluster, run:"
   echo -e "  export KUBECONFIG=${MAIN_KUBECONFIG}"
   echo -e "\nTo manage your remote clusters, run:"
-  echo -e "  export KUBECONFIG=${MEMBER_CLUSTER_KUBECONFIG}"
-  echo "Please use 'kubectl config use-context member1/member2' to switch to the different remote cluster."
+  echo -e "  export KUBECONFIG=${MEMBER_CLUSTER_1_KUBECONFIG} or export KUBECONFIG=${MEMBER_CLUSTER_2_KUBECONFIG}"
 }
 
 print_success
