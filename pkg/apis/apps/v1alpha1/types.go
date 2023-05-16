@@ -49,6 +49,10 @@ type ApplicationSpec struct {
 // ApplicationSource defines the configuration to produce an artifact for git, helm or OCI repository.
 // Note only one source can be specified
 type ApplicationSource struct {
+	// Kind specifies the type of application source.
+	// This field is generated based on the other fields in ApplicationSource.
+	// +optional
+	Kind string `json:"kind,omitempty"`
 	// +optional
 	GitRepo *sourcev1.GitRepositorySpec `json:"gitRepo,omitempty"`
 	// +optional

@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/cluster-api/util/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 
+	"kurator.dev/kurator/cmd/fleet-manager/application"
 	"kurator.dev/kurator/cmd/fleet-manager/options"
 	"kurator.dev/kurator/cmd/fleet-manager/scheme"
 	fleet "kurator.dev/kurator/pkg/fleet-manager"
@@ -130,6 +131,10 @@ func run(ctx context.Context, opts *options.Options) error {
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to set up fleet manager", "controller", "fleet manager")
 		return err
+	}
+
+	if err = application.InitControllers(ctx, opts, mgr); err != nil {
+		return fmt.Errorf("application init fail, %w", err)
 	}
 
 	log.Info("starting manager", "version", version.Get().String())

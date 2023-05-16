@@ -157,6 +157,19 @@ Note only one source can be specified</p>
 <tbody>
 <tr>
 <td>
+<code>kind</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Kind specifies the type of application source.
+This field is generated based on the other fields in ApplicationSource.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>gitRepo</code><br>
 <em>
 <a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#GitRepositorySpec">
@@ -525,6 +538,10 @@ map[string]string
 </div>
 <h3 id="apps.kurator.dev/v1alpha1.HelmChartTemplate">HelmChartTemplate
 </h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.HelmRelease">HelmRelease</a>)
+</p>
 <p>HelmChartTemplate defines the template from which the controller will
 generate a v1beta2.HelmChart object in the same namespace as the referenced
 v1beta2.Source.</p>
@@ -804,8 +821,8 @@ HelmRelease defines the desired state of a Helm release.</p>
 <td>
 <code>chart</code><br>
 <em>
-<a href="https://pkg.go.dev/github.com/fluxcd/helm-controller/api/v2beta1#HelmChartTemplate">
-github.com/fluxcd/helm-controller/api/v2beta1.HelmChartTemplate
+<a href="#apps.kurator.dev/v1alpha1.HelmChartTemplate">
+HelmChartTemplate
 </a>
 </em>
 </td>
