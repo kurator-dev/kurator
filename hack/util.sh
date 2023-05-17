@@ -255,43 +255,101 @@ function util::connect_kind_clusters() {
   fi
 }
 
+# util::wait_pods wait for pods in given namespace with given label to be ready
+# Parameters:
+#  - $1: namespace of the pods
+#  - $2: labels of the pods
+#  - $3: wait time for each check
+#  - $4: kubeconfig of the cluster
+#  - $5: context of the cluster
+function util::wait_pods() {
+  ns=$1
+  lb=$2
+  waittime=$3
+  # Wait for the pods to be ready in the given namespace with lable
+  while : ; do
+    res=$(kubectl wait --kubeconfig="$4" --context "$5" -n "${ns}" pod \
+      -l "${lb}" --for=condition=Ready --timeout="${waittime}s" 2>/dev/null ||true)
+    if [[ "${res}" == *"condition met"* ]]; then
+      break
+    fi
+    echo "Waiting for pods in namespace ${ns} with label ${lb} to be ready..."
+    sleep "${waittime}"
+  done
+}
+
 
 # util::install_metallb will install metallb for given kind cluster
 # Parameters:
 #  - $1: kubeconfig of the kind cluster want to install metallb
 #  - $2: context of the kind cluster want to install metallb
+#  - $3: ipv4 or ipv6
 function util::install_metallb() {
-  if [ -z "${METALLB_IPS[*]}" ]; then
-    # Take IPs from the end of the docker kind network subnet to use for MetalLB IPs
-    DOCKER_KIND_SUBNET="$(docker inspect kind | jq '.[0].IPAM.Config[0].Subnet' -r)"
-    METALLB_IPS=()
-    while read -r ip; do
-      echo $ip ==============
-      METALLB_IPS+=("$ip")
-    done < <(util::cidr_to_ips "$DOCKER_KIND_SUBNET" | tail -n 100)
+  METALLB_VERSION="v0.13.6"
+  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="$1" --context="$2"
+
+  addrName="IPAddress"
+  ipv4Prefix=""
+  ipv6Prefix=""
+  IPSPACE=255
+
+  # Get both ipv4 and ipv6 gateway for the cluster
+  gatewaystr=$(docker network inspect -f '{{range .IPAM.Config }}{{ .Gateway }} {{end}}' kind | cut -f1,2)
+  read -r -a gateways <<< "${gatewaystr}"
+  for gateway in "${gateways[@]}"; do
+    if [[ "$gateway" == *"."* ]]; then
+      ipv4Prefix=$(echo "${gateway}" |cut -d'.' -f1,2)
+    else
+      ipv6Prefix=$(echo "${gateway}" |cut -d':' -f1,2,3,4)
+    fi
+  done
+
+  if [[ "$3" == "ipv4" ]]; then
+    addrName="IPAddress"
+    ipv4Range="- ${ipv4Prefix}.$IPSPACE.200-${ipv4Prefix}.$IPSPACE.240"
+    ipv6Range=""
+  elif [[ "$3" == "ipv6" ]]; then
+    ipv4Range=""
+    ipv6Range="- ${ipv6Prefix}::$IPSPACE:200-${ipv6Prefix}::$IPSPACE:240"
+    addrName="GlobalIPv6Address"
+  else
+    ipv4Range="- ${ipv4Prefix}.$IPSPACE.200-${ipv4Prefix}.$IPSPACE.240"
+    ipv6Range="- ${ipv6Prefix}::$IPSPACE:200-${ipv6Prefix}::$IPSPACE:240"
   fi
-
-  # Give this cluster of those IPs
-  RANGE="${METALLB_IPS[0]}-${METALLB_IPS[9]}"
-  METALLB_IPS=("${METALLB_IPS[@]:10}")
-
-  echo 'apiVersion: v1
-kind: ConfigMap
+  
+  util::wait_pods metallb-system app=metallb 10 "$1" "$2"
+  
+  # Now configure the loadbalancer public IP range
+cat <<EOF | kubectl apply --kubeconfig="$1" --context="$2" -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
 metadata:
   namespace: metallb-system
-  name: config
-data:
-  config: |
-    address-pools:
-    - name: default
-      protocol: layer2
-      addresses:
-      - '"$RANGE" | kubectl apply --kubeconfig="$1" --context="$2" -f - 
-}
-
-function util::cidr_to_ips() {
-    CIDR="$1"
-    python3 - <<EOF
-from ipaddress import IPv4Network; [print(str(ip)) for ip in IPv4Network('$CIDR').hosts()]
+  name: address-pool
+spec:
+  addresses:
+    ${ipv4Range}
+    ${ipv6Range}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: empty
+  namespace: metallb-system
 EOF
+
+  # Wait for the public IP address to become available.
+  while : ; do
+    ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.'${addrName}'}}{{end}}' "$2"-control-plane)
+    if [[ -n "${ip}" ]]; then
+      #Change the kubeconfig file not to use the loopback IP
+      if [[ "$3" == "ipv6" ]]; then
+        ip="[${ip}]"
+      fi
+      kubectl config set clusters.kind-"$2".server https://"${ip}":6443
+      break
+    fi
+    echo 'Waiting for public IP address to be available...'
+    sleep 3
+  done
 }

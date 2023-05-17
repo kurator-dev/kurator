@@ -9,7 +9,6 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
 KIND_CONFIGS_ROOT=${REPO_ROOT}/kind-configs
 source "${REPO_ROOT}"/util.sh
 
-METALLB_VERSION=${METALLB_VERSION:-"v0.10.2"}
 KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.23.4"}
 
 KUBECONFIG_PATH=${KUBECONFIG_PATH:-"${HOME}/.kube"}

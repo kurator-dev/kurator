@@ -14,7 +14,6 @@ REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
 KIND_CONFIGS_ROOT=${REPO_ROOT}/kind-configs
 source "${REPO_ROOT}"/util.sh
 
-METALLB_VERSION=${METALLB_VERSION:-"v0.13.5"}
 KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.25.3"}
 
 # variable define
@@ -61,9 +60,8 @@ util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBE
 echo "cluster networks connected"
 
 echo "install metallb in host cluster"
-kubectl create ns metallb-system --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
-util::install_metallb ${MAIN_KUBECONFIG} ${HOST_CLUSTER_NAME}
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="${MAIN_KUBECONFIG}" --context="${HOST_CLUSTER_NAME}"
+util::install_metallb ${MAIN_KUBECONFIG} ${HOST_CLUSTER_NAME} "ipv4"
+
 
 echo "starting install metallb in member clusters"
 MEMBER_CLUSTERS=(${MEMBER_CLUSTER_1_NAME} ${MEMBER_CLUSTER_2_NAME})
@@ -71,9 +69,7 @@ MEMBER_KUBECONFIGS=(${MEMBER_CLUSTER_1_KUBECONFIG} ${MEMBER_CLUSTER_2_KUBECONFIG
 for i in "${!MEMBER_CLUSTERS[@]}"
 do
   echo "install metallb in ${MEMBER_CLUSTERS[i]}"
-  kubectl create ns metallb-system --kubeconfig="${MEMBER_KUBECONFIGS[i]}" --context="${MEMBER_CLUSTERS[i]}"
-  util::install_metallb ${MEMBER_KUBECONFIGS[i]} ${MEMBER_CLUSTERS[i]}
-  kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="${MEMBER_KUBECONFIGS[i]}" --context="${MEMBER_CLUSTERS[i]}"
+  util::install_metallb ${MEMBER_KUBECONFIGS[i]} ${MEMBER_CLUSTERS[i]} "ipv4"
 done
 
 
