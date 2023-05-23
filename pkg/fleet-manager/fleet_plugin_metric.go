@@ -19,6 +19,7 @@ package fleet
 import (
 	"context"
 	"fmt"
+	"net"
 	"reflect"
 	"time"
 
@@ -105,6 +106,11 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 		}
 
 		for _, lb := range svc.Status.LoadBalancer.Ingress {
+			if net.ParseIP(lb.IP) == nil {
+				// skip invalid ip
+				continue
+			}
+
 			endpoints.Insert(lb.IP)
 		}
 	}
@@ -245,7 +251,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 			Namespace: fleet.Namespace,
 			Name:      fleet.Name,
 		}
-		metricCfg     = *fleet.Spec.Plugin.Metric
+		metricCfg     = fleet.Spec.Plugin.Metric
 		fs            = manifests.BuiltinOrDir("") // TODO: make it configurable
 		fleetOwnerRef = &metav1.OwnerReference{
 			APIVersion: fleetapi.GroupVersion.String(),

@@ -32,7 +32,7 @@ func TestRenderThanos(t *testing.T) {
 		name  string
 		fleet types.NamespacedName
 		ref   *metav1.OwnerReference
-		in    v1alpha1.MetricConfig
+		in    *v1alpha1.MetricConfig
 	}{
 		{
 			name: "default",
@@ -40,7 +40,7 @@ func TestRenderThanos(t *testing.T) {
 				Name:      "fleet-1",
 				Namespace: "default",
 			},
-			in: v1alpha1.MetricConfig{
+			in: &v1alpha1.MetricConfig{
 				Thanos: v1alpha1.ThanosConfig{
 					ObjectStoreConfig: v1alpha1.ObjectStoreConfig{
 						SecretName: "thanos-objstore",
@@ -54,7 +54,7 @@ func TestRenderThanos(t *testing.T) {
 				Name:      "fleet-1",
 				Namespace: "monitoring",
 			},
-			in: v1alpha1.MetricConfig{
+			in: &v1alpha1.MetricConfig{
 				Thanos: v1alpha1.ThanosConfig{
 					Chart: &v1alpha1.ChartConfig{
 						Repository: "https://charts.bitnami.com/bitnami",
@@ -90,7 +90,7 @@ func TestRendPrometheus(t *testing.T) {
 		name  string
 		fleet types.NamespacedName
 		ref   *metav1.OwnerReference
-		in    v1alpha1.MetricConfig
+		in    *v1alpha1.MetricConfig
 	}{
 		{
 			name: "default",
@@ -104,7 +104,7 @@ func TestRendPrometheus(t *testing.T) {
 				Name:       "fleet-1",
 				UID:        "xxxxxx",
 			},
-			in: v1alpha1.MetricConfig{},
+			in: &v1alpha1.MetricConfig{},
 		},
 		{
 			name: "with-values",
@@ -112,7 +112,7 @@ func TestRendPrometheus(t *testing.T) {
 				Name:      "fleet-1",
 				Namespace: "default",
 			},
-			in: v1alpha1.MetricConfig{
+			in: &v1alpha1.MetricConfig{
 				Prometheus: v1alpha1.PrometheusConfig{
 					ExtraArgs: apiextensionsv1.JSON{
 						Raw: []byte("{\"key1\":\"value1\"}"),

@@ -39,7 +39,7 @@ const (
 	OCIReposiotryPrefix = "oci://"
 )
 
-func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, metricCfg v1alpha1.MetricConfig) ([]byte, error) {
+func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, metricCfg *v1alpha1.MetricConfig) ([]byte, error) {
 	thanosChart, err := getFleetPluginChart(fsys, ThanosComponentName)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 	return renderFleetPlugin(fsys, thanosCfg)
 }
 
-func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg v1alpha1.MetricConfig) ([]byte, error) {
+func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *v1alpha1.MetricConfig) ([]byte, error) {
 	promChart, err := getFleetPluginChart(fsys, PrometheusComponentName)
 	if err != nil {
 		return nil, err
