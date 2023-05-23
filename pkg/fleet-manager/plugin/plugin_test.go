@@ -27,6 +27,66 @@ import (
 	"kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
+func TestRenderGrafana(t *testing.T) {
+	cases := []struct {
+		name    string
+		fleet   types.NamespacedName
+		ref     *metav1.OwnerReference
+		cfg     *v1alpha1.GrafanaConfig
+		sources []*GrafanaDataSource
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			cfg: &v1alpha1.GrafanaConfig{},
+		},
+		{
+			name: "with-datasource",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			cfg: &v1alpha1.GrafanaConfig{},
+			sources: []*GrafanaDataSource{
+				{
+					Name:       "prometheus",
+					SourceType: "prometheus",
+					URL:        "http://prometheus:9090",
+					Access:     "proxy",
+					IsDefault:  true,
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderGrafana(manifestFS, tc.fleet, tc.ref, tc.cfg, tc.sources)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("grafana", tc.name)
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
 func TestRenderThanos(t *testing.T) {
 	cases := []struct {
 		name  string

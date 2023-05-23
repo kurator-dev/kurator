@@ -1,0 +1,56 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: "grafana"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "grafana"
+    fleet.kurator.dev/component: "grafana"
+  ownerReferences:
+  - apiVersion: "fleet.kurator.dev/v1alpha1"
+    kind: "Fleet"
+    name: "fleet-1"
+    uid: "xxxxxx"
+spec:
+  type: "oci"
+  interval: 5m0s
+  url: "oci://registry-1.docker.io/bitnamicharts"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: "grafana"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "grafana"
+    fleet.kurator.dev/component: "grafana"
+  ownerReferences:
+  - apiVersion: "fleet.kurator.dev/v1alpha1"
+    kind: "Fleet"
+    name: "fleet-1"
+    uid: "xxxxxx"
+spec:
+  chart:
+    spec:
+      chart: "grafana"
+      version: "8.2.33"
+      sourceRef:
+        kind: HelmRepository
+        name: "grafana"
+  values:
+    admin:
+      password: admin
+    fullnameOverride: grafana
+    service:
+      type: LoadBalancer
+    
+  interval: 1m0s
+  install:
+    createNamespace: true
+  targetNamespace: "default"
+  storageNamespace: "default"
+  timeout: 15m0s

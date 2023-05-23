@@ -1,0 +1,11 @@
+type: oci
+repo: oci://registry-1.docker.io/bitnamicharts
+name: grafana
+version: 8.2.33
+targetNamespace: monitoring
+values:
+  fullnameOverride: grafana
+  admin:
+    password: admin
+  service:
+    type: LoadBalancer

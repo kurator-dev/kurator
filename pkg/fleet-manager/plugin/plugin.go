@@ -27,19 +27,66 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
+	fleetv1a1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 const (
-	MetricPluginName = "metric"
+	MetricPluginName  = "metric"
+	GrafanaPluginName = "grafana"
 
 	ThanosComponentName     = "thanos"
 	PrometheusComponentName = "prometheus"
+	GrafanaComponentName    = "grafana"
 
 	OCIReposiotryPrefix = "oci://"
 )
 
-func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, metricCfg *v1alpha1.MetricConfig) ([]byte, error) {
+type GrafanaDataSource struct {
+	Name       string `json:"name"`
+	SourceType string `json:"type"`
+	URL        string `json:"url"`
+	Access     string `json:"access"`
+	IsDefault  bool   `json:"isDefault"`
+}
+
+func RenderGrafana(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, grafanaCfg *fleetv1a1.GrafanaConfig, datasources []*GrafanaDataSource) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, GrafanaComponentName)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeChartConfig(c, grafanaCfg.Chart)
+	c.TargetNamespace = fleetNN.Namespace // thanos chart is fleet scoped
+
+	values, err := toMap(grafanaCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(datasources) != 0 {
+		values = transform.MergeMaps(values, map[string]interface{}{
+			"datasources": map[string]interface{}{
+				"secretDefinition": map[string]interface{}{
+					"apiVersion":  1,
+					"datasources": datasources,
+				},
+			},
+		})
+	}
+
+	grafanaPluginCfg := FleetPluginConfig{
+		Name:           GrafanaPluginName,
+		Component:      GrafanaComponentName,
+		Fleet:          fleetNN,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	}
+
+	return renderFleetPlugin(fsys, grafanaPluginCfg)
+}
+
+func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
 	thanosChart, err := getFleetPluginChart(fsys, ThanosComponentName)
 	if err != nil {
 		return nil, err
@@ -74,7 +121,7 @@ func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 	return renderFleetPlugin(fsys, thanosCfg)
 }
 
-func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *v1alpha1.MetricConfig) ([]byte, error) {
+func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
 	promChart, err := getFleetPluginChart(fsys, PrometheusComponentName)
 	if err != nil {
 		return nil, err
@@ -113,7 +160,7 @@ func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1
 	return renderFleetPlugin(fsys, promCfg)
 }
 
-func mergeChartConfig(origin *ChartConfig, target *v1alpha1.ChartConfig) {
+func mergeChartConfig(origin *ChartConfig, target *fleetv1a1.ChartConfig) {
 	if target == nil {
 		return
 	}
