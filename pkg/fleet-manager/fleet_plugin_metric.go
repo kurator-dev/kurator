@@ -246,31 +246,29 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 		return nil, ctrl.Result{}, nil
 	}
 
-	var (
-		fleetNN = types.NamespacedName{
-			Namespace: fleet.Namespace,
-			Name:      fleet.Name,
-		}
-		metricCfg     = fleet.Spec.Plugin.Metric
-		fs            = manifests.BuiltinOrDir("") // TODO: make it configurable
-		fleetOwnerRef = &metav1.OwnerReference{
-			APIVersion: fleetapi.GroupVersion.String(),
-			Kind:       "Fleet", // TODO: use pkg typemeta
-			Name:       fleet.Name,
-			UID:        fleet.UID,
-		}
-
-		resources kube.ResourceList
-	)
+	fleetNN := types.NamespacedName{
+		Namespace: fleet.Namespace,
+		Name:      fleet.Name,
+	}
+	metricCfg := fleet.Spec.Plugin.Metric
+	fs := manifests.BuiltinOrDir("") // TODO: make it configurable
+	fleetOwnerRef := &metav1.OwnerReference{
+		APIVersion: fleetapi.GroupVersion.String(),
+		Kind:       "Fleet", // TODO: use pkg typemeta
+		Name:       fleet.Name,
+		UID:        fleet.UID,
+	}
 
 	b, err := plugin.RenderThanos(fs, fleetNN, fleetOwnerRef, metricCfg)
 	if err != nil {
 		return nil, ctrl.Result{}, err
 	}
+
 	thanosResources, err := util.PatchResources(b)
 	if err != nil {
 		return nil, ctrl.Result{}, err
 	}
+	var resources kube.ResourceList
 	resources = append(resources, thanosResources...)
 
 	// prepare objstore secret for fleet cluster
