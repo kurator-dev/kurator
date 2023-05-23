@@ -106,6 +106,8 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 		}
 
 		for _, lb := range svc.Status.LoadBalancer.Ingress {
+			// TODO: There is a case when lb has not assigned an ip to the service, if we choice to requeue the fleet,
+			// the fleet will never became ready in the worest case.
 			if net.ParseIP(lb.IP) == nil {
 				// skip invalid ip
 				continue
