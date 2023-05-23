@@ -23,8 +23,10 @@ import (
 )
 
 // FS embeds the manifests
+// TODO: find a condition compile way to remove unnecessary profile for fleet manager the manifests in the binary
 //
 //go:embed profiles/* profiles/prom/* profiles/prom-thanos/* profiles/thanos/* profiles/infra/plugins/* profiles/infra/capitpls/*
+//go:embed profiles/fleet/* profiles/fleet/plugins/*
 var FS embed.FS
 
 // BuiltinOrDir returns a FS for the provided directory. If no directory is passed, the compiled in

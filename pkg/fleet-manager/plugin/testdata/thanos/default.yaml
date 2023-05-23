@@ -1,0 +1,60 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: "thanos"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "metric"
+    fleet.kurator.dev/component: "thanos"
+spec:
+  type: "oci"
+  interval: 5m0s
+  url: "oci://registry-1.docker.io/bitnamicharts"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: "thanos"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "metric"
+    fleet.kurator.dev/component: "thanos"
+spec:
+  chart:
+    spec:
+      chart: "thanos"
+      version: "12.5.1"
+      sourceRef:
+        kind: HelmRepository
+        name: "thanos"
+  values:
+    bucketweb:
+      enabled: false
+    compactor:
+      enabled: false
+    existingObjstoreSecret: thanos-objstore
+    metrics:
+      enabled: false
+    minio:
+      enabled: false
+    query:
+      dnsDiscovery:
+        sidecarsNamespace: default
+        sidecarsService: thanos-sidecar-remote
+    queryFrontend:
+      enabled: false
+    ruler:
+      enabled: false
+    storegateway:
+      enabled: true
+    
+  interval: 1m0s
+  install:
+    createNamespace: true
+  targetNamespace: "default"
+  storageNamespace: "default"
+  timeout: 15m0s

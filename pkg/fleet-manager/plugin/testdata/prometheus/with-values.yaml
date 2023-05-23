@@ -1,0 +1,73 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: "prometheus-cluster1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "metric"
+    fleet.kurator.dev/component: "prometheus"
+spec:
+  type: "oci"
+  interval: 5m0s
+  url: "oci://registry-1.docker.io/bitnamicharts"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: "prometheus-cluster1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "metric"
+    fleet.kurator.dev/component: "prometheus"
+spec:
+  chart:
+    spec:
+      chart: "kube-prometheus"
+      version: "8.9.1"
+      sourceRef:
+        kind: HelmRepository
+        name: "prometheus-cluster1"
+  values:
+    alertmanager:
+      enabled: false
+    blackboxExporter:
+      enabled: false
+    exporters:
+      enabled: false
+      kube-state-metrics:
+        enabled: false
+      node-exporter:
+        enabled: false
+    fullnameOverride: prometheus
+    key1: value1
+    operator:
+      service:
+        type: ClusterIP
+    prometheus:
+      disableCompaction: true
+      externalLabels:
+        cluster: cluster1
+      service:
+        type: ClusterIP
+      thanos:
+        create: true
+        objectStorageConfig:
+          secretKey: objstore.yml
+          secretName: thanos-objstore
+        service:
+          type: LoadBalancer
+    
+  interval: 1m0s
+  install:
+    createNamespace: true
+  targetNamespace: "monitoring"
+  storageNamespace: "monitoring"
+  timeout: 15m0s
+  kubeConfig:
+    secretRef:
+      name: cluster1
+      key: kubeconfig.yaml

@@ -1,0 +1,24 @@
+type: oci
+repo: oci://registry-1.docker.io/bitnamicharts
+name: thanos
+version: 12.5.1
+targetNamespace: monitoring
+values:
+  query:
+    dnsDiscovery:
+      sidecarsService: thanos-sidecar-remote
+      sidecarsNamespace: monitoring
+  queryFrontend:
+    enabled: false
+  bucketweb:
+    enabled: false
+  compactor:
+    enabled: false
+  storegateway:
+    enabled: true
+  ruler:
+    enabled: false
+  metrics:
+    enabled: false
+  minio:
+    enabled: false

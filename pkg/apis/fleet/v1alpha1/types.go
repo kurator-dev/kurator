@@ -20,7 +20,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
 
 type FleetPhase string
@@ -150,13 +149,10 @@ type ThanosConfig struct {
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
-	// Mode defines the mode of the Thanos.
-	// The default is sidecar.
-	// +kubebuilder:validation:Enum=sidecar;reciever
-	// +optional
-	Mode string `json:"mode,omitempty"`
-	// ObjectStoreConfig defines the configuration for the object store.
-	ObjectStore *ThanosObjectStoreConfig `json:"objectStore,omitempty"`
+	// ObjectStoreConfig is the secret reference of the object store.
+	// Configuration must follow the definition of the thanos: https://thanos.io/tip/thanos/storage.md/.
+	// +required
+	ObjectStoreConfig ObjectStoreConfig `json:"objectStoreConfig"`
 	// ExtraArgs is the set of extra arguments for Thanos chart.
 	//
 	// For Example, using following configuration to enable query frontend.
@@ -168,29 +164,11 @@ type ThanosConfig struct {
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
 
-type ThanosObjectStoreConfig struct {
-	// Type defines the type of the object store.
-	// Now only support s3, which means S3-compatible object storages, e.g. MinIO.
-	Type string `json:"type"`
-	// S3 defines the configuration for the S3 object store.
-	// For more information, see https://thanos.io/tip/thanos/storage.md/#s3
-	// This field is required if the type is s3.
-	// +optional
-	S3 *S3Config `json:"s3,omitempty"`
-}
-
-type S3Config struct {
-	// Bucket defines the name of the bucket.
-	Bucket string `json:"bucket"`
-	// Region defines the region of the bucket.
-	Region string `json:"region"`
-	// Endpoint defines the endpoint of the bucket.
-	Endpoint string `json:"endpoint"`
-	// Credential is the credential used to access the bukcet.
-	// Make sure the credential is in the same namespace as the monitoring.
-	// The secret must have following keys: AccessKeyID, SecretAccessKey.
-	// SessionToken is optional.
-	Credential clusterv1alpha1.CredentialConfig `json:"credential"`
+type ObjectStoreConfig struct {
+	// SecretName is the name of the secret that holds the object store configuration.
+	// The path of object store configuration must be `objstore.yml`
+	// +required
+	SecretName string `json:"secretName"`
 }
 
 type GrafanaConfig struct {

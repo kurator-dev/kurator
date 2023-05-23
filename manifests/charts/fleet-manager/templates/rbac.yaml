@@ -6,7 +6,7 @@ rules:
   - apiGroups:
       - fleet.kurator.dev
     resources:
-      - '*'
+      - "*"
     verbs:
       - get
       - list
@@ -16,7 +16,7 @@ rules:
   - apiGroups:
       - cluster.kurator.dev
     resources:
-      - '*'
+      - "*"
     verbs:
       - get
       - list
@@ -28,6 +28,8 @@ rules:
     resources:
       - secrets
       - pods
+      - services
+      - endpoints
     verbs:
       - create
       - delete
@@ -76,6 +78,7 @@ rules:
       - update
       - patch
       - delete
+      - deletecollection
       - list
   - apiGroups:
       - "apps"
@@ -87,6 +90,30 @@ rules:
       - create
       - delete
       - list
+  - apiGroups:
+      - "source.toolkit.fluxcd.io"
+    resources:
+      - helmrepositories
+    verbs:
+      - get
+      - create
+      - delete
+      - deletecollection
+      - update
+      - list
+      - watch
+  - apiGroups:
+      - "helm.toolkit.fluxcd.io"
+    resources:
+      - helmreleases
+    verbs:
+      - get
+      - create
+      - delete
+      - deletecollection
+      - update
+      - list
+      - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -99,4 +126,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kurator-fleet-manager
-    namespace: {{ .Release.Namespace }}
+    namespace: "{{ .Release.Namespace }}"
