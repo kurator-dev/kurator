@@ -286,8 +286,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 	for _, c := range fleet.Spec.Clusters {
 		fleetCluster, ok := fleetClusters[ClusterKey{c.Kind, c.Name}]
 		if !ok {
-			// should no happen
-			log.Error(nil, "failed to get cluster client")
+			// could happen when cluster not present
 			continue
 		}
 
