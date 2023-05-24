@@ -59,8 +59,6 @@ type Fleet struct {
 // FleetSpec defines the desired state of the fleet
 type FleetSpec struct {
 	// Clusters represents the clusters that would be registered to the fleet.
-	// Note: only kurator cluster is supported now
-	// TODO: add attached cluster support?
 	Clusters []*corev1.ObjectReference `json:"clusters,omitempty"`
 
 	// TODO: support cluster selector?
