@@ -35,21 +35,25 @@ type fleetCluster struct {
 	client    *kclient.Client
 }
 
-func (f *FleetManager) buildFleetClusters(ctx context.Context, fleet *fleetapi.Fleet) (map[string]*fleetCluster, error) {
-	res := make(map[string]*fleetCluster, len(fleet.Spec.Clusters))
+type ClusterKey struct {
+	Kind string
+	Name string
+}
+
+func (f *FleetManager) buildFleetClusters(ctx context.Context, fleet *fleetapi.Fleet) (map[ClusterKey]*fleetCluster, error) {
+	res := make(map[ClusterKey]*fleetCluster, len(fleet.Spec.Clusters))
 	for _, c := range fleet.Spec.Clusters {
 		clusterKey := types.NamespacedName{Namespace: fleet.Namespace, Name: c.Name}
 		clusterInterface, err := f.getFleetClusterInterface(ctx, c.Kind, clusterKey)
+		// TODO: should we make it work
 		if err != nil {
 			return nil, err
 		}
-
 		kclient, err := f.clientForCluster(fleet.Namespace, clusterInterface)
 		if err != nil {
 			return nil, err
 		}
-
-		res[c.Name] = &fleetCluster{
+		res[ClusterKey{Kind: c.Kind, Name: c.Name}] = &fleetCluster{
 			Secret:    clusterInterface.GetSecretName(),
 			SecretKey: clusterInterface.GetSecretKey(),
 			client:    kclient,
@@ -61,7 +65,7 @@ func (f *FleetManager) buildFleetClusters(ctx context.Context, fleet *fleetapi.F
 
 func (f *FleetManager) getFleetClusterInterface(ctx context.Context, kind string, nn types.NamespacedName) (ClusterInterface, error) {
 	switch kind {
-	case ClusterKind:
+	case ClusterKind, "":
 		cluster := &clusterv1alpha1.Cluster{}
 		if err := f.Get(ctx, nn, cluster); err != nil {
 			return nil, err
