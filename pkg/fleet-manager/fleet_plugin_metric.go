@@ -41,10 +41,7 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
-func (f *FleetManager) reconcileObjstoreSecretOwnerReference(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) error {
-	log := ctrl.LoggerFrom(ctx)
-	log = log.WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
-
+func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) error {
 	for _, cluster := range fleet.Spec.Clusters {
 		fleetCluster, ok := fleetClusters[ClusterKey{cluster.Kind, cluster.Name}]
 		if !ok {
@@ -202,8 +199,8 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 	return nil
 }
 
-// syncObjstoreSecret syncs the secret to the cluster
-func (f *FleetManager) syncObjstoreSecret(ctx context.Context, fleetCluster *fleetCluster, secret *corev1.Secret) error {
+// syncObjStoreSecret syncs the secret to the cluster
+func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *fleetCluster, secret *corev1.Secret) error {
 	_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Get(ctx, secret.Namespace, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
@@ -295,7 +292,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 		}
 
 		// TODO: find a better way to sync objstore secret to member clusters
-		if err := f.syncObjstoreSecret(ctx, fleetCluster, promSecret); err != nil {
+		if err := f.syncObjStoreSecret(ctx, fleetCluster, promSecret); err != nil {
 			return nil, ctrl.Result{}, fmt.Errorf("failed to reconcile objstore secret for cluster %s: %w", c.Name, err)
 		}
 
@@ -326,7 +323,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 	}
 
 	log.V(4).Info("begin to reconcile owner reference for metric plugin")
-	if err := f.reconcileObjstoreSecretOwnerReference(ctx, fleet, fleetClusters); err != nil {
+	if err := f.reconcileObjStoreSecretOwnerReference(ctx, fleet, fleetClusters); err != nil {
 		return nil, ctrl.Result{}, err
 	}
 
