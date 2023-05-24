@@ -44,9 +44,8 @@ spec:
             description: FleetSpec defines the desired state of the fleet
             properties:
               clusters:
-                description: 'Clusters represents the clusters that would be registered
-                  to the fleet. Note: only kurator cluster is supported now TODO:
-                  add attached cluster support?'
+                description: Clusters represents the clusters that would be registered
+                  to the fleet.
                 items:
                   description: "ObjectReference contains enough information to let
                     you inspect or modify the referred object. --- New uses of this
