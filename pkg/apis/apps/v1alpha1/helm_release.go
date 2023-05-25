@@ -17,7 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	"github.com/fluxcd/pkg/apis/meta"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -98,23 +98,23 @@ type HelmRelease struct {
 
 	// Install holds the configuration for Helm install actions for this HelmRelease.
 	// +optional
-	Install *helmv2beta1.Install `json:"install,omitempty"`
+	Install *helmv2b1.Install `json:"install,omitempty"`
 
 	// Upgrade holds the configuration for Helm upgrade actions for this HelmRelease.
 	// +optional
-	Upgrade *helmv2beta1.Upgrade `json:"upgrade,omitempty"`
+	Upgrade *helmv2b1.Upgrade `json:"upgrade,omitempty"`
 
 	// Rollback holds the configuration for Helm rollback actions for this HelmRelease.
 	// +optional
-	Rollback *helmv2beta1.Rollback `json:"rollback,omitempty"`
+	Rollback *helmv2b1.Rollback `json:"rollback,omitempty"`
 
 	// Uninstall holds the configuration for Helm uninstall actions for this HelmRelease.
 	// +optional
-	Uninstall *helmv2beta1.Uninstall `json:"uninstall,omitempty"`
+	Uninstall *helmv2b1.Uninstall `json:"uninstall,omitempty"`
 
 	// ValuesFrom holds references to resources containing Helm values for this HelmRelease,
 	// and information about how they should be merged.
-	ValuesFrom []helmv2beta1.ValuesReference `json:"valuesFrom,omitempty"`
+	ValuesFrom []helmv2b1.ValuesReference `json:"valuesFrom,omitempty"`
 
 	// Values holds the values for this Helm release.
 	// +optional

@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"strconv"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourceapi "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1a2 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	apiserrors "k8s.io/apimachinery/pkg/api/errors"
@@ -45,11 +45,11 @@ import (
 )
 
 const (
-	GitRepoKind       = "GitRepository"
-	HelmRepoKind      = "HelmRepository"
-	OCIRepoKind       = "OCIRepository"
-	KustomizationKind = "Kustomization"
-	HelmReleaseKind   = "HelmRelease"
+	GitRepoKind       = sourcev1.GitRepositoryKind
+	HelmRepoKind      = sourcev1a2.HelmRepositoryKind
+	OCIRepoKind       = sourcev1a2.OCIRepositoryKind
+	KustomizationKind = kustomizev1.KustomizationKind
+	HelmReleaseKind   = helmv2b1.HelmReleaseKind
 
 	ApplicationLabel     = "apps.kurator.dev/app-name"
 	AppsPolicyLabel      = "apps.kurator.dev/policy-name"
@@ -92,7 +92,7 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &sourceapi.HelmRepository{}},
+		&source.Kind{Type: &sourcev1a2.HelmRepository{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for HelmRepository: %v", err)
@@ -106,7 +106,7 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &helmv2beta1.HelmRelease{}},
+		&source.Kind{Type: &helmv2b1.HelmRelease{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for HelmRelease: %v", err)
@@ -272,7 +272,7 @@ func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *ap
 	for _, policy := range app.Spec.SyncPolicy {
 		// A policy has a fleet, and a fleet has many clusters. Therefore, a policy may need to create or update multiple kustomizations/helmReleases for each cluster.
 		// Synchronize policy resource based on current application, fleet, and policy configuration
-		if err := a.SyncPolicyResource(ctx, app, fleet, policy); err != nil {
+		if err := a.syncPolicyResource(ctx, app, fleet, policy); err != nil {
 			log.Error(err, "failed to sync policy resource", "fleet", fleet.Name)
 			return ctrl.Result{}, err
 		}
@@ -303,7 +303,7 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 		app.Status.SourceStatus.GitRepoStatus = &currentResource.Status
 
 	case HelmRepoKind:
-		currentResource := &sourceapi.HelmRepository{}
+		currentResource := &sourcev1a2.HelmRepository{}
 		if err := a.Client.Get(ctx, sourceKey, currentResource); err != nil {
 			log.Error(err, "failed to get HelmRepository from the API server when reconciling status")
 			return ctrl.Result{}, err
@@ -330,7 +330,7 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 		app.Status.SyncStatus = syncStatus
 
 	case HelmRepoKind:
-		var helmReleaseList helmv2beta1.HelmReleaseList
+		var helmReleaseList helmv2b1.HelmReleaseList
 		if err := a.Client.List(ctx, &helmReleaseList, client.InNamespace(app.Namespace), client.MatchingLabels{ApplicationLabel: app.Name}); err != nil {
 			return ctrl.Result{}, err
 		}

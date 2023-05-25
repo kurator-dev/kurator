@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"strings"
 
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourceapi "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1a2 "github.com/fluxcd/source-controller/api/v1beta2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -36,8 +36,8 @@ import (
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
-// SyncPolicyResource synchronizes the sync policy resources for a given application.
-func (a *ApplicationManager) SyncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy) error {
+// syncPolicyResource synchronizes the sync policy resources for a given application.
+func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy) error {
 	log := ctrl.LoggerFrom(ctx)
 	sourceKind := app.Spec.Source.Kind
 
@@ -184,7 +184,7 @@ func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, ap
 // syncHelmReleaseForCluster ensures that the HelmRelease object is in sync with Flux's requirements for the object.
 func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app *applicationapi.Application, helmRelease *applicationapi.HelmRelease, kubeConfig *fluxmeta.KubeConfigReference, kustomizationName string) error {
 	// Create a target HelmRelease object with details extracted from the provided application's HelmRelease spec
-	targetHelmRelease := &helmv2beta1.HelmRelease{
+	targetHelmRelease := &helmv2b1.HelmRelease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kustomizationName,
 			Namespace: app.Namespace,
@@ -193,7 +193,7 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 			},
 			OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
 		},
-		Spec: helmv2beta1.HelmReleaseSpec{
+		Spec: helmv2b1.HelmReleaseSpec{
 			// Populate the HelmRelease spec with information from the provided HelmRelease spec
 			// Include all relevant details for the HelmRelease, like Interval, KubeConfig, Suspend, ReleaseName, and more.
 			Interval:           helmRelease.Interval,
@@ -217,7 +217,7 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 
 	// If available, apply HelmRelease Chart.ObjectMeta data to the target HelmRelease
 	if helmRelease.Chart.ObjectMeta != nil {
-		targetHelmRelease.Spec.Chart.ObjectMeta = &helmv2beta1.HelmChartTemplateObjectMeta{
+		targetHelmRelease.Spec.Chart.ObjectMeta = &helmv2b1.HelmChartTemplateObjectMeta{
 			Labels:      helmRelease.Chart.ObjectMeta.Labels,
 			Annotations: helmRelease.Chart.ObjectMeta.Annotations,
 		}
@@ -225,10 +225,10 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 
 	// Apply the HelmRelease Chart.HelmChartTemplateSpec data to the target HelmRelease
 	charSpec := helmRelease.Chart.Spec
-	targetHelmRelease.Spec.Chart.Spec = helmv2beta1.HelmChartTemplateSpec{
+	targetHelmRelease.Spec.Chart.Spec = helmv2b1.HelmChartTemplateSpec{
 		Chart:   charSpec.Chart,
 		Version: charSpec.Version,
-		SourceRef: helmv2beta1.CrossNamespaceObjectReference{
+		SourceRef: helmv2b1.CrossNamespaceObjectReference{
 			Kind: HelmRepoKind,
 			Name: generateSourceName(app),
 		},
@@ -260,7 +260,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, GitRepoKind)
 	case HelmRepoKind:
-		targetSource := &sourceapi.HelmRepository{
+		targetSource := &sourcev1a2.HelmRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -273,7 +273,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, HelmRepoKind)
 	case OCIRepoKind:
-		targetSource := &sourceapi.OCIRepository{
+		targetSource := &sourcev1a2.OCIRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -297,13 +297,13 @@ func createEmptyObject(resourceKind string) client.Object {
 	case GitRepoKind:
 		return &sourcev1.GitRepository{}
 	case HelmRepoKind:
-		return &sourceapi.HelmRepository{}
+		return &sourcev1a2.HelmRepository{}
 	case OCIRepoKind:
-		return &sourceapi.OCIRepository{}
+		return &sourcev1a2.OCIRepository{}
 	case KustomizationKind:
 		return &kustomizev1.Kustomization{}
 	case HelmReleaseKind:
-		return &helmv2beta1.HelmRelease{}
+		return &helmv2b1.HelmRelease{}
 	default:
 		return nil
 	}
@@ -345,13 +345,13 @@ func (a *ApplicationManager) syncResource(ctx context.Context, targetSource clie
 	case GitRepoKind:
 		err = a.updateGitRepository(ctx, currentResource.(*sourcev1.GitRepository), targetSource.(*sourcev1.GitRepository))
 	case HelmRepoKind:
-		err = a.updateHelmRepository(ctx, currentResource.(*sourceapi.HelmRepository), targetSource.(*sourceapi.HelmRepository))
+		err = a.updateHelmRepository(ctx, currentResource.(*sourcev1a2.HelmRepository), targetSource.(*sourcev1a2.HelmRepository))
 	case OCIRepoKind:
-		err = a.updateOCIRepository(ctx, currentResource.(*sourceapi.OCIRepository), targetSource.(*sourceapi.OCIRepository))
+		err = a.updateOCIRepository(ctx, currentResource.(*sourcev1a2.OCIRepository), targetSource.(*sourcev1a2.OCIRepository))
 	case KustomizationKind:
 		err = a.updateKustomization(ctx, currentResource.(*kustomizev1.Kustomization), targetSource.(*kustomizev1.Kustomization))
 	case HelmReleaseKind:
-		err = a.updateHelmRelease(ctx, currentResource.(*helmv2beta1.HelmRelease), targetSource.(*helmv2beta1.HelmRelease))
+		err = a.updateHelmRelease(ctx, currentResource.(*helmv2b1.HelmRelease), targetSource.(*helmv2b1.HelmRelease))
 	default:
 		log.Error(err, fmt.Sprintf("resource type %s is not supported", resourceKind))
 		return nil
@@ -376,7 +376,7 @@ func (a *ApplicationManager) updateGitRepository(ctx context.Context, currentRes
 
 // updateHelmRepository updates the state of a current HelmRepository resource to match the provided target HelmRepository resource.
 // This function is used by syncResource to keep the actual state of HelmRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourceapi.HelmRepository, targetSource *sourceapi.HelmRepository) error {
+func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourcev1a2.HelmRepository, targetSource *sourcev1a2.HelmRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -386,7 +386,7 @@ func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentRe
 
 // updateOCIRepository updates the state of a current OCIRepository resource to match the provided target OCIRepository resource.
 // This function is used by syncResource to keep the actual state of OCIRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourceapi.OCIRepository, targetSource *sourceapi.OCIRepository) error {
+func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourcev1a2.OCIRepository, targetSource *sourcev1a2.OCIRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -406,7 +406,7 @@ func (a *ApplicationManager) updateKustomization(ctx context.Context, currentRes
 
 // updateHelmRelease updates the state of a current HelmRelease resource to match the provided target HelmRelease resource.
 // This function is used by syncResource to keep the actual state of HelmRelease resources in sync with the desired state.
-func (a *ApplicationManager) updateHelmRelease(ctx context.Context, currentResource *helmv2beta1.HelmRelease, targetSource *helmv2beta1.HelmRelease) error {
+func (a *ApplicationManager) updateHelmRelease(ctx context.Context, currentResource *helmv2b1.HelmRelease, targetSource *helmv2b1.HelmRelease) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -421,6 +421,7 @@ func findSourceKind(app *applicationapi.Application) (string, error) {
 	validCount := 0
 	validKind := ""
 
+	// TODO: should not do these check here, it should be done via validating webhook.
 	// Check for each type of source in the application and count the number of valid sources
 	gitRepo := app.Spec.Source.GitRepo
 	if gitRepo != nil {

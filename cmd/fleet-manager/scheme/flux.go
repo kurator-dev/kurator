@@ -17,15 +17,15 @@ limitations under the License.
 package scheme
 
 import (
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourceapi "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1a2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 func init() {
 	_ = sourcev1.AddToScheme(Scheme)
-	_ = sourceapi.AddToScheme(Scheme)
+	_ = sourcev1a2.AddToScheme(Scheme)
 	_ = kustomizev1.AddToScheme(Scheme)
-	_ = helmv2beta1.AddToScheme(Scheme)
+	_ = helmv2b1.AddToScheme(Scheme)
 }
