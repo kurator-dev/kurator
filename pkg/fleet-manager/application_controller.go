@@ -124,6 +124,9 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		return ctrl.Result{}, errors.Wrapf(err, "failed to get application %s", req.NamespacedName)
 	}
 
+	log := ctrl.LoggerFrom(ctx)
+	log = log.WithValues("application", klog.KObj(app))
+
 	patchHelper, err := patch.NewHelper(app, a.Client)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to init patch helper for application %s", req.NamespacedName)
@@ -142,25 +145,60 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		return ctrl.Result{}, nil
 	}
 
+	// Define object key for fleet based on the current policy's destination
+	fleetKey := client.ObjectKey{
+		Namespace: app.Namespace,
+		// there only one fleet
+		Name: app.Spec.SyncPolicy[0].Destination.Fleet,
+	}
+	fleet := &fleetapi.Fleet{}
+	// Retrieve fleet object based on the defined fleet key
+	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("fleet does not exist", "fleet", fleetKey)
+			return ctrl.Result{RequeueAfter: RequeueAfter}, nil
+		}
+
+		// Log error and requeue request if error occurred during fleet retrieval
+		log.Error(err, "failed to find fleet", "fleet", fleetKey)
+		return ctrl.Result{}, err
+	}
+
+	// label the fleet
+	if fleet.GetLabels() == nil {
+		fleet.SetLabels(make(map[string]string))
+	}
+	// todo: there is a bug here if more than one application refer the same fleet: the new one will override the old
+	//  but it is needed to reconcile application when the fleet' cluster is all joined
+	if fleet.GetLabels()[ApplicationLabel] != app.Name {
+		labels := fleet.GetLabels()
+		labels[ApplicationLabel] = app.Name
+		fleet.SetLabels(labels)
+		err := a.Update(ctx, fleet)
+		if err != nil {
+			log.Error(err, "unable to label fleet", "fleet", fleet.Name)
+			return ctrl.Result{}, err
+		}
+	}
+
 	// Handle deletion reconciliation loop.
 	if app.DeletionTimestamp != nil {
-		return a.reconcileDelete(ctx, app)
+		return a.reconcileDelete(ctx, app, fleet)
 	}
 
 	// Handle normal loop.
-	return a.reconcile(ctx, app)
+	return a.reconcile(ctx, app, fleet)
 }
 
-func (a *ApplicationManager) reconcile(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
+func (a *ApplicationManager) reconcile(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-	log = log.WithValues("application", klog.KObj(app))
 
 	if result, err := a.reconcileInitializeParameters(ctx, app); err != nil || result.RequeueAfter > 0 {
 		log.Error(err, "failed to reconcileInitializeParameters")
 		return result, err
 	}
 
-	if result, err := a.reconcileSyncResources(ctx, app); err != nil || result.RequeueAfter > 0 {
+	if result, err := a.reconcileSyncResources(ctx, app, fleet); err != nil || result.RequeueAfter > 0 {
 		log.Error(err, "failed to reconcileSyncResources")
 
 		return result, err
@@ -220,7 +258,7 @@ func (a *ApplicationManager) reconcileInitializeParameters(ctx context.Context, 
 // The associated resources are categorized as 'source' and 'policy'.
 // 'source' could be one of gitRepo, helmRepo, or ociRepo while 'policy' can be either kustomizations or helmReleases.
 // Any change in Application configuration could potentially lead to creation, deletion, or modification of associated resources in the Kubernetes cluster.
-func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
+func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	// Synchronize source resource based on application configuration
 	if err := a.syncSourceResource(ctx, app); err != nil {
@@ -230,48 +268,12 @@ func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *ap
 	// todo: if we need to delete the kustomization/helmReleases when the cluster is removed from the fleet?
 	// todo: if we need to delete the kustomization/helmReleases when the fleet is removed from the application?
 
-	// Define object key for fleet based on the current policy's destination
-	fleetKey := client.ObjectKey{
-		Namespace: app.Namespace,
-		// there only one fleet
-		Name: app.Spec.SyncPolicy[0].Destination.Fleet,
-	}
-	fleet := &fleetapi.Fleet{}
-	// Retrieve fleet object based on the defined fleet key
-	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
-		if apierrors.IsNotFound(err) {
-			log.Info("fleet does not exist", "fleet", fleetKey)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, nil
-		}
-
-		// Log error and requeue request if error occurred during fleet retrieval
-		log.Error(err, "failed to find fleet", "fleet", fleetKey)
-		return ctrl.Result{}, err
-	}
-
-	// label the cluster
-	if fleet.GetLabels() == nil {
-		fleet.SetLabels(make(map[string]string))
-	}
-	// todo: there is a bug here if more than one application refer the same fleet: the new one will override the old
-	//  but it is needed to reconcile application when the fleet' cluster is all joined
-	if fleet.GetLabels()[ApplicationLabel] != app.Name {
-		labels := fleet.GetLabels()
-		labels[ApplicationLabel] = app.Name
-		fleet.SetLabels(labels)
-		err := a.Update(ctx, fleet)
-		if err != nil {
-			log.Error(err, "unable to label fleet", "fleet", fleet.Name)
-			return ctrl.Result{}, err
-		}
-	}
-
 	// Iterate over each policy in the application's spec.SyncPolicy
 	for _, policy := range app.Spec.SyncPolicy {
 		// A policy has a fleet, and a fleet has many clusters. Therefore, a policy may need to create or update multiple kustomizations/helmReleases for each cluster.
 		// Synchronize policy resource based on current application, fleet, and policy configuration
 		if err := a.SyncPolicyResource(ctx, app, fleet, policy); err != nil {
-			log.Error(err, "failed to sync policy resource", "fleet", fleetKey)
+			log.Error(err, "failed to sync policy resource", "fleet", fleet.Name)
 			return ctrl.Result{}, err
 		}
 	}
@@ -347,7 +349,19 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 	return ctrl.Result{}, nil
 }
 
-func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
+func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
+	// remove application label on fleet
+	if fleet.GetLabels()[FleetLabel] == app.Name {
+		delete(fleet.GetLabels(), FleetLabel)
+		err := a.Update(ctx, fleet)
+		if err != nil {
+			log.Error(err, "unable to remove application label", "fleet", fleet.GetName())
+			return ctrl.Result{}, nil
+		}
+	}
+
 	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
 
 	return ctrl.Result{}, nil
