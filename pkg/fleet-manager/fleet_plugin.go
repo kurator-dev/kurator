@@ -43,7 +43,12 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 	if err != nil || ctrlResult.RequeueAfter > 0 {
 		return ctrlResult, err
 	}
+	resources = append(resources, result...)
 
+	result, ctrlResult, err = f.reconcileGrafanaPlugin(ctx, fleet)
+	if err != nil || ctrlResult.RequeueAfter > 0 {
+		return ctrlResult, err
+	}
 	resources = append(resources, result...)
 
 	return f.reconcilePluginResources(ctx, fleet, resources)

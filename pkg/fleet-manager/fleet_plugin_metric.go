@@ -254,12 +254,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 	}
 	metricCfg := fleet.Spec.Plugin.Metric
 	fs := manifests.BuiltinOrDir("") // TODO: make it configurable
-	fleetOwnerRef := &metav1.OwnerReference{
-		APIVersion: fleetapi.GroupVersion.String(),
-		Kind:       "Fleet", // TODO: use pkg typemeta
-		Name:       fleet.Name,
-		UID:        fleet.UID,
-	}
+	fleetOwnerRef := ownerReference(fleet)
 
 	b, err := plugin.RenderThanos(fs, fleetNN, fleetOwnerRef, metricCfg)
 	if err != nil {

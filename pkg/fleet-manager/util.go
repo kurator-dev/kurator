@@ -22,6 +22,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	fleetv1a1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 const (
@@ -75,5 +77,14 @@ func convertToSubset(endpoints sets.Set[string]) []corev1.EndpointSubset {
 				},
 			},
 		},
+	}
+}
+
+func ownerReference(fleet *fleetv1a1.Fleet) *metav1.OwnerReference {
+	return &metav1.OwnerReference{
+		APIVersion: fleetv1a1.GroupVersion.String(),
+		Kind:       "Fleet", // TODO: use pkg typemeta
+		Name:       fleet.Name,
+		UID:        fleet.UID,
 	}
 }
