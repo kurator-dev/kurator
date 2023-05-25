@@ -41,15 +41,11 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
-func (f *FleetManager) reconcileObjstoreSecretOwnerReference(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[string]*fleetCluster) error {
-	log := ctrl.LoggerFrom(ctx)
-	log = log.WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
-
+func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) error {
 	for _, cluster := range fleet.Spec.Clusters {
-		fleetCluster, ok := fleetClusters[cluster.Name]
+		fleetCluster, ok := fleetClusters[ClusterKey{cluster.Kind, cluster.Name}]
 		if !ok {
-			// should no happen
-			log.Error(nil, "failed to get cluster client")
+			// can happen when the cluster is not present
 			continue
 		}
 
@@ -83,16 +79,15 @@ func (f *FleetManager) reconcileObjstoreSecretOwnerReference(ctx context.Context
 
 // reconcileSidecarRemoteService reconciles a headless service named thanos-sidecar-remote, and ensure owner reference is set for all resources
 // TODO: find a better way to collect service endpoints of thanos-sidecar-remote service after all helm releases are reconciled
-func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[string]*fleetCluster) error {
+func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) error {
 	log := ctrl.LoggerFrom(ctx)
 	log = log.WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
 
 	endpoints := sets.New[string]()
 	for _, cluster := range fleet.Spec.Clusters {
-		fleetCluster, ok := fleetClusters[cluster.Name]
+		fleetCluster, ok := fleetClusters[ClusterKey{cluster.Kind, cluster.Name}]
 		if !ok {
-			// should no happen
-			log.Error(nil, "failed to get cluster client")
+			// it can happen when the cluster is not present
 			continue
 		}
 
@@ -204,8 +199,8 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 	return nil
 }
 
-// syncObjstoreSecret syncs the secret to the cluster
-func (f *FleetManager) syncObjstoreSecret(ctx context.Context, fleetCluster *fleetCluster, secret *corev1.Secret) error {
+// syncObjStoreSecret syncs the secret to the cluster
+func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *fleetCluster, secret *corev1.Secret) error {
 	_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Get(ctx, secret.Namespace, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
@@ -239,7 +234,7 @@ func (f *FleetManager) syncObjstoreSecret(ctx context.Context, fleetCluster *fle
 	return nil
 }
 
-func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[string]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
+func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx).WithValues("fleet", client.ObjectKeyFromObject(fleet))
 
 	if fleet.Spec.Plugin == nil ||
@@ -284,15 +279,14 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 
 	log.V(4).Info("start to reconcile prometheus plugin for every cluster in fleet")
 	for _, c := range fleet.Spec.Clusters {
-		fleetCluster, ok := fleetClusters[c.Name]
+		fleetCluster, ok := fleetClusters[ClusterKey{c.Kind, c.Name}]
 		if !ok {
-			// should no happen
-			log.Error(nil, "failed to get cluster client")
+			// could happen when cluster not present
 			continue
 		}
 
 		// TODO: find a better way to sync objstore secret to member clusters
-		if err := f.syncObjstoreSecret(ctx, fleetCluster, promSecret); err != nil {
+		if err := f.syncObjStoreSecret(ctx, fleetCluster, promSecret); err != nil {
 			return nil, ctrl.Result{}, fmt.Errorf("failed to reconcile objstore secret for cluster %s: %w", c.Name, err)
 		}
 
@@ -323,7 +317,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 	}
 
 	log.V(4).Info("begin to reconcile owner reference for metric plugin")
-	if err := f.reconcileObjstoreSecretOwnerReference(ctx, fleet, fleetClusters); err != nil {
+	if err := f.reconcileObjStoreSecretOwnerReference(ctx, fleet, fleetClusters); err != nil {
 		return nil, ctrl.Result{}, err
 	}
 

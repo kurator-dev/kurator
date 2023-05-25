@@ -61,47 +61,39 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	var readyClusters []ClusterInterface
 	clusterMap := make(map[string]struct{}, len(fleet.Spec.Clusters))
 	// Loop over cluster, and add labels to the cluster
-	for _, c := range fleet.Spec.Clusters {
-		cluster := c
+	for _, cluster := range fleet.Spec.Clusters {
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
-		currentCLuster, err := f.getFleetClusterInterface(ctx, cluster.Kind, clusterKey)
+		currentCluster, err := f.getFleetClusterInterface(ctx, cluster.Kind, clusterKey)
 		if err != nil {
-			log.Error(err, "fail to get fleet cluster", "cluster", clusterKey, "kind", cluster.Kind)
-			return result, nil
+			if !apierrors.IsNotFound(err) {
+				log.Error(err, "unable to fetch cluster", "cluster", clusterKey, "kind", cluster.Kind)
+				return result, err
+			}
+			unreadyClusters++
+			continue
 		}
 
 		// In case multiple clusters of different kinds have the same name.
-		clusterMap[generateClusterNameInKarmada(currentCLuster)] = struct{}{}
+		clusterMap[generateClusterNameInKarmada(currentCluster)] = struct{}{}
 
-		if err != nil {
-			if !apierrors.IsNotFound(err) {
-				log.Error(err, "unable to fetch cluster", "cluster", clusterKey)
-				return result, err
+		// label the cluster
+		if currentCluster.GetObject().GetLabels() == nil {
+			currentCluster.GetObject().SetLabels(make(map[string]string))
+		}
+		if currentCluster.GetObject().GetLabels()[FleetLabel] != fleet.Name {
+			currentCluster.GetObject().GetLabels()[FleetLabel] = fleet.Name
+			err = f.Update(ctx, currentCluster.GetObject())
+			if err != nil {
+				log.Error(err, "unable to label cluster", "cluster", clusterKey)
+				return ctrl.Result{}, err
 			}
-			log.Info("cluster not found yet", "cluster", clusterKey)
-			result.RequeueAfter = RequeueAfter
+		}
+		// Register the ready cluster to the control plane
+		if currentCluster.IsReady() {
+			readyClusters = append(readyClusters, currentCluster)
 		} else {
-			// label the cluster
-			if currentCLuster.GetObject().GetLabels() == nil {
-				currentCLuster.GetObject().SetLabels(make(map[string]string))
-			}
-			if currentCLuster.GetObject().GetLabels()[FleetLabel] != fleet.Name {
-				labels := currentCLuster.GetObject().GetLabels()
-				labels[FleetLabel] = fleet.Name
-				currentCLuster.GetObject().SetLabels(labels)
-				err = f.Update(ctx, currentCLuster.GetObject())
-				if err != nil {
-					log.Error(err, "unable to label cluster", "cluster", clusterKey)
-					return ctrl.Result{}, err
-				}
-			}
-			// Register the ready cluster to the control plane
-			if currentCLuster.IsReady() {
-				readyClusters = append(readyClusters, currentCLuster)
-			} else {
-				unreadyClusters++
-			}
+			unreadyClusters++
 		}
 	}
 
@@ -186,22 +178,7 @@ func (f *FleetManager) reconcileClustersOnDelete(ctx context.Context, fleet *fle
 	for _, cluster := range fleet.Spec.Clusters {
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
-
-		var currentCLuster ClusterInterface
-		var err error
-		if cluster.Kind == ClusterKind {
-			var cluster clusterv1alpha1.Cluster
-			err = f.Get(ctx, clusterKey, &cluster)
-			currentCLuster = &cluster
-		} else if cluster.Kind == AttachedClusterKind {
-			var attachedCluster clusterv1alpha1.AttachedCluster
-			err = f.Get(ctx, clusterKey, &attachedCluster)
-			currentCLuster = &attachedCluster
-		} else {
-			log.Error(nil, "unsupported cluster kind", "cluster", clusterKey, "kind", cluster.Kind)
-			return result, nil
-		}
-
+		currentCluster, err := f.getFleetClusterInterface(ctx, cluster.Kind, clusterKey)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				log.Error(err, "unable to fetch cluster", "cluster", clusterKey)
@@ -209,9 +186,9 @@ func (f *FleetManager) reconcileClustersOnDelete(ctx context.Context, fleet *fle
 			}
 			log.Info("cluster not found maybe deleted or not created", "cluster", clusterKey)
 		} else {
-			if currentCLuster.GetObject().GetLabels()[FleetLabel] == fleet.Name {
-				delete(currentCLuster.GetObject().GetLabels(), FleetLabel)
-				err = f.Update(ctx, currentCLuster.GetObject())
+			if currentCluster.GetObject().GetLabels()[FleetLabel] == fleet.Name {
+				delete(currentCluster.GetObject().GetLabels(), FleetLabel)
+				err = f.Update(ctx, currentCluster.GetObject())
 				if err != nil {
 					log.Error(err, "unable to remove cluster label", "cluster", clusterKey)
 					return result, err
@@ -305,6 +282,7 @@ func (f *FleetManager) unjoinCluster(ctx context.Context, controlPlane *restclie
 	return nil
 }
 
+// TODO: rewrite it to reduce conflict
 // generateClusterNameInKarmada generate the name for karmada
 func generateClusterNameInKarmada(cluster ClusterInterface) string {
 	// to ensure a unique name in Karmada, add the suffix of the kind to avoid the possibility of different kind clusters having the same name.

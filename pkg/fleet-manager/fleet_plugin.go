@@ -37,7 +37,7 @@ const (
 	NoneClusterIP = "None"
 )
 
-func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[string]*fleetCluster) (ctrl.Result, error) {
+func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
 	var resources kube.ResourceList
 	result, ctrlResult, err := f.reconcileMetricPlugin(ctx, fleet, fleetClusters)
 	if err != nil || ctrlResult.RequeueAfter > 0 {
