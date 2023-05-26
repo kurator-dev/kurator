@@ -19,13 +19,14 @@ package fleet
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1a2 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,12 +38,12 @@ import (
 )
 
 // syncPolicyResource synchronizes the sync policy resources for a given application.
-func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy) error {
+func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) error {
 	log := ctrl.LoggerFrom(ctx)
-	sourceKind := app.Spec.Source.Kind
+	sourceKind := findSourceKind(app)
 
-	// Merge the list of clusters and attached clusters into a single list.
-	fleetClusterList, err := a.mergeClusterLists(ctx, fleet)
+	// Merge the list of clusters and attached clusters into a single list. also mapping relation will be added here
+	fleetClusterList, err := a.generateFleetCluster(ctx, fleet, app)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 		// handle gitRepo + kustomization
 		if sourceKind == GitRepoKind {
 			kustomization := syncPolicy.Kustomization
-			kustomizationName := generateKustomizationName(app, syncPolicy, currentFleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, currentFleetCluster.GetObject().GetName())
+			kustomizationName := generateKustomizationName(app, currentFleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, currentFleetCluster.GetObject().GetName(), policyName)
 
 			// create flux kustomization using kubeconfig and source.
 			if err := a.syncKustomizationForCluster(ctx, app, kustomization, kubeConfig, kustomizationName); err != nil {
@@ -73,7 +74,7 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 		// handle helmRepo + helmRelease
 		if sourceKind == HelmRepoKind {
 			helmRelease := syncPolicy.Helm
-			helmReleaseName := generateHelmReleaseName(app, syncPolicy, currentFleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, currentFleetCluster.GetObject().GetName())
+			helmReleaseName := generateHelmReleaseName(app, currentFleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, currentFleetCluster.GetObject().GetName(), policyName)
 
 			// create flux helmRelease using kubeconfig and source.
 			if err := a.syncHelmReleaseForCluster(ctx, app, helmRelease, kubeConfig, helmReleaseName); err != nil {
@@ -92,7 +93,7 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 }
 
 // mergeClusterLists merges the lists of Clusters and AttachedClusters associated with the specified Fleet.
-func (a *ApplicationManager) mergeClusterLists(ctx context.Context, fleet *fleetapi.Fleet) ([]ClusterInterface, error) {
+func (a *ApplicationManager) generateFleetCluster(ctx context.Context, fleet *fleetapi.Fleet, app *applicationapi.Application) ([]ClusterInterface, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	var clusterList clusterv1alpha1.ClusterList
@@ -114,9 +115,21 @@ func (a *ApplicationManager) mergeClusterLists(ctx context.Context, fleet *fleet
 
 	var fleetClusterList []ClusterInterface
 	for _, cluster := range clusterList.Items {
+		// add map item
+		if clusterToApplicationMap[cluster.Name] == nil {
+			clusterToApplicationMap[cluster.Name] = make([]string, 0)
+		}
+		clusterToApplicationMap[cluster.Name] = append(clusterToApplicationMap[cluster.Name], app.Name)
+		// merge fleetClusterList
 		fleetClusterList = append(fleetClusterList, &cluster)
 	}
 	for _, attachedCluster := range attachedClusterList.Items {
+		// add map item
+		if clusterToApplicationMap[attachedCluster.Name] == nil {
+			clusterToApplicationMap[attachedCluster.Name] = make([]string, 0)
+		}
+		clusterToApplicationMap[attachedCluster.Name] = append(clusterToApplicationMap[attachedCluster.Name], app.Name)
+		// merge fleetClusterList
 		fleetClusterList = append(fleetClusterList, &attachedCluster)
 	}
 	return fleetClusterList, nil
@@ -243,7 +256,7 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 
 // syncSourceResource synchronizes the source resource based on the application's source specification.
 func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applicationapi.Application) error {
-	kind := app.Spec.Source.Kind
+	kind := findSourceKind(app)
 	// Based on the source kind, create the appropriate source object and synchronize it with the Kubernetes API server
 	switch kind {
 	case GitRepoKind:
@@ -260,7 +273,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, GitRepoKind)
 	case HelmRepoKind:
-		targetSource := &sourcev1a2.HelmRepository{
+		targetSource := &sourcev1b2.HelmRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -273,7 +286,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, HelmRepoKind)
 	case OCIRepoKind:
-		targetSource := &sourcev1a2.OCIRepository{
+		targetSource := &sourcev1b2.OCIRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -297,9 +310,9 @@ func createEmptyObject(resourceKind string) client.Object {
 	case GitRepoKind:
 		return &sourcev1.GitRepository{}
 	case HelmRepoKind:
-		return &sourcev1a2.HelmRepository{}
+		return &sourcev1b2.HelmRepository{}
 	case OCIRepoKind:
-		return &sourcev1a2.OCIRepository{}
+		return &sourcev1b2.OCIRepository{}
 	case KustomizationKind:
 		return &kustomizev1.Kustomization{}
 	case HelmReleaseKind:
@@ -345,9 +358,9 @@ func (a *ApplicationManager) syncResource(ctx context.Context, targetSource clie
 	case GitRepoKind:
 		err = a.updateGitRepository(ctx, currentResource.(*sourcev1.GitRepository), targetSource.(*sourcev1.GitRepository))
 	case HelmRepoKind:
-		err = a.updateHelmRepository(ctx, currentResource.(*sourcev1a2.HelmRepository), targetSource.(*sourcev1a2.HelmRepository))
+		err = a.updateHelmRepository(ctx, currentResource.(*sourcev1b2.HelmRepository), targetSource.(*sourcev1b2.HelmRepository))
 	case OCIRepoKind:
-		err = a.updateOCIRepository(ctx, currentResource.(*sourcev1a2.OCIRepository), targetSource.(*sourcev1a2.OCIRepository))
+		err = a.updateOCIRepository(ctx, currentResource.(*sourcev1b2.OCIRepository), targetSource.(*sourcev1b2.OCIRepository))
 	case KustomizationKind:
 		err = a.updateKustomization(ctx, currentResource.(*kustomizev1.Kustomization), targetSource.(*kustomizev1.Kustomization))
 	case HelmReleaseKind:
@@ -376,7 +389,7 @@ func (a *ApplicationManager) updateGitRepository(ctx context.Context, currentRes
 
 // updateHelmRepository updates the state of a current HelmRepository resource to match the provided target HelmRepository resource.
 // This function is used by syncResource to keep the actual state of HelmRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourcev1a2.HelmRepository, targetSource *sourcev1a2.HelmRepository) error {
+func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourcev1b2.HelmRepository, targetSource *sourcev1b2.HelmRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -386,7 +399,7 @@ func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentRe
 
 // updateOCIRepository updates the state of a current OCIRepository resource to match the provided target OCIRepository resource.
 // This function is used by syncResource to keep the actual state of OCIRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourcev1a2.OCIRepository, targetSource *sourcev1a2.OCIRepository) error {
+func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourcev1b2.OCIRepository, targetSource *sourcev1b2.OCIRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -414,38 +427,20 @@ func (a *ApplicationManager) updateHelmRelease(ctx context.Context, currentResou
 	return nil
 }
 
-// findSourceKind determines the type of the application's source.
-// An application can only have one specified source type. In case of none or multiple source types are specified,
-// this function returns an error. If successful, it returns the string representation of the source type.
-func findSourceKind(app *applicationapi.Application) (string, error) {
-	validCount := 0
-	validKind := ""
+// TODO: An application can only have one specified source type. In case of none or multiple source types are specified, should not do these check here, it should be done via validating webhook.
 
-	// TODO: should not do these check here, it should be done via validating webhook.
-	// Check for each type of source in the application and count the number of valid sources
-	gitRepo := app.Spec.Source.GitRepo
-	if gitRepo != nil {
-		validCount++
-		validKind = GitRepoKind
+// findSourceKind get the type of the application's source.
+func findSourceKind(app *applicationapi.Application) string {
+	if app.Spec.Source.GitRepo != nil {
+		return GitRepoKind
 	}
-	helmRepo := app.Spec.Source.HelmRepo
-	if helmRepo != nil {
-		validCount++
-		validKind = HelmRepoKind
+	if app.Spec.Source.HelmRepo != nil {
+		return HelmRepoKind
 	}
-	ociRepo := app.Spec.Source.OCIRepo
-	if ociRepo != nil {
-		validCount++
-		validKind = OCIRepoKind
+	if app.Spec.Source.OCIRepo != nil {
+		return OCIRepoKind
 	}
-
-	// If more than one or no sources are valid, return an error
-	if validCount != 1 {
-		return "", fmt.Errorf("only one type of source can be specified. The current specified count is %d", validCount)
-	}
-
-	// If only one source is valid, return its type
-	return validKind, nil
+	return ""
 }
 
 // generateKustomizationName constructs a unique name for Kustomization based on the provided application,
@@ -453,8 +448,8 @@ func findSourceKind(app *applicationapi.Application) (string, error) {
 // and is truncated to a maximum of 63 characters if needed.
 
 // generateKustomizationName constructs a unique name for Kustomization based on the provided application,
-func generateKustomizationName(app *applicationapi.Application, syncPolicy *applicationapi.ApplicationSyncPolicy, clusterKind, clusterName string) string {
-	name := app.Name + "-" + syncPolicy.Name + "-" + clusterKind + "-" + clusterName
+func generateKustomizationName(app *applicationapi.Application, clusterKind, clusterName, policyName string) string {
+	name := app.Name + "-" + policyName + "-" + clusterKind + "-" + clusterName
 	name = strings.ToLower(name)
 	if len(name) > 63 {
 		name = name[:63]
@@ -463,8 +458,8 @@ func generateKustomizationName(app *applicationapi.Application, syncPolicy *appl
 }
 
 // generateHelmReleaseName constructs a unique name for HelmRelease based on the provided application,
-func generateHelmReleaseName(app *applicationapi.Application, syncPolicy *applicationapi.ApplicationSyncPolicy, clusterKind, clusterName string) string {
-	name := app.Name + "-" + syncPolicy.Name + "-" + clusterKind + "-" + clusterName
+func generateHelmReleaseName(app *applicationapi.Application, clusterKind, clusterName, policyName string) string {
+	name := app.Name + "-" + policyName + "-" + clusterKind + "-" + clusterName
 	name = strings.ToLower(name)
 	if len(name) > 63 {
 		name = name[:63]
@@ -488,4 +483,13 @@ func generateApplicationOwnerRef(app *applicationapi.Application) metav1.OwnerRe
 		UID:        app.UID,
 	}
 	return ownerRef
+}
+
+func generatePolicyName(app *applicationapi.Application, index int) string {
+	// If no policy name is specified, set a default in the format `<application name>-<index>`.
+	if len(app.Spec.SyncPolicy[index].Name) == 0 {
+		return app.Name + "-" + strconv.Itoa(index)
+	}
+
+	return app.Spec.SyncPolicy[index].Name
 }

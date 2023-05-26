@@ -277,10 +277,6 @@ spec:
                     - interval
                     - url
                     type: object
-                  kind:
-                    description: Kind specifies the type of application source. This
-                      field is generated based on the other fields in ApplicationSource.
-                    type: string
                   ociRepo:
                     description: OCIRepositorySpec defines the desired state of OCIRepository
                     properties:

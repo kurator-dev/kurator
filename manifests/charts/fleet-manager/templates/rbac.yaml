@@ -115,6 +115,8 @@ rules:
       - "source.toolkit.fluxcd.io"
     resources:
       - helmrepositories
+      - gitrepositories
+      - ocirepositories
     verbs:
       - get
       - create

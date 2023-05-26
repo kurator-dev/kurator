@@ -20,12 +20,12 @@ import (
 	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1a2 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 )
 
 func init() {
 	_ = sourcev1.AddToScheme(Scheme)
-	_ = sourcev1a2.AddToScheme(Scheme)
+	_ = sourcev1b2.AddToScheme(Scheme)
 	_ = kustomizev1.AddToScheme(Scheme)
 	_ = helmv2b1.AddToScheme(Scheme)
 }

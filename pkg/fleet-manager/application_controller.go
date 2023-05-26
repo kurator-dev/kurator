@@ -19,15 +19,13 @@ package fleet
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1a2 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	apiserrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -41,18 +39,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
+	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 const (
 	GitRepoKind       = sourcev1.GitRepositoryKind
-	HelmRepoKind      = sourcev1a2.HelmRepositoryKind
-	OCIRepoKind       = sourcev1a2.OCIRepositoryKind
+	HelmRepoKind      = sourcev1b2.HelmRepositoryKind
+	OCIRepoKind       = sourcev1b2.OCIRepositoryKind
 	KustomizationKind = kustomizev1.KustomizationKind
 	HelmReleaseKind   = helmv2b1.HelmReleaseKind
 
 	ApplicationLabel     = "apps.kurator.dev/app-name"
-	AppsPolicyLabel      = "apps.kurator.dev/policy-name"
 	ApplicationKind      = "Application"
 	ApplicationFinalizer = "apps.kurator.dev"
 )
@@ -63,6 +61,10 @@ type ApplicationManager struct {
 	Scheme *runtime.Scheme
 }
 
+var fleetToApplicationMap = map[string][]string{}
+var clusterToApplicationMap = map[string][]string{}
+var attachedClusterToApplicationMap = map[string][]string{}
+
 // SetupWithManager sets up the controller with the Manager.
 func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	c, err := ctrl.NewControllerManagedBy(mgr).
@@ -72,18 +74,29 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 		return err
 	}
 
-	// TODO: Consider whether it's necessary to watch the fleet/cluster/attachedCluster.
-	//  For example, if a cluster is added or removed from the fleet, should the application respond correspondingly?
-	//  Note that the relationship between fleet/cluster/attachedCluster and application is single-to-many, which can be complex to implement.
+	// Set up watches for the updates to application's resource.
 	if err := c.Watch(
 		&source.Kind{Type: &fleetapi.Fleet{}},
-		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
+		handler.EnqueueRequestsFromMapFunc(a.fleetToApplicationFunc),
 	); err != nil {
-		return fmt.Errorf("failed to add a Watch for GitRepository: %v", err)
+		return fmt.Errorf("failed to add a Watch for Fleet: %v", err)
+	}
+
+	if err := c.Watch(
+		&source.Kind{Type: &clusterv1alpha1.Cluster{}},
+		handler.EnqueueRequestsFromMapFunc(a.clusterToApplicationFunc),
+	); err != nil {
+		return fmt.Errorf("failed to add a Watch for Cluster: %v", err)
+	}
+
+	if err := c.Watch(
+		&source.Kind{Type: &clusterv1alpha1.AttachedCluster{}},
+		handler.EnqueueRequestsFromMapFunc(a.attachedClusterToApplicationFunc),
+	); err != nil {
+		return fmt.Errorf("failed to add a Watch for AttachedCluster: %v", err)
 	}
 
 	// Set up watches for the updates to application's status.
-	// GitRepository/HelmRepository/Kustomization/HelmRelease and application have a many-to-single relationship.
 	if err := c.Watch(
 		&source.Kind{Type: &sourcev1.GitRepository{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
@@ -92,10 +105,17 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1a2.HelmRepository{}},
+		&source.Kind{Type: &sourcev1b2.HelmRepository{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for HelmRepository: %v", err)
+	}
+
+	if err := c.Watch(
+		&source.Kind{Type: &sourcev1b2.OCIRepository{}},
+		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
+	); err != nil {
+		return fmt.Errorf("failed to add a Watch for OCIRepository: %v", err)
 	}
 
 	if err := c.Watch(
@@ -118,7 +138,7 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
 	app := &applicationapi.Application{}
 	if err := a.Get(ctx, req.NamespacedName, app); err != nil {
-		if apiserrors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, errors.Wrapf(err, "failed to get application %s", req.NamespacedName)
@@ -145,11 +165,10 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		return ctrl.Result{}, nil
 	}
 
-	// Define object key for fleet based on the current policy's destination
+	// there only one fleet, so pre-fetch it here.
 	fleetKey := client.ObjectKey{
 		Namespace: app.Namespace,
-		// there only one fleet
-		Name: app.Spec.SyncPolicy[0].Destination.Fleet,
+		Name:      app.Spec.SyncPolicy[0].Destination.Fleet,
 	}
 	fleet := &fleetapi.Fleet{}
 	// Retrieve fleet object based on the defined fleet key
@@ -158,28 +177,16 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 			log.Info("fleet does not exist", "fleet", fleetKey)
 			return ctrl.Result{RequeueAfter: RequeueAfter}, nil
 		}
-
 		// Log error and requeue request if error occurred during fleet retrieval
 		log.Error(err, "failed to find fleet", "fleet", fleetKey)
 		return ctrl.Result{}, err
 	}
 
-	// label the fleet
-	if fleet.GetLabels() == nil {
-		fleet.SetLabels(make(map[string]string))
+	// Add this relation to fleetToApplicationMap
+	if fleetToApplicationMap[fleet.Name] == nil {
+		fleetToApplicationMap[fleet.Name] = make([]string, 0)
 	}
-	// todo: there is a bug here if more than one application refer the same fleet: the new one will override the old
-	//  but it is needed to reconcile application when the fleet' cluster is all joined
-	if fleet.GetLabels()[ApplicationLabel] != app.Name {
-		labels := fleet.GetLabels()
-		labels[ApplicationLabel] = app.Name
-		fleet.SetLabels(labels)
-		err := a.Update(ctx, fleet)
-		if err != nil {
-			log.Error(err, "unable to label fleet", "fleet", fleet.Name)
-			return ctrl.Result{}, err
-		}
-	}
+	fleetToApplicationMap[fleet.Name] = append(fleetToApplicationMap[fleet.Name], app.Name)
 
 	// Handle deletion reconciliation loop.
 	if app.DeletionTimestamp != nil {
@@ -198,13 +205,13 @@ func (a *ApplicationManager) reconcile(ctx context.Context, app *applicationapi.
 		return result, err
 	}
 
-	if result, err := a.reconcileSyncResources(ctx, app, fleet); err != nil || result.RequeueAfter > 0 {
+	if result, err := a.reconcileApplicationResources(ctx, app, fleet); err != nil || result.RequeueAfter > 0 {
 		log.Error(err, "failed to reconcileSyncResources")
 
 		return result, err
 	}
 
-	if result, err := a.reconcileSyncStatus(ctx, app); err != nil || result.RequeueAfter > 0 {
+	if result, err := a.reconcileStatus(ctx, app); err != nil || result.RequeueAfter > 0 {
 		log.Error(err, "failed to reconcileSyncStatus")
 
 		return result, err
@@ -213,28 +220,16 @@ func (a *ApplicationManager) reconcile(ctx context.Context, app *applicationapi.
 	return ctrl.Result{}, nil
 }
 
-// reconcileInitializeParameters initializes the parameters for the given application. It also ensures some parameters is valid.
+// reconcileInitializeParameters initializes the parameters for the given application.
 func (a *ApplicationManager) reconcileInitializeParameters(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	// Find the source kind for the given application. Return an error if no source or more than one source is specified.
-	sourceKind, err := findSourceKind(app)
-	if err != nil {
-		log.Error(err, "failed to find source kind")
-		return ctrl.Result{}, err
-	}
-
-	// Set the source kind for the application.
-	app.Spec.Source.Kind = sourceKind
+	sourceKind := findSourceKind(app)
 
 	// Iterate over all sync policies.
-	for index, policy := range app.Spec.SyncPolicy {
-		// If no policy name is specified, set a default in the format `<application name>-<index>`.
-		if len(policy.Name) == 0 {
-			policy.Name = app.Name + "-" + strconv.Itoa(index)
-		}
-
+	for _, policy := range app.Spec.SyncPolicy {
 		// Currently, only two pairs of source types are supported: 'gitRepo + kustomization' and 'helmRepo + helmRelease'.
+		// TODO: support other pairs
 		if sourceKind == GitRepoKind && policy.Kustomization == nil {
 			log.Error(fmt.Errorf("source kind is GitRepoKind, but policy.Kustomization is nil"), "policyName", policy.Name)
 			return ctrl.Result{}, nil
@@ -258,7 +253,7 @@ func (a *ApplicationManager) reconcileInitializeParameters(ctx context.Context, 
 // The associated resources are categorized as 'source' and 'policy'.
 // 'source' could be one of gitRepo, helmRepo, or ociRepo while 'policy' can be either kustomizations or helmReleases.
 // Any change in Application configuration could potentially lead to creation, deletion, or modification of associated resources in the Kubernetes cluster.
-func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
+func (a *ApplicationManager) reconcileApplicationResources(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	// Synchronize source resource based on application configuration
 	if err := a.syncSourceResource(ctx, app); err != nil {
@@ -269,10 +264,11 @@ func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *ap
 	// todo: if we need to delete the kustomization/helmReleases when the fleet is removed from the application?
 
 	// Iterate over each policy in the application's spec.SyncPolicy
-	for _, policy := range app.Spec.SyncPolicy {
+	for index, policy := range app.Spec.SyncPolicy {
+		policyName := generatePolicyName(app, index)
 		// A policy has a fleet, and a fleet has many clusters. Therefore, a policy may need to create or update multiple kustomizations/helmReleases for each cluster.
 		// Synchronize policy resource based on current application, fleet, and policy configuration
-		if err := a.syncPolicyResource(ctx, app, fleet, policy); err != nil {
+		if err := a.syncPolicyResource(ctx, app, fleet, policy, policyName); err != nil {
 			log.Error(err, "failed to sync policy resource", "fleet", fleet.Name)
 			return ctrl.Result{}, err
 		}
@@ -283,7 +279,7 @@ func (a *ApplicationManager) reconcileSyncResources(ctx context.Context, app *ap
 // reconcileSyncStatus updates the status of resources associated with the current Application resource.
 // It does this by fetching the current status of the source (either GitRepoKind or HelmRepoKind) and the sync policy from the API server,
 // and updating the Application's status to reflect these current statuses.
-func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
+func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// reconcile Sync source Status
@@ -292,8 +288,9 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 		Namespace: app.GetNamespace(),
 	}
 
+	sourceKind := findSourceKind(app)
 	// Depending on source kind in application specifications, fetch resource status and update application's source status
-	switch app.Spec.Source.Kind {
+	switch sourceKind {
 	case GitRepoKind:
 		currentResource := &sourcev1.GitRepository{}
 		if err := a.Client.Get(ctx, sourceKey, currentResource); err != nil {
@@ -303,7 +300,7 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 		app.Status.SourceStatus.GitRepoStatus = &currentResource.Status
 
 	case HelmRepoKind:
-		currentResource := &sourcev1a2.HelmRepository{}
+		currentResource := &sourcev1b2.HelmRepository{}
 		if err := a.Client.Get(ctx, sourceKey, currentResource); err != nil {
 			log.Error(err, "failed to get HelmRepository from the API server when reconciling status")
 			return ctrl.Result{}, err
@@ -312,7 +309,7 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 	}
 
 	// Depending on source kind in application specifications, fetch associated resources and update application's sync status
-	switch app.Spec.Source.Kind {
+	switch sourceKind {
 	case GitRepoKind:
 		var kustomizationList kustomizev1.KustomizationList
 		if err := a.Client.List(ctx, &kustomizationList, client.InNamespace(app.Namespace), client.MatchingLabels{ApplicationLabel: app.Name}); err != nil {
@@ -352,13 +349,16 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	// remove application label on fleet
-	if fleet.GetLabels()[FleetLabel] == app.Name {
-		delete(fleet.GetLabels(), FleetLabel)
-		err := a.Update(ctx, fleet)
-		if err != nil {
-			log.Error(err, "unable to remove application label", "fleet", fleet.GetName())
-			return ctrl.Result{}, nil
+	if _, ok := fleetToApplicationMap[fleet.Name]; !ok {
+		log.Info("current fleet is not recorded in fleetToApplicationMap")
+	} else {
+		// remove current mapping of fleetToApplicationMap
+		applications := fleetToApplicationMap[fleet.Name]
+		for i, application := range applications {
+			if application == app.Name {
+				// delete it
+				fleetToApplicationMap[fleet.Name] = append(applications[:i], applications[i+1:]...)
+			}
 		}
 	}
 
@@ -381,4 +381,58 @@ func (a *ApplicationManager) objectToApplicationFunc(o client.Object) []ctrl.Req
 	}
 
 	return nil
+}
+
+func (a *ApplicationManager) fleetToApplicationFunc(o client.Object) []ctrl.Request {
+	c, ok := o.(*fleetapi.Fleet)
+	if !ok {
+		panic(fmt.Sprintf("Expected a Fleet but got a %T", o))
+	}
+	var result []ctrl.Request
+
+	applicationNames, ok := fleetToApplicationMap[c.Name]
+
+	if ok {
+		for _, applicationName := range applicationNames {
+			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: c.GetNamespace(), Name: applicationName}})
+		}
+	}
+
+	return result
+}
+
+func (a *ApplicationManager) clusterToApplicationFunc(o client.Object) []ctrl.Request {
+	c, ok := o.(*clusterv1alpha1.Cluster)
+	if !ok {
+		panic(fmt.Sprintf("Expected a Fleet but got a %T", o))
+	}
+	var result []ctrl.Request
+
+	applicationNames, ok := clusterToApplicationMap[c.Name]
+
+	if ok {
+		for _, applicationName := range applicationNames {
+			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: c.GetNamespace(), Name: applicationName}})
+		}
+	}
+
+	return result
+}
+
+func (a *ApplicationManager) attachedClusterToApplicationFunc(o client.Object) []ctrl.Request {
+	c, ok := o.(*clusterv1alpha1.AttachedCluster)
+	if !ok {
+		panic(fmt.Sprintf("Expected a Fleet but got a %T", o))
+	}
+	var result []ctrl.Request
+
+	applicationNames, ok := attachedClusterToApplicationMap[c.Name]
+
+	if ok {
+		for _, applicationName := range applicationNames {
+			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: c.GetNamespace(), Name: applicationName}})
+		}
+	}
+
+	return result
 }
