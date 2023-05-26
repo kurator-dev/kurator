@@ -1,0 +1,12 @@
+apiVersion: fleet.kurator.dev/v1alpha1
+kind: Fleet
+metadata:
+  name: fleet-helmrepo
+  namespace: app-helmrepo
+spec:
+  clusters:
+    - name: ac3
+      kind: AttachedCluster
+    - name: ac4
+      kind: AttachedCluster
+

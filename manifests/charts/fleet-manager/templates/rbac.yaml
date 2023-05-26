@@ -14,6 +14,27 @@ rules:
       - update
       - watch
   - apiGroups:
+      - apps.kurator.dev
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - kustomize.toolkit.fluxcd.io
+    resources:
+      - '*'
+    verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
       - cluster.kurator.dev
     resources:
       - "*"
@@ -94,6 +115,8 @@ rules:
       - "source.toolkit.fluxcd.io"
     resources:
       - helmrepositories
+      - gitrepositories
+      - ocirepositories
     verbs:
       - get
       - create

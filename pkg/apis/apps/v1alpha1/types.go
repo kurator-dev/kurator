@@ -17,10 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
+	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourceapi "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -52,9 +52,9 @@ type ApplicationSource struct {
 	// +optional
 	GitRepo *sourcev1.GitRepositorySpec `json:"gitRepo,omitempty"`
 	// +optional
-	HelmRepo *sourceapi.HelmRepositorySpec `json:"helmRepo,omitempty"`
+	HelmRepo *sourcev1b2.HelmRepositorySpec `json:"helmRepo,omitempty"`
 	// +optional
-	OCIRepo *sourceapi.OCIRepositorySpec `json:"ociRepo,omitempty"`
+	OCIRepo *sourcev1b2.OCIRepositorySpec `json:"ociRepo,omitempty"`
 }
 
 // ApplicationDestination defines the configuration to dispatch an artifact to a fleet or specific clusters.
@@ -94,16 +94,16 @@ type ApplicationStatus struct {
 
 // applicationSourceStatus defines the observed state of the artifact source.
 type ApplicationSourceStatus struct {
-	GitRepoStatus  *sourcev1.GitRepositoryStatus   `json:"gitRepoStatus,omitempty"`
-	HelmRepoStatus *sourceapi.HelmRepositoryStatus `json:"helmRepoStatus,omitempty"`
-	OCIRepoStatus  *sourceapi.OCIRepositoryStatus  `json:"ociRepoStatus,omitempty"`
+	GitRepoStatus  *sourcev1.GitRepositoryStatus    `json:"gitRepoStatus,omitempty"`
+	HelmRepoStatus *sourcev1b2.HelmRepositoryStatus `json:"helmRepoStatus,omitempty"`
+	OCIRepoStatus  *sourcev1b2.OCIRepositoryStatus  `json:"ociRepoStatus,omitempty"`
 }
 
 // ApplicationSyncStatus defines the observed state of Application sync.
 type ApplicationSyncStatus struct {
 	Name                string                           `json:"name,omitempty"`
 	KustomizationStatus *kustomizev1.KustomizationStatus `json:"kustomizationStatus,omitempty"`
-	HelmReleaseStatus   *helmv2beta1.HelmReleaseStatus   `json:"HelmReleaseStatus,omitempty"`
+	HelmReleaseStatus   *helmv2b1.HelmReleaseStatus      `json:"HelmReleaseStatus,omitempty"`
 }
 
 // ApplicationList contains a list of Application.
