@@ -1,5 +1,5 @@
 ```console
-helm install kurator-fleet-manager out/charts/fleet-manager-{{< kurator-version >}}.tgz -n kurator-system
+helm install --create-namespace kurator-fleet-manager out/charts/fleet-manager-{{< kurator-version >}}.tgz -n kurator-system
 ```
 
 After a while, you can see kurator fleet manager running.

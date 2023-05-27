@@ -8,5 +8,5 @@ VERSION={{< kurator-version >}} make gen-chart
 Load image to kind cluster:
 
 ```console
-kind load docker-image ghcr.io/kurator-dev/cluster-operator:{{< kurator-version >}} --name kurator
+kind load docker-image ghcr.io/kurator-dev/cluster-operator:{{< kurator-version >}} --name kurator-host
 ```

@@ -22,7 +22,7 @@ VERSION={{< kurator-version >}} make gen-chart
 Load image to kind cluster:
 
 ```console
-kind load docker-image ghcr.io/kurator-dev/fleet-manager:{{< kurator-version >}} --name kurator
+kind load docker-image ghcr.io/kurator-dev/fleet-manager:{{< kurator-version >}} --name kurator-host
 ```
 
 Install fleet manager into the management cluster.

@@ -30,7 +30,7 @@ EOF
 Check the controller status:
 
 ```console
-kubectl get po -n minio
+kubectl get po -n monitoring
 ```
 
 *Optional*, Create a secret for Thanos:
