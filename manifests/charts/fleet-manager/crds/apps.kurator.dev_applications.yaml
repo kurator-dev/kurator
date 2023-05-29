@@ -45,6 +45,46 @@ spec:
                     description: GitRepositorySpec specifies the required configuration
                       to produce an Artifact for a Git repository.
                     properties:
+                      accessFrom:
+                        description: 'AccessFrom specifies an Access Control List
+                          for allowing cross-namespace references to this object.
+                          NOTE: Not implemented, provisional as of https://github.com/fluxcd/flux2/pull/2092'
+                        properties:
+                          namespaceSelectors:
+                            description: NamespaceSelectors is the list of namespace
+                              selectors to which this ACL applies. Items in this list
+                              are evaluated using a logical OR operation.
+                            items:
+                              description: NamespaceSelector selects the namespaces
+                                to which this ACL applies. An empty map of MatchLabels
+                                matches all namespaces in a cluster.
+                              properties:
+                                matchLabels:
+                                  additionalProperties:
+                                    type: string
+                                  description: MatchLabels is a map of {key,value}
+                                    pairs. A single {key,value} in the matchLabels
+                                    map is equivalent to an element of matchExpressions,
+                                    whose key field is "key", the operator is "In",
+                                    and the values array contains only "value". The
+                                    requirements are ANDed.
+                                  type: object
+                              type: object
+                            type: array
+                        required:
+                        - namespaceSelectors
+                        type: object
+                      gitImplementation:
+                        default: go-git
+                        description: 'GitImplementation specifies which Git client
+                          library implementation to use. Defaults to ''go-git'', valid
+                          values are (''go-git'', ''libgit2''). Deprecated: gitImplementation
+                          is deprecated now that ''go-git'' is the only supported
+                          implementation.'
+                        enum:
+                        - go-git
+                        - libgit2
+                        type: string
                       ignore:
                         description: Ignore overrides the set of excluded patterns
                           in the .sourceignore format (which is the same as .gitignore).
@@ -1255,6 +1295,17 @@ spec:
                           - type
                           type: object
                         type: array
+                      contentConfigChecksum:
+                        description: "ContentConfigChecksum is a checksum of all the
+                          configurations related to the content of the source artifact:
+                          - .spec.ignore - .spec.recurseSubmodules - .spec.included
+                          and the checksum of the included artifacts observed in .status.observedGeneration
+                          version of the object. This can be used to determine if
+                          the content of the included repository has changed. It has
+                          the format of `<algo>:<checksum>`, for example: `sha256:<checksum>`.
+                          \n Deprecated: Replaced with explicit fields for observed
+                          artifact content config in the status."
+                        type: string
                       includedArtifacts:
                         description: IncludedArtifacts contains a list of the last
                           successfully included Artifacts as instructed by GitRepositorySpec.Include.
@@ -1322,7 +1373,7 @@ spec:
                         type: string
                       observedInclude:
                         description: ObservedInclude is the observed list of GitRepository
-                          resources used to produce the current Artifact.
+                          resources used to to produce the current Artifact.
                         items:
                           description: GitRepositoryInclude specifies a local reference
                             to a GitRepository which Artifact (sub-)contents must
@@ -1354,6 +1405,11 @@ spec:
                         description: ObservedRecurseSubmodules is the observed resource
                           submodules configuration used to produce the current Artifact.
                         type: boolean
+                      url:
+                        description: URL is the dynamic fetch link for the latest
+                          Artifact. It is provided on a "best effort" basis, and using
+                          the precise GitRepositoryStatus.Artifact data is recommended.
+                        type: string
                     type: object
                   helmRepoStatus:
                     description: HelmRepositoryStatus records the observed state of

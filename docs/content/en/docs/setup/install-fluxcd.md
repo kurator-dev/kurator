@@ -20,8 +20,6 @@ imageAutomationController:
   create: false
 imageReflectionController:
   create: false
-kustomizeController:
-  create: false
 notificationController:
   create: false
 EOF

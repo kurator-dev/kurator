@@ -23,10 +23,9 @@ import (
 	"strings"
 
 	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
+	kustomizev1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -150,7 +149,7 @@ func (a *ApplicationManager) generateKubeConfig(fleetCluster ClusterInterface) *
 // syncKustomizationForCluster ensures that the Kustomization object is in sync with Flux's requirements for the object.
 func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, app *applicationapi.Application, kustomization *applicationapi.Kustomization, kubeConfig *fluxmeta.KubeConfigReference, kustomizationName string) error {
 	// Create a target Kustomization object with details extracted from the provided application's Kustomization spec
-	targetKustomization := &kustomizev1.Kustomization{
+	targetKustomization := &kustomizev1beta2.Kustomization{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      kustomizationName,
 			Namespace: app.Namespace,
@@ -159,7 +158,7 @@ func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, ap
 			},
 			OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
 		},
-		Spec: kustomizev1.KustomizationSpec{
+		Spec: kustomizev1beta2.KustomizationSpec{
 			// Populate the Kustomization spec with information from the provided Kustomization spec
 			// Include all relevant details for the Kustomization, like DependsOn, Interval, RetryInterval, KubeConfig, Path, and more.
 			DependsOn:     kustomization.DependsOn,
@@ -170,7 +169,7 @@ func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, ap
 			Prune:         kustomization.Prune,
 			Patches:       kustomization.Patches,
 			Images:        kustomization.Images,
-			SourceRef: kustomizev1.CrossNamespaceSourceReference{
+			SourceRef: kustomizev1beta2.CrossNamespaceSourceReference{
 				Kind: GitRepoKind,
 				Name: generateSourceName(app),
 			},
@@ -184,7 +183,7 @@ func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, ap
 
 	// If available, apply Kustomization CommonMetadata data to the target Kustomization
 	if kustomization.CommonMetadata != nil {
-		targetKustomization.Spec.CommonMetadata = &kustomizev1.CommonMetadata{
+		targetKustomization.Spec.CommonMetadata = &kustomizev1beta2.CommonMetadata{
 			Annotations: kustomization.CommonMetadata.Annotations,
 			Labels:      kustomization.CommonMetadata.Labels,
 		}
@@ -260,7 +259,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 	// Based on the source kind, create the appropriate source object and synchronize it with the Kubernetes API server
 	switch kind {
 	case GitRepoKind:
-		targetSource := &sourcev1.GitRepository{
+		targetSource := &sourcev1beta2.GitRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -273,7 +272,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, GitRepoKind)
 	case HelmRepoKind:
-		targetSource := &sourcev1b2.HelmRepository{
+		targetSource := &sourcev1beta2.HelmRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -286,7 +285,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, HelmRepoKind)
 	case OCIRepoKind:
-		targetSource := &sourcev1b2.OCIRepository{
+		targetSource := &sourcev1beta2.OCIRepository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      generateSourceName(app),
 				Namespace: app.Namespace,
@@ -308,13 +307,13 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 func createEmptyObject(resourceKind string) client.Object {
 	switch resourceKind {
 	case GitRepoKind:
-		return &sourcev1.GitRepository{}
+		return &sourcev1beta2.GitRepository{}
 	case HelmRepoKind:
-		return &sourcev1b2.HelmRepository{}
+		return &sourcev1beta2.HelmRepository{}
 	case OCIRepoKind:
-		return &sourcev1b2.OCIRepository{}
+		return &sourcev1beta2.OCIRepository{}
 	case KustomizationKind:
-		return &kustomizev1.Kustomization{}
+		return &kustomizev1beta2.Kustomization{}
 	case HelmReleaseKind:
 		return &helmv2b1.HelmRelease{}
 	default:
@@ -356,13 +355,13 @@ func (a *ApplicationManager) syncResource(ctx context.Context, targetSource clie
 	// The following is a type assertion in Go. Type assertion is used here instead of reflection due to its safety and simplicity.
 	switch resourceKind {
 	case GitRepoKind:
-		err = a.updateGitRepository(ctx, currentResource.(*sourcev1.GitRepository), targetSource.(*sourcev1.GitRepository))
+		err = a.updateGitRepository(ctx, currentResource.(*sourcev1beta2.GitRepository), targetSource.(*sourcev1beta2.GitRepository))
 	case HelmRepoKind:
-		err = a.updateHelmRepository(ctx, currentResource.(*sourcev1b2.HelmRepository), targetSource.(*sourcev1b2.HelmRepository))
+		err = a.updateHelmRepository(ctx, currentResource.(*sourcev1beta2.HelmRepository), targetSource.(*sourcev1beta2.HelmRepository))
 	case OCIRepoKind:
-		err = a.updateOCIRepository(ctx, currentResource.(*sourcev1b2.OCIRepository), targetSource.(*sourcev1b2.OCIRepository))
+		err = a.updateOCIRepository(ctx, currentResource.(*sourcev1beta2.OCIRepository), targetSource.(*sourcev1beta2.OCIRepository))
 	case KustomizationKind:
-		err = a.updateKustomization(ctx, currentResource.(*kustomizev1.Kustomization), targetSource.(*kustomizev1.Kustomization))
+		err = a.updateKustomization(ctx, currentResource.(*kustomizev1beta2.Kustomization), targetSource.(*kustomizev1beta2.Kustomization))
 	case HelmReleaseKind:
 		err = a.updateHelmRelease(ctx, currentResource.(*helmv2b1.HelmRelease), targetSource.(*helmv2b1.HelmRelease))
 	default:
@@ -379,7 +378,7 @@ func (a *ApplicationManager) syncResource(ctx context.Context, targetSource clie
 
 // updateGitRepository updates the state of a current GitRepository resource to match the provided target GitRepository resource.
 // This function is used by syncResource to keep the actual state of GitRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateGitRepository(ctx context.Context, currentResource *sourcev1.GitRepository, targetSource *sourcev1.GitRepository) error {
+func (a *ApplicationManager) updateGitRepository(ctx context.Context, currentResource *sourcev1beta2.GitRepository, targetSource *sourcev1beta2.GitRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -389,7 +388,7 @@ func (a *ApplicationManager) updateGitRepository(ctx context.Context, currentRes
 
 // updateHelmRepository updates the state of a current HelmRepository resource to match the provided target HelmRepository resource.
 // This function is used by syncResource to keep the actual state of HelmRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourcev1b2.HelmRepository, targetSource *sourcev1b2.HelmRepository) error {
+func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourcev1beta2.HelmRepository, targetSource *sourcev1beta2.HelmRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -399,7 +398,7 @@ func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentRe
 
 // updateOCIRepository updates the state of a current OCIRepository resource to match the provided target OCIRepository resource.
 // This function is used by syncResource to keep the actual state of OCIRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourcev1b2.OCIRepository, targetSource *sourcev1b2.OCIRepository) error {
+func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourcev1beta2.OCIRepository, targetSource *sourcev1beta2.OCIRepository) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
@@ -409,7 +408,7 @@ func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentRes
 
 // updateKustomization updates the state of a current Kustomization resource to match the provided target Kustomization resource.
 // This function is used by syncResource to keep the actual state of Kustomization resources in sync with the desired state.
-func (a *ApplicationManager) updateKustomization(ctx context.Context, currentResource *kustomizev1.Kustomization, targetSource *kustomizev1.Kustomization) error {
+func (a *ApplicationManager) updateKustomization(ctx context.Context, currentResource *kustomizev1beta2.Kustomization, targetSource *kustomizev1beta2.Kustomization) error {
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err

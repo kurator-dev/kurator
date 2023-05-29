@@ -23,10 +23,9 @@ package v1alpha1
 
 import (
 	v2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizecontrollerapiv1 "github.com/fluxcd/kustomize-controller/api/v1"
+	apiv1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	kustomize "github.com/fluxcd/pkg/apis/kustomize"
 	meta "github.com/fluxcd/pkg/apis/meta"
-	apiv1 "github.com/fluxcd/source-controller/api/v1"
 	v1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -120,7 +119,7 @@ func (in *ApplicationSource) DeepCopyInto(out *ApplicationSource) {
 	*out = *in
 	if in.GitRepo != nil {
 		in, out := &in.GitRepo, &out.GitRepo
-		*out = new(apiv1.GitRepositorySpec)
+		*out = new(v1beta2.GitRepositorySpec)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.HelmRepo != nil {
@@ -151,7 +150,7 @@ func (in *ApplicationSourceStatus) DeepCopyInto(out *ApplicationSourceStatus) {
 	*out = *in
 	if in.GitRepoStatus != nil {
 		in, out := &in.GitRepoStatus, &out.GitRepoStatus
-		*out = new(apiv1.GitRepositoryStatus)
+		*out = new(v1beta2.GitRepositoryStatus)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.HelmRepoStatus != nil {
@@ -269,7 +268,7 @@ func (in *ApplicationSyncStatus) DeepCopyInto(out *ApplicationSyncStatus) {
 	*out = *in
 	if in.KustomizationStatus != nil {
 		in, out := &in.KustomizationStatus, &out.KustomizationStatus
-		*out = new(kustomizecontrollerapiv1.KustomizationStatus)
+		*out = new(apiv1beta2.KustomizationStatus)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.HelmReleaseStatus != nil {

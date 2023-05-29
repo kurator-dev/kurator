@@ -20,7 +20,7 @@ import (
 	"context"
 
 	hrapiv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
+	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	"helm.sh/helm/v3/pkg/kube"
 	"istio.io/istio/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/types"
@@ -63,7 +63,7 @@ func (f *FleetManager) reconcilePluginResources(ctx context.Context, fleet *flee
 	repoDict, releaseDict := sets.New[types.NamespacedName](), sets.New[types.NamespacedName]()
 	for _, res := range resources {
 		switch res.Mapping.GroupVersionKind.Kind {
-		case sourcev1.HelmRepositoryKind:
+		case sourcev1beta2.HelmRepositoryKind:
 			repoDict.Insert(types.NamespacedName{Namespace: res.Namespace, Name: res.Name})
 		case hrapiv2b1.HelmReleaseKind:
 			releaseDict.Insert(types.NamespacedName{Namespace: res.Namespace, Name: res.Name})
@@ -73,7 +73,7 @@ func (f *FleetManager) reconcilePluginResources(ctx context.Context, fleet *flee
 		}
 	}
 
-	helmRepos := &sourcev1.HelmRepositoryList{}
+	helmRepos := &sourcev1beta2.HelmRepositoryList{}
 	helmReleases := &hrapiv2b1.HelmReleaseList{}
 	fleetLabels := fleetResourceLables(fleet.Name)
 	if err := f.Client.List(ctx, helmRepos, client.InNamespace(fleet.Namespace), fleetLabels); err != nil {
