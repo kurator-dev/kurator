@@ -76,6 +76,8 @@ type PluginConfig struct {
 	// Grafana defines the configuration for the grafana installation and observation.
 	// +optional
 	Grafana *GrafanaConfig `json:"grafana,omitempty"`
+	// Kyverno defines the configuration for the kyverno installation.
+	Kyverno *KyvernoConfig `json:"kyverno,omitempty"`
 }
 
 type MetricConfig struct {
@@ -186,6 +188,27 @@ type GrafanaConfig struct {
 	// extraArgs:
 	//   grafana:
 	//     replicaCount: 2
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+}
+
+type KyvernoConfig struct {
+	// Chart defines the helm chart config of the kyverno.
+	// default values is
+	// chart:
+	//   repository: https://kyverno.github.io/kyverno/
+	//   name: kyverno
+	//   version: 2.7.5
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+	// ExtraArgs is the set of extra arguments for Grafana chart.
+	//
+	// For Example, using following configuration to change image pull policy.
+	// extraArgs:
+	//   image:
+	//     pullPolicy: Always
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
