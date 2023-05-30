@@ -1,23 +1,23 @@
 ---
-title: "Integrating the AttachedClusters with Fleet"
-linkTitle: "Integrating the AttachedClusters with Fleet"
+title: "Manage AttachedCluster"
+linkTitle: "Manage AttachedCluster"
 weight: 15
 description: >
-  Your roadmap to integrating and managing AttachedClusters with Kurator Fleet.
+  Your roadmap to manage AttachedClusters.
 ---
 
-In Kurator, clusters that were not created by Kurator are referred to as `AttachedClusters`.
+In Kurator, clusters that are not created by Kurator are referred to as `AttachedClusters`.
 These clusters can be managed by adding them to the Kurator Fleet, expanding the fleet's control to clusters not originally created by Kurator.
 
-This guide will walk you through the process of creating AttachedCluster resources, using two Kind clusters as examples.
+This guide will walk you through the process of creating AttachedCluster resources, using two [Kind](https://kind.sigs.k8s.io/) clusters as examples.
 
 ## Prerequisites
 
-### Cluster Operator and kind Cluster
+### Cluster operator
 
-As the AttachedCluster object is controlled by the cluster-operator, you need to first go to [install cluser operator](/docs/setup/install-cluster-operator.md) page to create kind clusters using `hack/local-dev-setup.sh` and install cluster operator.
+As the AttachedCluster object is controlled by the cluster-operator, you need to first go to [Install cluser operator](/docs/setup/install-cluster-operator) page to create clusters using `hack/local-dev-setup.sh` and install cluster operator.
 
-### AttachedCluster Secrets
+### AttachedCluster secrets
 
 From these clusters created by `hack/local-dev-setup.sh`, we'll select kurator-member1 and kurator-member2 to be attached to the Kurator Fleet.
 
@@ -31,7 +31,7 @@ kubectl create secret generic kurator-member2 --from-file=kurator-member2.config
 Please note, here we have named the secrets as `kurator-member1` and `kurator-member2` respectively, and set the key to save the kubeconfig in the secret as `kurator-member1.config` and `kurator-member1.config` respectively.
 You can modify these two elements according to your needs.
 
-## Creating AttachedCluster Resources
+## Create attachedCluster resources
 
 Now that we have the prerequisites sorted out, let's move on to creating the AttachedCluster resources.
 
@@ -39,10 +39,10 @@ We'll start by editing the configuration for the AttachedCluster.
 
 Notice that the `name` and `key` here need to be consistent with the secret generated earlier.
 
-Edit attachedCluster config.
+We can apply the resources using the configuration provided below.
 
 ```console
-$ vi ./ac-member1.yaml
+cat <<EOF | kubectl apply -f -
 apiVersion: cluster.kurator.dev/v1alpha1
 kind: AttachedCluster
 metadata:
@@ -52,8 +52,9 @@ spec:
   kubeconfig:
     name: kurator-member1
     key: kurator-member1.config
+EOF
 
-$ vi ./ac-member2.yaml
+cat <<EOF | kubectl apply -f -
 apiVersion: cluster.kurator.dev/v1alpha1
 kind: AttachedCluster
 metadata:
@@ -63,13 +64,7 @@ spec:
   kubeconfig:
     name: kurator-member2
     key: kurator-member2.config
-```
-
-With the configuration ready, we can apply the resources:
-
-```console
-kubectl apply -f ./ac-member1.yaml
-kubectl apply -f ./ac-member2.yaml
+ EOF
 ```
 
 ## View resource status
@@ -91,18 +86,26 @@ metadata:
   uid: 46199ce7-3829-4e0a-b1f7-46b47b8d421c
 spec:
   kubeconfig:
-    key: kubeconfig
+    key: kurator-member1.config
     name: kurator-member1
 status:
   ready: true
 ```
 
-## join with fleet
+When we see `ready: true` in the status, it means that everything is as expected and the AttachedCluster is ready to be managed by Fleet. 
+
+If this is not the case, you can use the following command to check the reason.
+
+```console
+kubectl logs -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-system --tail=-1
+```
+
+## Join with fleet
 
 To join the AttachedClusters into a fleet, create the yaml like this:
 
 ```console
-$ vi ./quickstart.yaml
+cat <<EOF | kubectl apply -f -
 apiVersion: fleet.kurator.dev/v1alpha1
 kind: Fleet 
 metadata:
@@ -115,6 +118,7 @@ spec:
       kind: AttachedCluster
     - name: kurator-member2
       kind: AttachedCluster
+EOF
 ```
 
 ## Cleanup
