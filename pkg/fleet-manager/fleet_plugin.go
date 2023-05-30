@@ -51,6 +51,12 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 	}
 	resources = append(resources, result...)
 
+	result, ctrlResult, err = f.reconcileKyvernoPlugin(ctx, fleet, fleetClusters)
+	if err != nil || ctrlResult.RequeueAfter > 0 {
+		return ctrlResult, err
+	}
+	resources = append(resources, result...)
+
 	return f.reconcilePluginResources(ctx, fleet, resources)
 }
 
