@@ -21,9 +21,8 @@ import (
 	"fmt"
 
 	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	kustomizev1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,10 +43,10 @@ import (
 )
 
 const (
-	GitRepoKind       = sourcev1.GitRepositoryKind
-	HelmRepoKind      = sourcev1b2.HelmRepositoryKind
-	OCIRepoKind       = sourcev1b2.OCIRepositoryKind
-	KustomizationKind = kustomizev1.KustomizationKind
+	GitRepoKind       = sourcev1beta2.GitRepositoryKind
+	HelmRepoKind      = sourcev1beta2.HelmRepositoryKind
+	OCIRepoKind       = sourcev1beta2.OCIRepositoryKind
+	KustomizationKind = kustomizev1beta2.KustomizationKind
 	HelmReleaseKind   = helmv2b1.HelmReleaseKind
 
 	ApplicationLabel     = "apps.kurator.dev/app-name"
@@ -98,28 +97,28 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 
 	// Set up watches for the updates to application's status.
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1.GitRepository{}},
+		&source.Kind{Type: &sourcev1beta2.GitRepository{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for GitRepository: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1b2.HelmRepository{}},
+		&source.Kind{Type: &sourcev1beta2.HelmRepository{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for HelmRepository: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1b2.OCIRepository{}},
+		&source.Kind{Type: &sourcev1beta2.OCIRepository{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for OCIRepository: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &kustomizev1.Kustomization{}},
+		&source.Kind{Type: &kustomizev1beta2.Kustomization{}},
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for Kustomization: %v", err)
@@ -292,7 +291,7 @@ func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicati
 	// Depending on source kind in application specifications, fetch resource status and update application's source status
 	switch sourceKind {
 	case GitRepoKind:
-		currentResource := &sourcev1.GitRepository{}
+		currentResource := &sourcev1beta2.GitRepository{}
 		if err := a.Client.Get(ctx, sourceKey, currentResource); err != nil {
 			log.Error(err, "failed to get GitRepository from the API server when reconciling status")
 			return ctrl.Result{}, nil
@@ -300,7 +299,7 @@ func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicati
 		app.Status.SourceStatus.GitRepoStatus = &currentResource.Status
 
 	case HelmRepoKind:
-		currentResource := &sourcev1b2.HelmRepository{}
+		currentResource := &sourcev1beta2.HelmRepository{}
 		if err := a.Client.Get(ctx, sourceKey, currentResource); err != nil {
 			log.Error(err, "failed to get HelmRepository from the API server when reconciling status")
 			return ctrl.Result{}, err
@@ -311,7 +310,7 @@ func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicati
 	// Depending on source kind in application specifications, fetch associated resources and update application's sync status
 	switch sourceKind {
 	case GitRepoKind:
-		var kustomizationList kustomizev1.KustomizationList
+		var kustomizationList kustomizev1beta2.KustomizationList
 		if err := a.Client.List(ctx, &kustomizationList, client.InNamespace(app.Namespace), client.MatchingLabels{ApplicationLabel: app.Name}); err != nil {
 			return ctrl.Result{}, err
 		}

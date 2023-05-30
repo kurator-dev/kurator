@@ -18,9 +18,8 @@ package v1alpha1
 
 import (
 	helmv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
-	kustomizev1 "github.com/fluxcd/kustomize-controller/api/v1"
-	sourcev1 "github.com/fluxcd/source-controller/api/v1"
-	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	kustomizev1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
+	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -50,11 +49,11 @@ type ApplicationSpec struct {
 // Note only one source can be specified
 type ApplicationSource struct {
 	// +optional
-	GitRepo *sourcev1.GitRepositorySpec `json:"gitRepo,omitempty"`
+	GitRepo *sourcev1beta2.GitRepositorySpec `json:"gitRepo,omitempty"`
 	// +optional
-	HelmRepo *sourcev1b2.HelmRepositorySpec `json:"helmRepo,omitempty"`
+	HelmRepo *sourcev1beta2.HelmRepositorySpec `json:"helmRepo,omitempty"`
 	// +optional
-	OCIRepo *sourcev1b2.OCIRepositorySpec `json:"ociRepo,omitempty"`
+	OCIRepo *sourcev1beta2.OCIRepositorySpec `json:"ociRepo,omitempty"`
 }
 
 // ApplicationDestination defines the configuration to dispatch an artifact to a fleet or specific clusters.
@@ -94,16 +93,16 @@ type ApplicationStatus struct {
 
 // applicationSourceStatus defines the observed state of the artifact source.
 type ApplicationSourceStatus struct {
-	GitRepoStatus  *sourcev1.GitRepositoryStatus    `json:"gitRepoStatus,omitempty"`
-	HelmRepoStatus *sourcev1b2.HelmRepositoryStatus `json:"helmRepoStatus,omitempty"`
-	OCIRepoStatus  *sourcev1b2.OCIRepositoryStatus  `json:"ociRepoStatus,omitempty"`
+	GitRepoStatus  *sourcev1beta2.GitRepositoryStatus  `json:"gitRepoStatus,omitempty"`
+	HelmRepoStatus *sourcev1beta2.HelmRepositoryStatus `json:"helmRepoStatus,omitempty"`
+	OCIRepoStatus  *sourcev1beta2.OCIRepositoryStatus  `json:"ociRepoStatus,omitempty"`
 }
 
 // ApplicationSyncStatus defines the observed state of Application sync.
 type ApplicationSyncStatus struct {
-	Name                string                           `json:"name,omitempty"`
-	KustomizationStatus *kustomizev1.KustomizationStatus `json:"kustomizationStatus,omitempty"`
-	HelmReleaseStatus   *helmv2b1.HelmReleaseStatus      `json:"HelmReleaseStatus,omitempty"`
+	Name                string                                `json:"name,omitempty"`
+	KustomizationStatus *kustomizev1beta2.KustomizationStatus `json:"kustomizationStatus,omitempty"`
+	HelmReleaseStatus   *helmv2b1.HelmReleaseStatus           `json:"HelmReleaseStatus,omitempty"`
 }
 
 // ApplicationList contains a list of Application.
