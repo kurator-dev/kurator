@@ -64,7 +64,7 @@ spec:
   kubeconfig:
     name: kurator-member2
     key: kurator-member2.config
- EOF
+EOF
 ```
 
 ## View resource status
