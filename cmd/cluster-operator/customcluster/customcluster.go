@@ -23,13 +23,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/cluster-operator/options"
-	"kurator.dev/kurator/pkg/controllers"
+	clusteroperator "kurator.dev/kurator/pkg/cluster-operator"
 )
 
 var log = ctrl.Log.WithName("custom_cluster")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
-	if err := (&controllers.CustomClusterController{
+	if err := (&clusteroperator.CustomClusterController{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
@@ -38,7 +38,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		return err
 	}
 
-	if err := (&controllers.CustomMachineController{
+	if err := (&clusteroperator.CustomMachineController{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
