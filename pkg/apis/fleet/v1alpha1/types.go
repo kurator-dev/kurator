@@ -199,7 +199,7 @@ type KyvernoConfig struct {
 	// chart:
 	//   repository: https://kyverno.github.io/kyverno/
 	//   name: kyverno
-	//   version: 2.7.5
+	//   version: 3.0.0
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`

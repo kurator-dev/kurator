@@ -147,7 +147,7 @@ spec:
                       chart:
                         description: 'Chart defines the helm chart config of the kyverno.
                           default values is chart: repository: https://kyverno.github.io/kyverno/
-                          name: kyverno version: 2.7.5'
+                          name: kyverno version: 3.0.0'
                         properties:
                           name:
                             description: Name defines the name of the chart. Default
