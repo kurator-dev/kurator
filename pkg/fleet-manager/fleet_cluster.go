@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/clientcmd"
+	ctrl "sigs.k8s.io/controller-runtime"
 
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
@@ -41,6 +42,8 @@ type ClusterKey struct {
 }
 
 func (f *FleetManager) buildFleetClusters(ctx context.Context, fleet *fleetapi.Fleet) (map[ClusterKey]*fleetCluster, error) {
+	log := ctrl.LoggerFrom(ctx)
+
 	res := make(map[ClusterKey]*fleetCluster, len(fleet.Spec.Clusters))
 	for _, c := range fleet.Spec.Clusters {
 		clusterKey := types.NamespacedName{Namespace: fleet.Namespace, Name: c.Name}
@@ -49,6 +52,12 @@ func (f *FleetManager) buildFleetClusters(ctx context.Context, fleet *fleetapi.F
 		if err != nil {
 			return nil, err
 		}
+
+		if !clusterInterface.IsReady() {
+			log.V(4).Info("cluster is not ready", "cluster", clusterKey)
+			continue
+		}
+
 		kclient, err := f.clientForCluster(fleet.Namespace, clusterInterface)
 		if err != nil {
 			return nil, err
