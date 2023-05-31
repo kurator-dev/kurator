@@ -34,6 +34,7 @@ rules:
       - patch
       - update
       - watch
+      - delete
   - apiGroups:
       - cluster.kurator.dev
     resources:
