@@ -23,13 +23,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/cluster-operator/options"
-	"kurator.dev/kurator/pkg/controllers"
+	clusteroperator "kurator.dev/kurator/pkg/cluster-operator"
 )
 
 var log = ctrl.Log.WithName("attached cluster")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
-	if err := (&controllers.AttachedClusterController{
+	if err := (&clusteroperator.AttachedClusterController{
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
