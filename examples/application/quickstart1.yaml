@@ -1,0 +1,61 @@
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: AttachedCluster
+metadata:
+  name: kurator-member1
+  namespace: default
+spec:
+  kubeconfig:
+    name: kurator-member1
+    key: kurator-member1.config
+---
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: AttachedCluster
+metadata:
+  name: kurator-member2
+  namespace: default
+spec:
+  kubeconfig:
+    name: kurator-member2
+    key: kurator-member2.config
+---
+apiVersion: fleet.kurator.dev/v1alpha1
+kind: Fleet
+metadata:
+  name: quickstart
+  namespace: default
+spec:
+  clusters:
+    - name: kurator-member1
+      kind: AttachedCluster
+    - name: kurator-member2
+      kind: AttachedCluster
+---
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: quickstart1
+  namespace: default
+spec:
+  source:
+    gitRepo:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
+  syncPolicy:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 5m0s
+        path: ./deploy/webapp
+        prune: true
+        timeout: 2m0s
+    - destination:
+        fleet: quickstart
+      kustomization:
+        targetNamespace: default
+        interval: 5m0s
+        path: ./kustomize
+        prune: true
+        timeout: 2m0s
