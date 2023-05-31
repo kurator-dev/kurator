@@ -21,6 +21,7 @@ import (
 )
 
 type Options struct {
+	ManifestsDir            string
 	MetricsBindAddr         string
 	EnableLeaderElection    bool
 	LeaderElectionNamespace string
@@ -62,5 +63,12 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 		"concurrency",
 		5,
 		"Number of Fleet API resources to process simultaneously",
+	)
+
+	fs.StringVar(
+		&opt.ManifestsDir,
+		"manifests",
+		"",
+		"Path to the directory containing the Fleet manifests, built-in manifests will be used if not specified",
 	)
 }

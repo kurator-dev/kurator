@@ -38,6 +38,7 @@ import (
 	"kurator.dev/kurator/cmd/fleet-manager/options"
 	"kurator.dev/kurator/cmd/fleet-manager/scheme"
 	fleet "kurator.dev/kurator/pkg/fleet-manager"
+	"kurator.dev/kurator/pkg/fleet-manager/manifests"
 	"kurator.dev/kurator/pkg/util"
 	"kurator.dev/kurator/pkg/version"
 )
@@ -126,8 +127,9 @@ func run(ctx context.Context, opts *options.Options) error {
 
 	record.InitFromRecorder(mgr.GetEventRecorderFor("cluster-operator"))
 	if err := (&fleet.FleetManager{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Manifests: manifests.BuiltinOrDir(opts.ManifestsDir),
 	}).SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to set up fleet manager", "controller", "fleet manager")
 		return err
