@@ -35,10 +35,11 @@ const (
 	GrafanaPluginName = "grafana"
 	KyvernoPluginName = "kyverno"
 
-	ThanosComponentName     = "thanos"
-	PrometheusComponentName = "prometheus"
-	GrafanaComponentName    = "grafana"
-	KyvernoComponentName    = "kyverno"
+	ThanosComponentName        = "thanos"
+	PrometheusComponentName    = "prometheus"
+	GrafanaComponentName       = "grafana"
+	KyvernoComponentName       = "kyverno"
+	KyvernoPolicyComponentName = "kyverno-policies"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -49,6 +50,30 @@ type GrafanaDataSource struct {
 	URL        string `json:"url"`
 	Access     string `json:"access"`
 	IsDefault  bool   `json:"isDefault"`
+}
+
+func RenderKyvernoPolicy(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, KyvernoPolicyComponentName)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeChartConfig(c, kyvernoCfg.Chart)
+
+	values := map[string]interface{}{
+		"podSecurityStandard": kyvernoCfg.Policy.PodSecurityStandard,
+		"podSecuritySeverity": kyvernoCfg.Policy.PodSecuritySeverity,
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           KyvernoPluginName,
+		Component:      KyvernoPolicyComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
 }
 
 func RenderKyverno(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {

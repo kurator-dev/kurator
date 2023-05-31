@@ -203,6 +203,9 @@ type KyvernoConfig struct {
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
+	// Policy defines the kyverno policy configuration.
+	// +optional
+	Policy *KyvernoPolicyConfig `json:"policy,omitempty"`
 	// ExtraArgs is the set of extra arguments for Grafana chart.
 	//
 	// For Example, using following configuration to change image pull policy.
@@ -212,6 +215,19 @@ type KyvernoConfig struct {
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+}
+
+type KyvernoPolicyConfig struct {
+	// PodSecurityStandard defines the pod security standard.
+	// +kubebuilder:validation:Enum=privileged;baseline;restricted
+	// +kubebuilder:default=baseline
+	// +optional
+	PodSecurityStandard string `json:"podSecurityStandard,omitempty"`
+	// PodSecuritySeverity defines the pod security severity.
+	// +kubebuilder:validation:Enum=low;medium;high;critical
+	// +kubebuilder:default=medium
+	// +optional
+	PodSecuritySeverity string `json:"podSecuritySeverity,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet

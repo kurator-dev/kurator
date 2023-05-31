@@ -168,6 +168,29 @@ spec:
                           to change image pull policy. extraArgs: image: pullPolicy:
                           Always"
                         x-kubernetes-preserve-unknown-fields: true
+                      policy:
+                        description: Policy defines the kyverno policy configuration.
+                        properties:
+                          podSecuritySeverity:
+                            default: medium
+                            description: PodSecuritySeverity defines the pod security
+                              severity.
+                            enum:
+                            - low
+                            - medium
+                            - high
+                            - critical
+                            type: string
+                          podSecurityStandard:
+                            default: baseline
+                            description: PodSecurityStandard defines the pod security
+                              standard.
+                            enum:
+                            - privileged
+                            - baseline
+                            - restricted
+                            type: string
+                        type: object
                     type: object
                   metric:
                     description: Metric defines the configuration for the monitoring

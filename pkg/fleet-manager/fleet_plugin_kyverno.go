@@ -23,7 +23,6 @@ import (
 	"helm.sh/helm/v3/pkg/kube"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"kurator.dev/kurator/manifests"
 	fleetv1a1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
@@ -32,7 +31,7 @@ import (
 )
 
 func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv1a1.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
-	log := ctrl.LoggerFrom(ctx).WithValues("fleet", client.ObjectKeyFromObject(fleet))
+	log := ctrl.LoggerFrom(ctx)
 
 	if fleet.Spec.Plugin == nil ||
 		fleet.Spec.Plugin.Kyverno == nil {
@@ -62,6 +61,24 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 			return nil, ctrl.Result{}, err
 		}
 		resources = append(resources, kyvernoResources...)
+
+		// handle kyverno policy
+		if fleet.Spec.Plugin.Kyverno.Policy != nil {
+			b, err = plugin.RenderKyvernoPolicy(fs, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+				Name:       key.Name,
+				SecretName: cluster.Secret,
+				SecretKey:  cluster.SecretKey,
+			}, fleet.Spec.Plugin.Kyverno)
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+
+			kyvernoPolicyResources, err := util.PatchResources(b)
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+			resources = append(resources, kyvernoPolicyResources...)
+		}
 	}
 
 	log.V(4).Info("wait for grafana helm release to be reconciled")

@@ -424,6 +424,20 @@ version: 2.7.5</p>
 </tr>
 <tr>
 <td>
+<code>policy</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.KyvernoPolicyConfig">
+KyvernoPolicyConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policy defines the kyverno policy configuration.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>extraArgs</code><br>
 <em>
 <a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
@@ -438,6 +452,50 @@ Kubernetes /apiextensions/v1.JSON
 extraArgs:
 image:
 pullPolicy: Always</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.KyvernoPolicyConfig">KyvernoPolicyConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>podSecurityStandard</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodSecurityStandard defines the pod security standard.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podSecuritySeverity</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodSecuritySeverity defines the pod security severity.</p>
 </td>
 </tr>
 </tbody>
