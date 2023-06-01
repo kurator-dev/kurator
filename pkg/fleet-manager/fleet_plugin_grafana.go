@@ -26,7 +26,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"kurator.dev/kurator/manifests"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
 	"kurator.dev/kurator/pkg/infra/util"
@@ -45,7 +44,7 @@ func (f *FleetManager) reconcileGrafanaPlugin(ctx context.Context, fleet *fleeta
 		Namespace: fleet.Namespace,
 		Name:      fleet.Name,
 	}
-	fs := manifests.BuiltinOrDir("") // TODO: make it configurable
+
 	fleetOwnerRef := ownerReference(fleet)
 
 	dataSources := make([]*plugin.GrafanaDataSource, 0, 1)
@@ -59,7 +58,7 @@ func (f *FleetManager) reconcileGrafanaPlugin(ctx context.Context, fleet *fleeta
 		})
 	}
 
-	b, err := plugin.RenderGrafana(fs, fleetNN, fleetOwnerRef, fleet.Spec.Plugin.Grafana, dataSources)
+	b, err := plugin.RenderGrafana(f.Manifests, fleetNN, fleetOwnerRef, fleet.Spec.Plugin.Grafana, dataSources)
 	if err != nil {
 		return nil, ctrl.Result{}, err
 	}

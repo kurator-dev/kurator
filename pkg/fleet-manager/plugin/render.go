@@ -71,7 +71,7 @@ type ChartConfig struct {
 }
 
 func getFleetPluginChart(fsys fs.FS, pluginName string) (*ChartConfig, error) {
-	out, err := fs.ReadFile(fsys, "profiles/fleet/plugins/"+pluginName+".yaml")
+	out, err := fs.ReadFile(fsys, "plugins/"+pluginName+".yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func getFleetPluginChart(fsys fs.FS, pluginName string) (*ChartConfig, error) {
 }
 
 func renderFleetPlugin(fsys fs.FS, cfg FleetPluginConfig) ([]byte, error) {
-	out, err := fs.ReadFile(fsys, "profiles/fleet/plugin.tpl")
+	out, err := fs.ReadFile(fsys, "plugin.tpl")
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,7 @@ package fleet
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"time"
 
 	"github.com/pkg/errors"
@@ -49,7 +50,8 @@ const FleetLabel = "fleet.kurator.dev/fleet-name"
 // FleetManager reconciles a Cluster object
 type FleetManager struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	Manifests fs.FS
 }
 
 // SetupWithManager sets up the controller with the Manager.

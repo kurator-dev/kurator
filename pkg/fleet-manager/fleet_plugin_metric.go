@@ -35,7 +35,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"kurator.dev/kurator/manifests"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
 	"kurator.dev/kurator/pkg/infra/util"
@@ -248,10 +247,9 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 		Name:      fleet.Name,
 	}
 	metricCfg := fleet.Spec.Plugin.Metric
-	fs := manifests.BuiltinOrDir("") // TODO: make it configurable
 	fleetOwnerRef := ownerReference(fleet)
 
-	b, err := plugin.RenderThanos(fs, fleetNN, fleetOwnerRef, metricCfg)
+	b, err := plugin.RenderThanos(f.Manifests, fleetNN, fleetOwnerRef, metricCfg)
 	if err != nil {
 		return nil, ctrl.Result{}, err
 	}
@@ -290,7 +288,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 			return nil, ctrl.Result{}, fmt.Errorf("failed to reconcile objstore secret for cluster %s: %w", c.Name, err)
 		}
 
-		b, err := plugin.RendPrometheus(fs, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+		b, err := plugin.RendPrometheus(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
 			Name:       c.Name,
 			SecretName: fleetCluster.Secret,
 			SecretKey:  fleetCluster.SecretKey,

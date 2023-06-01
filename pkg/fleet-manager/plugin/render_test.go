@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"kurator.dev/kurator/manifests"
+	"kurator.dev/kurator/pkg/fleet-manager/manifests"
 )
 
 var manifestFS = manifests.BuiltinOrDir("")
