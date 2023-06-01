@@ -391,7 +391,7 @@ replicaCount: 2</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+<a href="#fleet.kurator.dev/v1alpha1.PolicyConfig">PolicyConfig</a>)
 </p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
@@ -424,16 +424,16 @@ version: 3.0.0</p>
 </tr>
 <tr>
 <td>
-<code>policy</code><br>
+<code>podSecurity</code><br>
 <em>
-<a href="#fleet.kurator.dev/v1alpha1.KyvernoPolicyConfig">
-KyvernoPolicyConfig
+<a href="#fleet.kurator.dev/v1alpha1.PodSecurityPolicy">
+PodSecurityPolicy
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Policy defines the kyverno policy configuration.</p>
+<p>PodSecurity defines the pod security configuration for the kyverno.</p>
 </td>
 </tr>
 <tr>
@@ -452,50 +452,6 @@ Kubernetes /apiextensions/v1.JSON
 extraArgs:
 image:
 pullPolicy: Always</p>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-<h3 id="fleet.kurator.dev/v1alpha1.KyvernoPolicyConfig">KyvernoPolicyConfig
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>)
-</p>
-<div class="md-typeset__scrollwrap">
-<div class="md-typeset__table td-content">
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>podSecurityStandard</code><br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>PodSecurityStandard defines the pod security standard.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>podSecuritySeverity</code><br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>PodSecuritySeverity defines the pod security severity.</p>
 </td>
 </tr>
 </tbody>
@@ -628,6 +584,83 @@ GrafanaConfig
 </tr>
 <tr>
 <td>
+<code>policy</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PolicyConfig">
+PolicyConfig
+</a>
+</em>
+</td>
+<td>
+<p>Policy defines the configuration for the ploicy management.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PodSecurityPolicy">PodSecurityPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>standard</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Standard defines the pod security standard.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>severity</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Severity defines the pod security severity.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PolicyConfig">PolicyConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
 <code>kyverno</code><br>
 <em>
 <a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">
@@ -636,7 +669,8 @@ KyvernoConfig
 </em>
 </td>
 <td>
-<p>Kyverno defines the configuration for the kyverno installation.</p>
+<em>(Optional)</em>
+<p>Kyverno defines the configuration for the kyverno installation and policy management.</p>
 </td>
 </tr>
 </tbody>

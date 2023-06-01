@@ -140,58 +140,6 @@ spec:
                           2"
                         x-kubernetes-preserve-unknown-fields: true
                     type: object
-                  kyverno:
-                    description: Kyverno defines the configuration for the kyverno
-                      installation.
-                    properties:
-                      chart:
-                        description: 'Chart defines the helm chart config of the kyverno.
-                          default values is chart: repository: https://kyverno.github.io/kyverno/
-                          name: kyverno version: 3.0.0'
-                        properties:
-                          name:
-                            description: Name defines the name of the chart. Default
-                              value depends on the kind of the component.
-                            type: string
-                          repository:
-                            description: Repository defines the repository of chart.
-                              Default value depends on the kind of the component.
-                            type: string
-                          version:
-                            description: Version defines the version of the chart.
-                              Default value depends on the kind of the component.
-                            type: string
-                        type: object
-                      extraArgs:
-                        description: "ExtraArgs is the set of extra arguments for
-                          Grafana chart. \n For Example, using following configuration
-                          to change image pull policy. extraArgs: image: pullPolicy:
-                          Always"
-                        x-kubernetes-preserve-unknown-fields: true
-                      policy:
-                        description: Policy defines the kyverno policy configuration.
-                        properties:
-                          podSecuritySeverity:
-                            default: medium
-                            description: PodSecuritySeverity defines the pod security
-                              severity.
-                            enum:
-                            - low
-                            - medium
-                            - high
-                            - critical
-                            type: string
-                          podSecurityStandard:
-                            default: baseline
-                            description: PodSecurityStandard defines the pod security
-                              standard.
-                            enum:
-                            - privileged
-                            - baseline
-                            - restricted
-                            type: string
-                        type: object
-                    type: object
                   metric:
                     description: Metric defines the configuration for the monitoring
                       system installation and metrics collection..
@@ -292,6 +240,61 @@ spec:
                             type: object
                         required:
                         - objectStoreConfig
+                        type: object
+                    type: object
+                  policy:
+                    description: Policy defines the configuration for the ploicy management.
+                    properties:
+                      kyverno:
+                        description: Kyverno defines the configuration for the kyverno
+                          installation and policy management.
+                        properties:
+                          chart:
+                            description: 'Chart defines the helm chart config of the
+                              kyverno. default values is chart: repository: https://kyverno.github.io/kyverno/
+                              name: kyverno version: 3.0.0'
+                            properties:
+                              name:
+                                description: Name defines the name of the chart. Default
+                                  value depends on the kind of the component.
+                                type: string
+                              repository:
+                                description: Repository defines the repository of
+                                  chart. Default value depends on the kind of the
+                                  component.
+                                type: string
+                              version:
+                                description: Version defines the version of the chart.
+                                  Default value depends on the kind of the component.
+                                type: string
+                            type: object
+                          extraArgs:
+                            description: "ExtraArgs is the set of extra arguments
+                              for Grafana chart. \n For Example, using following configuration
+                              to change image pull policy. extraArgs: image: pullPolicy:
+                              Always"
+                            x-kubernetes-preserve-unknown-fields: true
+                          podSecurity:
+                            description: PodSecurity defines the pod security configuration
+                              for the kyverno.
+                            properties:
+                              severity:
+                                default: medium
+                                description: Severity defines the pod security severity.
+                                enum:
+                                - low
+                                - medium
+                                - high
+                                type: string
+                              standard:
+                                default: baseline
+                                description: Standard defines the pod security standard.
+                                enum:
+                                - privileged
+                                - baseline
+                                - restricted
+                                type: string
+                            type: object
                         type: object
                     type: object
                 type: object

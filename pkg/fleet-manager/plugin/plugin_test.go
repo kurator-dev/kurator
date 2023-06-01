@@ -47,9 +47,9 @@ func TestRenderKyvernoPolicy(t *testing.T) {
 				UID:        "xxxxxx",
 			},
 			in: &v1alpha1.KyvernoConfig{
-				Policy: &v1alpha1.KyvernoPolicyConfig{
-					PodSecurityStandard: "baseline",
-					PodSecuritySeverity: "medium",
+				PodSecurity: &v1alpha1.PodSecurityPolicy{
+					Standard: "baseline",
+					Severity: "medium",
 				},
 			},
 		},

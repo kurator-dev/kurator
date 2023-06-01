@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"kurator.dev/kurator/manifests"
 	fleetv1a1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
 	"kurator.dev/kurator/pkg/infra/util"
@@ -34,24 +33,27 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 	log := ctrl.LoggerFrom(ctx)
 
 	if fleet.Spec.Plugin == nil ||
-		fleet.Spec.Plugin.Kyverno == nil {
+		fleet.Spec.Plugin.Policy == nil ||
+		fleet.Spec.Plugin.Policy.Kyverno == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil
 		return nil, ctrl.Result{}, nil
 	}
+
+	kyvernoCfg := fleet.Spec.Plugin.Policy.Kyverno
 
 	fleetNN := types.NamespacedName{
 		Namespace: fleet.Namespace,
 		Name:      fleet.Name,
 	}
-	fs := manifests.BuiltinOrDir("") // TODO: make it configurable
+
 	fleetOwnerRef := ownerReference(fleet)
 	var resources kube.ResourceList
 	for key, cluster := range fleetClusters {
-		b, err := plugin.RenderKyverno(fs, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+		b, err := plugin.RenderKyverno(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
-		}, fleet.Spec.Plugin.Kyverno)
+		}, fleet.Spec.Plugin.Policy.Kyverno)
 		if err != nil {
 			return nil, ctrl.Result{}, err
 		}
@@ -62,13 +64,13 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 		}
 		resources = append(resources, kyvernoResources...)
 
-		// handle kyverno policy
-		if fleet.Spec.Plugin.Kyverno.Policy != nil {
-			b, err = plugin.RenderKyvernoPolicy(fs, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+		// handle kyverno pod security policy
+		if kyvernoCfg.PodSecurity != nil {
+			b, err = plugin.RenderKyvernoPolicy(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
 				Name:       key.Name,
 				SecretName: cluster.Secret,
 				SecretKey:  cluster.SecretKey,
-			}, fleet.Spec.Plugin.Kyverno)
+			}, kyvernoCfg)
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}

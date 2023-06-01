@@ -76,8 +76,8 @@ type PluginConfig struct {
 	// Grafana defines the configuration for the grafana installation and observation.
 	// +optional
 	Grafana *GrafanaConfig `json:"grafana,omitempty"`
-	// Kyverno defines the configuration for the kyverno installation.
-	Kyverno *KyvernoConfig `json:"kyverno,omitempty"`
+	// Policy defines the configuration for the ploicy management.
+	Policy *PolicyConfig `json:"policy,omitempty"`
 }
 
 type MetricConfig struct {
@@ -193,6 +193,14 @@ type GrafanaConfig struct {
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
 
+type PolicyConfig struct {
+	// Kyverno defines the configuration for the kyverno installation and policy management.
+	// +optional
+	Kyverno *KyvernoConfig `json:"kyverno,omitempty"`
+
+	// TODO: support other policy management system.
+}
+
 type KyvernoConfig struct {
 	// Chart defines the helm chart config of the kyverno.
 	// default values is
@@ -203,9 +211,9 @@ type KyvernoConfig struct {
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
-	// Policy defines the kyverno policy configuration.
+	// PodSecurity defines the pod security configuration for the kyverno.
 	// +optional
-	Policy *KyvernoPolicyConfig `json:"policy,omitempty"`
+	PodSecurity *PodSecurityPolicy `json:"podSecurity,omitempty"`
 	// ExtraArgs is the set of extra arguments for Grafana chart.
 	//
 	// For Example, using following configuration to change image pull policy.
@@ -217,17 +225,17 @@ type KyvernoConfig struct {
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
 
-type KyvernoPolicyConfig struct {
-	// PodSecurityStandard defines the pod security standard.
+type PodSecurityPolicy struct {
+	// Standard defines the pod security standard.
 	// +kubebuilder:validation:Enum=privileged;baseline;restricted
 	// +kubebuilder:default=baseline
 	// +optional
-	PodSecurityStandard string `json:"podSecurityStandard,omitempty"`
-	// PodSecuritySeverity defines the pod security severity.
-	// +kubebuilder:validation:Enum=low;medium;high;critical
+	Standard string `json:"standard,omitempty"`
+	// Severity defines the pod security severity.
+	// +kubebuilder:validation:Enum=low;medium;high
 	// +kubebuilder:default=medium
 	// +optional
-	PodSecuritySeverity string `json:"podSecuritySeverity,omitempty"`
+	Severity string `json:"severity,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet
