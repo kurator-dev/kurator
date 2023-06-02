@@ -33,10 +33,13 @@ import (
 const (
 	MetricPluginName  = "metric"
 	GrafanaPluginName = "grafana"
+	KyvernoPluginName = "kyverno"
 
-	ThanosComponentName     = "thanos"
-	PrometheusComponentName = "prometheus"
-	GrafanaComponentName    = "grafana"
+	ThanosComponentName        = "thanos"
+	PrometheusComponentName    = "prometheus"
+	GrafanaComponentName       = "grafana"
+	KyvernoComponentName       = "kyverno"
+	KyvernoPolicyComponentName = "kyverno-policies"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -49,14 +52,63 @@ type GrafanaDataSource struct {
 	IsDefault  bool   `json:"isDefault"`
 }
 
-func RenderGrafana(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, grafanaCfg *fleetv1a1.GrafanaConfig, datasources []*GrafanaDataSource) ([]byte, error) {
+func RenderKyvernoPolicy(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, KyvernoPolicyComponentName)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeChartConfig(c, kyvernoCfg.Chart)
+
+	values := map[string]interface{}{
+		"podSecurityStandard": kyvernoCfg.PodSecurity.Standard,
+		"podSecuritySeverity": kyvernoCfg.PodSecurity.Severity,
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           KyvernoPluginName,
+		Component:      KyvernoPolicyComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RenderKyverno(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, KyvernoComponentName)
+	if err != nil {
+		return nil, err
+	}
+
+	mergeChartConfig(c, kyvernoCfg.Chart)
+
+	values, err := toMap(kyvernoCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           KyvernoPluginName,
+		Component:      KyvernoComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RenderGrafana(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference,
+	grafanaCfg *fleetv1a1.GrafanaConfig, datasources []*GrafanaDataSource) ([]byte, error) {
 	c, err := getFleetPluginChart(fsys, GrafanaComponentName)
 	if err != nil {
 		return nil, err
 	}
 
 	mergeChartConfig(c, grafanaCfg.Chart)
-	c.TargetNamespace = fleetNN.Namespace // thanos chart is fleet scoped
+	c.TargetNamespace = fleetNN.Namespace // grafana chart is fleet scoped
 
 	values, err := toMap(grafanaCfg.ExtraArgs)
 	if err != nil {

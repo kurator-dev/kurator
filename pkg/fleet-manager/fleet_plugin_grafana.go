@@ -34,8 +34,7 @@ import (
 func (f *FleetManager) reconcileGrafanaPlugin(ctx context.Context, fleet *fleetapi.Fleet) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx).WithValues("fleet", client.ObjectKeyFromObject(fleet))
 
-	if fleet.Spec.Plugin == nil ||
-		fleet.Spec.Plugin.Grafana == nil {
+	if fleet.Spec.Plugin.Grafana == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil
 		return nil, ctrl.Result{}, nil
 	}

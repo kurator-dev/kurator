@@ -116,6 +116,7 @@ FleetStatus
 <p>
 (<em>Appears on:</em>
 <a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
 </p>
@@ -386,6 +387,77 @@ replicaCount: 2</p>
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PolicyConfig">PolicyConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart config of the kyverno.
+default values is
+chart:
+repository: <a href="https://kyverno.github.io/kyverno/">https://kyverno.github.io/kyverno/</a>
+name: kyverno
+version: 3.0.0</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podSecurity</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PodSecurityPolicy">
+PodSecurityPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodSecurity defines the pod security configuration for the kyverno.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for Grafana chart.</p>
+<p>For Example, using following configuration to change image pull policy.
+extraArgs:
+image:
+pullPolicy: Always</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="fleet.kurator.dev/v1alpha1.MetricConfig">MetricConfig
 </h3>
 <p>
@@ -508,6 +580,98 @@ GrafanaConfig
 <td>
 <em>(Optional)</em>
 <p>Grafana defines the configuration for the grafana installation and observation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policy</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.PolicyConfig">
+PolicyConfig
+</a>
+</em>
+</td>
+<td>
+<p>Policy defines the configuration for the ploicy management.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PodSecurityPolicy">PodSecurityPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>standard</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Standard defines the pod security standard.
+More details: <a href="https://kubernetes.io/docs/concepts/security/pod-security-standards">https://kubernetes.io/docs/concepts/security/pod-security-standards</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>severity</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Severity indicates policy check result criticality in a policy report.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.PolicyConfig">PolicyConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>kyverno</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">
+KyvernoConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Kyverno defines the configuration for the kyverno installation and policy management.</p>
 </td>
 </tr>
 </tbody>

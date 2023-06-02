@@ -1,0 +1,7 @@
+type: default
+repo: https://kyverno.github.io/kyverno/
+name: kyverno-policies
+version: 3.0.0
+targetNamespace: kyverno
+values:
+  fullnameOverride: kyverno-policies

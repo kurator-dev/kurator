@@ -236,8 +236,7 @@ func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *fle
 func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx).WithValues("fleet", client.ObjectKeyFromObject(fleet))
 
-	if fleet.Spec.Plugin == nil ||
-		fleet.Spec.Plugin.Metric == nil {
+	if fleet.Spec.Plugin.Metric == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil
 		return nil, ctrl.Result{}, nil
 	}

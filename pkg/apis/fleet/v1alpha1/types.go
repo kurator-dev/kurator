@@ -76,6 +76,8 @@ type PluginConfig struct {
 	// Grafana defines the configuration for the grafana installation and observation.
 	// +optional
 	Grafana *GrafanaConfig `json:"grafana,omitempty"`
+	// Policy defines the configuration for the ploicy management.
+	Policy *PolicyConfig `json:"policy,omitempty"`
 }
 
 type MetricConfig struct {
@@ -189,6 +191,52 @@ type GrafanaConfig struct {
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+}
+
+type PolicyConfig struct {
+	// Kyverno defines the configuration for the kyverno installation and policy management.
+	// +optional
+	Kyverno *KyvernoConfig `json:"kyverno,omitempty"`
+
+	// TODO: support other policy management system.
+}
+
+type KyvernoConfig struct {
+	// Chart defines the helm chart config of the kyverno.
+	// default values is
+	// chart:
+	//   repository: https://kyverno.github.io/kyverno/
+	//   name: kyverno
+	//   version: 3.0.0
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+	// PodSecurity defines the pod security configuration for the kyverno.
+	// +optional
+	PodSecurity *PodSecurityPolicy `json:"podSecurity,omitempty"`
+	// ExtraArgs is the set of extra arguments for Grafana chart.
+	//
+	// For Example, using following configuration to change image pull policy.
+	// extraArgs:
+	//   image:
+	//     pullPolicy: Always
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+}
+
+type PodSecurityPolicy struct {
+	// Standard defines the pod security standard.
+	// More details: https://kubernetes.io/docs/concepts/security/pod-security-standards
+	// +kubebuilder:validation:Enum=privileged;baseline;restricted
+	// +kubebuilder:default=baseline
+	// +optional
+	Standard string `json:"standard,omitempty"`
+	// Severity indicates policy check result criticality in a policy report.
+	// +kubebuilder:validation:Enum=low;medium;high
+	// +kubebuilder:default=medium
+	// +optional
+	Severity string `json:"severity,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet

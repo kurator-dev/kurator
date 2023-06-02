@@ -27,6 +27,91 @@ import (
 	"kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
+func TestRenderKyvernoPolicy(t *testing.T) {
+	cases := []struct {
+		name  string
+		fleet types.NamespacedName
+		ref   *metav1.OwnerReference
+		in    *v1alpha1.KyvernoConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			in: &v1alpha1.KyvernoConfig{
+				PodSecurity: &v1alpha1.PodSecurityPolicy{
+					Standard: "baseline",
+					Severity: "medium",
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderKyvernoPolicy(manifestFS, tc.fleet, tc.ref, FleetCluster{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.in)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected(KyvernoPolicyComponentName, tc.name)
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
+func TestRenderKyverno(t *testing.T) {
+	cases := []struct {
+		name  string
+		fleet types.NamespacedName
+		ref   *metav1.OwnerReference
+		in    *v1alpha1.KyvernoConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			in: &v1alpha1.KyvernoConfig{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderKyverno(manifestFS, tc.fleet, tc.ref, FleetCluster{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.in)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("kyverno", tc.name)
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
 func TestRenderGrafana(t *testing.T) {
 	cases := []struct {
 		name    string
