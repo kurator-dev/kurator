@@ -32,8 +32,7 @@ import (
 func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv1a1.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	if fleet.Spec.Plugin == nil ||
-		fleet.Spec.Plugin.Policy == nil ||
+	if fleet.Spec.Plugin.Policy == nil ||
 		fleet.Spec.Plugin.Policy.Kyverno == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil
 		return nil, ctrl.Result{}, nil
@@ -58,13 +57,14 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 			return nil, ctrl.Result{}, err
 		}
 
+		// apply kyverno resources
 		kyvernoResources, err := util.PatchResources(b)
 		if err != nil {
 			return nil, ctrl.Result{}, err
 		}
 		resources = append(resources, kyvernoResources...)
 
-		// handle kyverno pod security policy
+		// generate policies for pod security admission
 		if kyvernoCfg.PodSecurity != nil {
 			b, err = plugin.RenderKyvernoPolicy(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
 				Name:       key.Name,

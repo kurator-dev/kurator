@@ -39,23 +39,26 @@ const (
 
 func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
 	var resources kube.ResourceList
-	result, ctrlResult, err := f.reconcileMetricPlugin(ctx, fleet, fleetClusters)
-	if err != nil || ctrlResult.RequeueAfter > 0 {
-		return ctrlResult, err
-	}
-	resources = append(resources, result...)
 
-	result, ctrlResult, err = f.reconcileGrafanaPlugin(ctx, fleet)
-	if err != nil || ctrlResult.RequeueAfter > 0 {
-		return ctrlResult, err
-	}
-	resources = append(resources, result...)
+	if fleet.Spec.Plugin != nil {
+		result, ctrlResult, err := f.reconcileMetricPlugin(ctx, fleet, fleetClusters)
+		if err != nil || ctrlResult.RequeueAfter > 0 {
+			return ctrlResult, err
+		}
+		resources = append(resources, result...)
 
-	result, ctrlResult, err = f.reconcileKyvernoPlugin(ctx, fleet, fleetClusters)
-	if err != nil || ctrlResult.RequeueAfter > 0 {
-		return ctrlResult, err
+		result, ctrlResult, err = f.reconcileGrafanaPlugin(ctx, fleet)
+		if err != nil || ctrlResult.RequeueAfter > 0 {
+			return ctrlResult, err
+		}
+		resources = append(resources, result...)
+
+		result, ctrlResult, err = f.reconcileKyvernoPlugin(ctx, fleet, fleetClusters)
+		if err != nil || ctrlResult.RequeueAfter > 0 {
+			return ctrlResult, err
+		}
+		resources = append(resources, result...)
 	}
-	resources = append(resources, result...)
 
 	return f.reconcilePluginResources(ctx, fleet, resources)
 }

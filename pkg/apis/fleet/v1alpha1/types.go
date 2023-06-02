@@ -227,11 +227,12 @@ type KyvernoConfig struct {
 
 type PodSecurityPolicy struct {
 	// Standard defines the pod security standard.
+	// More details: https://kubernetes.io/docs/concepts/security/pod-security-standards
 	// +kubebuilder:validation:Enum=privileged;baseline;restricted
 	// +kubebuilder:default=baseline
 	// +optional
 	Standard string `json:"standard,omitempty"`
-	// Severity defines the pod security severity.
+	// Severity indicates policy check result criticality in a policy report.
 	// +kubebuilder:validation:Enum=low;medium;high
 	// +kubebuilder:default=medium
 	// +optional

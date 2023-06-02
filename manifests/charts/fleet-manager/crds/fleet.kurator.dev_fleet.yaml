@@ -280,7 +280,8 @@ spec:
                             properties:
                               severity:
                                 default: medium
-                                description: Severity defines the pod security severity.
+                                description: Severity indicates policy check result
+                                  criticality in a policy report.
                                 enum:
                                 - low
                                 - medium
@@ -288,7 +289,8 @@ spec:
                                 type: string
                               standard:
                                 default: baseline
-                                description: Standard defines the pod security standard.
+                                description: 'Standard defines the pod security standard.
+                                  More details: https://kubernetes.io/docs/concepts/security/pod-security-standards'
                                 enum:
                                 - privileged
                                 - baseline
