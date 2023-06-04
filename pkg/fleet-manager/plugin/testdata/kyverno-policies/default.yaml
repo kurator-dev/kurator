@@ -45,6 +45,7 @@ spec:
     fullnameOverride: kyverno-policies
     podSecuritySeverity: medium
     podSecurityStandard: baseline
+    validationFailureAction: Audit
     
   interval: 1m0s
   install:

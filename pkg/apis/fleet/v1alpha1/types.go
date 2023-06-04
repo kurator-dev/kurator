@@ -237,6 +237,12 @@ type PodSecurityPolicy struct {
 	// +kubebuilder:default=medium
 	// +optional
 	Severity string `json:"severity,omitempty"`
+	// ValidationFailureAction indicates the action to take when a pod creation fails to validate.
+	// For more info https://kyverno.io/docs/writing-policies/validate/#validation-failure-action
+	// +kubebuilder:validation:Enum=Enforce;Audit
+	// +kubebuilder:default=Audit
+	// +optional
+	ValidationFailureAction string `json:"validationFailureAction,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet

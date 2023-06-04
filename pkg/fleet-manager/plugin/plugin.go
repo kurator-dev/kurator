@@ -61,8 +61,9 @@ func RenderKyvernoPolicy(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *met
 	mergeChartConfig(c, kyvernoCfg.Chart)
 
 	values := map[string]interface{}{
-		"podSecurityStandard": kyvernoCfg.PodSecurity.Standard,
-		"podSecuritySeverity": kyvernoCfg.PodSecurity.Severity,
+		"podSecurityStandard":     kyvernoCfg.PodSecurity.Standard,
+		"podSecuritySeverity":     kyvernoCfg.PodSecurity.Severity,
+		"validationFailureAction": kyvernoCfg.PodSecurity.ValidationFailureAction,
 	}
 
 	return renderFleetPlugin(fsys, FleetPluginConfig{

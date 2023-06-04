@@ -296,6 +296,15 @@ spec:
                                 - baseline
                                 - restricted
                                 type: string
+                              validationFailureAction:
+                                default: Audit
+                                description: ValidationFailureAction indicates the
+                                  action to take when a pod creation fails to validate.
+                                  For more info https://kyverno.io/docs/writing-policies/validate/#validation-failure-action
+                                enum:
+                                - Enforce
+                                - Audit
+                                type: string
                             type: object
                         type: object
                     type: object
