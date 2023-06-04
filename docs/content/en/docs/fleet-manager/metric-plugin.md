@@ -28,7 +28,7 @@ Fleet's multi cluster monitoring is built on top [Prometheus](https://prometheus
 ### Create a fleet with metric plugin enabled
 
 ```console
-kubectl apply -f examples/fleet/metric-plugin.yaml
+kubectl apply -f examples/fleet/metric/metric-plugin.yaml
 ```
 
 After a while, we can see the fleet is `ready`:
@@ -47,11 +47,42 @@ kubectl port-forward svc/default-thanos-query 9090:9090 --address 0.0.0.0
     link="./image/thanos-ui.jpeg"
     >}}
 
+## Apply more monitor settings with Fleet Application
+
+Run following command to create a [avalanche](https://github.com/prometheus-community/avalanche) pod and ServiceMonitor in the fleet:
+
+```console
+cat <<EOF | kubectl apply -f -
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: metric-demo
+  namespace: default
+spec:
+  source:
+    gitRepo:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/kurator-dev/kurator
+  syncPolicy:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 5m0s
+        path: ./examples/fleet/metric/monitor-demo
+        prune: true
+        timeout: 2m0s
+EOF
+```
+
 ## Cleanup
 
 Delete the fleet created
 
 ```console
+kubectl delete application metric-demo
 kubectl delete fleet quickstart
 ```
 
