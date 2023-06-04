@@ -140,12 +140,13 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	var labeledCluster []ClusterInterface
 
 	for _, cluster := range clusterList.Items {
-		labeledCluster = append(labeledCluster, &cluster)
+		clusterCopy := cluster.DeepCopy()
+		labeledCluster = append(labeledCluster, clusterCopy)
 	}
 
 	for _, attachedCluster := range attachedClusterList.Items {
-		log.Info("a attachedCluster added ", "attachedCluster", attachedCluster.Name)
-		labeledCluster = append(labeledCluster, &attachedCluster)
+		attachedClusterCopy := attachedCluster.DeepCopy()
+		labeledCluster = append(labeledCluster, attachedClusterCopy)
 	}
 
 	for _, cluster := range labeledCluster {
