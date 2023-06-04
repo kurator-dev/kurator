@@ -284,6 +284,7 @@ function util::wait_pods() {
 #  - $1: kubeconfig of the kind cluster want to install metallb
 #  - $2: context of the kind cluster want to install metallb
 #  - $3: ipv4 or ipv6
+#  - $4: ip address space
 function util::install_metallb() {
   METALLB_VERSION="v0.13.6"
   kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/${METALLB_VERSION}/config/manifests/metallb-native.yaml --kubeconfig="$1" --context="$2"
@@ -291,7 +292,7 @@ function util::install_metallb() {
   addrName="IPAddress"
   ipv4Prefix=""
   ipv6Prefix=""
-  IPSPACE=255
+  IPSPACE=$4
 
   # Get both ipv4 and ipv6 gateway for the cluster
   gatewaystr=$(docker network inspect -f '{{range .IPAM.Config }}{{ .Gateway }} {{end}}' kind | cut -f1,2)
