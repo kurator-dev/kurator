@@ -35,6 +35,15 @@ const KarmadaCtlImage = "ghcr.io/kurator-dev/karmadactl:v0.1.0"
 const FleetWorkerClusterRoleBindingName = "fleet-worker"
 
 func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetapi.Fleet) error {
+	controlplane := fleet.Annotations[fleetapi.ControlplaneAnnotation]
+	// if no controlplane is specified, do nothing
+	// we donot support annotation update yet
+	if controlplane == "" {
+		fleet.Status.Phase = fleetapi.ReadyPhase
+		fleet.Status.CredentialSecret = nil
+		return nil
+	}
+	// TODO: generate a valid name
 	podName := fleet.Name + "-init"
 	namespace := fleet.Namespace
 
@@ -50,9 +59,10 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 		if pod.Status.Phase == corev1.PodSucceeded {
 			// pod is done, update the fleet status
 			fleet.Status.Phase = fleetapi.ReadyPhase
+			secret := "kubeconfig"
 			// TODO: update the kubeconfig api endpoint?
 			// "kubeconfig" is the name of the kubeconfig to access karmada apiserver.
-			fleet.Status.CredentialSecret = "kubeconfig"
+			fleet.Status.CredentialSecret = &secret
 		}
 		return nil
 	}
@@ -143,6 +153,13 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 }
 
 func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.Fleet) error {
+	controlplane := fleet.Annotations[fleetapi.ControlplaneAnnotation]
+	// if no controlplane is specified, do nothing
+	if controlplane == "" {
+		fleet.Status.Phase = fleetapi.TerminateSucceededPhase
+		fleet.Status.CredentialSecret = nil
+		return nil
+	}
 	podName := fleet.Name + "-delete"
 	namespace := fleet.Namespace
 
