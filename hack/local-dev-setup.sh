@@ -60,16 +60,17 @@ util::connect_kind_clusters "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${MEMBE
 echo "cluster networks connected"
 
 echo "install metallb in host cluster"
-util::install_metallb ${MAIN_KUBECONFIG} ${HOST_CLUSTER_NAME} "ipv4"
+util::install_metallb ${MAIN_KUBECONFIG} ${HOST_CLUSTER_NAME} "ipv4" "255"
 
 
 echo "starting install metallb in member clusters"
 MEMBER_CLUSTERS=(${MEMBER_CLUSTER_1_NAME} ${MEMBER_CLUSTER_2_NAME})
 MEMBER_KUBECONFIGS=(${MEMBER_CLUSTER_1_KUBECONFIG} ${MEMBER_CLUSTER_2_KUBECONFIG})
+MEMBER_IPSPACES=("254" "253")
 for i in "${!MEMBER_CLUSTERS[@]}"
 do
   echo "install metallb in ${MEMBER_CLUSTERS[i]}"
-  util::install_metallb ${MEMBER_KUBECONFIGS[i]} ${MEMBER_CLUSTERS[i]} "ipv4"
+  util::install_metallb ${MEMBER_KUBECONFIGS[i]} ${MEMBER_CLUSTERS[i]} "ipv4" ${MEMBER_IPSPACES[i]}
 done
 
 
