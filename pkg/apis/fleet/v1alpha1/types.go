@@ -41,6 +41,11 @@ const (
 	TerminateSucceededPhase FleetPhase = "TerminateSucceeded"
 )
 
+// ControlplaneAnnotation is the annotation that can be added to the fleet
+// to indicate fleet manager to install control plane for the fleet.
+// Current the supported value of the annotation is `karmada`.
+const ControlplaneAnnotation = "fleet.kurator.dev/controlplane"
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
@@ -59,10 +64,8 @@ type Fleet struct {
 // FleetSpec defines the desired state of the fleet
 type FleetSpec struct {
 	// Clusters represents the clusters that would be registered to the fleet.
+	// +required
 	Clusters []*corev1.ObjectReference `json:"clusters,omitempty"`
-
-	// TODO: support cluster selector?
-	// TODO: add options to allow customize fleet control plane if neccessary. And in future this could not be karmada.
 
 	// Plugin defines the plugins that would be installed in the fleet.
 	// +optional
@@ -194,7 +197,7 @@ type GrafanaConfig struct {
 // FleetStatus defines the observed state of the fleet
 type FleetStatus struct {
 	// CredentialSecret is the secret name that holds credentials used for accessing the fleet control plane.
-	CredentialSecret string `json:"credentialSecret,omitempty"`
+	CredentialSecret *string `json:"credentialSecret,omitempty"`
 
 	// Phase represents the current phase of fleet.
 	// E.g. Pending, Running, Terminating, Failed, Ready, etc.
@@ -210,7 +213,6 @@ type FleetStatus struct {
 	// PluginEndpoints is the endpoints of the plugins.
 	PluginEndpoints map[string]Endpoints `json:"pluginEndpoints,omitempty"`
 
-	// TODO: healthy/unhealthy members cluster
 	// Total number of ready clusters, ready to deploy .
 	ReadyClusters int32 `json:"readyClusters,omitempty"`
 

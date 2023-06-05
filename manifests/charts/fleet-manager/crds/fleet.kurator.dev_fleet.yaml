@@ -263,8 +263,7 @@ spec:
                 description: PluginEndpoints is the endpoints of the plugins.
                 type: object
               readyClusters:
-                description: 'TODO: healthy/unhealthy members cluster Total number
-                  of ready clusters, ready to deploy .'
+                description: Total number of ready clusters, ready to deploy .
                 format: int32
                 type: integer
               reason:
