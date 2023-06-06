@@ -1,12 +1,12 @@
 ---
-title: "Install Fluxcd"
-linkTitle: "Install Fluxcd"
+title: "Install FluxCD"
+linkTitle: "Install FluxCD"
 weight: 40
 description: >
-  Instructions on installing Flucd.
+  Instructions on installing FluxCD.
 ---
 
-## Install Fluxcd with Helm
+## Install FluxCD with Helm
 
 Kurator use helm chart from fluxcd community, more details can be found [here](https://github.com/fluxcd-community/helm-charts).
 

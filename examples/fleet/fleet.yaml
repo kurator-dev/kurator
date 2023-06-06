@@ -7,5 +7,3 @@ spec:
   clusters:
     - name: quickstart
       kind: Cluster
-    - name: ac1
-      kind: AttachedCluster
