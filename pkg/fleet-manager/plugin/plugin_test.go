@@ -48,8 +48,9 @@ func TestRenderKyvernoPolicy(t *testing.T) {
 			},
 			in: &v1alpha1.KyvernoConfig{
 				PodSecurity: &v1alpha1.PodSecurityPolicy{
-					Standard: "baseline",
-					Severity: "medium",
+					Standard:                "baseline",
+					Severity:                "medium",
+					ValidationFailureAction: "Audit",
 				},
 			},
 		},
