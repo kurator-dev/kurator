@@ -38,10 +38,36 @@ spec:
             description: ApplicationSpec defines the configuration to produce an artifact
               and how to dispatch it.
             properties:
+              destination:
+                description: Destination defines the destination clusters where the
+                  artifacts will be synced. It can be overriden by the syncPolicies'
+                  destination.
+                properties:
+                  clusterSelector:
+                    description: ClusterSelector specifies the selectors to select
+                      the clusters within the fleet. If unspecified, all clusters
+                      in the fleet will be selected.
+                    properties:
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: 'MatchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors'
+                        type: object
+                    type: object
+                  fleet:
+                    description: Fleet defines the fleet to dispatch the artifact.
+                    type: string
+                required:
+                - fleet
+                type: object
               source:
                 description: Source defines the artifact source.
                 properties:
-                  gitRepo:
+                  gitRepository:
                     description: GitRepositorySpec specifies the required configuration
                       to produce an Artifact for a Git repository.
                     properties:
@@ -218,7 +244,7 @@ spec:
                     - interval
                     - url
                     type: object
-                  helmRepo:
+                  helmRepository:
                     description: HelmRepositorySpec specifies the required configuration
                       to produce an Artifact for a Helm repository index YAML.
                     properties:
@@ -317,7 +343,7 @@ spec:
                     - interval
                     - url
                     type: object
-                  ociRepo:
+                  ociRepository:
                     description: OCIRepositorySpec defines the desired state of OCIRepository
                     properties:
                       certSecretRef:
@@ -462,60 +488,32 @@ spec:
                     - url
                     type: object
                 type: object
-              syncPolicy:
-                description: SyncPolicy controls how the artifact will be synced.
+              syncPolicies:
+                description: SyncPolicies controls how the artifact will be customized
+                  and where it will be synced.
                 items:
                   description: ApplicationSyncPolicy defines the configuration to
-                    sync an artifact. Only `kustomization` or `helm` can be specified
-                    to manage application sync.
+                    sync an artifact. Only oneof `kustomization` or `helm` can be
+                    specified to manage application sync.
                   properties:
                     destination:
                       description: Destination defines the destination for the artifact.
+                        If specified, it will override the destination specified at
+                        Application level.
                       properties:
                         clusterSelector:
-                          description: ClusterSelector defines the label selectors
-                            to select the clusters of the fleet.
+                          description: ClusterSelector specifies the selectors to
+                            select the clusters within the fleet. If unspecified,
+                            all clusters in the fleet will be selected.
                           properties:
-                            matchExpressions:
-                              description: matchExpressions is a list of label selector
-                                requirements. The requirements are ANDed.
-                              items:
-                                description: A label selector requirement is a selector
-                                  that contains values, a key, and an operator that
-                                  relates the key and values.
-                                properties:
-                                  key:
-                                    description: key is the label key that the selector
-                                      applies to.
-                                    type: string
-                                  operator:
-                                    description: operator represents a key's relationship
-                                      to a set of values. Valid operators are In,
-                                      NotIn, Exists and DoesNotExist.
-                                    type: string
-                                  values:
-                                    description: values is an array of string values.
-                                      If the operator is In or NotIn, the values array
-                                      must be non-empty. If the operator is Exists
-                                      or DoesNotExist, the values array must be empty.
-                                      This array is replaced during a strategic merge
-                                      patch.
-                                    items:
-                                      type: string
-                                    type: array
-                                required:
-                                - key
-                                - operator
-                                type: object
-                              type: array
                             matchLabels:
                               additionalProperties:
                                 type: string
-                              description: matchLabels is a map of {key,value} pairs.
+                              description: 'MatchLabels is a map of {key,value} pairs.
                                 A single {key,value} in the matchLabels map is equivalent
                                 to an element of matchExpressions, whose key field
                                 is "key", the operator is "In", and the values array
-                                contains only "value". The requirements are ANDed.
+                                contains only "value". More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors'
                               type: object
                           type: object
                         fleet:
@@ -974,7 +972,7 @@ spec:
                       type: object
                     kustomization:
                       description: Kustomization defines the configuration to calculate
-                        the desired state from a Source using Kustomize.
+                        the desired state from a source using kustomize.
                       properties:
                         commonMetadata:
                           description: CommonMetadata specifies the common labels
@@ -1156,10 +1154,11 @@ spec:
                       description: Name defines the name of the sync policy. If unspecified,
                         a name of format `<application name>-<index>` will be generated.
                       type: string
-                  required:
-                  - destination
                   type: object
                 type: array
+            required:
+            - source
+            - syncPolicies
             type: object
           status:
             description: ApplicationStatus defines the observed state of Application.
