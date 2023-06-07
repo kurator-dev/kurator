@@ -247,12 +247,12 @@ func addFleetClusterRelation(clusterList *clusterv1alpha1.ClusterList, attachedC
 func generateFleetClusterList(clusterList *clusterv1alpha1.ClusterList, attachedClusterList *clusterv1alpha1.AttachedClusterList, app *applicationapi.Application) ([]ClusterInterface, error) {
 	var fleetClusterList []ClusterInterface
 	for _, cluster := range clusterList.Items {
-		clusterCopy := cluster.DeepCopy()
-		fleetClusterList = append(fleetClusterList, clusterCopy)
+		clusterCopy := cluster
+		fleetClusterList = append(fleetClusterList, &clusterCopy)
 	}
 	for _, attachedCluster := range attachedClusterList.Items {
-		attachedClusterCopy := attachedCluster.DeepCopy()
-		fleetClusterList = append(fleetClusterList, attachedClusterCopy)
+		attachedClusterCopy := attachedCluster
+		fleetClusterList = append(fleetClusterList, &attachedClusterCopy)
 	}
 	return fleetClusterList, nil
 }
