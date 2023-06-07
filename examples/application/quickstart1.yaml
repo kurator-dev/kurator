@@ -37,13 +37,13 @@ metadata:
   namespace: default
 spec:
   source:
-    gitRepo:
+    gitRepository:
       interval: 3m0s
       ref:
         branch: master
       timeout: 1m0s
       url: https://github.com/stefanprodan/podinfo
-  syncPolicy:
+  syncPolicies:
     - destination:
         fleet: quickstart
       kustomization:

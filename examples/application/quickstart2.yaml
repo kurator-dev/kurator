@@ -37,10 +37,10 @@ metadata:
   namespace: default
 spec:
   source:
-    helmRepo:
+    helmRepository:
       interval: 5m
       url: https://stefanprodan.github.io/podinfo
-  syncPolicy:
+  syncPolicies:
     - destination:
         fleet: quickstart
       helm:
