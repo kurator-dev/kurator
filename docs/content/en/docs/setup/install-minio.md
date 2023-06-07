@@ -1,7 +1,7 @@
 ---
 title: "Install Minio"
 linkTitle: "Install Minio"
-weight: 50
+weight: 40
 description: >
   Instructions on installing Minio.
 ---

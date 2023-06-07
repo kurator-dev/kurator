@@ -18,9 +18,7 @@ Fleet's multi cluster policy management is built on top [Kyverno](https://kyvern
 
 ## Prerequisites
 
-1. Setup Fleet manager following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
-
-1. Fleet manager depends on [FluxCD](https://fluxcd.io/flux/), setup by following the instructions in the [installation guide](/docs/setup/install-fluxcd/).
+Setup Fleet manager following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
 
 ### Create a fleet with pod security policy enabled
 

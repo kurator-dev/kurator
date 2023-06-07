@@ -10,6 +10,31 @@ description: >
 
 Fleet manager depends on cluster operator, so refer to [Cluster operator installation guide](/docs/setup/install-cluster-operator).
 
+## Install FluxCD with Helm
+
+Fleet manager depends on [Fluxcd](https://fluxcd.io/flux/), Kurator use helm chart from fluxcd community, more details can be found [here](https://github.com/fluxcd-community/helm-charts).
+
+Setup with following command:
+
+```console
+helm repo add fluxcd-community https://fluxcd-community.github.io/helm-charts
+
+cat <<EOF | helm install fluxcd fluxcd-community/flux2 --version 2.7.0 -n fluxcd-system --create-namespace -f -
+imageAutomationController:
+  create: false
+imageReflectionController:
+  create: false
+notificationController:
+  create: false
+EOF
+```
+
+Check the controller status:
+
+```console
+kubectl get po -n fluxcd-system
+```
+
 ## Install fleet manager from source
 
 Build fleet manager image and helm chart:
@@ -58,4 +83,9 @@ Install fleet manager into the management cluster.
 ```bash
 helm uninstall kurator-cluster-operator -n kurator-system
 helm uninstall kurator-fleet-manager -n kurator-system
+```
+
+```bash
+helm delete fluxcd -n fluxcd-system
+kubectl delete ns fluxcd-system --ignore-not-found
 ```
