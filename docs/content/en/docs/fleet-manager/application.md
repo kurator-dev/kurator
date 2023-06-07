@@ -12,7 +12,7 @@ In this guide, we will introduce how to use Kurator to distribute applications u
 
 Kurator offers a unified system for distributing applications across multiple clusters, powered by Fleet.
 
-By making use of the GitOps approach through [Fluxcd](https://fluxcd.io/flux/), Kurator automates the process of syncing and deploying applications. This makes the entire procedure quicker and more precise
+By making use of the GitOps approach through [FluxCD](https://fluxcd.io/flux/), Kurator automates the process of syncing and deploying applications. This makes the entire procedure quicker and more precise
 
 Built to be flexible and responsive, Kurator's distribution system is specially designed to accommodate various business and cluster demands.
 
@@ -24,9 +24,7 @@ The overall architecture is shown as below:
 
 ## Prerequisites
 
-1. Setup Fleet manager by following the instructions in the [installation guide](/docs/setup/install-fleet-manager).
-
-1. Follow the instructions in the [installation guide](/docs/setup/install-fluxcd) to install Fluxcd.
+Setup Fleet manager by following the instructions in the [installation guide](/docs/setup/install-fleet-manager).
 
 ## Create an example application
 

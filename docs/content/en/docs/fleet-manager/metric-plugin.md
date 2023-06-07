@@ -20,8 +20,6 @@ Fleet's multi cluster monitoring is built on top [Prometheus](https://prometheus
 
 1. Setup Fleet manager by following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
 
-1. Fleet manager depends on [Fluxcd](https://fluxcd.io/flux/), setup by following the instructions in the [installation guide](/docs/setup/install-fluxcd/).
-
 1. Kurator metric depends on [Thanos](https://thanos.io), [Object Storage](https://thanos.io/tip/thanos/storage.md/) is required for Thanos. In the task, [Minio](https://min.io/) is used, setup by the [installation guide](/docs/setup/install-minio).
 
 
