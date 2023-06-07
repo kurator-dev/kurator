@@ -164,10 +164,16 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		return ctrl.Result{}, nil
 	}
 
+	var fleetName string
+	if app.Spec.Destination != nil {
+		fleetName = app.Spec.Destination.Fleet
+	} else {
+		fleetName = app.Spec.SyncPolicies[0].Destination.Fleet
+	}
 	// there only one fleet, so pre-fetch it here.
 	fleetKey := client.ObjectKey{
 		Namespace: app.Namespace,
-		Name:      app.Spec.SyncPolicies[0].Destination.Fleet,
+		Name:      fleetName,
 	}
 	fleet := &fleetapi.Fleet{}
 	// Retrieve fleet object based on the defined fleet key
