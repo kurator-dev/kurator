@@ -268,7 +268,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 				},
 				OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
 			},
-			Spec: *app.Spec.Source.GitRepo,
+			Spec: *app.Spec.Source.GitRepository,
 		}
 		return a.syncResource(ctx, targetSource, GitRepoKind)
 	case HelmRepoKind:
@@ -281,7 +281,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 				},
 				OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
 			},
-			Spec: *app.Spec.Source.HelmRepo,
+			Spec: *app.Spec.Source.HelmRepository,
 		}
 		return a.syncResource(ctx, targetSource, HelmRepoKind)
 	case OCIRepoKind:
@@ -294,7 +294,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 				},
 				OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
 			},
-			Spec: *app.Spec.Source.OCIRepo,
+			Spec: *app.Spec.Source.OCIRepository,
 		}
 		return a.syncResource(ctx, targetSource, OCIRepoKind)
 	}
@@ -430,13 +430,13 @@ func (a *ApplicationManager) updateHelmRelease(ctx context.Context, currentResou
 
 // findSourceKind get the type of the application's source.
 func findSourceKind(app *applicationapi.Application) string {
-	if app.Spec.Source.GitRepo != nil {
+	if app.Spec.Source.GitRepository != nil {
 		return GitRepoKind
 	}
-	if app.Spec.Source.HelmRepo != nil {
+	if app.Spec.Source.HelmRepository != nil {
 		return HelmRepoKind
 	}
-	if app.Spec.Source.OCIRepo != nil {
+	if app.Spec.Source.OCIRepository != nil {
 		return OCIRepoKind
 	}
 	return ""
@@ -486,9 +486,9 @@ func generateApplicationOwnerRef(app *applicationapi.Application) metav1.OwnerRe
 
 func generatePolicyName(app *applicationapi.Application, index int) string {
 	// If no policy name is specified, set a default in the format `<application name>-<index>`.
-	if len(app.Spec.SyncPolicy[index].Name) == 0 {
+	if len(app.Spec.SyncPolicies[index].Name) == 0 {
 		return app.Name + "-" + strconv.Itoa(index)
 	}
 
-	return app.Spec.SyncPolicy[index].Name
+	return app.Spec.SyncPolicies[index].Name
 }

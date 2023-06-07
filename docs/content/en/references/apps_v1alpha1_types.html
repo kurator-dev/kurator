@@ -61,7 +61,7 @@ ApplicationSource
 </tr>
 <tr>
 <td>
-<code>syncPolicy</code><br>
+<code>syncPolicies</code><br>
 <em>
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">
 []ApplicationSyncPolicy
@@ -69,7 +69,22 @@ ApplicationSource
 </em>
 </td>
 <td>
-<p>SyncPolicy controls how the artifact will be synced.</p>
+<p>SyncPolicies controls how the artifact will be customized and where it will be synced.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>destination</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationDestination">
+ApplicationDestination
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Destination defines the destination clusters where the artifacts will be synced.
+It can be overriden by the syncPolicies&rsquo; destination.</p>
 </td>
 </tr>
 </table>
@@ -95,6 +110,7 @@ ApplicationStatus
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec</a>, 
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
 </p>
 <p>ApplicationDestination defines the configuration to dispatch an artifact to a fleet or specific clusters.</p>
@@ -123,14 +139,15 @@ string
 <td>
 <code>clusterSelector</code><br>
 <em>
-<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#labelselector-v1-meta">
-Kubernetes meta/v1.LabelSelector
+<a href="#apps.kurator.dev/v1alpha1.ClusterSelector">
+ClusterSelector
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>ClusterSelector defines the label selectors to select the clusters of the fleet.</p>
+<p>ClusterSelector specifies the selectors to select the clusters within the fleet.
+If unspecified, all clusters in the fleet will be selected.</p>
 </td>
 </tr>
 </tbody>
@@ -143,8 +160,8 @@ Kubernetes meta/v1.LabelSelector
 (<em>Appears on:</em>
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec</a>)
 </p>
-<p>ApplicationSource defines the configuration to produce an artifact for git, helm or OCI repository.
-Note only one source can be specified</p>
+<p>ApplicationSource defines the configuration to produce an artifact for git, helm or oci repository.
+Note only one source can be specified.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
 <table>
@@ -157,7 +174,7 @@ Note only one source can be specified</p>
 <tbody>
 <tr>
 <td>
-<code>gitRepo</code><br>
+<code>gitRepository</code><br>
 <em>
 <a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#GitRepositorySpec">
 github.com/fluxcd/source-controller/api/v1beta2.GitRepositorySpec
@@ -170,7 +187,7 @@ github.com/fluxcd/source-controller/api/v1beta2.GitRepositorySpec
 </tr>
 <tr>
 <td>
-<code>helmRepo</code><br>
+<code>helmRepository</code><br>
 <em>
 <a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#HelmRepositorySpec">
 github.com/fluxcd/source-controller/api/v1beta2.HelmRepositorySpec
@@ -183,7 +200,7 @@ github.com/fluxcd/source-controller/api/v1beta2.HelmRepositorySpec
 </tr>
 <tr>
 <td>
-<code>ociRepo</code><br>
+<code>ociRepository</code><br>
 <em>
 <a href="https://pkg.go.dev/github.com/fluxcd/source-controller/api/v1#OCIRepositorySpec">
 github.com/fluxcd/source-controller/api/v1beta2.OCIRepositorySpec
@@ -287,7 +304,7 @@ ApplicationSource
 </tr>
 <tr>
 <td>
-<code>syncPolicy</code><br>
+<code>syncPolicies</code><br>
 <em>
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">
 []ApplicationSyncPolicy
@@ -295,7 +312,22 @@ ApplicationSource
 </em>
 </td>
 <td>
-<p>SyncPolicy controls how the artifact will be synced.</p>
+<p>SyncPolicies controls how the artifact will be customized and where it will be synced.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>destination</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationDestination">
+ApplicationDestination
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Destination defines the destination clusters where the artifacts will be synced.
+It can be overriden by the syncPolicies&rsquo; destination.</p>
 </td>
 </tr>
 </tbody>
@@ -354,7 +386,7 @@ ApplicationSourceStatus
 <a href="#apps.kurator.dev/v1alpha1.ApplicationSpec">ApplicationSpec</a>)
 </p>
 <p>ApplicationSyncPolicy defines the configuration to sync an artifact.
-Only <code>kustomization</code> or <code>helm</code> can be specified to manage application sync.</p>
+Only oneof <code>kustomization</code> or <code>helm</code> can be specified to manage application sync.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
 <table>
@@ -390,7 +422,7 @@ Kustomization
 <td>
 <em>(Optional)</em>
 <p>Kustomization defines the configuration to calculate the desired state
-from a Source using Kustomize.</p>
+from a source using kustomize.</p>
 </td>
 </tr>
 <tr>
@@ -417,7 +449,9 @@ ApplicationDestination
 </em>
 </td>
 <td>
-<p>Destination defines the destination for the artifact.</p>
+<em>(Optional)</em>
+<p>Destination defines the destination for the artifact.
+If specified, it will override the destination specified at Application level.</p>
 </td>
 </tr>
 </tbody>
@@ -473,6 +507,39 @@ github.com/fluxcd/helm-controller/api/v2beta1.HelmReleaseStatus
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.ClusterSelector">ClusterSelector
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationDestination">ApplicationDestination</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>matchLabels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MatchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &ldquo;key&rdquo;, the operator is &ldquo;In&rdquo;, and the values array contains only &ldquo;value&rdquo;.
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors">https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors</a></p>
 </td>
 </tr>
 </tbody>

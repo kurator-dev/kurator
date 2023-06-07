@@ -164,10 +164,16 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		return ctrl.Result{}, nil
 	}
 
+	var fleetName string
+	if app.Spec.Destination != nil {
+		fleetName = app.Spec.Destination.Fleet
+	} else {
+		fleetName = app.Spec.SyncPolicies[0].Destination.Fleet
+	}
 	// there only one fleet, so pre-fetch it here.
 	fleetKey := client.ObjectKey{
 		Namespace: app.Namespace,
-		Name:      app.Spec.SyncPolicy[0].Destination.Fleet,
+		Name:      fleetName,
 	}
 	fleet := &fleetapi.Fleet{}
 	// Retrieve fleet object based on the defined fleet key
@@ -226,7 +232,7 @@ func (a *ApplicationManager) reconcileInitializeParameters(ctx context.Context, 
 	sourceKind := findSourceKind(app)
 
 	// Iterate over all sync policies.
-	for _, policy := range app.Spec.SyncPolicy {
+	for _, policy := range app.Spec.SyncPolicies {
 		// Currently, only two pairs of source types are supported: 'gitRepo + kustomization' and 'helmRepo + helmRelease'.
 		// TODO: support other pairs
 		if sourceKind == GitRepoKind && policy.Kustomization == nil {
@@ -263,7 +269,7 @@ func (a *ApplicationManager) reconcileApplicationResources(ctx context.Context, 
 	// todo: if we need to delete the kustomization/helmReleases when the fleet is removed from the application?
 
 	// Iterate over each policy in the application's spec.SyncPolicy
-	for index, policy := range app.Spec.SyncPolicy {
+	for index, policy := range app.Spec.SyncPolicies {
 		policyName := generatePolicyName(app, index)
 		// A policy has a fleet, and a fleet has many clusters. Therefore, a policy may need to create or update multiple kustomizations/helmReleases for each cluster.
 		// Synchronize policy resource based on current application, fleet, and policy configuration
