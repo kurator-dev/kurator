@@ -772,8 +772,20 @@ func generatePolicyName(app *applicationapi.Application, index int) string {
 }
 
 func generateFleetKey(app *applicationapi.Application) client.ObjectKey {
+	var fleetName string
+	// if destination of SyncPolicies is not set, we use the destination of application
+	if app.Spec.SyncPolicies[0].Destination == nil || len(app.Spec.SyncPolicies[0].Destination.Fleet) == 0 {
+		// if destination is not set in both SyncPolicies and application, just return ""
+		if app.Spec.Destination == nil {
+			fleetName = ""
+		} else {
+			fleetName = app.Spec.Destination.Fleet
+		}
+	} else {
+		fleetName = app.Spec.SyncPolicies[0].Destination.Fleet
+	}
 	return client.ObjectKey{
 		Namespace: app.Namespace,
-		Name:      app.Spec.SyncPolicies[0].Destination.Fleet,
+		Name:      fleetName,
 	}
 }
