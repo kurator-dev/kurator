@@ -63,7 +63,7 @@ spec:
     gitRepo:
       interval: 3m0s
       ref:
-        branch: master
+        branch: main
       timeout: 1m0s
       url: https://github.com/kurator-dev/kurator
   syncPolicy:

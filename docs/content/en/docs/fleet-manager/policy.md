@@ -52,7 +52,7 @@ spec:
     gitRepo:
       interval: 3m0s
       ref:
-        branch: master
+        branch: main
       timeout: 1m0s
       url: https://github.com/kurator-dev/kurator
   syncPolicy:
@@ -76,17 +76,17 @@ you will see warning message like following:
 
 ```console
 NAME                                  PASS   FAIL   WARN   ERROR   SKIP   AGE
-cpol-disallow-capabilities            6      0      0      0       0      15s
-cpol-disallow-host-namespaces         5      1      0      0       0      15s
-cpol-disallow-host-path               6      0      0      0       0      15s
-cpol-disallow-host-ports              6      0      0      0       0      15s
-cpol-disallow-host-process            6      0      0      0       0      15s
-cpol-disallow-privileged-containers   6      0      0      0       0      15s
-cpol-disallow-proc-mount              6      0      0      0       0      15s
-cpol-disallow-selinux                 12     0      0      0       0      15s
-cpol-restrict-apparmor-profiles       6      0      0      0       0      15s
-cpol-restrict-seccomp                 6      0      0      0       0      15s
-cpol-restrict-sysctls                 6      0      0      0       0      15s
+cpol-disallow-capabilities            1      0      0      0       0      17s
+cpol-disallow-host-namespaces         0      1      0      0       0      17s
+cpol-disallow-host-path               1      0      0      0       0      17s
+cpol-disallow-host-ports              1      0      0      0       0      17s
+cpol-disallow-host-process            1      0      0      0       0      17s
+cpol-disallow-privileged-containers   1      0      0      0       0      17s
+cpol-disallow-proc-mount              1      0      0      0       0      17s
+cpol-disallow-selinux                 2      0      0      0       0      17s
+cpol-restrict-apparmor-profiles       1      0      0      0       0      17s
+cpol-restrict-seccomp                 1      0      0      0       0      17s
+cpol-restrict-sysctls                 1      0      0      0       0      17s
 ```
 
 check pod event:
