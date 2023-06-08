@@ -33,13 +33,16 @@ spec:
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: helmrepo-helmrelease-demo
+  name: gitrepo-helmrelease-demo
   namespace: default
 spec:
   source:
-    helmRepository:
-      interval: 5m
-      url: https://stefanprodan.github.io/podinfo
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
   syncPolicies:
     - destination:
         fleet: quickstart
@@ -47,7 +50,7 @@ spec:
         releaseName: podinfo
         chart:
           spec:
-            chart: podinfo
+            chart: ./charts/podinfo
         interval: 50m
         install:
           remediation:
