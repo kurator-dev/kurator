@@ -33,7 +33,7 @@ spec:
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: quickstart3
+  name: gitrepo-helmrelease-demo
   namespace: default
 spec:
   source:
