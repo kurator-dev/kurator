@@ -49,7 +49,7 @@ application.apps.kurator.dev/quickstart1 created
 
 Here is the content of example application resource.
 The YAML configuration of the example application outlines its source, synchronization policy, and other key settings.
-This includes the  `gitRepository` as its source and two  `kustomization` syncPolicies referring to a fleet that contains two attachedClusters
+This includes the `gitRepository` as its source and two `kustomization` syncPolicies referring to a fleet that contains two attachedClusters
 
 ```console
 apiVersion: apps.kurator.dev/v1alpha1
@@ -81,6 +81,18 @@ spec:
         path: ./kustomize
         prune: true
         timeout: 2m0s
+```
+
+Optionally, you can also try testing the examples below with different combinations
+
+```console
+# This includes the `helmRepository` as source and the `helmRelease` as syncPolicies 
+kubectl apply -f examples/application/quickstart2.yaml
+```
+
+```console
+# This includes the `gitRepository` as source and the `helmRelease` as syncPolicies 
+kubectl apply -f examples/application/quickstart3.yaml
 ```
 
 ## Verifying the unified application distribution result
