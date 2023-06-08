@@ -37,169 +37,16 @@ import (
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
-const (
-	ApplicationToCluster         = "ApplicationToCluster"
-	ApplicationToAttachedCluster = "ApplicationToAttachedCluster"
-	ApplicationToFleet           = "ApplicationToFleet"
-	ClusterToApplication         = "ClusterToApplication"
-	AttachedClusterToApplication = "AttachedClusterToApplication"
-	FleetToApplication           = "FleetToApplication"
-)
-
-// StringSet is a set of strings
-type StringSet map[string]bool
-
-func NewStringSet() StringSet {
-	return make(map[string]bool)
-}
-
-func (s StringSet) Add(item string) {
-	s[item] = true
-}
-
-func (s StringSet) Remove(item string) {
-	delete(s, item)
-}
-
-func (s StringSet) Contains(item string) bool {
-	_, exists := s[item]
-	return exists
-}
-
-// Relations contains resourceToApplication and applicationToResource
-// resourceToApplication tracks which applications should be triggered for reconciliation when a resource is updated.
-// applicationToResource tracks the current resource of each application to facilitate comparison with the desired state for reconciliation.
-type Relations struct {
-	ApplicationToCluster         map[string]StringSet
-	ClusterToApplication         map[string]StringSet
-	ApplicationToAttachedCluster map[string]StringSet
-	AttachedClusterToApplication map[string]StringSet
-	ApplicationToFleet           map[string]StringSet
-	FleetToApplication           map[string]StringSet
-}
-
-func NewRelations() *Relations {
-	return &Relations{
-		ApplicationToCluster:         make(map[string]StringSet),
-		ClusterToApplication:         make(map[string]StringSet),
-		ApplicationToAttachedCluster: make(map[string]StringSet),
-		AttachedClusterToApplication: make(map[string]StringSet),
-		ApplicationToFleet:           make(map[string]StringSet),
-		FleetToApplication:           make(map[string]StringSet),
-	}
-}
-
-func (r *Relations) AddRelation(application, target, relationType string) {
-	switch relationType {
-	case ApplicationToCluster:
-		if _, ok := r.ApplicationToCluster[application]; !ok {
-			r.ApplicationToCluster[application] = NewStringSet()
-		}
-		if _, ok := r.ClusterToApplication[target]; !ok {
-			r.ClusterToApplication[target] = NewStringSet()
-		}
-		r.ApplicationToCluster[application].Add(target)
-		r.ClusterToApplication[target].Add(application)
-	case ApplicationToAttachedCluster:
-		if _, ok := r.ApplicationToAttachedCluster[application]; !ok {
-			r.ApplicationToAttachedCluster[application] = NewStringSet()
-		}
-		if _, ok := r.AttachedClusterToApplication[target]; !ok {
-			r.AttachedClusterToApplication[target] = NewStringSet()
-		}
-		r.ApplicationToAttachedCluster[application].Add(target)
-		r.AttachedClusterToApplication[target].Add(application)
-	case ApplicationToFleet:
-		if _, ok := r.ApplicationToFleet[application]; !ok {
-			r.ApplicationToFleet[application] = NewStringSet()
-		}
-		if _, ok := r.FleetToApplication[target]; !ok {
-			r.FleetToApplication[target] = NewStringSet()
-		}
-		r.ApplicationToFleet[application].Add(target)
-		r.FleetToApplication[target].Add(application)
-	default:
-		fmt.Println("Invalid relation type")
-	}
-}
-
-func (r *Relations) RemoveRelation(application, target, relationType string) {
-	switch relationType {
-	case ApplicationToCluster:
-		if _, ok := r.ApplicationToCluster[application]; ok {
-			r.ApplicationToCluster[application].Remove(target)
-		}
-		if _, ok := r.ClusterToApplication[target]; ok {
-			r.ClusterToApplication[target].Remove(application)
-		}
-	case ApplicationToAttachedCluster:
-		if _, ok := r.ApplicationToAttachedCluster[application]; ok {
-			r.ApplicationToAttachedCluster[application].Remove(target)
-		}
-		if _, ok := r.AttachedClusterToApplication[target]; ok {
-			r.AttachedClusterToApplication[target].Remove(application)
-		}
-	case ApplicationToFleet:
-		if _, ok := r.ApplicationToFleet[application]; ok {
-			r.ApplicationToFleet[application].Remove(target)
-		}
-		if _, ok := r.FleetToApplication[target]; ok {
-			r.FleetToApplication[target].Remove(application)
-		}
-	default:
-		fmt.Println("Invalid relation type")
-	}
-}
-
-func (r *Relations) GetRelated(relationKey, relationType string) StringSet {
-	switch relationType {
-	case ApplicationToCluster:
-		return r.ApplicationToCluster[relationKey]
-	case ClusterToApplication:
-		return r.ClusterToApplication[relationKey]
-	case ApplicationToAttachedCluster:
-		return r.ApplicationToAttachedCluster[relationKey]
-	case AttachedClusterToApplication:
-		return r.AttachedClusterToApplication[relationKey]
-	case ApplicationToFleet:
-		return r.ApplicationToFleet[relationKey]
-	case FleetToApplication:
-		return r.FleetToApplication[relationKey]
-	default:
-		fmt.Println("Invalid relation type")
-		return nil
-	}
-}
-
 // syncPolicyResource synchronizes the sync policy resources for a given application.
 func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) (ctrl.Result, error) {
 	policyKind := findPolicyKind(syncPolicy)
 
-	// fetch all fleet cluster
-	clusterList, attachedClusterList, err := a.fetchClusterLists(ctx, fleet)
-	if err != nil {
-		return ctrl.Result{}, err
+	// fetch fleet cluster list that recorded in fleet.
+	fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet)
+	if err != nil || result.RequeueAfter > 0 {
+		return result, err
 	}
-
-	//  add the relation of "ApplicationToCluster" and "ApplicationToAttachedCluster"
-	addFleetClusterRelation(clusterList, attachedClusterList, app)
-
-	// merge the list of clusters and attachedClusters into a single list.
-	fleetClusterList, err := generateFleetClusterList(clusterList, attachedClusterList, app)
-
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	// compare current cluster and spec cluster, find the removed cluster and to delete corresponding kustomization/helmRelease
-	// This ensures that kustomization/helmRelease can be deleted for newly deleted clusters in fleet.
-	err = a.deleteRemovedClusterResources(ctx, app, policyKind, policyName, clusterList, attachedClusterList)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// Iterate through all clusters, and create/update kustomization/helmRelease for each of them.
-	// This ensures that kustomization/helmRelease can be created for newly added clusters in fleet.
 	for _, currentFleetCluster := range fleetClusterList {
 		// fetch kubeconfig for each cluster.
 		kubeconfig := a.generateKubeConfig(currentFleetCluster)
@@ -212,49 +59,48 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 	return ctrl.Result{}, nil
 }
 
-// fetchClusterLists fetch clusterList and attachedClusterList from fleet
-func (a *ApplicationManager) fetchClusterLists(ctx context.Context, fleet *fleetapi.Fleet) (*clusterv1alpha1.ClusterList, *clusterv1alpha1.AttachedClusterList, error) {
+// fetchFleetClusterList fetch fleet cluster list that recorded in fleet.
+func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *fleetapi.Fleet) ([]ClusterInterface, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-	var clusterList clusterv1alpha1.ClusterList
-	var attachedClusterList clusterv1alpha1.AttachedClusterList
-	if err := a.Client.List(ctx, &clusterList,
-		client.InNamespace(fleet.Namespace),
-		client.MatchingLabels{FleetLabel: fleet.Name}); err != nil {
-		log.Error(err, "failed to fetch clusterList for fleet", "fleet", fleet.Name)
-		return nil, nil, err
-	}
-
-	if err := a.Client.List(ctx, &attachedClusterList,
-		client.InNamespace(fleet.Namespace),
-		client.MatchingLabels{FleetLabel: fleet.Name}); err != nil {
-		log.Error(err, "failed to fetch attachedClusterList for fleet", "fleet", fleet.Name)
-		return nil, nil, err
-	}
-	return &clusterList, &attachedClusterList, nil
-}
-
-// addFleetClusterRelation add the relation of "ApplicationToCluster" and "ApplicationToAttachedCluster"
-func addFleetClusterRelation(clusterList *clusterv1alpha1.ClusterList, attachedClusterList *clusterv1alpha1.AttachedClusterList, app *applicationapi.Application) {
-	for _, cluster := range clusterList.Items {
-		relations.AddRelation(app.Name, cluster.Name, ApplicationToCluster)
-	}
-	for _, attachedCluster := range attachedClusterList.Items {
-		relations.AddRelation(app.Name, attachedCluster.Name, ApplicationToAttachedCluster)
-	}
-}
-
-// generateFleetClusterList merges the lists of Clusters and AttachedClusters associated with the specified Fleet.
-func generateFleetClusterList(clusterList *clusterv1alpha1.ClusterList, attachedClusterList *clusterv1alpha1.AttachedClusterList, app *applicationapi.Application) ([]ClusterInterface, error) {
 	var fleetClusterList []ClusterInterface
-	for _, cluster := range clusterList.Items {
-		clusterCopy := cluster
-		fleetClusterList = append(fleetClusterList, &clusterCopy)
+
+	for _, cluster := range fleet.Spec.Clusters {
+		// cluster.kind cluster.name that recorded in fleet must be valid
+		kind := cluster.Kind
+		name := cluster.Name
+		if kind == ClusterKind {
+			cluster := &clusterv1alpha1.Cluster{}
+			key := client.ObjectKey{
+				Name:      name,
+				Namespace: fleet.Namespace,
+			}
+			err := a.Client.Get(ctx, key, cluster)
+			if apierrors.IsNotFound(err) {
+				return nil, ctrl.Result{RequeueAfter: RequeueAfter}, nil
+			}
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+			fleetClusterList = append(fleetClusterList, cluster)
+		} else if kind == AttachedClusterKind {
+			attachedCluster := &clusterv1alpha1.AttachedCluster{}
+			key := client.ObjectKey{
+				Name:      name,
+				Namespace: fleet.Namespace,
+			}
+			err := a.Client.Get(ctx, key, attachedCluster)
+			if apierrors.IsNotFound(err) {
+				return nil, ctrl.Result{RequeueAfter: RequeueAfter}, nil
+			}
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+			fleetClusterList = append(fleetClusterList, attachedCluster)
+		} else {
+			log.Info("kind of cluster in fleet is not support, skip this cluster", "fleet", fleet.Name, "kind", kind)
+		}
 	}
-	for _, attachedCluster := range attachedClusterList.Items {
-		attachedClusterCopy := attachedCluster
-		fleetClusterList = append(fleetClusterList, &attachedClusterCopy)
-	}
-	return fleetClusterList, nil
+	return fleetClusterList, ctrl.Result{}, nil
 }
 
 // getKustomizationList returns a list of kustomizations associated with the given application.
@@ -281,50 +127,6 @@ func (a *ApplicationManager) getHelmReleaseList(ctx context.Context, app *applic
 	return helmReleaseList, nil
 }
 
-// deleteRemovedClusterResources compares the list of current clusters with the desired clusters which specified in the application spec.
-// It finds the clusters that have been removed and deletes the corresponding kustomizations and Helm releases.
-func (a *ApplicationManager) deleteRemovedClusterResources(ctx context.Context, app *applicationapi.Application, policyKind string, syncPolicyName string, clusterList *clusterv1alpha1.ClusterList, attachedClusterList *clusterv1alpha1.AttachedClusterList) error {
-	// check is there any cluster has been removed
-	currentClusterNameSet := relations.GetRelated(app.Name, ApplicationToCluster)
-	for currentClusterName := range currentClusterNameSet {
-		currentClusterExist := false
-		for _, specCluster := range clusterList.Items {
-			if currentClusterName == specCluster.Name {
-				currentClusterExist = true
-				break
-			}
-		}
-
-		if !currentClusterExist {
-			// delete it
-			if err := a.ensurePolicyResourceDeleted(ctx, app.Namespace, policyKind, syncPolicyName, ClusterKind, currentClusterName); err != nil {
-				return err
-			}
-			relations.RemoveRelation(app.Name, currentClusterName, ApplicationToCluster)
-		}
-	}
-
-	// check is there any attachedCluster has been removed
-	currentAttachedClusterNameSet := relations.GetRelated(app.Name, ApplicationToAttachedCluster)
-	for currentAttachedClusterName := range currentAttachedClusterNameSet {
-		currentAttachedClusterExist := false
-		for _, specAttachedCluster := range attachedClusterList.Items {
-			if currentAttachedClusterName == specAttachedCluster.Name {
-				currentAttachedClusterExist = true
-				break
-			}
-		}
-		if !currentAttachedClusterExist {
-			// delete it
-			if err := a.ensurePolicyResourceDeleted(ctx, app.Namespace, policyKind, syncPolicyName, AttachedClusterKind, currentAttachedClusterName); err != nil {
-				return err
-			}
-			relations.RemoveRelation(app.Name, currentAttachedClusterName, ApplicationToCluster)
-		}
-	}
-	return nil
-}
-
 // handleSyncByPolicyKind handles syncing for a given policy kind (either kustomization or Helm release) based on the provided sync policy.
 func (a *ApplicationManager) handleSyncPolicyByKind(ctx context.Context, app *applicationapi.Application, policyKind string, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string, fleetCluster ClusterInterface, kubeConfig *fluxmeta.KubeConfigReference) (ctrl.Result, error) {
 	// handle kustomization
@@ -332,7 +134,7 @@ func (a *ApplicationManager) handleSyncPolicyByKind(ctx context.Context, app *ap
 		kustomization := syncPolicy.Kustomization
 		kustomizationName := generateKustomizationName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
 
-		// sync Flux kustomization using the provided kubeconfig and source.
+		// sync kustomization using the provided kubeconfig and source.
 		if result, err := a.syncKustomizationForCluster(ctx, app, kustomization, kubeConfig, kustomizationName); err != nil || result.RequeueAfter > 0 {
 			return result, err
 		}
@@ -344,7 +146,7 @@ func (a *ApplicationManager) handleSyncPolicyByKind(ctx context.Context, app *ap
 		helmRelease := syncPolicy.Helm
 		helmReleaseName := generateHelmReleaseName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
 
-		// sync Flux helmRelease using the provided kubeconfig and source.
+		// sync helmRelease using the provided kubeconfig and source.
 		if result, err := a.syncHelmReleaseForCluster(ctx, app, helmRelease, kubeConfig, helmReleaseName); err != nil || result.RequeueAfter > 0 {
 			return result, err
 		}
@@ -647,52 +449,6 @@ func (a *ApplicationManager) updateHelmRelease(ctx context.Context, currentResou
 	currentResource.Spec = targetSource.Spec
 	if err := a.Client.Update(ctx, currentResource); err != nil {
 		return err
-	}
-	return nil
-}
-
-// ensurePolicyResourceDeleted deletes the cluster resource for the given policy kind (either kustomization or Helm release) associated with the specified cluster.
-func (a *ApplicationManager) ensurePolicyResourceDeleted(ctx context.Context, namespace, policyKind, policyName, clusterKind, clusterName string) error {
-	log := ctrl.LoggerFrom(ctx)
-
-	if policyKind == KustomizationKind {
-		kustomizationName := generateKustomizationName(policyName, clusterKind, clusterName)
-		resourceKey := client.ObjectKey{
-			Name:      kustomizationName,
-			Namespace: namespace,
-		}
-		kustomization := &kustomizev1beta2.Kustomization{}
-		err := a.Client.Get(ctx, resourceKey, kustomization)
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if err := a.Client.Delete(ctx, kustomization); err != nil {
-			return err
-		}
-		log.Info("kustomization is deleted successfully", "kustomization", kustomizationName)
-	}
-
-	if policyKind == HelmReleaseKind {
-		helmReleaseName := generateHelmReleaseName(policyName, clusterKind, clusterName)
-		resourceKey := client.ObjectKey{
-			Name:      helmReleaseName,
-			Namespace: namespace,
-		}
-		helmRelease := &helmv2b1.HelmRelease{}
-		err := a.Client.Get(ctx, resourceKey, helmRelease)
-		if apierrors.IsNotFound(err) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if err := a.Client.Delete(ctx, helmRelease); err != nil {
-			return err
-		}
-		log.Info("helmRelease is deleted successfully", "helmRelease", helmReleaseName)
 	}
 	return nil
 }

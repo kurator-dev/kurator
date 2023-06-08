@@ -38,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
-	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
@@ -60,9 +59,6 @@ type ApplicationManager struct {
 	Scheme *runtime.Scheme
 }
 
-// relations represent the actual associated resources of the current application.
-var relations = NewRelations()
-
 // SetupWithManager sets up the controller with the Manager.
 func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Manager, options controller.Options) error {
 	c, err := ctrl.NewControllerManagedBy(mgr).
@@ -70,28 +66,6 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 		Build(a)
 	if err != nil {
 		return err
-	}
-
-	// Set up watches for the updates to application's resource.
-	if err := c.Watch(
-		&source.Kind{Type: &fleetapi.Fleet{}},
-		handler.EnqueueRequestsFromMapFunc(a.fleetToApplicationFunc),
-	); err != nil {
-		return fmt.Errorf("failed to add a Watch for Fleet: %v", err)
-	}
-
-	if err := c.Watch(
-		&source.Kind{Type: &clusterv1alpha1.Cluster{}},
-		handler.EnqueueRequestsFromMapFunc(a.clusterToApplicationFunc),
-	); err != nil {
-		return fmt.Errorf("failed to add a Watch for Cluster: %v", err)
-	}
-
-	if err := c.Watch(
-		&source.Kind{Type: &clusterv1alpha1.AttachedCluster{}},
-		handler.EnqueueRequestsFromMapFunc(a.attachedClusterToApplicationFunc),
-	); err != nil {
-		return fmt.Errorf("failed to add a Watch for AttachedCluster: %v", err)
 	}
 
 	// Set up watches for the updates to application's status.
@@ -176,9 +150,6 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		log.Error(err, "failed to find fleet", "fleet", fleetKey)
 		return ctrl.Result{}, err
 	}
-
-	// Add bidirectional relationship between the application and the fleet.
-	relations.AddRelation(app.Name, fleet.Name, ApplicationToFleet)
 
 	// Handle deletion reconciliation loop.
 	if app.DeletionTimestamp != nil {
@@ -325,21 +296,6 @@ func (a *ApplicationManager) reconcilePolicyStatus(ctx context.Context, app *app
 }
 
 func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
-	// delete ApplicationToFleet relation
-	relations.RemoveRelation(app.Name, fleet.Name, ApplicationToFleet)
-
-	// delete all ApplicationToCluster relation
-	appToClusterRelations := relations.GetRelated(app.Name, ApplicationToCluster)
-	for clusterInRelation := range appToClusterRelations {
-		relations.RemoveRelation(app.Name, clusterInRelation, ApplicationToCluster)
-	}
-
-	// delete all ApplicationToAttachedCluster relation
-	appToAttachedClusterRelations := relations.GetRelated(app.Name, ApplicationToAttachedCluster)
-	for attachedClusterInRelation := range appToAttachedClusterRelations {
-		relations.RemoveRelation(app.Name, attachedClusterInRelation, ApplicationToAttachedCluster)
-	}
-
 	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
 
 	return ctrl.Result{}, nil
@@ -359,57 +315,4 @@ func (a *ApplicationManager) objectToApplicationFunc(o client.Object) []ctrl.Req
 	}
 
 	return nil
-}
-
-func (a *ApplicationManager) fleetToApplicationFunc(o client.Object) []ctrl.Request {
-	c, ok := o.(*fleetapi.Fleet)
-	if !ok {
-		panic(fmt.Sprintf("Expected a Fleet but got a %T", o))
-	}
-	var result []ctrl.Request
-
-	applicationNameSet, ok := relations.FleetToApplication[c.Name]
-
-	if ok {
-		for applicationName := range applicationNameSet {
-			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: c.GetNamespace(), Name: applicationName}})
-		}
-	}
-
-	return result
-}
-
-func (a *ApplicationManager) clusterToApplicationFunc(o client.Object) []ctrl.Request {
-	c, ok := o.(*clusterv1alpha1.Cluster)
-	if !ok {
-		panic(fmt.Sprintf("Expected a Fleet but got a %T", o))
-	}
-	var result []ctrl.Request
-
-	applicationNameSet, ok := relations.ClusterToApplication[c.Name]
-
-	if ok {
-		for applicationName := range applicationNameSet {
-			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: c.GetNamespace(), Name: applicationName}})
-		}
-	}
-
-	return result
-}
-
-func (a *ApplicationManager) attachedClusterToApplicationFunc(o client.Object) []ctrl.Request {
-	c, ok := o.(*clusterv1alpha1.AttachedCluster)
-	if !ok {
-		panic(fmt.Sprintf("Expected a Fleet but got a %T", o))
-	}
-	var result []ctrl.Request
-
-	applicationNameSet, ok := relations.AttachedClusterToApplication[c.Name]
-
-	if ok {
-		for applicationName := range applicationNameSet {
-			result = append(result, ctrl.Request{NamespacedName: client.ObjectKey{Namespace: c.GetNamespace(), Name: applicationName}})
-		}
-	}
-	return result
 }
