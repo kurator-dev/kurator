@@ -47,13 +47,13 @@ metadata:
   namespace: default
 spec:
   source:
-    gitRepo:
+    gitRepository:
       interval: 3m0s
       ref:
         branch: main
       timeout: 1m0s
       url: https://github.com/kurator-dev/kurator
-  syncPolicy:
+  syncPolicies:
     - destination:
         fleet: quickstart
       kustomization:

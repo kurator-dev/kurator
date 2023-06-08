@@ -54,6 +54,12 @@ const (
 )
 
 func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fleet) (ctrl.Result, error) {
+	controlplane := fleet.Annotations[fleetapi.ControlplaneAnnotation]
+	controlplaneSpecified := true
+	if len(controlplane) == 0 {
+		controlplaneSpecified = false
+	}
+
 	fleetKey := client.ObjectKeyFromObject(fleet)
 	log := ctrl.LoggerFrom(ctx).WithValues("fleet", fleetKey)
 	var unreadyClusters int32
@@ -100,29 +106,32 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	fleet.Status.ReadyClusters = int32(len(readyClusters))
 	fleet.Status.UnReadyClusters = unreadyClusters
 
-	var kubeconfig corev1.Secret
-	controlPlaneSecretKey := types.NamespacedName{Name: "kubeconfig", Namespace: fleet.Namespace}
-	err := f.Get(ctx, controlPlaneSecretKey, &kubeconfig)
-	if err != nil {
-		return result, err
-	}
-
-	controlplaneRestConfig, err := clientcmd.RESTConfigFromKubeConfig(kubeconfig.Data["kubeconfig"])
-	if err != nil {
-		log.Error(err, "build restconfig for controlplane failed")
-		return result, fmt.Errorf("build restconfig for controlplane failed %v", err)
-	}
-	for _, cluster := range readyClusters {
-		err := f.joinCluster(ctx, controlplaneRestConfig, cluster)
+	var controlplaneRestConfig *restclient.Config
+	if controlplaneSpecified {
+		var kubeconfig corev1.Secret
+		controlPlaneSecretKey := types.NamespacedName{Name: "kubeconfig", Namespace: fleet.Namespace}
+		err := f.Get(ctx, controlPlaneSecretKey, &kubeconfig)
 		if err != nil {
-			log.Error(err, "Join cluster failed")
 			return result, err
+		}
+
+		controlplaneRestConfig, err = clientcmd.RESTConfigFromKubeConfig(kubeconfig.Data["kubeconfig"])
+		if err != nil {
+			log.Error(err, "build restconfig for controlplane failed")
+			return result, fmt.Errorf("build restconfig for controlplane failed %v", err)
+		}
+		for _, cluster := range readyClusters {
+			err := f.joinCluster(ctx, controlplaneRestConfig, cluster)
+			if err != nil {
+				log.Error(err, "Join cluster failed")
+				return result, err
+			}
 		}
 	}
 
 	// Handle cluster unjoin
 	var clusterList clusterv1alpha1.ClusterList
-	err = f.Client.List(ctx, &clusterList,
+	err := f.Client.List(ctx, &clusterList,
 		client.InNamespace(fleet.Namespace),
 		client.MatchingLabels{FleetLabel: fleet.Name})
 	if err != nil {
@@ -151,10 +160,12 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 
 	for _, cluster := range labeledCluster {
 		if _, ok := clusterMap[generateClusterNameInKarmada(cluster)]; !ok {
-			err := f.unjoinCluster(ctx, controlplaneRestConfig, cluster)
-			if err != nil {
-				log.Error(err, "Unjoin cluster failed")
-				return result, err
+			if controlplaneSpecified {
+				err = f.unjoinCluster(ctx, controlplaneRestConfig, cluster)
+				if err != nil {
+					log.Error(err, "Unjoin cluster failed")
+					return result, err
+				}
 			}
 
 			// remove label after unjoined
