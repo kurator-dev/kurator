@@ -83,6 +83,8 @@ spec:
         timeout: 2m0s
 ```
 
+## Try other example application
+
 Optionally, you can also try testing the examples below with different combinations
 
 ```console
@@ -90,10 +92,84 @@ Optionally, you can also try testing the examples below with different combinati
 kubectl apply -f examples/application/quickstart2.yaml
 ```
 
+Here is the configuration of application.
+
+```console
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: helmrepo-helmrelease-demo
+  namespace: default
+spec:
+  source:
+    helmRepository:
+      interval: 5m
+      url: https://stefanprodan.github.io/podinfo
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      helm:
+        releaseName: podinfo
+        chart:
+          spec:
+            chart: podinfo
+        interval: 50m
+        install:
+          remediation:
+            retries: 3
+        values:
+          redis:
+            enabled: true
+            repository: public.ecr.aws/docker/library/redis
+            tag: 7.0.6
+          ingress:
+            enabled: true
+            className: nginx
+```
+
 ```console
 # This includes the `gitRepository` as source and the `helmRelease` as syncPolicies 
 kubectl apply -f examples/application/quickstart3.yaml
 ```
+
+Here is the configuration of application.
+
+```console
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: gitrepo-helmrelease-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      helm:
+        releaseName: podinfo
+        chart:
+          spec:
+            chart: ./charts/podinfo
+        interval: 50m
+        install:
+          remediation:
+            retries: 3
+        values:
+          redis:
+            enabled: true
+            repository: public.ecr.aws/docker/library/redis
+            tag: 7.0.6
+          ingress:
+            enabled: true
+            className: nginx
+```
+
 
 ## Verifying the unified application distribution result
 
