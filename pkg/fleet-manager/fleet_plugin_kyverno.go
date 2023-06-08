@@ -63,10 +63,22 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 			return nil, ctrl.Result{}, err
 		}
 		resources = append(resources, kyvernoResources...)
+	}
 
-		// generate policies for pod security admission
-		if kyvernoCfg.PodSecurity != nil {
-			b, err = plugin.RenderKyvernoPolicy(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+	log.V(4).Info("wait for grafana helm release to be reconciled")
+	if !f.helmReleaseReady(ctx, fleet, resources) {
+		// wait for HelmRelease to be ready
+		return nil, ctrl.Result{
+			// HelmRelease check interval is 1m, so we set 30s here
+			RequeueAfter: 30 * time.Second,
+		}, nil
+	}
+
+	// After CRDs are created, start to install pod security policy
+	if kyvernoCfg.PodSecurity != nil {
+		for key, cluster := range fleetClusters {
+			// generate policies for pod security admission
+			b, err := plugin.RenderKyvernoPolicy(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
 				Name:       key.Name,
 				SecretName: cluster.Secret,
 				SecretKey:  cluster.SecretKey,
@@ -83,7 +95,6 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 		}
 	}
 
-	log.V(4).Info("wait for grafana helm release to be reconciled")
 	if !f.helmReleaseReady(ctx, fleet, resources) {
 		// wait for HelmRelease to be ready
 		return nil, ctrl.Result{
