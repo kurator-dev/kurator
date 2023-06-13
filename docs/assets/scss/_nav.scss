@@ -1,0 +1,104 @@
+//
+// Top navbar - copied from Docsy theme and additional styling included.
+//
+
+
+.navbar-bg-onscroll {
+    background: $primary !important;
+    opacity: inherit;
+}
+
+.td-navbar {
+    background: $primary;
+    min-height: 4rem;
+    margin: 0;
+    z-index: 32;
+
+    .brand-name {display: none;}
+
+    @include media-breakpoint-up(md) {
+        position: fixed;
+        top: 0;
+        width: 100%;
+    }
+
+    .navbar-brand {
+        text-transform: none;
+        text-align: middle;
+        margin: 0;
+        padding: 0;
+
+        .nav-link {
+            display: inline-block;
+            margin-right: -30px;
+        }
+        
+        .navbar-brand__name{
+            display: none;
+        }
+        
+        .navbar-logo {
+            svg {
+                display: inline-block;
+                position: absolute;
+                top: 5px;
+                left: 26px;
+                z-index: 33;
+                padding: 1px;
+                // background: white;
+            
+
+                @include media-breakpoint-down(md) {
+                    left: 16px;
+                    width: 80px;
+                    height: auto;
+                    padding: 6px;
+                }
+            }
+        }
+    }
+
+    .nav-link {
+        text-transform: none;
+        font-weight: $font-weight-bold;
+    }
+
+    .td-search-input {
+        border: none;
+
+        @include placeholder {
+            color: $navbar-dark-color;
+        }
+    }
+
+    .dropdown {
+        min-width: 100px;
+    }
+
+    @include media-breakpoint-down(md) {
+        padding-right: .5rem;
+        padding-left: .75rem;
+        align-items: flex-end;
+
+        .td-navbar-nav-scroll {
+            max-width: calc(100% + .75rem - 96px - 1.5rem);
+            height: 2.5rem;
+            margin-top: .25rem;
+            overflow: hidden;
+            font-size: .875rem;
+
+            .nav-link {
+                padding-right: .25rem;
+                padding-left: 0;
+            }
+
+            .navbar-nav {
+                margin-top: 0 !important;
+                padding-bottom: 2rem;
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    }
+}
