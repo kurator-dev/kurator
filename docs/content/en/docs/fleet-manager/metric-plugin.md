@@ -22,6 +22,12 @@ Fleet's multi cluster monitoring is built on top [Prometheus](https://prometheus
 
 1. Kurator metric depends on [Thanos](https://thanos.io), [Object Storage](https://thanos.io/tip/thanos/storage.md/) is required for Thanos. In the task, [Minio](https://min.io/) is used, setup by the [installation guide](/docs/setup/install-minio).
 
+1. Running following command to attach cluster secrets.
+
+```console
+kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
+kubectl create secret generic kurator-member2 --from-file=kurator-member2.config=/root/.kube/kurator-member2.config
+```
 
 ### Create a fleet with metric plugin enabled
 
@@ -40,10 +46,6 @@ Then, we can access Thanos web UI with `localhost:9090/stores` to verify status 
 ```console
 kubectl port-forward svc/default-thanos-query 9090:9090 --address 0.0.0.0
 ```
-
-{{< image width="100%"
-    link="./image/thanos-ui.jpeg"
-    >}}
 
 ## Apply more monitor settings with Fleet Application
 
@@ -74,6 +76,14 @@ spec:
         timeout: 2m0s
 EOF
 ```
+
+## Query metric from Grafana
+
+After a while, you can go to grafana datasource page query avalanche metric, it will looks like following:
+
+{{< image width="100%"
+    link="./image/grafana-thanos.jpeg"
+    >}}
 
 ## Cleanup
 

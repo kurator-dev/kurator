@@ -34,3 +34,4 @@ spec:
       thanos:
         objectStoreConfig:
           secretName: thanos-objstore
+    grafana: {}
