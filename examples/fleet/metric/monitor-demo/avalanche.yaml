@@ -27,8 +27,9 @@ spec:
         - name: pg-avalanche
           image: quay.io/freshtracks.io/avalanche:latest
           args:
-            - "--metric-count=1000"
-            - "--series-count=50"
+            - "--metric-count=10"
+            - "--label-count=1"
+            - "--series-count=1"
             - "--port=9001"
           ports:
             - containerPort: 9001
