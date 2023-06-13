@@ -20,3 +20,25 @@ path = "github.com/google/docsy/dependencies"
 
 [markup.goldmark.renderer]
 unsafe = true
+
+[params]
+copyright = "The Kurator Authors"
+
+[params.links]
+# End user relevant links. These will show up on left side of footer and in the community page if you have one.
+
+[[params.links.user]]
+	name ="Kurator GitHub repository"
+	url = "https://github.com/kurator-dev/kurator/"
+	icon = "fab fa-github"
+  desc = "Kurator GitHub"
+[[params.links.user]]
+	name = "Kurator slack"
+	url = "https://join.slack.com/t/kurator-hq/shared_invite/zt-1sowqzfnl-Vu1AhxgAjSr1XnaFoogq0A"
+	icon = "fab fa-slack"
+  desc = "Kurator on slack"
+[[params.links.user]]
+	name = "Kurator mailing list"
+	url = "https://groups.google.com/g/kurator-dev"
+	icon = "fa fa-envelope"
+  desc = "Kyverno mailing list"

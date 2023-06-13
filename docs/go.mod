@@ -1,5 +1,5 @@
 module kurator.dev/kurator/docs
 
-go 1.17
+go 1.18
 
-require github.com/google/docsy v0.4.0 // indirect
+require github.com/google/docsy v0.6.0 // indirect
