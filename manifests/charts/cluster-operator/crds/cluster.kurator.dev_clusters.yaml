@@ -52,8 +52,8 @@ spec:
             properties:
               additionalResources:
                 description: 'AdditionalResources provides a way to automatically
-                  apply a set of resouces to cluster after it''s ready. Note: the
-                  resouces will only apply once.'
+                  apply a set of resources to cluster after it''s ready. Note: the
+                  resources will only apply once.'
                 items:
                   properties:
                     kind:

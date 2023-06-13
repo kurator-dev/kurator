@@ -4,8 +4,9 @@
 
 Kurator is an open source distributed cloud native platform that helps users to build their own distributed cloud native infrastructure and facilitates enterprise digital transformation.
 
-Kurator integrates popular cloud native software stacks including [Karmada](https://github.com/karmada-io/karmada), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](https://github.com/prometheus/prometheus), etc.
-It provides powerful capabilities to multi-cloud and multi-cluster, including:
+Kurator stands on shoulders of many popular cloud native software stacks including
+[Kubernetes](https://github.com/kubernetes/kubernetes), [Istio](https://github.com/istio/istio), [Prometheus](https://github.com/prometheus/prometheus), [FluxCD](https://github.com/fluxcd/flux2), [KubeEdge](https://github.com/kubeedge/kubeedge), [Volcano](https://github.com/volcano-sh/volcano), [Karmada](https://github.com/karmada-io/karmada), [Kyverno](https://github.com/kyverno/kyverno), etc.
+It provides powerful capabilities for multi-cloud and multi-cluster management, including:
 
 - Multi-cloud, Edge-cloud, Edge-edge Synergy
 - Unified Resource Orchestration
@@ -17,12 +18,19 @@ It provides powerful capabilities to multi-cloud and multi-cluster, including:
 
 - Infrastructure-as-Code: declarative way of infrastructure(cluster, node, vpc, etc) management on cloud, edge or on premises.
 - Out of box: one button to install cloud native software stacks
-- Unified management of clusters with fleet
+- Unified management of clusters with fleet:
+
+1. Support cluster registration and un-registration to a fleet.
+1. Application customize and sync across fleet.
+1. Namespaces, ServiceAccount, Service sameness across clusters of a fleet.
+1. Provide service discovery and communication across clusters.
+1. Aggregate metrics from all clusters of a fleet.
+1. Provide policy engine to make all clusters have consistent policies.
 
 ## Architecture
 
 <div  align="center">
-    <img src="./docs/images/kurator.png" width = "85%" align="center">
+    <img src="./docs/images/kurator-arch.svg" width = "80%" align="center">
 </div>
 
 ## Documentation

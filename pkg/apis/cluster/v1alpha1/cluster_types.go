@@ -62,8 +62,8 @@ type ClusterSpec struct {
 	// PodIdentity is the configuration for the pod identity.
 	// +optional
 	PodIdentity PodIdentityConfig `json:"podIdentity,omitempty"`
-	// AdditionalResources provides a way to automatically apply a set of resouces to cluster after it's ready.
-	// Note: the resouces will only apply once.
+	// AdditionalResources provides a way to automatically apply a set of resources to cluster after it's ready.
+	// Note: the resources will only apply once.
 	// +optional
 	AdditionalResources []ResourceRef `json:"additionalResources,omitempty"`
 }
