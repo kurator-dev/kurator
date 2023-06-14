@@ -41,16 +41,6 @@ After a while, we can see the fleet is `ready`:
 kubectl wait fleet quickstart --for='jsonpath='{.status.phase}'=Ready'
 ```
 
-Thanos and Grafana are installed correctly:
-
-```console
-kubectl get po 
-NAME                                    READY   STATUS    RESTARTS   AGE
-default-thanos-query-5b6d4dcf89-xm54l   1/1     Running   0          1m
-default-thanos-storegateway-0           1/1     Running   0          1m
-grafana-7b4bc74fcc-bvwgv                1/1     Running   0          1m
-```
-
 ### Verify pod security policy
 
 Run following command to create a invalid pod in the fleet:

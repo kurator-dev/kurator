@@ -41,10 +41,14 @@ After a while, we can see the fleet is `ready`:
 kubectl wait fleet quickstart --for='jsonpath='{.status.phase}'=Ready'
 ```
 
-Then, we can access Thanos web UI with `localhost:9090/stores` to verify status of stores:
+Thanos and Grafana are installed correctly:
 
 ```console
-kubectl port-forward svc/default-thanos-query 9090:9090 --address 0.0.0.0
+kubectl get po 
+NAME                                    READY   STATUS    RESTARTS   AGE
+default-thanos-query-5b6d4dcf89-xm54l   1/1     Running   0          1m
+default-thanos-storegateway-0           1/1     Running   0          1m
+grafana-7b4bc74fcc-bvwgv                1/1     Running   0          1m
 ```
 
 ## Apply more monitor settings with Fleet Application
