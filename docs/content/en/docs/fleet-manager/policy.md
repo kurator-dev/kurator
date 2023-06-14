@@ -20,7 +20,7 @@ Fleet's multi cluster policy management is built on top [Kyverno](https://kyvern
 
 1. Setup Fleet manager following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
 
-1. Running following command to attach cluster secrets.
+1. Running the following command to create two secrets to access attached clusters.
 
 ```console
 kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
@@ -39,6 +39,16 @@ After a while, we can see the fleet is `ready`:
 
 ```console
 kubectl wait fleet quickstart --for='jsonpath='{.status.phase}'=Ready'
+```
+
+Thanos and Grafana are installed correctly:
+
+```console
+kubectl get po 
+NAME                                    READY   STATUS    RESTARTS   AGE
+default-thanos-query-5b6d4dcf89-xm54l   1/1     Running   0          1m
+default-thanos-storegateway-0           1/1     Running   0          1m
+grafana-7b4bc74fcc-bvwgv                1/1     Running   0          1m
 ```
 
 ### Verify pod security policy

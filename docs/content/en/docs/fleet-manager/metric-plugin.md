@@ -22,7 +22,7 @@ Fleet's multi cluster monitoring is built on top [Prometheus](https://prometheus
 
 1. Kurator metric depends on [Thanos](https://thanos.io), [Object Storage](https://thanos.io/tip/thanos/storage.md/) is required for Thanos. In the task, [Minio](https://min.io/) is used, setup by the [installation guide](/docs/setup/install-minio).
 
-1. Running following command to attach cluster secrets.
+1. Running the following command to create two secrets to access attached clusters.
 
 ```console
 kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
