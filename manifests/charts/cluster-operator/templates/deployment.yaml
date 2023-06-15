@@ -64,7 +64,11 @@ spec:
       - name: cert
         secret:
           defaultMode: 420
+          {{- if .Values.certManager.enabled }}
           secretName: kurator-webhook-service-cert
+          {{- else }}
+          secretName: cluster-operator-serving-cert
+          {{- end }}
       - name: credentials
         secret:
           optional: true
