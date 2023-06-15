@@ -389,7 +389,7 @@ spec:
       maxSurge: 1
     type: RollingUpdate
   # edit the version to desired upgrading version
-  version: v1.24.6
+  version: v1.26.5
 status:
   conditions:
   ...

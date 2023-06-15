@@ -36,7 +36,7 @@ func (r *CustomClusterController) reconcileUpgrade(ctx context.Context, customCl
 
 	cmd := generateUpgradeManageCMD(targetVersion)
 	// Checks whether the worker node for upgrading already exists. If it does not exist, then create it.
-	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterUpgradeAction, cmd, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster))
+	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterUpgradeAction, cmd, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster), targetVersion)
 	if err1 != nil {
 		conditions.MarkFalse(customCluster, v1alpha1.UpgradeCondition, v1alpha1.UpgradeWorkerCreateFailed,
 			clusterv1.ConditionSeverityWarning, "upgrade worker is failed to create %s/%s.", customCluster.Namespace, customCluster.Name)

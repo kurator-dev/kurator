@@ -97,13 +97,6 @@ const (
 
 	// KubeVersionPrefix is the prefix string of version of kubernetes
 	KubeVersionPrefix = "kube_version: "
-	// DefaultKubesprayVersion is the version of Kubespray used by the customCluster manager worker pod.
-	DefaultKubesprayVersion = "v2.20.0"
-	// DefaultMaxVersion is the max version of Kubernetes that is supported by DefaultKubesprayVersion.
-	DefaultMaxVersion = "v1.24.6"
-	// DefaultMinVersion is the min version of Kubernetes that is supported by DefaultKubesprayVersion.
-	DefaultMinVersion = "v1.22.0"
-	// TODO: support more version to remove limited DefaultMaxVersion and DefaultMinVersion
 )
 
 // SetupWithManager sets up the controller with the Manager.
@@ -270,11 +263,6 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 	desiredClusterInfo := getDesiredClusterInfo(customMachine, kcp)
 	// desiredVersion is the one recorded in kcp.version.
 	desiredVersion := desiredClusterInfo.KubeVersion
-	// If the desired version is not within a specified range of versions, return directly.
-	if !isSupportedVersion(desiredVersion, DefaultMinVersion, DefaultMaxVersion) {
-		log.Error(fmt.Errorf("the kubespray image version is %s. Then the minimum supported version of Kubernetes is %s, and the maximum is %s. However, the desired version of Kubernetes is %s ", DefaultKubesprayVersion, DefaultMinVersion, DefaultMaxVersion, desiredVersion), "")
-		return ctrl.Result{}, nil
-	}
 
 	// Handle cluster provision.
 	if phase == v1alpha1.PendingPhase || phase == v1alpha1.ProvisionFailedPhase || phase == v1alpha1.ProvisioningPhase {
@@ -304,10 +292,10 @@ func (r *CustomClusterController) reconcile(ctx context.Context, customCluster *
 	// Handle worker nodes scaling.
 	// By comparing desiredClusterInfo.WorkerNodes and provisionedClusterInfo.WorkerNodes to decide whether to proceed reconcileScaleUp or reconcileScaleDown.
 	if len(scaleUpWorkerNodes) != 0 {
-		return r.reconcileScaleUp(ctx, customCluster, scaleUpWorkerNodes)
+		return r.reconcileScaleUp(ctx, customCluster, scaleUpWorkerNodes, kcp)
 	}
 	if len(scaleDownWorkerNodes) != 0 {
-		return r.reconcileScaleDown(ctx, customCluster, customMachine, scaleDownWorkerNodes)
+		return r.reconcileScaleDown(ctx, customCluster, customMachine, scaleDownWorkerNodes, kcp)
 	}
 
 	// Handle cluster upgrade.
@@ -341,7 +329,7 @@ func (r *CustomClusterController) reconcileProvision(ctx context.Context, custom
 	}
 
 	// Create init worker pod to handle the provisioning process.
-	initWorker, err3 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterInitAction, KubesprayInitCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster))
+	initWorker, err3 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterInitAction, KubesprayInitCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster), kcp.Spec.Version)
 	if err3 != nil {
 		conditions.MarkFalse(customCluster, v1alpha1.ReadyCondition, v1alpha1.FailedCreateInitWorker,
 			clusterv1.ConditionSeverityWarning, "init worker is failed to create %s/%s", customCluster.Namespace, customCluster.Name)
@@ -398,7 +386,7 @@ func (r *CustomClusterController) reconcileDelete(ctx context.Context, customClu
 	}
 
 	// Create the termination worker to handle the cluster deletion.
-	terminateWorker, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterTerminateAction, KubesprayTerminateCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster))
+	terminateWorker, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterTerminateAction, KubesprayTerminateCMD, generateClusterHostsName(customCluster), generateClusterConfigName(customCluster), kcp.Spec.Version)
 	if err1 != nil {
 		conditions.MarkFalse(customCluster, v1alpha1.TerminatedCondition, v1alpha1.FailedCreateTerminateWorker,
 			clusterv1.ConditionSeverityWarning, "terminate worker is failed to create %s/%s.", customCluster.Namespace, customCluster.Name)
