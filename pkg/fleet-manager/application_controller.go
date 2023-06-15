@@ -209,13 +209,14 @@ func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicati
 		return err
 	}
 
-	if err := a.reconcilePolicyStatus(ctx, app); err != nil {
+	if err := a.reconcileSyncStatus(ctx, app); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// reconcileSourceStatus reconciles the source status of the given application by fetching the status of the source resource (e.g. GitRepository, HelmRepository)
 func (a *ApplicationManager) reconcileSourceStatus(ctx context.Context, app *applicationapi.Application) error {
 	log := ctrl.LoggerFrom(ctx)
 
@@ -260,7 +261,9 @@ func (a *ApplicationManager) reconcileSourceStatus(ctx context.Context, app *app
 	return nil
 }
 
-func (a *ApplicationManager) reconcilePolicyStatus(ctx context.Context, app *applicationapi.Application) error {
+// reconcileSyncStatus reconciles the sync status of the given application by finding all Kustomizations and HelmReleases associated with it,
+// and updating the sync status of each resource in the application's SyncStatus field.
+func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *applicationapi.Application) error {
 	var syncStatus []*applicationapi.ApplicationSyncStatus
 
 	// find all kustomization
