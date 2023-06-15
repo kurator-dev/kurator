@@ -18,7 +18,14 @@ Fleet's multi cluster policy management is built on top [Kyverno](https://kyvern
 
 ## Prerequisites
 
-Setup Fleet manager following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
+1. Setup Fleet manager following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
+
+1. Running the following command to create two secrets to access attached clusters.
+
+```console
+kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
+kubectl create secret generic kurator-member2 --from-file=kurator-member2.config=/root/.kube/kurator-member2.config
+```
 
 ### Create a fleet with pod security policy enabled
 
