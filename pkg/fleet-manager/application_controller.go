@@ -153,7 +153,7 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 
 	// Handle deletion reconciliation loop.
 	if app.DeletionTimestamp != nil {
-		return a.reconcileDelete(ctx, app, fleet)
+		return a.reconcileDelete(app)
 	}
 
 	// Handle normal loop.
@@ -172,14 +172,14 @@ func (a *ApplicationManager) reconcile(ctx context.Context, app *applicationapi.
 	}
 
 	if err := a.reconcileStatus(ctx, app); err != nil {
-		log.Error(err, "failed to reconcileSyncStatus")
+		log.Error(err, "failed to reconcile status")
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-// reconcileSyncResources handles the synchronization of resources associated with the current Application resource.
+// reconcileApplicationResources handles the synchronization of resources associated with the current Application resource.
 // The associated resources are categorized as 'source' and 'policy'.
 // 'source' could be one of gitRepo, helmRepo, or ociRepo while 'policy' can be either kustomizations or helmReleases.
 // Any change in Application configuration could potentially lead to creation, deletion, or modification of associated resources in the Kubernetes cluster.
@@ -201,7 +201,7 @@ func (a *ApplicationManager) reconcileApplicationResources(ctx context.Context, 
 	return ctrl.Result{}, nil
 }
 
-// reconcileSyncStatus updates the status of resources associated with the current Application resource.
+// reconcileStatus updates the status of resources associated with the current Application resource.
 // It does this by fetching the current status of the source (either GitRepoKind or HelmRepoKind) and the sync policy from the API server,
 // and updating the Application's status to reflect these current statuses.
 func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicationapi.Application) error {
@@ -295,7 +295,7 @@ func (a *ApplicationManager) reconcilePolicyStatus(ctx context.Context, app *app
 	return nil
 }
 
-func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
+func (a *ApplicationManager) reconcileDelete(app *applicationapi.Application) (ctrl.Result, error) {
 	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
 
 	return ctrl.Result{}, nil

@@ -39,7 +39,7 @@ import (
 
 // syncPolicyResource synchronizes the sync policy resources for a given application.
 func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) (ctrl.Result, error) {
-	policyKind := findPolicyKind(syncPolicy)
+	policyKind := getSyncPolicyKind(syncPolicy)
 
 	// fetch fleet cluster list that recorded in fleet.
 	fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet)
@@ -127,15 +127,22 @@ func (a *ApplicationManager) getHelmReleaseList(ctx context.Context, app *applic
 	return helmReleaseList, nil
 }
 
-// handleSyncByPolicyKind handles syncing for a given policy kind (either kustomization or Helm release) based on the provided sync policy.
-func (a *ApplicationManager) handleSyncPolicyByKind(ctx context.Context, app *applicationapi.Application, policyKind string, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string, fleetCluster ClusterInterface, kubeConfig *fluxmeta.KubeConfigReference) (ctrl.Result, error) {
+// handleSyncPolicyByKind handles syncing for a given policy kind (either kustomization or Helm release) based on the provided sync policy.
+func (a *ApplicationManager) handleSyncPolicyByKind(
+	ctx context.Context,
+	app *applicationapi.Application,
+	policyKind string,
+	syncPolicy *applicationapi.ApplicationSyncPolicy,
+	policyName string,
+	fleetCluster ClusterInterface,
+	kubeConfig *fluxmeta.KubeConfigReference,
+) (ctrl.Result, error) {
+	policyResourceName := generatePolicyResourceName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
 	// handle kustomization
 	if policyKind == KustomizationKind {
 		kustomization := syncPolicy.Kustomization
-		kustomizationName := generateKustomizationName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
-
 		// sync kustomization using the provided kubeconfig and source.
-		if result, err := a.syncKustomizationForCluster(ctx, app, kustomization, kubeConfig, kustomizationName); err != nil || result.RequeueAfter > 0 {
+		if result, err := a.syncKustomizationForCluster(ctx, app, kustomization, kubeConfig, policyResourceName); err != nil || result.RequeueAfter > 0 {
 			return result, err
 		}
 		return ctrl.Result{}, nil
@@ -144,10 +151,8 @@ func (a *ApplicationManager) handleSyncPolicyByKind(ctx context.Context, app *ap
 	// handle helmRelease
 	if policyKind == HelmReleaseKind {
 		helmRelease := syncPolicy.Helm
-		helmReleaseName := generateHelmReleaseName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
-
 		// sync helmRelease using the provided kubeconfig and source.
-		if result, err := a.syncHelmReleaseForCluster(ctx, app, helmRelease, kubeConfig, helmReleaseName); err != nil || result.RequeueAfter > 0 {
+		if result, err := a.syncHelmReleaseForCluster(ctx, app, helmRelease, kubeConfig, policyResourceName); err != nil || result.RequeueAfter > 0 {
 			return result, err
 		}
 		return ctrl.Result{}, nil
@@ -469,8 +474,8 @@ func findSourceKind(app *applicationapi.Application) string {
 	return ""
 }
 
-// findPolicyKind get the type of the application's syncPolicy.
-func findPolicyKind(syncPolicy *applicationapi.ApplicationSyncPolicy) string {
+// getSyncPolicyKind get the type of the application's syncPolicy.
+func getSyncPolicyKind(syncPolicy *applicationapi.ApplicationSyncPolicy) string {
 	if syncPolicy.Kustomization != nil {
 		return KustomizationKind
 	}
@@ -480,18 +485,9 @@ func findPolicyKind(syncPolicy *applicationapi.ApplicationSyncPolicy) string {
 	return ""
 }
 
-// generateKustomizationName constructs a unique name for Kustomization based on the provided application,
-func generateKustomizationName(policyName, clusterKind, clusterName string) string {
-	name := policyName + "-" + clusterKind + "-" + clusterName
-	name = strings.ToLower(name)
-	if len(name) > 63 {
-		name = name[:63]
-	}
-	return name
-}
-
-// generateHelmReleaseName constructs a unique name for HelmRelease based on the provided application,
-func generateHelmReleaseName(policyName, clusterKind, clusterName string) string {
+// generatePolicyResourceName creates a unique name for a policy resource (such as helmRelease or kustomization)
+// based on the provided application, cluster kind, and cluster name.
+func generatePolicyResourceName(policyName, clusterKind, clusterName string) string {
 	name := policyName + "-" + clusterKind + "-" + clusterName
 	name = strings.ToLower(name)
 	if len(name) > 63 {
