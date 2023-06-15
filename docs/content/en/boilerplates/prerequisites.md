@@ -33,11 +33,16 @@ kurator-member1.config
 kurator-member2.config
 ```
 
-### Install cert manager
+### Optional: Install cert manager
 
-Kurator cluster operator depends on [cert manager CA injector](https://cert-manager.io/docs/concepts/ca-injector).
+Kurator cluster operator depends on [cert manager CA injector](https://cert-manager.io/docs/concepts/ca-injector) if you install with following values:
 
-***Please make sure cert manager is ready before install cluster operator***
+```
+certManager:
+  enabled: true
+
+autoGenerateCert: false
+```
 
 ```console
 helm repo add jetstack https://charts.jetstack.io
