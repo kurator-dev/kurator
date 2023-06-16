@@ -33,20 +33,25 @@ kurator-member1.config
 kurator-member2.config
 ```
 
-### Optional: Install cert manager
+### Webhook CA cert
 
-Kurator cluster operator depends on [cert manager CA injector](https://cert-manager.io/docs/concepts/ca-injector) if you install with following values:
+Kurator cluster operator require cert for webhook, there're different ways to gerenate:
 
-```console
-certManager:
-  enabled: true
+1. By default, cert will be gerenated by helm during the installation
 
-autoGenerateCert: false
-```
+1. Kurator also support [cert manager CA injector](https://cert-manager.io/docs/concepts/ca-injector), you can enable it by following setps:
+
+- Install cert-manager
 
 ```console
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
 kubectl create namespace cert-manager
 helm install -n cert-manager cert-manager jetstack/cert-manager --set installCRDs=true
+```
+
+- Install cluster operator with cert-manager enabled
+
+```console
+helm upgrade --install kurator-cluster-operator kurator/cluster-operator --set certManager.enabled=true --set autoGenerateCert=false
 ```
