@@ -453,7 +453,9 @@ func (r *CustomClusterController) findManageWorkerPod(ctx context.Context, custo
 func getKubesprayImage(ctx context.Context, kubeVersion string) string {
 	log := ctrl.LoggerFrom(ctx)
 	var kubesprayVersion string
+
 	kubeVersion = strings.TrimPrefix(kubeVersion, "v")
+
 	targetVersion, err := semver.NewVersion(kubeVersion)
 	// should not happen
 	if err != nil {
@@ -461,12 +463,7 @@ func getKubesprayImage(ctx context.Context, kubeVersion string) string {
 		return ""
 	}
 
-	midVersion, err := semver.NewVersion("1.24.0")
-	// should not happen
-	if err != nil {
-		log.Error(err, "unexpected kube version", "midVersion", midVersion)
-		return ""
-	}
+	midVersion, _ := semver.NewVersion("1.24.0")
 
 	// Determine the Kubespray version based on the Kubernetes version.
 	if targetVersion.Compare(*midVersion) >= 0 {
