@@ -33,6 +33,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -410,10 +411,7 @@ func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, cu
 		return workerPod, nil
 	}
 
-	kubesprayImage, err := getKubesprayImage(kubeVersion)
-	if err != nil {
-		return nil, err
-	}
+	kubesprayImage := getKubesprayImage(ctx, kubeVersion)
 
 	newWorkerPod := generateClusterManageWorker(customCluster, manageAction, manageCMD, hostName, configName, kubesprayImage)
 	newWorkerPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
@@ -452,17 +450,22 @@ func (r *CustomClusterController) findManageWorkerPod(ctx context.Context, custo
 // Kubespray v2.20.0 supports Kubernetes versions from 1.22.0 to 1.24.6,
 // while Kubespray v2.22.1 supports Kubernetes versions from 1.24.0 to 1.26.5.
 // This function returns one of these two Kubespray versions based on the input Kubernetes version.
-func getKubesprayImage(kubeVersion string) (string, error) {
+func getKubesprayImage(ctx context.Context, kubeVersion string) string {
+	log := ctrl.LoggerFrom(ctx)
 	var kubesprayVersion string
 	kubeVersion = strings.TrimPrefix(kubeVersion, "v")
 	targetVersion, err := semver.NewVersion(kubeVersion)
+	// should not happen
 	if err != nil {
-		return "", err
+		log.Error(err, "unexpected kube version", "targetVersion", targetVersion)
+		return ""
 	}
 
 	midVersion, err := semver.NewVersion("1.24.0")
+	// should not happen
 	if err != nil {
-		return "", err
+		log.Error(err, "unexpected kube version", "midVersion", midVersion)
+		return ""
 	}
 
 	// Determine the Kubespray version based on the Kubernetes version.
@@ -473,7 +476,8 @@ func getKubesprayImage(kubeVersion string) (string, error) {
 	}
 
 	imagePath := "quay.io/kubespray/kubespray:" + kubesprayVersion
-	return imagePath, nil
+
+	return imagePath
 }
 
 // hasProvisionClusterInfo is used to determine if the current phase is valid for retrieving ProvisionClusterInfo.
