@@ -37,7 +37,7 @@ kurator-member2.config
 
 Kurator cluster operator depends on [cert manager CA injector](https://cert-manager.io/docs/concepts/ca-injector) if you install with following values:
 
-```
+```console
 certManager:
   enabled: true
 
