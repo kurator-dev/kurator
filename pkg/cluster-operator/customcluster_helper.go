@@ -457,7 +457,7 @@ func getKubesprayImage(ctx context.Context, kubeVersion string) string {
 	kubeVersion = strings.TrimPrefix(kubeVersion, "v")
 
 	targetVersion, err := semver.NewVersion(kubeVersion)
-	// should not happen
+	// should not happen, if we have validation on kubeVersion
 	if err != nil {
 		log.Error(err, "unexpected kube version", "targetVersion", targetVersion)
 		return ""
