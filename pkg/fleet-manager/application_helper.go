@@ -26,6 +26,7 @@ import (
 	kustomizev1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	fluxmeta "github.com/fluxcd/pkg/apis/meta"
 	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,101 +38,126 @@ import (
 )
 
 // syncPolicyResource synchronizes the sync policy resources for a given application.
-func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) error {
-	log := ctrl.LoggerFrom(ctx)
-	sourceKind := findSourceKind(app)
+func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) (ctrl.Result, error) {
+	policyKind := getSyncPolicyKind(syncPolicy)
 
-	// Merge the list of clusters and attached clusters into a single list. also mapping relation will be added here
-	fleetClusterList, err := a.generateFleetCluster(ctx, fleet, app)
-	if err != nil {
-		return err
+	// fetch fleet cluster list that recorded in fleet.
+	fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet)
+	if err != nil || result.RequeueAfter > 0 {
+		return result, err
 	}
-
-	if len(fleetClusterList) == 0 {
-		log.Info("no cluster is found in current fleet", "fleet", fleet.Name)
-		return nil
-	}
-
-	// Handle each cluster in current fleet.
+	// Iterate through all clusters, and create/update kustomization/helmRelease for each of them.
 	for _, currentFleetCluster := range fleetClusterList {
 		// fetch kubeconfig for each cluster.
-		kubeConfig := a.generateKubeConfig(currentFleetCluster)
+		kubeconfig := a.generateKubeConfig(currentFleetCluster)
 
-		// handle gitRepo + kustomization
-		if sourceKind == GitRepoKind {
-			kustomization := syncPolicy.Kustomization
-			kustomizationName := generateKustomizationName(app, currentFleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, currentFleetCluster.GetObject().GetName(), policyName)
-
-			// create flux kustomization using kubeconfig and source.
-			if err := a.syncKustomizationForCluster(ctx, app, kustomization, kubeConfig, kustomizationName); err != nil {
-				log.Error(err, "failed to syncKustomizationForCluster", "kustomizationName", kustomizationName)
-				return err
-			}
-			return nil
-		}
-
-		// handle helmRepo + helmRelease
-		if sourceKind == HelmRepoKind {
-			helmRelease := syncPolicy.Helm
-			helmReleaseName := generateHelmReleaseName(app, currentFleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, currentFleetCluster.GetObject().GetName(), policyName)
-
-			// create flux helmRelease using kubeconfig and source.
-			if err := a.syncHelmReleaseForCluster(ctx, app, helmRelease, kubeConfig, helmReleaseName); err != nil {
-				log.Error(err, "failed to syncHelmReleaseForCluster", "helmReleaseName", helmReleaseName)
-				return err
-			}
-			return nil
-		}
-
-		// todo: what if kind is ociRepo
-		if sourceKind != GitRepoKind && sourceKind != HelmRepoKind {
-			return fmt.Errorf("current source kind is %s, this kind is unsupported", sourceKind)
+		if result, err1 := a.handleSyncPolicyByKind(ctx, app, policyKind, syncPolicy, policyName, currentFleetCluster, kubeconfig); err1 != nil || result.RequeueAfter > 0 {
+			return result, errors.Wrapf(err1, "failed to handleSyncPolicyByKind currentFleetCluster=%s", currentFleetCluster.GetObject().GetName())
 		}
 	}
-	return nil
+
+	return ctrl.Result{}, nil
 }
 
-// mergeClusterLists merges the lists of Clusters and AttachedClusters associated with the specified Fleet.
-func (a *ApplicationManager) generateFleetCluster(ctx context.Context, fleet *fleetapi.Fleet, app *applicationapi.Application) ([]ClusterInterface, error) {
+// fetchFleetClusterList fetch fleet cluster list that recorded in fleet.
+func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *fleetapi.Fleet) ([]ClusterInterface, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-
-	var clusterList clusterv1alpha1.ClusterList
-	var attachedClusterList clusterv1alpha1.AttachedClusterList
-
-	if err := a.Client.List(ctx, &clusterList,
-		client.InNamespace(fleet.Namespace),
-		client.MatchingLabels{FleetLabel: fleet.Name}); err != nil {
-		log.Error(err, "failed to fetch clusterList for fleet", "fleet", fleet.Name)
-		return nil, err
-	}
-
-	if err := a.Client.List(ctx, &attachedClusterList,
-		client.InNamespace(fleet.Namespace),
-		client.MatchingLabels{FleetLabel: fleet.Name}); err != nil {
-		log.Error(err, "failed to fetch attachedClusterList for fleet", "fleet", fleet.Name)
-		return nil, err
-	}
-
 	var fleetClusterList []ClusterInterface
-	for _, cluster := range clusterList.Items {
-		// add map item
-		if clusterToApplicationMap[cluster.Name] == nil {
-			clusterToApplicationMap[cluster.Name] = make([]string, 0)
+
+	for _, cluster := range fleet.Spec.Clusters {
+		// cluster.kind cluster.name that recorded in fleet must be valid
+		kind := cluster.Kind
+		name := cluster.Name
+		if kind == ClusterKind {
+			cluster := &clusterv1alpha1.Cluster{}
+			key := client.ObjectKey{
+				Name:      name,
+				Namespace: fleet.Namespace,
+			}
+			err := a.Client.Get(ctx, key, cluster)
+			if apierrors.IsNotFound(err) {
+				return nil, ctrl.Result{RequeueAfter: RequeueAfter}, nil
+			}
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+			fleetClusterList = append(fleetClusterList, cluster)
+		} else if kind == AttachedClusterKind {
+			attachedCluster := &clusterv1alpha1.AttachedCluster{}
+			key := client.ObjectKey{
+				Name:      name,
+				Namespace: fleet.Namespace,
+			}
+			err := a.Client.Get(ctx, key, attachedCluster)
+			if apierrors.IsNotFound(err) {
+				return nil, ctrl.Result{RequeueAfter: RequeueAfter}, nil
+			}
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+			fleetClusterList = append(fleetClusterList, attachedCluster)
+		} else {
+			log.Info("kind of cluster in fleet is not support, skip this cluster", "fleet", fleet.Name, "kind", kind)
 		}
-		clusterToApplicationMap[cluster.Name] = append(clusterToApplicationMap[cluster.Name], app.Name)
-		// merge fleetClusterList
-		fleetClusterList = append(fleetClusterList, &cluster)
 	}
-	for _, attachedCluster := range attachedClusterList.Items {
-		// add map item
-		if clusterToApplicationMap[attachedCluster.Name] == nil {
-			clusterToApplicationMap[attachedCluster.Name] = make([]string, 0)
+	return fleetClusterList, ctrl.Result{}, nil
+}
+
+// getKustomizationList returns a list of kustomizations associated with the given application.
+func (a *ApplicationManager) getKustomizationList(ctx context.Context, app *applicationapi.Application) (*kustomizev1beta2.KustomizationList, error) {
+	kustomizationList := &kustomizev1beta2.KustomizationList{}
+	err := a.Client.List(ctx, kustomizationList,
+		client.InNamespace(app.Namespace),
+		client.MatchingLabels{ApplicationLabel: app.Name})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to fetch kustomizationList for application: %w", err)
+	}
+	return kustomizationList, nil
+}
+
+// getHelmReleaseList returns a list of helmReleases associated with the given application.
+func (a *ApplicationManager) getHelmReleaseList(ctx context.Context, app *applicationapi.Application) (*helmv2b1.HelmReleaseList, error) {
+	helmReleaseList := &helmv2b1.HelmReleaseList{}
+	err := a.Client.List(ctx, helmReleaseList,
+		client.InNamespace(app.Namespace),
+		client.MatchingLabels{ApplicationLabel: app.Name})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return nil, fmt.Errorf("failed to fetch kustomizationList for application: %w", err)
+	}
+	return helmReleaseList, nil
+}
+
+// handleSyncPolicyByKind handles syncing for a given policy kind (either kustomization or Helm release) based on the provided sync policy.
+func (a *ApplicationManager) handleSyncPolicyByKind(
+	ctx context.Context,
+	app *applicationapi.Application,
+	policyKind string,
+	syncPolicy *applicationapi.ApplicationSyncPolicy,
+	policyName string,
+	fleetCluster ClusterInterface,
+	kubeConfig *fluxmeta.KubeConfigReference,
+) (ctrl.Result, error) {
+	policyResourceName := generatePolicyResourceName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
+	// handle kustomization
+	if policyKind == KustomizationKind {
+		kustomization := syncPolicy.Kustomization
+		// sync kustomization using the provided kubeconfig and source.
+		if result, err := a.syncKustomizationForCluster(ctx, app, kustomization, kubeConfig, policyResourceName); err != nil || result.RequeueAfter > 0 {
+			return result, err
 		}
-		clusterToApplicationMap[attachedCluster.Name] = append(clusterToApplicationMap[attachedCluster.Name], app.Name)
-		// merge fleetClusterList
-		fleetClusterList = append(fleetClusterList, &attachedCluster)
+		return ctrl.Result{}, nil
 	}
-	return fleetClusterList, nil
+
+	// handle helmRelease
+	if policyKind == HelmReleaseKind {
+		helmRelease := syncPolicy.Helm
+		// sync helmRelease using the provided kubeconfig and source.
+		if result, err := a.syncHelmReleaseForCluster(ctx, app, helmRelease, kubeConfig, policyResourceName); err != nil || result.RequeueAfter > 0 {
+			return result, err
+		}
+		return ctrl.Result{}, nil
+	}
+	return ctrl.Result{}, nil
 }
 
 // generateKubeConfig generates the kubeconfig reference for a cluster within a Fleet.
@@ -147,7 +173,7 @@ func (a *ApplicationManager) generateKubeConfig(fleetCluster ClusterInterface) *
 }
 
 // syncKustomizationForCluster ensures that the Kustomization object is in sync with Flux's requirements for the object.
-func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, app *applicationapi.Application, kustomization *applicationapi.Kustomization, kubeConfig *fluxmeta.KubeConfigReference, kustomizationName string) error {
+func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, app *applicationapi.Application, kustomization *applicationapi.Kustomization, kubeConfig *fluxmeta.KubeConfigReference, kustomizationName string) (ctrl.Result, error) {
 	// Create a target Kustomization object with details extracted from the provided application's Kustomization spec
 	targetKustomization := &kustomizev1beta2.Kustomization{
 		ObjectMeta: metav1.ObjectMeta{
@@ -170,7 +196,7 @@ func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, ap
 			Patches:       kustomization.Patches,
 			Images:        kustomization.Images,
 			SourceRef: kustomizev1beta2.CrossNamespaceSourceReference{
-				Kind: GitRepoKind,
+				Kind: findSourceKind(app),
 				Name: generateSourceName(app),
 			},
 			Suspend:         kustomization.Suspend,
@@ -194,11 +220,11 @@ func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, ap
 }
 
 // syncHelmReleaseForCluster ensures that the HelmRelease object is in sync with Flux's requirements for the object.
-func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app *applicationapi.Application, helmRelease *applicationapi.HelmRelease, kubeConfig *fluxmeta.KubeConfigReference, kustomizationName string) error {
+func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app *applicationapi.Application, helmRelease *applicationapi.HelmRelease, kubeConfig *fluxmeta.KubeConfigReference, helmReleaseName string) (ctrl.Result, error) {
 	// Create a target HelmRelease object with details extracted from the provided application's HelmRelease spec
 	targetHelmRelease := &helmv2b1.HelmRelease{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      kustomizationName,
+			Name:      helmReleaseName,
 			Namespace: app.Namespace,
 			Labels: map[string]string{
 				ApplicationLabel: app.Name,
@@ -241,7 +267,7 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 		Chart:   charSpec.Chart,
 		Version: charSpec.Version,
 		SourceRef: helmv2b1.CrossNamespaceObjectReference{
-			Kind: HelmRepoKind,
+			Kind: findSourceKind(app),
 			Name: generateSourceName(app),
 		},
 		Interval:          charSpec.Interval,
@@ -254,7 +280,7 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 }
 
 // syncSourceResource synchronizes the source resource based on the application's source specification.
-func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applicationapi.Application) error {
+func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
 	kind := findSourceKind(app)
 	// Based on the source kind, create the appropriate source object and synchronize it with the Kubernetes API server
 	switch kind {
@@ -298,7 +324,7 @@ func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applic
 		}
 		return a.syncResource(ctx, targetSource, OCIRepoKind)
 	}
-	return nil
+	return ctrl.Result{}, nil
 }
 
 // createEmptyObject generates an uninitialized instance of the specified resource type.
@@ -326,7 +352,7 @@ func createEmptyObject(resourceKind string) client.Object {
 // If the resource already exists, it is updated with the contents of the `targetSource` object.
 // If the resource does not exist, it is created using the contents of the `targetSource` object.
 // Returns an error if the synchronization or creation of the resource fails.
-func (a *ApplicationManager) syncResource(ctx context.Context, targetSource client.Object, resourceKind string) error {
+func (a *ApplicationManager) syncResource(ctx context.Context, targetSource client.Object, resourceKind string) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// try to get the current resource from the API server
@@ -338,17 +364,18 @@ func (a *ApplicationManager) syncResource(ctx context.Context, targetSource clie
 	err := a.Client.Get(ctx, resourceKey, currentResource)
 	if err != nil && !apierrors.IsNotFound(err) {
 		log.Error(err, fmt.Sprintf("failed to get %s", resourceKind), resourceKind, resourceKey)
-		return err
+		return ctrl.Result{}, err
 	}
 
 	// if not found, create it
 	if apierrors.IsNotFound(err) {
 		if err := a.Client.Create(ctx, targetSource); err != nil {
-			log.Error(err, fmt.Sprintf("failed to get %s", resourceKind), resourceKind, resourceKey)
-			return err
+			if !apierrors.IsAlreadyExists(err) {
+				log.Error(err, fmt.Sprintf("failed to create %s", resourceKind), resourceKind, resourceKey)
+				return ctrl.Result{}, err
+			}
 		}
-		log.Info(fmt.Sprintf("create %s successful", resourceKind), resourceKind, resourceKey)
-		return nil
+		return ctrl.Result{}, nil
 	}
 
 	// if already exist, update it
@@ -366,14 +393,19 @@ func (a *ApplicationManager) syncResource(ctx context.Context, targetSource clie
 		err = a.updateHelmRelease(ctx, currentResource.(*helmv2b1.HelmRelease), targetSource.(*helmv2b1.HelmRelease))
 	default:
 		log.Error(err, fmt.Sprintf("resource type %s is not supported", resourceKind))
-		return nil
+		return ctrl.Result{}, nil
 	}
-	if err != nil {
+	// If there is a conflict during the update, it indicates that the resource may have been updated by the Flux controller.
+	// In this case, the handler should requeue the resource and wait for the next reconciliation.
+	if apierrors.IsConflict(err) {
+		return ctrl.Result{RequeueAfter: RequeueAfter}, nil
+	}
+	if err != nil && !apierrors.IsConflict(err) {
 		log.Error(err, fmt.Sprintf("failed to update %s", resourceKind), resourceKind, resourceKey)
-		return err
+		return ctrl.Result{}, err
 	}
 
-	return nil
+	return ctrl.Result{}, nil
 }
 
 // updateGitRepository updates the state of a current GitRepository resource to match the provided target GitRepository resource.
@@ -442,23 +474,21 @@ func findSourceKind(app *applicationapi.Application) string {
 	return ""
 }
 
-// generateKustomizationName constructs a unique name for Kustomization based on the provided application,
-// synchronization policy, cluster kind and cluster name. The resulting name is formatted to be lower-case,
-// and is truncated to a maximum of 63 characters if needed.
-
-// generateKustomizationName constructs a unique name for Kustomization based on the provided application,
-func generateKustomizationName(app *applicationapi.Application, clusterKind, clusterName, policyName string) string {
-	name := app.Name + "-" + policyName + "-" + clusterKind + "-" + clusterName
-	name = strings.ToLower(name)
-	if len(name) > 63 {
-		name = name[:63]
+// getSyncPolicyKind get the type of the application's syncPolicy.
+func getSyncPolicyKind(syncPolicy *applicationapi.ApplicationSyncPolicy) string {
+	if syncPolicy.Kustomization != nil {
+		return KustomizationKind
 	}
-	return name
+	if syncPolicy.Helm != nil {
+		return HelmReleaseKind
+	}
+	return ""
 }
 
-// generateHelmReleaseName constructs a unique name for HelmRelease based on the provided application,
-func generateHelmReleaseName(app *applicationapi.Application, clusterKind, clusterName, policyName string) string {
-	name := app.Name + "-" + policyName + "-" + clusterKind + "-" + clusterName
+// generatePolicyResourceName creates a unique name for a policy resource (such as helmRelease or kustomization)
+// based on the provided application, cluster kind, and cluster name.
+func generatePolicyResourceName(policyName, clusterKind, clusterName string) string {
+	name := policyName + "-" + clusterKind + "-" + clusterName
 	name = strings.ToLower(name)
 	if len(name) > 63 {
 		name = name[:63]
@@ -491,4 +521,23 @@ func generatePolicyName(app *applicationapi.Application, index int) string {
 	}
 
 	return app.Spec.SyncPolicies[index].Name
+}
+
+func generateFleetKey(app *applicationapi.Application) client.ObjectKey {
+	var fleetName string
+	// if destination of SyncPolicies is not set, we use the destination of application
+	if app.Spec.SyncPolicies[0].Destination == nil || len(app.Spec.SyncPolicies[0].Destination.Fleet) == 0 {
+		// if destination is not set in both SyncPolicies and application, just return ""
+		if app.Spec.Destination == nil {
+			fleetName = ""
+		} else {
+			fleetName = app.Spec.Destination.Fleet
+		}
+	} else {
+		fleetName = app.Spec.SyncPolicies[0].Destination.Fleet
+	}
+	return client.ObjectKey{
+		Namespace: app.Namespace,
+		Name:      fleetName,
+	}
 }
