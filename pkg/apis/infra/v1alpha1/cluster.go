@@ -31,9 +31,7 @@ import (
 
 // CustomCluster represents the parameters for a cluster in supplement of Cluster API.
 type CustomCluster struct {
-	metav1.TypeMeta `json:",inline"`
-
-	// +optional
+	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// Specification of the desired behavior of the kurator cluster.
@@ -48,29 +46,30 @@ type CustomClusterSpec struct {
 	// TODO: any other configurations that does not exist in upstream cluster api
 
 	// MachineRef is the reference of nodes for provisioning a kurator cluster.
-	// +optional
 	MachineRef *corev1.ObjectReference `json:"machineRef,omitempty"`
 
 	// CNIConfig is the configuration for the CNI of the cluster.
 	CNI CNIConfig `json:"cni"`
 
 	// ControlPlaneConfig contains control plane configuration.
+	// +optional
 	ControlPlaneConfig ControlPlaneConfig `json:"controlPlaneConfig,omitempty"`
 }
 
 type ControlPlaneConfig struct {
-	// same as `ControlPlaneEndpoint`
+	// same as `ControlPlaneEndpoint` (e.g. 192.x.x.0).
 	Address string `json:"address"`
-	// CertSANs sets extra Subject Alternative Names for the API Server signing cert.
+	// CertSANs sets extra Subject Alternative Names for the API Server signing cert (e.g.[200.x.x.1,200.x.x.2], [200.x.x.1], etc...).
 	// +optional
 	CertSANs []string `json:"certSANs,omitempty"`
 	// LoadBalancerDomainName is a variable used to set the endpoint for a Kubernetes cluster
 	// when a load balancer (LB) is enabled. The default value is ControlPlaneConfig.Address.
+	// +optional
 	LoadBalancerDomainName string `json:"loadBalancerDomainName,omitempty"`
 }
 
 type CNIConfig struct {
-	// Type is the type of CNI. The default value is calico and can be ["calico", "cilium", "canal", "flannel"]
+	// Type is the type of CNI (e.g. calico, canal, cilium, flannel, kube-ovn, kube-router, macvlan, weave).
 	Type string `json:"type"`
 }
 

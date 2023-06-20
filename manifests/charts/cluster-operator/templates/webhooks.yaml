@@ -28,3 +28,28 @@ webhooks:
     resources:
     - clusters
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    {{- if .Values.autoGenerateCert }}
+    caBundle: {{ $ca.Cert | b64enc }}
+    {{- end }}
+    service:
+      name: kurator-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha1-customcluster # get this path from webhook service log
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: validation.customcluster.infrastructure.cluster.x-k8s.io
+  rules:
+  - apiGroups:
+    - infrastructure.cluster.x-k8s.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - customclusters
+  sideEffects: None

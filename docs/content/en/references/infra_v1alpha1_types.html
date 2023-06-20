@@ -52,7 +52,6 @@ Kubernetes meta/v1.ObjectMeta
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 Refer to the Kubernetes API documentation for the fields of the
 <code>metadata</code> field.
 </td>
@@ -79,7 +78,6 @@ Kubernetes core/v1.ObjectReference
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>MachineRef is the reference of nodes for provisioning a kurator cluster.</p>
 </td>
 </tr>
@@ -106,6 +104,7 @@ ControlPlaneConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneConfig contains control plane configuration.</p>
 </td>
 </tr>
@@ -254,7 +253,7 @@ string
 </em>
 </td>
 <td>
-<p>Type is the type of CNI. The default value is calico and can be [&ldquo;calico&rdquo;, &ldquo;cilium&rdquo;, &ldquo;canal&rdquo;, &ldquo;flannel&rdquo;]</p>
+<p>Type is the type of CNI (e.g. calico, canal, cilium, flannel, kube-ovn, kube-router, macvlan, weave).</p>
 </td>
 </tr>
 </tbody>
@@ -285,7 +284,7 @@ string
 </em>
 </td>
 <td>
-<p>same as <code>ControlPlaneEndpoint</code></p>
+<p>same as <code>ControlPlaneEndpoint</code> (e.g. 192.x.x.0).</p>
 </td>
 </tr>
 <tr>
@@ -297,7 +296,7 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>CertSANs sets extra Subject Alternative Names for the API Server signing cert.</p>
+<p>CertSANs sets extra Subject Alternative Names for the API Server signing cert (e.g.[200.x.x.1,200.x.x.2], [200.x.x.1], etc&hellip;).</p>
 </td>
 </tr>
 <tr>
@@ -308,6 +307,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>LoadBalancerDomainName is a variable used to set the endpoint for a Kubernetes cluster
 when a load balancer (LB) is enabled. The default value is ControlPlaneConfig.Address.</p>
 </td>
@@ -349,7 +349,6 @@ Kubernetes core/v1.ObjectReference
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>MachineRef is the reference of nodes for provisioning a kurator cluster.</p>
 </td>
 </tr>
@@ -376,6 +375,7 @@ ControlPlaneConfig
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>ControlPlaneConfig contains control plane configuration.</p>
 </td>
 </tr>

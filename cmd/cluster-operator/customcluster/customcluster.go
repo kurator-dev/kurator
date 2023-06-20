@@ -18,12 +18,14 @@ package customcluster
 
 import (
 	"context"
+	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/cluster-operator/options"
 	clusteroperator "kurator.dev/kurator/pkg/cluster-operator"
+	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("custom_cluster")
@@ -45,6 +47,12 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "CustomMachine")
 		return err
+	}
+
+	if err := (&webhooks.CustomClusterWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
+		return fmt.Errorf("unable to create CustomCluster webhook, %w", err)
 	}
 
 	return nil
