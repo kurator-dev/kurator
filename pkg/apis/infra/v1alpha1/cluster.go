@@ -27,6 +27,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=customclusters,shortName=cc
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Ready",type="string",JSONPath=".status.phase",description="Represents the current phase of customCluster actuation."
 
 // CustomCluster represents the parameters for a cluster in supplement of Cluster API.
 type CustomCluster struct {

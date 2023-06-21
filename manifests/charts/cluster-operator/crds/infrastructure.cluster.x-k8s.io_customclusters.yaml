@@ -18,7 +18,12 @@ spec:
     singular: customcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Represents the current phase of customCluster actuation.
+      jsonPath: .status.phase
+      name: Ready
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: CustomCluster represents the parameters for a cluster in supplement
