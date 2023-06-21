@@ -17,7 +17,12 @@ spec:
     singular: attachedcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Indicates if the AttachedClusters are ready
+      jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: AttachedCluster is the schema for the external cluster that are
