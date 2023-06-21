@@ -67,7 +67,7 @@ func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Reques
 
 func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *v1alpha1.CustomMachine) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-	keyRef := customMachine.Spec.Master[0].SSHKey
+	keyRef := customMachine.Spec.Masters[0].SSHKey
 	obj, err := external.Get(ctx, r.Client, keyRef, customMachine.Namespace)
 	if err != nil {
 		if apierrors.IsNotFound(err) {

@@ -4,7 +4,7 @@ metadata:
   name: cc-custommachine
   namespace: default
 spec:
-  master:
+  masters:
     - hostName: master1
       publicIP: 202.x.x.x
       privateIP: 192.x.x.x
@@ -12,7 +12,7 @@ spec:
         apiVersion: v1
         kind: Secret
         name: cluster-secret
-  node:
+  nodes:
     - hostName: node1
       publicIP: 202.x.x.x
       privateIP: 192.x.x.x

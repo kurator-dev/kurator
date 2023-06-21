@@ -15,7 +15,12 @@ spec:
     singular: custommachine
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Indicates if the machines are ready
+      jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: CustomMachine is the schema for kubernetes nodes.
@@ -35,7 +40,7 @@ spec:
           spec:
             description: Specification of the desired behavior of the kurator cluster.
             properties:
-              master:
+              masters:
                 items:
                   description: Machine defines a node.
                   properties:
@@ -98,11 +103,11 @@ spec:
                           type: string
                       type: object
                     zone:
-                      description: Region specifies the zone where the machine resides.
+                      description: Zone specifies the zone where the machine resides.
                       type: string
                   type: object
                 type: array
-              node:
+              nodes:
                 items:
                   description: Machine defines a node.
                   properties:
@@ -165,7 +170,7 @@ spec:
                           type: string
                       type: object
                     zone:
-                      description: Region specifies the zone where the machine resides.
+                      description: Zone specifies the zone where the machine resides.
                       type: string
                   type: object
                 type: array
@@ -174,8 +179,7 @@ spec:
             description: Current status of the machine.
             properties:
               ready:
-                description: 'TODO: add state. TODO: display with kubectl Indicate
-                  whether the machines are ready.'
+                description: 'TODO: add state. Indicate whether the machines are ready.'
                 type: boolean
             type: object
         type: object

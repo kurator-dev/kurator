@@ -46,15 +46,15 @@ var node2 = v1alpha1.Machine{
 
 var curCustomMachineSingle = &v1alpha1.CustomMachine{
 	Spec: v1alpha1.CustomMachineSpec{
-		Master: []v1alpha1.Machine{master1},
-		Nodes:  []v1alpha1.Machine{node1},
+		Masters: []v1alpha1.Machine{master1},
+		Nodes:   []v1alpha1.Machine{node1},
 	},
 }
 
 var curCustomMachineMulti = &v1alpha1.CustomMachine{
 	Spec: v1alpha1.CustomMachineSpec{
-		Master: []v1alpha1.Machine{master1},
-		Nodes:  []v1alpha1.Machine{node1, node2},
+		Masters: []v1alpha1.Machine{master1},
+		Nodes:   []v1alpha1.Machine{node1, node2},
 	},
 }
 

@@ -169,7 +169,7 @@ func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPl
 }
 
 func GetHostsContent(customMachine *v1alpha1.CustomMachine) *HostTemplateContent {
-	masterMachine := customMachine.Spec.Master
+	masterMachine := customMachine.Spec.Masters
 	nodeMachine := customMachine.Spec.Nodes
 	hostVar := &HostTemplateContent{
 		NodeAndIP:    make([]string, len(masterMachine)+len(nodeMachine)),
@@ -457,8 +457,8 @@ func hasProvisionClusterInfo(phase v1alpha1.CustomClusterPhase) bool {
 
 // fetchProvisionedClusterKubeConfig fetch provisioned cluster’s kubeConfig file, and create a secret named "provisionedClusterKubeConfigSecretPrefix + customCluster.name" with the data of kube-config file.
 func (r *CustomClusterController) fetchProvisionedClusterKubeConfig(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine) error {
-	remoteMachineSSHKey := customMachine.Spec.Master[0].SSHKey
-	controlPlaneHost := customMachine.Spec.Master[0].PublicIP
+	remoteMachineSSHKey := customMachine.Spec.Masters[0].SSHKey
+	controlPlaneHost := customMachine.Spec.Masters[0].PublicIP
 
 	sshKeySecret, err := r.getSSHKeySecret(ctx, customMachine.Namespace, remoteMachineSSHKey.Name)
 	if err != nil {
