@@ -1,7 +1,5 @@
 certManager:
-  enabled: false
-
-autoGenerateCert: true
+  enabled: true
 
 replicaCount: 1
 
