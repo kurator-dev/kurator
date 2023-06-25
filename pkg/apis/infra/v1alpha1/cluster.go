@@ -53,7 +53,7 @@ type CustomClusterSpec struct {
 
 	// ControlPlaneConfig contains control plane configuration.
 	// +optional
-	ControlPlaneConfig ControlPlaneConfig `json:"controlPlaneConfig,omitempty"`
+	ControlPlaneConfig *ControlPlaneConfig `json:"controlPlaneConfig,omitempty"`
 }
 
 type ControlPlaneConfig struct {

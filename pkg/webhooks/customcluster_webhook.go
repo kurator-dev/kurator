@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -56,8 +57,10 @@ func (wh *CustomClusterWebhook) validate(in *v1alpha1.CustomCluster) error {
 	var allErrs field.ErrorList
 
 	allErrs = append(allErrs, validateCNI(in)...)
-	allErrs = append(allErrs, validateMachineRef(in)...)
-	allErrs = append(allErrs, validateControlPlaneConfig(in.Spec.ControlPlaneConfig, field.NewPath("spec", "controlPlaneConfig"))...)
+	allErrs = append(allErrs, validateMachineRef(in.Spec.MachineRef)...)
+	if in.Spec.ControlPlaneConfig != nil {
+		allErrs = append(allErrs, validateControlPlaneConfig(in.Spec.ControlPlaneConfig)...)
+	}
 
 	if len(allErrs) > 0 {
 		return apierrors.NewInvalid(v1alpha1.SchemeGroupVersion.WithKind("CustomCluster").GroupKind(), in.Name, allErrs)
@@ -80,43 +83,26 @@ func IsValidCNI(value string) bool {
 func validateCNI(in *v1alpha1.CustomCluster) field.ErrorList {
 	var allErrs field.ErrorList
 	if !IsValidCNI(in.Spec.CNI.Type) {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "version"), in.Spec.CNI.Type,
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "cni", "type"), in.Spec.CNI.Type,
 			fmt.Sprintf("invalid CNI type: %v ,it should be one of %v ", in.Spec.CNI.Type, validCNIs)))
 	}
 
 	return allErrs
 }
 
-func validateMachineRef(in *v1alpha1.CustomCluster) field.ErrorList {
+func validateMachineRef(machineRef *corev1.ObjectReference) field.ErrorList {
 	var allErrs field.ErrorList
 
-	machineRef := in.Spec.MachineRef
-
-	if machineRef == nil {
-		allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef"), "must be set"))
-	} else {
-		if machineRef.Kind == "" {
-			allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "kind"), "must be set"))
-		}
-		if machineRef.Name == "" {
-			allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "name"), "must be set"))
-		}
-		if machineRef.Namespace == "" {
-			allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "namespace"), "must be set"))
-		}
-		if machineRef.APIVersion == "" {
-			allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "apiVersion"), "must be set"))
-		}
-	}
+	allErrs = append(allErrs, ValidateObjectReference(machineRef, field.NewPath("spec", "machineRef"))...)
 
 	return allErrs
 }
 
-func validateControlPlaneConfig(in v1alpha1.ControlPlaneConfig, fldPath *field.Path) field.ErrorList {
+func validateControlPlaneConfig(in *v1alpha1.ControlPlaneConfig) field.ErrorList {
 	var allErrs field.ErrorList
 
 	if len(in.Address) != 0 {
-		allErrs = append(allErrs, validateIP(in.Address, fldPath.Child("address"))...)
+		allErrs = append(allErrs, validateIP(in.Address, field.NewPath("spec", "controlPlaneConfig", "address"))...)
 	}
 
 	return allErrs
