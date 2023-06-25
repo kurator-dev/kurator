@@ -57,7 +57,9 @@ func (wh *CustomClusterWebhook) validate(in *v1alpha1.CustomCluster) error {
 	var allErrs field.ErrorList
 
 	allErrs = append(allErrs, validateCNI(in)...)
-	allErrs = append(allErrs, validateMachineRef(in.Spec.MachineRef)...)
+	if in.Spec.MachineRef != nil {
+		allErrs = append(allErrs, validateMachineRef(in.Spec.MachineRef)...)
+	}
 	if in.Spec.ControlPlaneConfig != nil {
 		allErrs = append(allErrs, validateControlPlaneConfig(in.Spec.ControlPlaneConfig)...)
 	}
@@ -93,7 +95,22 @@ func validateCNI(in *v1alpha1.CustomCluster) field.ErrorList {
 func validateMachineRef(machineRef *corev1.ObjectReference) field.ErrorList {
 	var allErrs field.ErrorList
 
-	allErrs = append(allErrs, ValidateObjectReference(machineRef, field.NewPath("spec", "machineRef"))...)
+	if machineRef.Kind == "" {
+		allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "kind"), "must be set"))
+	}
+	if machineRef.APIVersion == "" {
+		allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "apiVersion"), "must be set"))
+	}
+	if machineRef.Name == "" {
+		allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "name"), "must be set"))
+	} else {
+		allErrs = append(allErrs, validateDNS1123Domain(machineRef.Name, field.NewPath("spec", "machineRef", "name"))...)
+	}
+	if machineRef.Namespace == "" {
+		allErrs = append(allErrs, field.Required(field.NewPath("spec", "machineRef", "namespace"), "must be set"))
+	} else {
+		allErrs = append(allErrs, validateDNS1123Label(machineRef.Namespace, field.NewPath("spec", "machineRef", "namespace"))...)
+	}
 
 	return allErrs
 }
