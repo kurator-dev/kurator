@@ -59,7 +59,7 @@ type CustomClusterSpec struct {
 type ControlPlaneConfig struct {
 	// same as `ControlPlaneEndpoint` (e.g. 192.x.x.0).
 	Address string `json:"address"`
-	// CertSANs sets extra Subject Alternative Names for the API Server signing cert (e.g.[200.x.x.1,200.x.x.2], [200.x.x.1], etc...).
+	// CertSANs sets extra Subject Alternative Names for the API Server signing cert (e.g.[200.x.x.1,200.x.x.2,kubernetes.default.svc.cluster.local], [200.x.x.1], etc...).
 	// +optional
 	CertSANs []string `json:"certSANs,omitempty"`
 	// LoadBalancerDomainName is a variable used to set the endpoint for a Kubernetes cluster
@@ -69,7 +69,7 @@ type ControlPlaneConfig struct {
 }
 
 type CNIConfig struct {
-	// Type is the type of CNI (e.g. calico, canal, cilium, flannel, kube-ovn, kube-router, macvlan, weave).
+	// Type is the type of CNI. The supported types are: calico, canal, cilium, flannel, kube-ovn, kube-router, macvlan, weave
 	Type string `json:"type"`
 }
 

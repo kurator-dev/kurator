@@ -32,9 +32,6 @@ webhooks:
   - v1
   - v1beta1
   clientConfig:
-    {{- if .Values.autoGenerateCert }}
-    caBundle: {{ $ca.Cert | b64enc }}
-    {{- end }}
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}

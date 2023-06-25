@@ -48,8 +48,9 @@ spec:
                 description: CNIConfig is the configuration for the CNI of the cluster.
                 properties:
                   type:
-                    description: Type is the type of CNI (e.g. calico, canal, cilium,
-                      flannel, kube-ovn, kube-router, macvlan, weave).
+                    description: 'Type is the type of CNI. The supported types are:
+                      calico, canal, cilium, flannel, kube-ovn, kube-router, macvlan,
+                      weave'
                     type: string
                 required:
                 - type
@@ -62,8 +63,8 @@ spec:
                     type: string
                   certSANs:
                     description: CertSANs sets extra Subject Alternative Names for
-                      the API Server signing cert (e.g.[200.x.x.1,200.x.x.2], [200.x.x.1],
-                      etc...).
+                      the API Server signing cert (e.g.[200.x.x.1,200.x.x.2,kubernetes.default.svc.cluster.local],
+                      [200.x.x.1], etc...).
                     items:
                       type: string
                     type: array

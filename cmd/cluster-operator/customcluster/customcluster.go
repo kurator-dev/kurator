@@ -18,7 +18,6 @@ package customcluster
 
 import (
 	"context"
-	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -52,7 +51,8 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 	if err := (&webhooks.CustomClusterWebhook{
 		Client: mgr.GetClient(),
 	}).SetupWebhookWithManager(mgr); err != nil {
-		return fmt.Errorf("unable to create CustomCluster webhook, %w", err)
+		log.Error(err, "unable to create CustomCluster webhook", "Webhook", "CustomCluster")
+		return err
 	}
 
 	return nil
