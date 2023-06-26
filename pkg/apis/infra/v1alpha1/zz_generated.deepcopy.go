@@ -134,7 +134,11 @@ func (in *CustomClusterSpec) DeepCopyInto(out *CustomClusterSpec) {
 		**out = **in
 	}
 	out.CNI = in.CNI
-	in.ControlPlaneConfig.DeepCopyInto(&out.ControlPlaneConfig)
+	if in.ControlPlaneConfig != nil {
+		in, out := &in.ControlPlaneConfig, &out.ControlPlaneConfig
+		*out = new(ControlPlaneConfig)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

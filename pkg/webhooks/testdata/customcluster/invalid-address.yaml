@@ -1,0 +1,15 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: CustomCluster
+metadata:
+  name: cc-customcluster
+  namespace: default
+spec:
+  cni:
+    type: cilium
+  machineRef:
+    apiVersion: cluster.kurator.dev/v1alpha1
+    kind: CustomMachine
+    name: cc-custommachine
+    namespace: default
+  controlPlaneConfig:
+    address: 192.1.1.256
