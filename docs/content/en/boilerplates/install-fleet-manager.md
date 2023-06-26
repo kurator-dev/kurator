@@ -1,8 +1,5 @@
-```console
-helm install --create-namespace kurator-fleet-manager out/charts/fleet-manager-{{< kurator-version >}}.tgz -n kurator-system
-```
+Verify the fleet manager chart installation:
 
-After a while, you can see kurator fleet manager running.
 
 ```bash
 $ kubectl get pod -l app.kubernetes.io/name=kurator-fleet-manager -n kurator-system

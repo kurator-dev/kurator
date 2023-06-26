@@ -37,22 +37,20 @@ kubectl get po -n fluxcd-system
 
 ## Install fleet manager from source
 
-Build fleet manager image and helm chart:
+1. Build docker image and helm chart
 
-```console
-VERSION={{< kurator-version >}} make docker
-VERSION={{< kurator-version >}} make gen-chart
-```
+{{< boilerplate build-from-source >}}
 
-Load image to kind cluster:
 
-```console
-kind load docker-image ghcr.io/kurator-dev/fleet-manager:{{< kurator-version >}} --name kurator-host
-```
+1. Change directory to the helm charts
 
-Install fleet manager into the management cluster.
+    ```console
+    cd out/charts/
+    ```
 
-{{< boilerplate install-fleet-manager >}}
+1. Install fleet manager into the management cluster.
+
+  {{< boilerplate install-fleet-manager >}}
 
 ## Install fleet manager from release package
 
@@ -60,19 +58,26 @@ Install fleet manager into the management cluster.
 1. Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
     ```console
-    curl -L https://github.com/kurator-dev/kurator/releases/download/{{< kurator-version >}}/kurator-{{< kurator-version >}}.tar.gz
-    tar -zxvf kurator-{{< kurator-version >}}.tar.gz
-    ```
-
-1. Move to release package directory.
-
-    ```console
-    cd kurator-{{< kurator-version >}}
+    curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/fleet-manager-{{< kurator-version >}}.tgz
     ```
 
 1. Install fleet manager into the management cluster.
 
-    {{< boilerplate install-fleet-manager >}}
+  {{< boilerplate install-fleet-manager >}}
+
+
+## Install fleet manager from helm repo
+
+1. Configure the Helm repository:
+
+    ```console
+    helm repo add kurator https://kurator-dev.github.io/helm-charts
+    helm repo update
+    ```
+
+1. Install fleet manager into the management cluster.
+
+  {{< boilerplate install-fleet-manager >}}
 
 ## Try to create a fleet with fleet manager
 
