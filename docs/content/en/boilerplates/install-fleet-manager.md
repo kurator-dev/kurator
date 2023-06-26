@@ -1,7 +1,7 @@
 Install fleet manager into the management cluster.
 
 ```console
-helm install --create-namespace kurator-cluster-operator fleet-manager-{{< kurator-version >}}.tgz -n kurator-system
+helm install --create-namespace kurator-fleet-manager fleet-manager-{{< kurator-version >}}.tgz -n kurator-system
 ```
 
 Verify the fleet manager chart installation:
