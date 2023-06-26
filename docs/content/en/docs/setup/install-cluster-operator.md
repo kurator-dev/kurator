@@ -17,9 +17,9 @@ description: >
 
 Change directory to the helm charts
 
-    ```console
-    cd out/charts/
-    ```
+```bash
+cd out/charts/
+```
 
 {{< boilerplate install-cluster-operator >}}
 
@@ -28,26 +28,26 @@ Change directory to the helm charts
 
 Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
-    ```console
-    curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/cluster-operator-{{< kurator-version >}}.tgz
-    ```
+```bash
+curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/cluster-operator-{{< kurator-version >}}.tgz
+```
 
 Install cluster operator into the management cluster.
 
-    {{< boilerplate install-cluster-operator >}}
+{{< boilerplate install-cluster-operator >}}
 
 ## Install cluster operator from helm repo
 
 Configure the Helm repository:
 
-    ```console
-    helm repo add kurator https://kurator-dev.github.io/helm-charts
-    helm repo update
-    ```
+```bash
+helm repo add kurator https://kurator-dev.github.io/helm-charts
+helm repo update
+```
 
 Install cluster operator into the management cluster.
 
-    {{< boilerplate install-cluster-operator >}}
+{{< boilerplate install-cluster-operator >}}
 
 ## Try to deploy a cluster with cluster operator
 

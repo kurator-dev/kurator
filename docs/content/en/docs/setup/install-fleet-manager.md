@@ -16,7 +16,7 @@ Fleet manager depends on [Fluxcd](https://fluxcd.io/flux/), Kurator use helm cha
 
 Setup with following command:
 
-```console
+```bash
 helm repo add fluxcd-community https://fluxcd-community.github.io/helm-charts
 
 cat <<EOF | helm install fluxcd fluxcd-community/flux2 --version 2.7.0 -n fluxcd-system --create-namespace -f -
@@ -31,7 +31,7 @@ EOF
 
 Check the controller status:
 
-```console
+```bash
 kubectl get po -n fluxcd-system
 ```
 
@@ -41,9 +41,9 @@ kubectl get po -n fluxcd-system
 
 Change directory to the helm charts
 
-    ```console
-    cd out/charts/
-    ```
+  ```bash
+  cd out/charts/
+  ```
 
 {{< boilerplate install-fleet-manager >}}
 
@@ -51,9 +51,9 @@ Change directory to the helm charts
 
 Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
-    ```console
-    curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/fleet-manager-{{< kurator-version >}}.tgz
-    ```
+  ```bash
+  curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/fleet-manager-{{< kurator-version >}}.tgz
+  ```
 
 
 {{< boilerplate install-fleet-manager >}}
@@ -63,10 +63,10 @@ Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to
 
 Configure the Helm repository:
 
-    ```console
-    helm repo add kurator https://kurator-dev.github.io/helm-charts
-    helm repo update
-    ```
+```bash
+helm repo add kurator https://kurator-dev.github.io/helm-charts
+helm repo update
+```
 
 {{< boilerplate install-fleet-manager >}}
 
