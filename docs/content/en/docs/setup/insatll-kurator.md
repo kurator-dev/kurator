@@ -20,7 +20,7 @@ And then move the executable binary to your PATH.
 
 ## Install from release package
 
-1. Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
+Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
     ```console
     curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/kurator-{{< kurator-version >}}-linux-amd64.tar.gz
@@ -29,4 +29,4 @@ And then move the executable binary to your PATH.
 
     kurator binary is in the current directory.
 
-1. Move the kurator to your user PATH
+Move the kurator binary to your user PATH

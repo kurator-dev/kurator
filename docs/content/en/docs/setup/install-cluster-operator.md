@@ -12,18 +12,18 @@ description: >
 
 ## Install from source
 
-1. Build docker image and helm chart
+Build docker image and helm chart
 
     {{< boilerplate build-from-source >}}
 
 
-1. Change directory to the helm charts
+Change directory to the helm charts
 
     ```console
     cd out/charts/
     ```
 
-1. Install cluster operator into the management cluster.
+Install cluster operator into the management cluster.
 
     {{< boilerplate install-cluster-operator >}}
 
@@ -31,26 +31,26 @@ description: >
 ## Install cluster operator from release package
 
 
-1. Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
+Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
     ```console
     curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/cluster-operator-{{< kurator-version >}}.tgz
     ```
 
-1. Install cluster operator into the management cluster.
+Install cluster operator into the management cluster.
 
     {{< boilerplate install-cluster-operator >}}
 
 ## Install cluster operator from helm repo
 
-1. Configure the Helm repository:
+Configure the Helm repository:
 
     ```console
     helm repo add kurator https://kurator-dev.github.io/helm-charts
     helm repo update
     ```
 
-1. Install cluster operator into the management cluster.
+Install cluster operator into the management cluster.
 
     {{< boilerplate install-cluster-operator >}}
 
