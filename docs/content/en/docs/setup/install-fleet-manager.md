@@ -41,9 +41,9 @@ kubectl get po -n fluxcd-system
 
 Change directory to the helm charts
 
-  ```bash
-  cd out/charts/
-  ```
+```bash
+cd out/charts/
+```
 
 {{< boilerplate install-fleet-manager >}}
 
@@ -51,9 +51,9 @@ Change directory to the helm charts
 
 Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
-  ```bash
-  curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/fleet-manager-{{< kurator-version >}}.tgz
-  ```
+```bash
+curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/fleet-manager-{{< kurator-version >}}.tgz
+```
 
 
 {{< boilerplate install-fleet-manager >}}
