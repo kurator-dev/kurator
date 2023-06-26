@@ -24,6 +24,7 @@ import (
 
 	"kurator.dev/kurator/cmd/cluster-operator/options"
 	clusteroperator "kurator.dev/kurator/pkg/cluster-operator"
+	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("attached cluster")
@@ -35,6 +36,13 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		APIReader: mgr.GetAPIReader(),
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "AttachedCluster")
+		return err
+	}
+
+	if err := (&webhooks.AttachedClusterWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create AttachedCluster webhook", "Webhook", "AttachedCluster")
 		return err
 	}
 

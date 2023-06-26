@@ -50,3 +50,25 @@ webhooks:
     resources:
     - customclusters
   sideEffects: None
+- admissionReviewVersions:
+    - v1
+    - v1beta1
+  clientConfig:
+    service:
+      name: kurator-webhook-service
+      namespace: {{ .Release.Namespace }}
+      path: /validate-cluster-kurator-dev-v1alpha1-attachedcluster # get this path from webhook service log
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: validation.attachedcluster.cluster.kurator.dev
+  rules:
+    - apiGroups:
+        - cluster.kurator.dev
+      apiVersions:
+        - v1alpha1
+      operations:
+        - CREATE
+        - UPDATE
+      resources:
+        - attachedclusters
+  sideEffects: None
