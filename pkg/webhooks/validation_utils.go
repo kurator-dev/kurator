@@ -46,7 +46,7 @@ func validateDNS1123Label(label string, fldPath *field.Path) field.ErrorList {
 }
 
 // validateDNS1123Domain checks if a string is a valid DNS1123 domain.
-// A lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-',
+// A lowercase RFC 1123 domain must consist of lower case alphanumeric characters, '-' or '.'
 // must start and end with an alphanumeric character,
 // and must have a maximum length of 253 characters.
 func validateDNS1123Domain(domain string, fldPath *field.Path) field.ErrorList {
