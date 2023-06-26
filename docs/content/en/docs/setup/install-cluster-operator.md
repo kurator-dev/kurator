@@ -12,9 +12,7 @@ description: >
 
 ## Install from source
 
-Build docker image and helm chart
-
-    {{< boilerplate build-from-source >}}
+{{< boilerplate build-from-source >}}
 
 
 Change directory to the helm charts
@@ -23,13 +21,10 @@ Change directory to the helm charts
     cd out/charts/
     ```
 
-Install cluster operator into the management cluster.
-
-    {{< boilerplate install-cluster-operator >}}
+{{< boilerplate install-cluster-operator >}}
 
 
 ## Install cluster operator from release package
-
 
 Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
