@@ -26,6 +26,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
+	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,7 +35,7 @@ import (
 )
 
 // reconcileScaleUp is responsible for handling the customCluster reconciliation process when worker nodes need to be scaled up.
-func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCluster *v1alpha1.CustomCluster, scaleUpWorkerNodes []NodeInfo) (ctrl.Result, error) {
+func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCluster *v1alpha1.CustomCluster, scaleUpWorkerNodes []NodeInfo, kcp *controlplanev1.KubeadmControlPlane) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Create a temporary configmap that represents the desired state to create the scaleUp pod.
@@ -44,7 +45,7 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 	}
 
 	// Create the scaleUp pod.
-	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleUpAction, KubesprayScaleUpCMD, generateScaleUpHostsName(customCluster), generateClusterConfigName(customCluster))
+	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleUpAction, KubesprayScaleUpCMD, generateScaleUpHostsName(customCluster), generateClusterConfigName(customCluster), kcp.Spec.Version)
 	if err1 != nil {
 		conditions.MarkFalse(customCluster, v1alpha1.ScaledUpCondition, v1alpha1.FailedCreateScaleUpWorker,
 			clusterv1.ConditionSeverityWarning, "scale up worker is failed to create %s/%s.", customCluster.Namespace, customCluster.Name)
@@ -98,11 +99,11 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 }
 
 // reconcileScaleDown is responsible for handling the customCluster reconciliation process when worker nodes need to be scaled down.
-func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, scaleDownWorkerNodes []NodeInfo) (ctrl.Result, error) {
+func (r *CustomClusterController) reconcileScaleDown(ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, scaleDownWorkerNodes []NodeInfo, kcp *controlplanev1.KubeadmControlPlane) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Checks whether the worker node for scaling down already exists. If it does not exist, the function creates it.
-	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleDownAction, generateScaleDownManageCMD(scaleDownWorkerNodes), generateClusterHostsName(customCluster), generateClusterConfigName(customCluster))
+	workerPod, err1 := r.ensureWorkerPodCreated(ctx, customCluster, CustomClusterScaleDownAction, generateScaleDownManageCMD(scaleDownWorkerNodes), generateClusterHostsName(customCluster), generateClusterConfigName(customCluster), kcp.Spec.Version)
 	if err1 != nil {
 		conditions.MarkFalse(customCluster, v1alpha1.ScaledDownCondition, v1alpha1.FailedCreateScaleDownWorker,
 			clusterv1.ConditionSeverityWarning, "scale down worker is failed to create %s/%s.", customCluster.Namespace, customCluster.Name)

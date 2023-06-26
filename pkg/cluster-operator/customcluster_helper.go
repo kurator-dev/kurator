@@ -24,6 +24,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/coreos/go-semver/semver"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
@@ -32,6 +33,7 @@ import (
 	"k8s.io/apiserver/pkg/storage/names"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
@@ -39,12 +41,11 @@ import (
 )
 
 // generateClusterManageWorker generate a kubespray manage worker pod from configmap.
-func generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostsName, configName string) *corev1.Pod {
+func generateClusterManageWorker(customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostsName, configName, kubesprayImage string) *corev1.Pod {
 	basePodName := customCluster.Name + "-" + string(manageAction)
 	podName := names.SimpleNameGenerator.GenerateName(basePodName + "-")
 	namespace := customCluster.Namespace
 	defaultMode := int32(0o600)
-	kubesprayImage := getKubesprayImage(DefaultKubesprayVersion)
 	managerWorker := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -400,7 +401,7 @@ func (r *CustomClusterController) ensureWorkerPodDeleted(ctx context.Context, cu
 }
 
 // ensureWorkerPodCreated ensure that the worker pod is created.
-func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostName, configName string) (*corev1.Pod, error) {
+func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction, manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
 	workerPod, err := r.findManageWorkerPod(ctx, customCluster, manageAction)
 
 	if err != nil {
@@ -410,7 +411,9 @@ func (r *CustomClusterController) ensureWorkerPodCreated(ctx context.Context, cu
 		return workerPod, nil
 	}
 
-	newWorkerPod := generateClusterManageWorker(customCluster, manageAction, manageCMD, hostName, configName)
+	kubesprayImage := getKubesprayImage(ctx, kubeVersion)
+
+	newWorkerPod := generateClusterManageWorker(customCluster, manageAction, manageCMD, hostName, configName, kubesprayImage)
 	newWorkerPod.OwnerReferences = []metav1.OwnerReference{generateOwnerRefFromCustomCluster(customCluster)}
 	if err := r.Client.Create(ctx, newWorkerPod); err != nil {
 		return nil, fmt.Errorf("failed to create customCluster manager worker pod: %v", err)
@@ -441,9 +444,36 @@ func (r *CustomClusterController) findManageWorkerPod(ctx context.Context, custo
 	return nil, nil
 }
 
-// getKubesprayImage take in kubesprayVersion return the kubespray image url of this version.
-func getKubesprayImage(kubesprayVersion string) string {
+// getKubesprayImage takes a Kubernetes version string (in the format "vX.Y.Z")
+// and returns the corresponding Kubespray image URL for that version.
+// The function supports Kubernetes versions from 1.22.0 to 1.26.5.
+// Kubespray v2.20.0 supports Kubernetes versions from 1.22.0 to 1.24.6,
+// while Kubespray v2.22.1 supports Kubernetes versions from 1.24.0 to 1.26.5.
+// This function returns one of these two Kubespray versions based on the input Kubernetes version.
+func getKubesprayImage(ctx context.Context, kubeVersion string) string {
+	log := ctrl.LoggerFrom(ctx)
+	var kubesprayVersion string
+
+	kubeVersion = strings.TrimPrefix(kubeVersion, "v")
+
+	targetVersion, err := semver.NewVersion(kubeVersion)
+	// should not happen, if we have validation on kubeVersion
+	if err != nil {
+		log.Error(err, "unexpected kube version", "targetVersion", targetVersion)
+		return ""
+	}
+
+	midVersion, _ := semver.NewVersion("1.24.0")
+
+	// Determine the Kubespray version based on the Kubernetes version.
+	if targetVersion.Compare(*midVersion) >= 0 {
+		kubesprayVersion = "v2.22.1"
+	} else {
+		kubesprayVersion = "v2.20.0"
+	}
+
 	imagePath := "quay.io/kubespray/kubespray:" + kubesprayVersion
+
 	return imagePath
 }
 

@@ -19,4 +19,4 @@ spec:
       kind: customMachine
       name: cc-custommachine
       namespace: default
-  version: v1.24.6
+  version: v1.26.5
