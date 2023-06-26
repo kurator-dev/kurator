@@ -21,7 +21,7 @@ BINS=("kurator")
 # tar kurator binary
 for BIN in "${BINS[@]}"; do
     echo "TAR BINARY: ${BIN}"
-    BIN_RELEASE="${BIN}_${VERSION}_${GOOS}-${GOARCH}.tar.gz"
+    BIN_RELEASE="${BIN}-${VERSION}-${GOOS}-${GOARCH}.tar.gz"
     pushd "${OUT_BASE_PATH}/${GOOS}-${GOARCH}/"
         tar -zcvf "${BIN_RELEASE}" "./${BIN}"
     popd
