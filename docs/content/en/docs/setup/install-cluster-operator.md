@@ -32,8 +32,6 @@ Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to
 curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/cluster-operator-{{< kurator-version >}}.tgz
 ```
 
-Install cluster operator into the management cluster.
-
 {{< boilerplate install-cluster-operator >}}
 
 ## Install cluster operator from helm repo
@@ -44,8 +42,6 @@ Configure the Helm repository:
 helm repo add kurator https://kurator-dev.github.io/helm-charts
 helm repo update
 ```
-
-Install cluster operator into the management cluster.
 
 {{< boilerplate install-cluster-operator >}}
 
