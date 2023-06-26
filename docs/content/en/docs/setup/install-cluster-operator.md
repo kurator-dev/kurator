@@ -14,7 +14,7 @@ description: >
 
 1. Build docker image and helm chart
 
-{{< boilerplate build-from-source >}}
+    {{< boilerplate build-from-source >}}
 
 
 1. Change directory to the helm charts

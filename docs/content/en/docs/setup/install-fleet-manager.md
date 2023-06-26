@@ -39,7 +39,7 @@ kubectl get po -n fluxcd-system
 
 1. Build docker image and helm chart
 
-{{< boilerplate build-from-source >}}
+    {{< boilerplate build-from-source >}}
 
 
 1. Change directory to the helm charts
@@ -50,7 +50,7 @@ kubectl get po -n fluxcd-system
 
 1. Install fleet manager into the management cluster.
 
-  {{< boilerplate install-fleet-manager >}}
+    {{< boilerplate install-fleet-manager >}}
 
 ## Install fleet manager from release package
 
@@ -63,7 +63,7 @@ kubectl get po -n fluxcd-system
 
 1. Install fleet manager into the management cluster.
 
-  {{< boilerplate install-fleet-manager >}}
+    {{< boilerplate install-fleet-manager >}}
 
 
 ## Install fleet manager from helm repo
@@ -77,7 +77,7 @@ kubectl get po -n fluxcd-system
 
 1. Install fleet manager into the management cluster.
 
-  {{< boilerplate install-fleet-manager >}}
+    {{< boilerplate install-fleet-manager >}}
 
 ## Try to create a fleet with fleet manager
 

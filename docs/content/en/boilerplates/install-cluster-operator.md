@@ -1,10 +1,10 @@
-1. Install cluster operator into the management cluster.
+Install cluster operator into the management cluster.
 
     ```console
     helm install --create-namespace kurator-cluster-operator cluster-operator-{{< kurator-version >}}.tgz -n kurator-system
     ```
 
-1. Verify the cluster operator chart installation:
+Verify the cluster operator chart installation:
 
 ```bash
 $ kubectl get pod -n kurator-system
