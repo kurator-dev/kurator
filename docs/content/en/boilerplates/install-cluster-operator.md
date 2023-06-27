@@ -7,8 +7,8 @@ helm install --create-namespace kurator-cluster-operator cluster-operator-{{< ku
 Verify the cluster operator chart installation:
 
 ```bash
-$ kubectl get pod -n kurator-system
+$ kubectl get pod -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-system
 NAME                                        READY   STATUS    RESTARTS   AGE
-kurator-cluster-operator-84d64c89db-brmv2   1/1     Running   0          14s
+kurator-cluster-operator-5977486c8f-7b5rc   1/1     Running   0          21h
 ```
 

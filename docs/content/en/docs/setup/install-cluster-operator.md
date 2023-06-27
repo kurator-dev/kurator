@@ -43,7 +43,21 @@ helm repo add kurator https://kurator-dev.github.io/helm-charts
 helm repo update
 ```
 
-{{< boilerplate install-cluster-operator >}}
+Install cluster operator into the management cluster.
+
+```console
+helm install --create-namespace  kurator-cluster-operator kurator/cluster-operator --version={{< kurator-version >}} -n kurator-system 
+
+```
+
+Verify the cluster operator chart installation:
+
+```bash
+$ kubectl get pod -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-system
+NAME                                        READY   STATUS    RESTARTS   AGE
+kurator-cluster-operator-5977486c8f-7b5rc   1/1     Running   0          21h
+```
+
 
 ## Try to deploy a cluster with cluster operator
 
