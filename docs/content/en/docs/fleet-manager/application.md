@@ -55,7 +55,7 @@ This includes the `gitRepository` as its source and two `kustomization` syncPoli
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: quickstart1
+  name: gitrepo-kustomization-demo
   namespace: default
 spec:
   source:
