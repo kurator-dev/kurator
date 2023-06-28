@@ -20,23 +20,11 @@ And then move the executable binary to your PATH.
 
 ## Install from release package
 
-1. Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
+Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
-    ```console
-    curl -L https://github.com/kurator-dev/kurator/releases/download/{{< kurator-version >}}/kurator-{{< kurator-version >}}.tar.gz
-    tar -zxvf kurator-{{< kurator-version >}}.tar.gz
-    ```
+```console
+curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/kurator-{{< kurator-version >}}-linux-amd64.tar.gz
+tar -zxvf kurator-{{< kurator-version >}}-linux-amd64.tar.gz
+```
 
-1. Move to release package directory.
-
-    ```console
-    cd kurator-{{< kurator-version >}}
-    ```
-
-    kurator binary is under `bin/` directory, and cluster operator helm chart is under `charts` directory.
-
-1. Add kurator to your PATH
-
-    ```console
-    export PATH=$PWD/bin:$PATH
-    ```
+kurator binary is in the current directory, move it to your user PATH

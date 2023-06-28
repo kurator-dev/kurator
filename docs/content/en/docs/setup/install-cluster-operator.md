@@ -14,29 +14,50 @@ description: >
 
 {{< boilerplate build-from-source >}}
 
-Install cluster operator into the management cluster.
+
+Change directory to the helm charts
+
+```bash
+cd out/charts/
+```
 
 {{< boilerplate install-cluster-operator >}}
 
+
 ## Install cluster operator from release package
 
+Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
-1. Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
+```bash
+curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/cluster-operator-{{< kurator-version >}}.tgz
+```
 
-    ```console
-    curl -L https://github.com/kurator-dev/kurator/releases/download/{{< kurator-version >}}/kurator-{{< kurator-version >}}.tar.gz
-    tar -zxvf kurator-{{< kurator-version >}}.tar.gz
-    ```
+{{< boilerplate install-cluster-operator >}}
 
-1. Move to release package directory.
+## Install cluster operator from helm repo
 
-    ```console
-    cd kurator-{{< kurator-version >}}
-    ```
+Configure the Helm repository:
 
-1. Install cluster operator into the management cluster.
+```bash
+helm repo add kurator https://kurator-dev.github.io/helm-charts
+helm repo update
+```
 
-    {{< boilerplate install-cluster-operator >}}
+Install cluster operator into the management cluster.
+
+```console
+helm install --create-namespace  kurator-cluster-operator kurator/cluster-operator --version={{< kurator-version >}} -n kurator-system 
+
+```
+
+Verify the cluster operator chart installation:
+
+```bash
+$ kubectl get pod -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-system
+NAME                                        READY   STATUS    RESTARTS   AGE
+kurator-cluster-operator-5977486c8f-7b5rc   1/1     Running   0          21h
+```
+
 
 ## Try to deploy a cluster with cluster operator
 

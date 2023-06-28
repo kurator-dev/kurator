@@ -1,13 +1,14 @@
+Install cluster operator into the management cluster.
+
 ```console
-# Please make sure cert manager is ready before install cluster operator
-helm install --create-namespace kurator-cluster-operator out/charts/cluster-operator-{{< kurator-version >}}.tgz -n kurator-system
+helm install --create-namespace kurator-cluster-operator cluster-operator-{{< kurator-version >}}.tgz -n kurator-system
 ```
 
-After a while, you can see kurator cluster operator running.
+Verify the cluster operator chart installation:
 
 ```bash
-$ kubectl get pod -n kurator-system
+$ kubectl get pod -l app.kubernetes.io/name=kurator-cluster-operator -n kurator-system
 NAME                                        READY   STATUS    RESTARTS   AGE
-kurator-cluster-operator-84d64c89db-brmv2   1/1     Running   0          14s
+kurator-cluster-operator-5977486c8f-7b5rc   1/1     Running   0          21h
 ```
 
