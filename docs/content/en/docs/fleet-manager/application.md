@@ -37,13 +37,19 @@ After the Kind cluster is ready, you can check the original status of the cluste
 kubectl get po -A --kubeconfig=/root/.kube/kurator-member1.config
 ```
 
-Apply example application with the following command:
+Apply pre-prepared attachedClusters and fleet with the following command:
 
 ```console
-$ kubectl apply -f examples/application/quickstart1.yaml
+$ kubectl apply -f examples/application/common/
 attachedcluster.cluster.kurator.dev/kurator-member1 created
 attachedcluster.cluster.kurator.dev/kurator-member2 created
 fleet.fleet.kurator.dev/quickstart created
+```
+
+Apply example application with the following command:
+
+```console
+$ kubectl apply -f examples/application/gitrepo-kustomization-demo.yaml
 application.apps.kurator.dev/gitrepo-kustomization-demo created
 ```
 
@@ -67,14 +73,14 @@ spec:
       url: https://github.com/stefanprodan/podinfo
   syncPolicies:
     - destination:
-        fleet: fleet-gitrepo
+        fleet: quickstart
       kustomization:
         interval: 5m0s
         path: ./deploy/webapp
         prune: true
         timeout: 2m0s
     - destination:
-        fleet: fleet-gitrepo
+        fleet: quickstart
       kustomization:
         targetNamespace: default
         interval: 5m0s
@@ -89,7 +95,7 @@ Optionally, you can also try testing the examples below with different combinati
 
 ```console
 # This includes the `helmRepository` as source and the `helmRelease` as syncPolicies 
-kubectl apply -f examples/application/quickstart2.yaml
+kubectl apply -f examples/application/helmrepo-helmrelease-demo.yaml
 ```
 
 Here is the configuration of application.
@@ -129,7 +135,7 @@ spec:
 
 ```console
 # This includes the `gitRepository` as source and the `helmRelease` as syncPolicies 
-kubectl apply -f examples/application/quickstart3.yaml
+kubectl apply -f examples/application/gitrepo-helmrelease-demo.yaml
 ```
 
 Here is the configuration of application.
