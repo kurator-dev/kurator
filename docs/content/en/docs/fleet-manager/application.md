@@ -37,14 +37,20 @@ After the Kind cluster is ready, you can check the original status of the cluste
 kubectl get po -A --kubeconfig=/root/.kube/kurator-member1.config
 ```
 
-Apply example application with the following command:
+Apply pre-prepared attachedClusters and fleet with the following command:
 
 ```console
-$ kubectl apply -f examples/application/quickstart1.yaml
+$ kubectl apply -f examples/application/common/
 attachedcluster.cluster.kurator.dev/kurator-member1 created
 attachedcluster.cluster.kurator.dev/kurator-member2 created
 fleet.fleet.kurator.dev/quickstart created
-application.apps.kurator.dev/quickstart1 created
+```
+
+Apply example application with the following command:
+
+```console
+$ kubectl apply -f examples/application/gitrepo-kustomization-demo.yaml
+application.apps.kurator.dev/gitrepo-kustomization-demo created
 ```
 
 Here is the content of example application resource.
@@ -67,14 +73,14 @@ spec:
       url: https://github.com/stefanprodan/podinfo
   syncPolicies:
     - destination:
-        fleet: fleet-gitrepo
+        fleet: quickstart
       kustomization:
         interval: 5m0s
         path: ./deploy/webapp
         prune: true
         timeout: 2m0s
     - destination:
-        fleet: fleet-gitrepo
+        fleet: quickstart
       kustomization:
         targetNamespace: default
         interval: 5m0s
@@ -89,7 +95,7 @@ Optionally, you can also try testing the examples below with different combinati
 
 ```console
 # This includes the `helmRepository` as source and the `helmRelease` as syncPolicies 
-kubectl apply -f examples/application/quickstart2.yaml
+kubectl apply -f examples/application/helmrepo-helmrelease-demo.yaml
 ```
 
 Here is the configuration of application.
@@ -129,7 +135,7 @@ spec:
 
 ```console
 # This includes the `gitRepository` as source and the `helmRelease` as syncPolicies 
-kubectl apply -f examples/application/quickstart3.yaml
+kubectl apply -f examples/application/gitrepo-helmrelease-demo.yaml
 ```
 
 Here is the configuration of application.
@@ -201,10 +207,10 @@ If the application distribution is successful, you should see pods from the 'pod
 
 ## CleanUp
 
-Use the following command to clean up the `quickstart1` application and related resources, like `gitRepository`, `kustomization`, `helmRelease`, etc.
+Use the following command to clean up the `gitrepo-kustomization-demo` application and related resources, like `gitRepository`, `kustomization`, `helmRelease`, etc.
 
 ```console
-kubectl delete applications.apps.kurator.dev quickstart1
+kubectl delete applications.apps.kurator.dev gitrepo-kustomization-demo
 ```
 
 Also, you can confirm that the corresponding cluster applications have been cleared through the following command:
