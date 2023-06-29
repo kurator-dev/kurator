@@ -44,7 +44,7 @@ $ kubectl apply -f examples/application/quickstart1.yaml
 attachedcluster.cluster.kurator.dev/kurator-member1 created
 attachedcluster.cluster.kurator.dev/kurator-member2 created
 fleet.fleet.kurator.dev/quickstart created
-application.apps.kurator.dev/quickstart1 created
+application.apps.kurator.dev/gitrepo-kustomization-demo created
 ```
 
 Here is the content of example application resource.
@@ -201,10 +201,10 @@ If the application distribution is successful, you should see pods from the 'pod
 
 ## CleanUp
 
-Use the following command to clean up the `quickstart1` application and related resources, like `gitRepository`, `kustomization`, `helmRelease`, etc.
+Use the following command to clean up the `gitrepo-kustomization-demo` application and related resources, like `gitRepository`, `kustomization`, `helmRelease`, etc.
 
 ```console
-kubectl delete applications.apps.kurator.dev quickstart1
+kubectl delete applications.apps.kurator.dev gitrepo-kustomization-demo
 ```
 
 Also, you can confirm that the corresponding cluster applications have been cleared through the following command:
