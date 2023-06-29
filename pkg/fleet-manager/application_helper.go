@@ -41,8 +41,10 @@ import (
 func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) (ctrl.Result, error) {
 	policyKind := getSyncPolicyKind(syncPolicy)
 
-	// fetch fleet cluster list that recorded in fleet.
-	fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet)
+	destination := getPolicyDestination(app, syncPolicy)
+
+	// fetch fleet cluster list that recorded in fleet and matches the destination's cluster selector
+	fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet, destination.ClusterSelector)
 	if err != nil || result.RequeueAfter > 0 {
 		return result, err
 	}
@@ -59,8 +61,8 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 	return ctrl.Result{}, nil
 }
 
-// fetchFleetClusterList fetch fleet cluster list that recorded in fleet.
-func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *fleetapi.Fleet) ([]ClusterInterface, ctrl.Result, error) {
+// fetchFleetClusterList fetch fleet cluster list that recorded in fleet and matches the selector.
+func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *fleetapi.Fleet, selector *applicationapi.ClusterSelector) ([]ClusterInterface, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 	var fleetClusterList []ClusterInterface
 
@@ -81,7 +83,9 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}
-			fleetClusterList = append(fleetClusterList, cluster)
+			if doesClusterMatchSelector(cluster, selector) {
+				fleetClusterList = append(fleetClusterList, cluster)
+			}
 		} else if kind == AttachedClusterKind {
 			attachedCluster := &clusterv1alpha1.AttachedCluster{}
 			key := client.ObjectKey{
@@ -95,7 +99,9 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}
-			fleetClusterList = append(fleetClusterList, attachedCluster)
+			if doesAttachedClusterMatchSelector(attachedCluster, selector) {
+				fleetClusterList = append(fleetClusterList, attachedCluster)
+			}
 		} else {
 			log.Info("kind of cluster in fleet is not support, skip this cluster", "fleet", fleet.Name, "kind", kind)
 		}
@@ -540,4 +546,58 @@ func generateFleetKey(app *applicationapi.Application) client.ObjectKey {
 		Namespace: app.Namespace,
 		Name:      fleetName,
 	}
+}
+
+// getPolicyDestination returns the actual destination used by the sync policy.
+// The function assumes either Application or its SyncPolicy will have a valid Destination, as this is ensured by the webhook validator.
+// If SyncPolicy's Destination is nil, it defaults to Application's Destination.
+func getPolicyDestination(app *applicationapi.Application, policy *applicationapi.ApplicationSyncPolicy) applicationapi.ApplicationDestination {
+	if policy.Destination == nil {
+		return applicationapi.ApplicationDestination{
+			Fleet:           app.Spec.Destination.Fleet,
+			ClusterSelector: app.Spec.Destination.ClusterSelector,
+		}
+	}
+	return applicationapi.ApplicationDestination{
+		Fleet:           policy.Destination.Fleet,
+		ClusterSelector: policy.Destination.ClusterSelector,
+	}
+}
+
+// doesClusterMatchSelector checks if a cluster's labels match the provided selector.
+func doesClusterMatchSelector(cluster *clusterv1alpha1.Cluster, selector *applicationapi.ClusterSelector) bool {
+	// If there is no selector, all clusters are considered a match.
+	if selector == nil || selector.MatchLabels == nil {
+		return true
+	}
+
+	for key, value := range selector.MatchLabels {
+		if clusterValue, ok := cluster.Labels[key]; !ok || clusterValue != value {
+			// If the cluster does not have a label for the key,
+			// or the cluster's label value does not match the selector's value,
+			// this cluster does not match the selector.
+			return false
+		}
+	}
+
+	return true
+}
+
+// doesAttachedClusterMatchSelector checks if a attachedCluster's labels match the provided selector.
+func doesAttachedClusterMatchSelector(attachedCluster *clusterv1alpha1.AttachedCluster, selector *applicationapi.ClusterSelector) bool {
+	// If there is no selector, all attachedCluster are considered a match.
+	if selector == nil || selector.MatchLabels == nil {
+		return true
+	}
+
+	for key, value := range selector.MatchLabels {
+		if clusterValue, ok := attachedCluster.Labels[key]; !ok || clusterValue != value {
+			// If the attachedCluster does not have a label for the key,
+			// or the attachedCluster's label value does not match the selector's value,
+			// this attachedCluster does not match the selector.
+			return false
+		}
+	}
+
+	return true
 }
