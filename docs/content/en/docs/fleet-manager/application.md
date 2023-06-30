@@ -205,6 +205,48 @@ webapp               frontend-6d94ff7cb5-4d4hh                   1/1     Running
 The command output lists all the pods deployed across two clusters. 
 If the application distribution is successful, you should see pods from the 'podinfo' and 'webapp' applications installed in both clusters
 
+## Cluster Selection with Application Policies
+
+You can add selectors to an application policy to ensure that the policy is applied specifically to corresponding clusters. This functionality is particularly useful in scenarios where a fleet contains various types of clusters. For instance, if your fleet includes clusters for testing and others for development, different application distribution strategies may be required.
+
+Labels such as `env=dev` can be assigned to clusters, and the same selectors can then be specified in the corresponding application policy. Once configured, the application will select the specific clusters in the fleet based on these selectors to distribute the application.
+
+Please note the following considerations:
+
+1. You have the option to set a default selector for all policies under `application.spec.destination`, or to configure it within individual policies. Kurator gives precedence to the policy-level setting - it resorts to the default setting only when the destination within the policy is not set.
+
+1. To ensure that the policy functions as expected, selectors should be added to the cluster prior to running the application.
+
+Let's look at a use case:
+
+We'll continue with the test fleet and attachedCluster used previously:
+
+```console
+kubectl apply -f examples/application/common/
+```
+
+Next, let's add labels to the attachedCluster:
+
+```console
+kubectl label attachedcluster kurator-member1 env=test
+kubectl label attachedcluster kurator-member2 env=dev
+```
+
+To test the selector, run the application:
+
+```console
+kubectl apply -f examples/application/cluster-selector-demo.yaml
+```
+
+You can inspect the clusters with the following commands:
+
+```console
+kubectl get po -A --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get po -A --kubeconfig=/root/.kube/kurator-member2.config
+```
+
+Upon examining the respective clusters, you'll find that applications originating from the same source configuration have been distributed to different clusters based on their respective policy selector labels.
+
 ## CleanUp
 
 Use the following command to clean up the `gitrepo-kustomization-demo` application and related resources, like `gitRepository`, `kustomization`, `helmRelease`, etc.
