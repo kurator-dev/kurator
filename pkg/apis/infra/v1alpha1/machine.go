@@ -58,18 +58,15 @@ type CustomMachineStatus struct {
 // Machine defines a node.
 type Machine struct {
 	// HostName is the hostname of the machine.
-	// +optional
-	HostName string `json:"hostName,omitempty"`
+	HostName string `json:"hostName"`
 	// PrivateIP is the private ip address of the machine.
-	// +optional
-	PrivateIP string `json:"privateIP,omitempty"`
+	PrivateIP string `json:"privateIP"`
 	// PublicIP specifies the public IP.
-	// +optional
-	PublicIP string `json:"publicIP,omitempty"`
+	PublicIP string `json:"publicIP"`
 	// Region specifies the region where the machine resides.
 	// +optional
 	Region *string `json:"region,omitempty"`
-	// Region specifies the zone where the machine resides.
+	// Zone specifies the zone where the machine resides.
 	// +optional
 	Zone *string `json:"zone,omitempty"`
 	// SSHKeyName is the name of the ssh key to attach to the instance. Valid values are empty string (do not use SSH keys), a valid SSH key name, or omitted (use the default SSH key name)

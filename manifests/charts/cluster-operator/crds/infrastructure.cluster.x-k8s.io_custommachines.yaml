@@ -98,8 +98,12 @@ spec:
                           type: string
                       type: object
                     zone:
-                      description: Region specifies the zone where the machine resides.
+                      description: Zone specifies the zone where the machine resides.
                       type: string
+                  required:
+                  - hostName
+                  - privateIP
+                  - publicIP
                   type: object
                 type: array
               node:
@@ -165,8 +169,12 @@ spec:
                           type: string
                       type: object
                     zone:
-                      description: Region specifies the zone where the machine resides.
+                      description: Zone specifies the zone where the machine resides.
                       type: string
+                  required:
+                  - hostName
+                  - privateIP
+                  - publicIP
                   type: object
                 type: array
             type: object
