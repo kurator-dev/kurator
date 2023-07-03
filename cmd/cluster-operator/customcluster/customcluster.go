@@ -55,5 +55,12 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		return err
 	}
 
+	if err := (&webhooks.CustomMachineWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create CustomMachine webhook", "Webhook", "CustomMachine")
+		return err
+	}
+
 	return nil
 }
