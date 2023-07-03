@@ -83,7 +83,7 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}
-			if doesClusterMatchSelector(cluster, selector) {
+			if doLabelsMatchSelector(cluster.Labels, selector) {
 				fleetClusterList = append(fleetClusterList, cluster)
 			}
 		} else if kind == AttachedClusterKind {
@@ -99,7 +99,7 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}
-			if doesAttachedClusterMatchSelector(attachedCluster, selector) {
+			if doLabelsMatchSelector(attachedCluster.Labels, selector) {
 				fleetClusterList = append(fleetClusterList, attachedCluster)
 			}
 		} else {
@@ -564,37 +564,18 @@ func getPolicyDestination(app *applicationapi.Application, policy *applicationap
 	}
 }
 
-// doesClusterMatchSelector checks if a cluster's labels match the provided selector.
-func doesClusterMatchSelector(cluster *clusterv1alpha1.Cluster, selector *applicationapi.ClusterSelector) bool {
-	// If there is no selector, all clusters are considered a match.
+// doLabelsMatchSelector checks if labels match the provided selector.
+func doLabelsMatchSelector(labels map[string]string, selector *applicationapi.ClusterSelector) bool {
+	// If there is no selector, all labels are considered a match.
 	if selector == nil || selector.MatchLabels == nil {
 		return true
 	}
 
 	for key, value := range selector.MatchLabels {
-		if clusterValue, ok := cluster.Labels[key]; !ok || clusterValue != value {
-			// If the cluster does not have a label for the key,
-			// or the cluster's label value does not match the selector's value,
-			// this cluster does not match the selector.
-			return false
-		}
-	}
-
-	return true
-}
-
-// doesAttachedClusterMatchSelector checks if a attachedCluster's labels match the provided selector.
-func doesAttachedClusterMatchSelector(attachedCluster *clusterv1alpha1.AttachedCluster, selector *applicationapi.ClusterSelector) bool {
-	// If there is no selector, all attachedCluster are considered a match.
-	if selector == nil || selector.MatchLabels == nil {
-		return true
-	}
-
-	for key, value := range selector.MatchLabels {
-		if clusterValue, ok := attachedCluster.Labels[key]; !ok || clusterValue != value {
-			// If the attachedCluster does not have a label for the key,
-			// or the attachedCluster's label value does not match the selector's value,
-			// this attachedCluster does not match the selector.
+		if clusterValue, ok := labels[key]; !ok || clusterValue != value {
+			// If there is no label for the key,
+			// or the label value does not match the selector's value,
+			// this labels does not match the selector.
 			return false
 		}
 	}
