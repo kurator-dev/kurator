@@ -1,0 +1,35 @@
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: gitrepo-kustomization-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+        clusterSelector:
+          matchLabels:
+            env: test
+      kustomization:
+        interval: 5m0s
+        path: ./deploy/webapp
+        prune: true
+        timeout: 2m0s
+    - destination:
+        fleet: quickstart
+        clusterSelector:
+          matchLabels:
+            env: dev
+      kustomization:
+        targetNamespace: default
+        interval: 5m0s
+        path: ./kustomize
+        prune: true
+        timeout: 2m0s
