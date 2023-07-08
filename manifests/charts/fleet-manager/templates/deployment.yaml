@@ -22,6 +22,14 @@ spec:
         image: {{ .Values.image.hub }}/fleet-manager:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
+        ports:
+          - containerPort: 9443
+            name: webhook-server
+            protocol: TCP
+        volumeMounts:
+          - mountPath: /tmp/k8s-webhook-server/serving-certs
+            name: cert
+            readOnly: true
       serviceAccountName: kurator-fleet-manager
       terminationGracePeriodSeconds: 10
       tolerations:
@@ -29,3 +37,8 @@ spec:
         key: node-role.kubernetes.io/master
       - effect: NoSchedule
         key: node-role.kubernetes.io/control-plane
+      volumes:
+        - name: cert
+          secret:
+            defaultMode: 420
+            secretName: kurator-webhook-service-cert

@@ -7,6 +7,7 @@ metadata:
 spec:
   dnsNames:
   - kurator-webhook-service.{{ .Release.Namespace }}.svc
+  - kurator-webhook-service-fleet.{{ .Release.Namespace }}.svc
   - kurator-webhook-service.{{ .Release.Namespace }}.svc.cluster.local
   issuerRef:
     kind: Issuer

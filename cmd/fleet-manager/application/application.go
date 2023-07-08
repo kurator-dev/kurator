@@ -24,6 +24,7 @@ import (
 
 	"kurator.dev/kurator/cmd/fleet-manager/options"
 	"kurator.dev/kurator/pkg/fleet-manager"
+	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("application")
@@ -34,6 +35,13 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Application")
+		return err
+	}
+
+	if err := (&webhooks.ApplicationWebhook{
+		Client: mgr.GetClient(),
+	}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create Application webhook", "Webhook", "Application")
 		return err
 	}
 
