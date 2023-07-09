@@ -24,7 +24,7 @@ Kurator cluster operator provide an easy way to get your Kubernetes cluster up a
 The overall architecture of Kurator cluster operator is shown as below:
 
 {{< image width="100%"
-    link="./image/cluster-operator.png"
+    link="./image/cluster-operator.svg"
     >}}
 
 The Kurator Cluster Operator runs various controllers, which watch cluster api objects and then talk to the underlying clusters' API servers to create Kubernetes clusters.
