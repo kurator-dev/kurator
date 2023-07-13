@@ -154,18 +154,22 @@ type ConfigTemplateContent struct {
 func GetConfigContent(c *clusterv1.Cluster, kcp *controlplanev1.KubeadmControlPlane, cc *v1alpha1.CustomCluster) *ConfigTemplateContent {
 	// Add kubespray init config here
 	configContent := &ConfigTemplateContent{
-		PodCIDR:                c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
-		ServiceCIDR:            c.Spec.ClusterNetwork.Services.CIDRBlocks[0],
-		KubeVersion:            kcp.Spec.Version,
-		CNIType:                cc.Spec.CNI.Type,
-		ControlPlaneAddress:    cc.Spec.ControlPlaneConfig.Address,
-		ControlPlaneCertSANs:   strings.Join(cc.Spec.ControlPlaneConfig.CertSANs, ","),
-		ClusterName:            kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ClusterName,
-		DnsDomain:              c.Spec.ClusterNetwork.ServiceDomain,
-		KubeImageRepo:          kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository,
-		FeatureGates:           kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.FeatureGates,
-		LoadBalancerDomainName: cc.Spec.ControlPlaneConfig.LoadBalancerDomainName,
+		PodCIDR:       c.Spec.ClusterNetwork.Pods.CIDRBlocks[0],
+		ServiceCIDR:   c.Spec.ClusterNetwork.Services.CIDRBlocks[0],
+		KubeVersion:   kcp.Spec.Version,
+		CNIType:       cc.Spec.CNI.Type,
+		ClusterName:   kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ClusterName,
+		DnsDomain:     c.Spec.ClusterNetwork.ServiceDomain,
+		KubeImageRepo: kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository,
+		FeatureGates:  kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.FeatureGates,
 	}
+
+	if cc.Spec.ControlPlaneConfig != nil {
+		configContent.ControlPlaneCertSANs = strings.Join(cc.Spec.ControlPlaneConfig.CertSANs, ",")
+		configContent.ControlPlaneAddress = cc.Spec.ControlPlaneConfig.Address
+		configContent.LoadBalancerDomainName = cc.Spec.ControlPlaneConfig.LoadBalancerDomainName
+	}
+
 	return configContent
 }
 
