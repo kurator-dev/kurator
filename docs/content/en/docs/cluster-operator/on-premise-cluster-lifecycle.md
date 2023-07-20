@@ -1,23 +1,22 @@
 ---
-title: "Lifecycle management of cluster on VMs"
-linkTitle: "Lifecycle management of cluster on VMs"
+title: "On-Premise Kubernetes Cluster Lifecycle Management "
+linkTitle: "On-Premise Kubernetes Cluster Lifecycle Management"
 weight: 20
 description: >
-  The easiest way to deploy a cluster on VMs, and manage the cluster lifecycle with Kurator.
+  The easiest way to deploy an on-premise Kubernetes cluster and manage its lifecycle using Kurator.
 ---
 
-You can easily manage the VMs cluster with Kurator, including the installation, deletion, upgrade and scale of the VMs cluster.
+This guide offers the simplest method to deploy an on-premise Kubernetes cluster and manage its lifecycle using Kurator. 
+Kurator allows you to manage your on-premise cluster effortlessly, including the installation, deletion, upgrade, and scaling of the cluster.
 
 These properties are built on [Cluster API](https://cluster-api.sigs.k8s.io) and [KubeSpray](https://kubespray.io/).
 
-This guide will describe how to manage the k8s cluster on VMs with Kurator.
-
 ## Prerequisites
 
-### Install an SSH key on your VMs
+### Install an SSH key on your on-premise servers
 
-Assuming the public IP address of the VMs where you want to install K8s is "200.x.x.1" and "200.x.x.2".
-The private IP address is "192.x.x.1" and "192.x.x.2".
+Assume the public IP addresses of the servers where you plan to install Kubernetes are "200.x.x.1" and "200.x.x.2". 
+The corresponding private IP addresses are "192.x.x.1" and "192.x.x.2".
 
 #### Generate a public and private key pair
 
@@ -31,14 +30,16 @@ You need follow prompts to "Enter file in which to save the key" and "Enter pass
 
 #### Install SSH public key
 
+Attempt to log into the servers using a password for each login:
+
 ```console
-ssh-copy-id [user@]200.x.x.1
-ssh-copy-id [user@]200.x.x.2
+ssh-copy-id 200.x.x.1
+ssh-copy-id 200.x.x.2
 ```
 
-#### Check your access
+#### Verify your access
 
-Try logging into the VMs with a password for each login.
+Try logging into the on-premise service with a password for each login.
 
 ```console
 ssh 200.x.x.1 
@@ -47,20 +48,20 @@ ssh 200.x.x.2
 
 ### Create the secret for operator
 
-Now you can easily log in VMs, but you still need to pass this ability to Kurator operator through secret.
+Although you can easily log into your servers now, you still need to grant this ability to the Kurator operator through a secret.
 
 #### Create the secret with kubectl
 
-Create a secret used to install kubernetes cluster on your VMs via ssh.
+Create a secret used to install Kubernetes cluster on your servers via SSH:
 
 ```console
 kubectl create secret generic cluster-secret --from-file=ssh-privatekey=/root/.ssh/id_rsa
 ```
 
 
-#### Check the secret
+#### Verify the secret
 
-You can check your secret with follow command.
+You can verify your secret with the following command:
 
 ```console
 $ kubectl describe secrets cluster-secret
@@ -80,7 +81,7 @@ ssh-privatekey:  2590 bytes
 
 You can find custom cluster examples [here](https://github.com/kurator-dev/kurator/tree/main/examples/infra/customcluster).
 
-Here are the four types of resources needed for VMs cluster provision：
+Here are the four types of resources needed for on-premise Kubernetes cluster provision：
 
 - cluster
 - kcp(KubeadmControlPlane)
@@ -125,11 +126,11 @@ spec:
         name: cluster-secret
 ```
 
-If you just modify the IP and apply the manifest directly, you will get a kubernetes cluster with one master and one node.
+If you just modify the IP and apply the manifest directly, you will get a Kubernetes  cluster with one master and one node.
 
-Here are some optional parameters you may care about and the setting position:
+Here are some optional parameters that you may be interested in, along with their settings:
 
-| parameters    | setting-position                                                |
+| Parameters     | Setting Position                                                                |
 |:--------------|:----------------------------------------------------------------| 
 | KubeVersion   | KubeadmControlPlane.Spec.Version                                | 
 | PodCIDR       | Cluster.Spec.ClusterNetwork.Pods.CidrBlocks                     | 
@@ -137,9 +138,9 @@ Here are some optional parameters you may care about and the setting position:
 | CNIPlugin     | CustomCluster.CNI.Type                                          | 
 | KubeImageRepo | kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository |
 
-## Deploy a k8s cluster on VMs
+## Deploy a Kubernetes Cluster On-Premise
 
-Now everything ready and let's start to deploy a k8s cluster on your VMs.
+Now everything is ready. Let's begin deploying a Kubernetes cluster on your on-premise servers:
 
 ### Apply resource configuration
 
@@ -166,17 +167,17 @@ The duration of "ContainerCreating" and "Running" may last tens of minutes which
 
 Image pull only needs to be executed once in the same cluster.
 
-If you want see the procedures of init worker, you can use the following command.
+If you want to see the procedures of the init worker, you can use the following command:
 
 ```console
 kubectl logs cc-customcluster-init
 ```
 
-### Confirm your Installation
+### Confirm your Kubernetes Cluster
 
 When the installation of cluster is done, the status of the init worker will change from "running" to "complete". The phase of customCluster will also change into "succeeded".
 
-You can log in the master node and confirm your installation. Here is an example using cilium as CNI plugin.
+You can log into the master node and confirm your Kubernetes cluster. Here is an example master node using Cilium as the CNI plugin:
 
 ```console
 $ kubectl get po -A
@@ -198,18 +199,17 @@ kube-system   nodelocaldns-97kg7                 1/1     Running   0          8m
 kube-system   nodelocaldns-fpfxj                 1/1     Running   0          8m19s
 ```
 
-We can see that the cluster on VMs is installed successful.
+You should see that the on-premise cluster has been successfully installed.
 
-## HA for control plane
+## High Availability for the Control Plane
 
-The cluster installed by Kurator based on kubespray includes a [pre-installed local nginx](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/ha-mode.md) on every non-master Kubernetes node.
+The cluster installed by Kurator, based on KubeSpray, includes a [pre-installed local nginx](https://github.com/kubernetes-sigs/kubespray/blob/master/docs/ha-mode.md) on every non-master Kubernetes node.
 
-If you **don't** want to use pre-installed local nginx and hope to achieve better HA effects, you can also choose to use Kurator to create a cluster bounded with VIP (virtual IPAddress).
+If you prefer not to use the pre-installed local Nginx and aim to achieve better high-availability (HA) effects, you can opt to use Kurator to create a cluster bound with a Virtual IP (VIP).
 
 In this mode, Kurator utilizes the capabilities of [kube-vip](https://github.com/kube-vip/kube-vip) to enable load-balancing of incoming traffic across multiple control-plane replicas using VIP.
 
 With Kurator, you only need to add a few additional variables in the CRD, then you will get a high-availability cluster based on kube-vip after init worker finished. The remaining part of this section will explain how to achieve this.
-
 
 Before proceeding, make sure that you have multiple control plane nodes and have configured them in examples/infra/my-customcluster/cc-custommachine.yaml.
 
@@ -260,11 +260,11 @@ kube-system   kube-vip-master3                  1/1     Running   0             
 
 ## Cluster Scaling
 
-With Kurator, you can declaratively add, remove, or replace multiple worker nodes on VMs.
+With Kurator, you can declaratively add, remove, or replace multiple worker nodes on on-premise servers.
 
-When performing scaling, you should avoid modifying the hostname in case the same VM has multiple names configured.
+When performing scaling, avoid modifying the hostname in case the same server has multiple names configured.
 
-You only need to declare the desired final worker node state on the target customMachine, and Kurator can complete the node scaling without any external intervention.
+Declare the desired final worker node state on the target customMachine, and Kurator completes the node scaling without any external intervention.
 
 You can make a copy of the custommachine.yaml file and edit it to reflect the desired scaling state.
 
@@ -337,7 +337,7 @@ default              cc-customcluster-scale-up                               1/1
 
 ### Scaling down
 
-Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove the worker nodes on VMs.
+Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove the worker nodes on on-premise servers.
 
 You can view the running of pods through the following methods:
 
@@ -363,7 +363,7 @@ default              cc-customcluster-scale-down                         1/1    
 
 With Kurator, you can easily upgrade the Kubernetes version of your cluster with a declarative approach.
 
-All you need to do is declaring the desired Kubernetes version on the kcp, and Kurator will complete the cluster upgrade without any external intervention.
+Declare the desired Kubernetes version on the kcp, and Kurator completes the cluster upgrade without any external intervention.
 
 Since the upgrade implementation depends on kubeadm, it is recommended to avoid skipping minor versions. For example, you can upgrade from v1.22.0 to v1.23.9, but you **cannot** upgrade from v1.22.0 to v1.24.0 in one step.
 
@@ -395,16 +395,16 @@ status:
   ...
 ```
 
-To confirm the upgrade worker is running, use the following command:
+Confirm the upgrade worker is running with the following command:
 
 ```console
 $ kubectl get pod -A | grep -i upgrade
 default              cc-customcluster-upgrade                                1/1     Running     0               18s
 ```
 
-## Delete the k8s cluster for VMs
+## Delete the k8s cluster for on-premise servers
 
-If you no longer need cluster on VMs and want to delete the cluster, you only need to delete the cluster object.
+If you no longer need the cluster on on-premise servers and want to delete the cluster, just delete the cluster object.
 
 ### Find the cluster resource
 
@@ -418,15 +418,15 @@ cc-cluster   running    3h6m
 
 ### Delete the custom cluster resource
 
-Delete the custom cluster which you want.
+Delete the custom cluster that you want to remove.
 
 ```console
-kubectl delete cluster cc-cluster 
+kubectl delete clusters.cluster.x-k8s.io cc-cluster
 ```
 
-The deleting action of cluster will get stuck due to the procedures of deletion of related object.
+The deleting action of the cluster might get stuck due to the procedures of deletion of related object.
 
-The deletion will create a terminating worker. The terminating worker will be responsible for cleaning up the cluster on the VMs.
+The deletion will create a terminating worker. The terminating worker will be responsible for cleaning up the cluster on the on-premise servers.
 
 You can open a new command tab in terminal to check the status of the terminate pod.
 
@@ -435,6 +435,6 @@ $ kubectl get pod | grep terminate
 cc-customcluster-terminate   1/1     Running   0          14s
 ```
 
-After the terminate worker finished, the Cluster on VMs will be clean up and the related resource will also be deleted.
+After the terminate worker finishes, the cluster on on-premise servers will be cleaned up and the related resource will also be deleted.
 
 The entire deletion of cluster may take 5 min.
