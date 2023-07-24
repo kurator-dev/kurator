@@ -1,0 +1,36 @@
+apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+kind: CustomMachine
+metadata:
+  name: cc-custommachine
+  namespace: default
+spec:
+  master:
+    - hostName: master1
+      publicIP: 202.1.1.1
+      privateIP: 192.1.1.1
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret
+    - hostName: master2
+      publicIP: 202.1.2.2
+      privateIP: 192.1.2.2
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret
+    - hostName: master3
+      publicIP: 202.1.3.3
+      privateIP: 192.1.3.3
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret
+  node:
+    - hostName: node1
+      publicIP: 202.2.1.1
+      privateIP: 192-2-1-1
+      sshKey:
+        apiVersion: v1
+        kind: Secret
+        name: cluster-secret

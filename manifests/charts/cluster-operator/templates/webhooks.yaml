@@ -57,6 +57,28 @@ webhooks:
     service:
       name: kurator-webhook-service
       namespace: {{ .Release.Namespace }}
+      path: /validate-infrastructure-cluster-x-k8s-io-v1alpha1-custommachine # get this path from webhook service log
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: validation.custommachine.infrastructure.cluster.x-k8s.io
+  rules:
+    - apiGroups:
+        - infrastructure.cluster.x-k8s.io
+      apiVersions:
+        - v1alpha1
+      operations:
+        - CREATE
+        - UPDATE
+      resources:
+        - custommachines
+  sideEffects: None
+- admissionReviewVersions:
+    - v1
+    - v1beta1
+  clientConfig:
+    service:
+      name: kurator-webhook-service
+      namespace: {{ .Release.Namespace }}
       path: /validate-cluster-kurator-dev-v1alpha1-attachedcluster # get this path from webhook service log
   failurePolicy: Fail
   matchPolicy: Equivalent
