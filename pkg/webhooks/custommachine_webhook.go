@@ -62,7 +62,7 @@ func (wh *CustomMachineWebhook) validate(in *v1alpha1.CustomMachine) error {
 		// etcd nodes must be set to an odd number, see https://github.com/kubernetes-sigs/kubespray/blob/0405af11077bc271529f9eca790a7dac4edf3891/docs/nodes.md
 		// we do not have a dedicated etcd configuration, so we are using the master node as the etcd node
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "master"), len(in.Spec.Master),
-			fmt.Sprintf("the number of master nodes needs to be set to an odd number due to the restrictions of etcd nodes. so current %v is not acceptable", len(in.Spec.Master))))
+			"the number of master nodes need to be set to an odd number due to the restrictions of etcd cluster."))
 	}
 
 	if len(in.Spec.Nodes) == 0 {
