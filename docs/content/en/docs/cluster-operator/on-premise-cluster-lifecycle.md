@@ -138,7 +138,7 @@ Here are some optional parameters that you may be interested in, along with thei
 | CNIPlugin     | CustomCluster.CNI.Type                                          | 
 | KubeImageRepo | kcp.Spec.KubeadmConfigSpec.ClusterConfiguration.ImageRepository |
 
-## Deploy a Kubernetes Cluster On-Premise
+## Deploy an On-Premise Kubernetes Cluster
 
 Now everything is ready. Let's begin deploying a Kubernetes cluster on your on-premise servers:
 
@@ -173,11 +173,11 @@ If you want to see the procedures of the init worker, you can use the following 
 kubectl logs cc-customcluster-init
 ```
 
-### Confirm your Kubernetes Cluster
+### Verify your Kubernetes Cluster
 
 When the installation of cluster is done, the status of the init worker will change from "running" to "complete". The phase of customCluster will also change into "succeeded".
 
-You can log into the master node and confirm your Kubernetes cluster. Here is an example master node using Cilium as the CNI plugin:
+You can log into the master node and verify your Kubernetes cluster. Here is an example master node using Cilium as the CNI plugin:
 
 ```console
 $ kubectl get po -A
@@ -337,7 +337,7 @@ default              cc-customcluster-scale-up                               1/1
 
 ### Scaling down
 
-Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove the worker nodes on on-premise servers.
+Similarly, if deletion is required to achieve the desired state, Kurator will create a pod to remove a number of worker nodes.
 
 You can view the running of pods through the following methods:
 
