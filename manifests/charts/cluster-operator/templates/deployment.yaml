@@ -35,7 +35,7 @@ spec:
           periodSeconds: 10
         name: manager
         ports:
-        - containerPort: 9443
+        - containerPort: {{ .Values.webhook.port }}
           name: webhook-server
           protocol: TCP
         - containerPort: 9440
@@ -46,7 +46,7 @@ spec:
             path: /readyz
             port: healthz
         volumeMounts:
-        - mountPath: /tmp/k8s-webhook-server/serving-certs
+        - mountPath: {{ .Values.webhook.certMountPath }}
           name: cert
           readOnly: true
         - mountPath: /home/.aws
