@@ -7,3 +7,7 @@ image:
 
 logging:
   level: 0
+
+webhook:
+  port: 9443
+  certMountPath: /tmp/k8s-webhook-server/serving-certs

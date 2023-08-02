@@ -23,11 +23,11 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
         ports:
-          - containerPort: 9443
+          - containerPort: {{ .Values.webhook.port }}
             name: webhook-server
             protocol: TCP
         volumeMounts:
-          - mountPath: /tmp/k8s-webhook-server/serving-certs
+          - mountPath: {{ .Values.webhook.certMountPath }}
             name: cert
             readOnly: true
       serviceAccountName: kurator-fleet-manager
