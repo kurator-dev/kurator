@@ -21,3 +21,7 @@ feautreGates:
 aws:
   # AWS_BASE64ENCODED_CREDENTIALS
   credentials: "Cg==" # zero credential
+
+webhook:
+  port: 9443
+  certMountPath: /tmp/k8s-webhook-server/serving-certs
