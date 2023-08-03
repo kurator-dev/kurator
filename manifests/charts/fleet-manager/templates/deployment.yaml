@@ -19,6 +19,8 @@ spec:
       - args:
         - --leader-elect
         - --v={{ .Values.logging.level }}
+        - --webhook-port={{ .Values.webhook.port }}
+        - --webhook-cert-dir={{ .Values.webhook.certMountPath }}
         image: {{ .Values.image.hub }}/fleet-manager:{{ .Values.image.tag }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: manager
