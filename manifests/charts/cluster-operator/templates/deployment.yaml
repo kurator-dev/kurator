@@ -22,6 +22,8 @@ spec:
         - --v={{ .Values.logging.level }}
         - --metrics-bind-addr=127.0.0.1:8080
         - --requeue-after={{ .Values.requeueAfter }}
+        - --webhook-port={{ .Values.webhook.port }}
+        - --webhook-cert-dir={{ .Values.webhook.certMountPath }}
         env:
         - name: AWS_SHARED_CREDENTIALS_FILE
           value: /home/.aws/credentials
