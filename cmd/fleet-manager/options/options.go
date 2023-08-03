@@ -27,6 +27,8 @@ type Options struct {
 	LeaderElectionNamespace string
 	ProfilerAddress         string
 	Concurrency             int
+	WebhookPort             int
+	WebhookCertDir          string
 }
 
 func (opt *Options) AddFlags(fs *pflag.FlagSet) {
@@ -71,4 +73,17 @@ func (opt *Options) AddFlags(fs *pflag.FlagSet) {
 		"",
 		"Path to the directory containing the Fleet manifests, built-in manifests will be used if not specified",
 	)
+
+	fs.IntVar(
+		&opt.WebhookPort,
+		"webhook-port",
+		9443,
+		"Webhook Server port.",
+	)
+
+	fs.StringVar(
+		&opt.WebhookCertDir,
+		"webhook-cert-dir",
+		"/tmp/k8s-webhook-server/serving-certs/",
+		"Webhook cert dir, only used when webhook-port is specified.")
 }

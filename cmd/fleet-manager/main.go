@@ -118,6 +118,8 @@ func run(ctx context.Context, opts *options.Options) error {
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 		LeaderElectionID:           "kurator-fleet-manager-leader-elect",
 		LeaderElectionNamespace:    opts.LeaderElectionNamespace,
+		Port:                       opts.WebhookPort,
+		CertDir:                    opts.WebhookCertDir,
 		EventBroadcaster:           broadcaster,
 	})
 	if err != nil {
