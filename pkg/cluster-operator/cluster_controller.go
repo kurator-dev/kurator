@@ -160,7 +160,7 @@ func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *cluste
 	// CAPI Cluster is deleted, do the rest
 
 	if err := provider.Clean(ctx); err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to delete AWS Cluster %s/%s", cluster.Namespace, cluster.Name)
+		return ctrl.Result{}, errors.Wrapf(err, "failed to delete %s Cluster %s/%s", scope.InfraType, cluster.Namespace, cluster.Name)
 	}
 
 	// clean up ClusterResourceSet
