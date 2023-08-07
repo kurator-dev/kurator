@@ -512,7 +512,7 @@ func (r *CustomClusterController) ensureFinalizerAndOwnerRef(ctx context.Context
 func (r *CustomClusterController) WorkerToCustomClusterMapFunc(o client.Object) []ctrl.Request {
 	c, ok := o.(*corev1.Pod)
 	if !ok {
-		panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
+		panic(fmt.Sprintf("Expected a pod but got a %T", o))
 	}
 	for _, owner := range c.GetOwnerReferences() {
 		if owner.Kind == CustomClusterKind {

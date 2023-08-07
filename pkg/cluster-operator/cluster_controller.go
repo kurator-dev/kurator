@@ -267,7 +267,7 @@ func (r *ClusterController) reconcile(ctx context.Context, cluster *clusterv1alp
 	if err := provider.Reconcile(ctx); err != nil {
 		conditions.MarkFalse(cluster, clusterv1alpha1.InfrastructureReadyCondition, clusterv1alpha1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
-		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to reconcile AWS Cluster %s/%s", cluster.Namespace, cluster.Name)
+		return ctrl.Result{RequeueAfter: r.RequeueAfter}, errors.Wrapf(err, "failed to reconcile %s Cluster %s/%s", scope.InfraType, cluster.Namespace, cluster.Name)
 	}
 
 	// check Cluster status
