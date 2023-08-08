@@ -417,6 +417,8 @@ func (r *CustomClusterController) reconcileDelete(ctx context.Context, customClu
 
 // deleteWorkerPods delete all the manage worker pods, including those for initialization, scaling up, scaling down, and other related tasks.
 func (r *CustomClusterController) deleteWorkerPods(ctx context.Context, customCluster *v1alpha1.CustomCluster) error {
+	log := ctrl.LoggerFrom(ctx)
+
 	// Delete the init worker.
 	if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterInitAction); err != nil {
 		log.Error(err, "failed to delete init worker", "name", customCluster.Name, "namespace", customCluster.Namespace)
