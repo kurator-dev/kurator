@@ -417,6 +417,8 @@ func (r *CustomClusterController) reconcileDelete(ctx context.Context, customClu
 
 // deleteWorkerPods delete all the manage worker pods, including those for initialization, scaling up, scaling down, and other related tasks.
 func (r *CustomClusterController) deleteWorkerPods(ctx context.Context, customCluster *v1alpha1.CustomCluster) error {
+	log := ctrl.LoggerFrom(ctx)
+
 	// Delete the init worker.
 	if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterInitAction); err != nil {
 		log.Error(err, "failed to delete init worker", "name", customCluster.Name, "namespace", customCluster.Namespace)
@@ -512,7 +514,7 @@ func (r *CustomClusterController) ensureFinalizerAndOwnerRef(ctx context.Context
 func (r *CustomClusterController) WorkerToCustomClusterMapFunc(o client.Object) []ctrl.Request {
 	c, ok := o.(*corev1.Pod)
 	if !ok {
-		panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
+		panic(fmt.Sprintf("Expected a pod but got a %T", o))
 	}
 	for _, owner := range c.GetOwnerReferences() {
 		if owner.Kind == CustomClusterKind {
