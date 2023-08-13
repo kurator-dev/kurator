@@ -23,7 +23,7 @@ And then move the executable binary to your PATH.
 Go to [Kurator release](https://github.com/kurator-dev/kurator/releases) page to download the release package for your OS and extract.
 
 ```console
-curl -L https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/kurator-{{< kurator-version >}}-linux-amd64.tar.gz
+curl -LO https://github.com/kurator-dev/kurator/releases/download/v{{< kurator-version >}}/kurator-{{< kurator-version >}}-linux-amd64.tar.gz
 tar -zxvf kurator-{{< kurator-version >}}-linux-amd64.tar.gz
 ```
 
