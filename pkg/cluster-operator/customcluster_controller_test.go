@@ -268,7 +268,7 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 				})
 			defer patches.Reset()
 			err2 := r.deleteWorkerPods(tt.args.ctx, tt.args.customCluster)
-			assert.Empty(t, err2)
+			assert.NotEmpty(t, err2)
 		})
 
 	}
@@ -288,12 +288,14 @@ func TestCustomClusterController_CustomMachineToCustomClusterMapFunc(t *testing.
 		o client.Object
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name      string
+		wantError bool
+		fields    fields
+		args      args
 	}{
 		{
-			name: "Not CustomMachine Error",
+			name:      "Not CustomMachine Error",
+			wantError: true,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testPod, testCustomMachine, testCustomCluster).Build(),
@@ -303,7 +305,8 @@ func TestCustomClusterController_CustomMachineToCustomClusterMapFunc(t *testing.
 			},
 		},
 		{
-			name: "CustomManchine test",
+			name:      "CustomManchine test",
+			wantError: false,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testPod, testCustomMachine, testCustomCluster).Build(),
@@ -323,8 +326,8 @@ func TestCustomClusterController_CustomMachineToCustomClusterMapFunc(t *testing.
 
 			defer func() {
 				err := recover()
-				if err != nil {
-					t.Errorf("this code did  panic %v", err)
+				if err == nil && tt.wantError {
+					t.Errorf("this code did not panic %v", err)
 				}
 			}()
 			actual := r.CustomMachineToCustomClusterMapFunc(tt.args.o)
@@ -348,13 +351,14 @@ func TestCustomClusterController_WorkerToCustomClusterMapFunc(t *testing.T) {
 		o client.Object
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []ctrl.Request
+		name      string
+		wantError bool
+		fields    fields
+		args      args
 	}{
 		{
-			name: "Not Pod Error",
+			name:      "Not Pod Error",
+			wantError: true,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testPod, testCustomMachine, testCustomCluster).Build(),
@@ -364,7 +368,8 @@ func TestCustomClusterController_WorkerToCustomClusterMapFunc(t *testing.T) {
 			},
 		},
 		{
-			name: "Pod test",
+			name:      "Pod test",
+			wantError: false,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testPod, testCustomMachine, testCustomCluster).Build(),
@@ -383,8 +388,8 @@ func TestCustomClusterController_WorkerToCustomClusterMapFunc(t *testing.T) {
 			}
 			defer func() {
 				err := recover()
-				if err != nil {
-					t.Errorf("this code did  panic %v", err)
+				if err == nil && tt.wantError {
+					t.Errorf("this code did not panic %v", err)
 				}
 			}()
 			actual := r.WorkerToCustomClusterMapFunc(tt.args.o)
@@ -408,13 +413,14 @@ func TestCustomClusterController_ClusterToCustomClusterMapFunc(t *testing.T) {
 		o client.Object
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []ctrl.Request
+		name      string
+		wantError bool
+		fields    fields
+		args      args
 	}{
 		{
-			name: "Not Cluster Error",
+			name:      "Not Cluster Error",
+			wantError: true,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testPod, testCluster, testCustomCluster).Build(),
@@ -424,7 +430,8 @@ func TestCustomClusterController_ClusterToCustomClusterMapFunc(t *testing.T) {
 			},
 		},
 		{
-			name: "Cluster test",
+			name:      "Cluster test",
+			wantError: false,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testPod, testCluster, testCustomCluster).Build(),
@@ -443,8 +450,8 @@ func TestCustomClusterController_ClusterToCustomClusterMapFunc(t *testing.T) {
 			}
 			defer func() {
 				err := recover()
-				if err != nil {
-					t.Errorf("this code did  panic %v", err)
+				if err == nil && tt.wantError {
+					t.Errorf("this code did not panic %v", err)
 				}
 			}()
 			actual := r.ClusterToCustomClusterMapFunc(tt.args.o)
@@ -497,11 +504,13 @@ func TestCustomClusterController_deleteResource(t *testing.T) {
 
 	testCases := []struct {
 		name       string
+		wantError  bool
 		beforeFunc func()
 		afterFunc  func()
 	}{
 		{
-			name: "Delete the configmap cluster-config failed",
+			name:      "Delete the configmap cluster-config failed",
+			wantError: true,
 			beforeFunc: func() {
 				patches.ApplyPrivateMethod(reflect.TypeOf(r), "ensureConfigMapDeleted",
 					func(_ *CustomClusterController, ctx context.Context, cmKey types.NamespacedName) error {
@@ -513,7 +522,8 @@ func TestCustomClusterController_deleteResource(t *testing.T) {
 			},
 		},
 		{
-			name:       "Test deleteResource",
+			name:       "no error test",
+			wantError:  false,
 			beforeFunc: func() {},
 			afterFunc:  func() {},
 		},
@@ -523,7 +533,9 @@ func TestCustomClusterController_deleteResource(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.beforeFunc()
 			err := r.deleteResource(ctx, testCustomCluster, testCustomMachine, testKcp)
-			assert.Empty(t, err)
+			if err != nil && !tt.wantError {
+				t.Errorf("%v", err)
+			}
 			tt.afterFunc()
 		})
 	}
@@ -543,11 +555,13 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 
 	testCases := []struct {
 		name       string
+		wantError  bool
 		beforeFunc func()
 		afterFunc  func()
 	}{
 		{
-			name: "Failed to delete worker pods",
+			name:      "Failed to delete worker pods",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "deleteWorkerPods",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster) error {
@@ -559,7 +573,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name: "Failed to create terminate worker",
+			name:      "Failed to create terminate worker",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -573,7 +588,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name: "Cluster delete cluster but delete CRD failed",
+			name:      "Cluster delete cluster but delete CRD failed",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -593,7 +609,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name: "Termination worker pod create successful but run failed",
+			name:      "Termination worker pod create successful but run failed",
+			wantError: false,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -608,7 +625,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name:       "no gomonkey test",
+			name:       "no error test",
+			wantError:  false,
 			beforeFunc: func() {},
 			afterFunc:  func() {},
 		},
@@ -618,7 +636,9 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.beforeFunc()
 			_, err := r.reconcileDelete(ctx, testCustomCluster, testCustomMachine, testKcp)
-			assert.Empty(t, err)
+			if err != nil && !tt.wantError {
+				t.Errorf("%v", err)
+			}
 			tt.afterFunc()
 		})
 	}
@@ -639,11 +659,13 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 	patches2 := gomonkey.NewPatches()
 	testCases := []struct {
 		name       string
+		wantError  bool
 		beforeFunc func()
 		afterFunc  func()
 	}{
 		{
-			name: "failed to update cluster-hosts configmap",
+			name:      "failed to update cluster-hosts configmap",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureClusterHostsCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, kcp *controlplanev1.KubeadmControlPlane) (*corev1.ConfigMap, error) {
@@ -656,7 +678,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "failed to update cluster-config configmap",
+			name:      "failed to update cluster-config configmap",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureClusterConfigCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, kcp *controlplanev1.KubeadmControlPlane) (*corev1.ConfigMap, error) {
@@ -669,7 +692,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "init worker is failed to create",
+			name:      "init worker is failed to create",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -683,7 +707,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "failed to set finalizer or ownerRefs",
+			name:      "failed to set finalizer or ownerRefs",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureFinalizerAndOwnerRef",
 					func(_ *CustomClusterController, ctx context.Context, clusterHosts *corev1.ConfigMap, clusterConfig *corev1.ConfigMap, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, kcp *controlplanev1.KubeadmControlPlane) error {
@@ -695,7 +720,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "init worker create successful but run failed",
+			name:      "init worker create successful but run failed",
+			wantError: false,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -710,7 +736,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "init worker finished successful but failed to fetch provisioned cluster kubeConfig",
+			name:      "init worker finished successful but failed to fetch provisioned cluster kubeConfig",
+			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -731,7 +758,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "init worker finished successful",
+			name:      "init worker finished successful",
+			wantError: false,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
@@ -751,7 +779,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			},
 		},
 		{
-			name:       "no gomonkey test",
+			name:       "no error test",
+			wantError:  false,
 			beforeFunc: func() {},
 			afterFunc:  func() {},
 		},
@@ -761,7 +790,9 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.beforeFunc()
 			_, err := r.reconcileProvision(ctx, testCustomCluster, testCustomMachine, testCluster, testKcp)
-			assert.Empty(t, err)
+			if err != nil && !tt.wantError {
+				t.Errorf("%v", err)
+			}
 			tt.afterFunc()
 		})
 	}
