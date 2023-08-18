@@ -28,14 +28,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"kurator.dev/kurator/cmd/cluster-operator/scheme"
-	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	bootstrapv1 "sigs.k8s.io/cluster-api/bootstrap/kubeadm/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fake "sigs.k8s.io/controller-runtime/pkg/client/fake"
+
+	"kurator.dev/kurator/cmd/cluster-operator/scheme"
+	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
 
 func generatePodOwnerRefCluster(clusterName string) *corev1.Pod {
@@ -270,7 +271,6 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 			err2 := r.deleteWorkerPods(tt.args.ctx, tt.args.customCluster)
 			assert.NotEmpty(t, err2)
 		})
-
 	}
 }
 
@@ -796,5 +796,4 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			tt.afterFunc()
 		})
 	}
-
 }
