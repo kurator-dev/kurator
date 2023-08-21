@@ -40,7 +40,7 @@ import (
 )
 
 func generatePodOwnerRefCluster(clusterName string) *corev1.Pod {
-	Pod := &corev1.Pod{
+	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "default",
 			Name:      "test-pod",
@@ -56,11 +56,10 @@ func generatePodOwnerRefCluster(clusterName string) *corev1.Pod {
 			},
 		},
 	}
-	return Pod
 }
 
 func generateCustomMachineOwnerRefCustomCluster(clusterName string) *v1alpha1.CustomMachine {
-	customMachine := &v1alpha1.CustomMachine{
+	return &v1alpha1.CustomMachine{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test",
 			Name:      "test-machine",
@@ -89,11 +88,10 @@ func generateCustomMachineOwnerRefCustomCluster(clusterName string) *v1alpha1.Cu
 			},
 		},
 	}
-	return customMachine
 }
 
 func generateCustomCluster(customClusterName string) *v1alpha1.CustomCluster {
-	testCustomCluster := &v1alpha1.CustomCluster{
+	return &v1alpha1.CustomCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test",
 			Name:      customClusterName,
@@ -103,11 +101,10 @@ func generateCustomCluster(customClusterName string) *v1alpha1.CustomCluster {
 			},
 		},
 	}
-	return testCustomCluster
 }
 
 func generateCluster(clusterName string) *clusterv1.Cluster {
-	cluster := &clusterv1.Cluster{
+	return &clusterv1.Cluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test",
 			Name:      clusterName,
@@ -134,11 +131,10 @@ func generateCluster(clusterName string) *clusterv1.Cluster {
 			},
 		},
 	}
-	return cluster
 }
 
 func generateKcp(kcpName string) *controlplanev1.KubeadmControlPlane {
-	testKcp := &controlplanev1.KubeadmControlPlane{
+	return &controlplanev1.KubeadmControlPlane{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: "test",
 			Name:      kcpName,
@@ -155,25 +151,11 @@ func generateKcp(kcpName string) *controlplanev1.KubeadmControlPlane {
 			},
 		},
 	}
-	return testKcp
 }
 
 func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 	testCustomCluster := generateCustomCluster("customcluster")
-	testKcp := &controlplanev1.KubeadmControlPlane{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: "test",
-			Name:      "test-kcp",
-		},
-		Spec: controlplanev1.KubeadmControlPlaneSpec{
-			Version: "v1",
-			KubeadmConfigSpec: bootstrapv1.KubeadmConfigSpec{
-				ClusterConfiguration: &bootstrapv1.ClusterConfiguration{
-					ClusterName: "test-cluster",
-				},
-			},
-		},
-	}
+	testKcp := generateKcp("testKcp")
 	// init worker pod
 	workerPod1 := generateClusterManageWorker(testCustomCluster, CustomClusterInitAction, KubesprayInitCMD,
 		generateClusterHostsName(testCustomCluster), generateClusterHostsName(testCustomCluster), testKcp.Spec.Version)
@@ -215,7 +197,7 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Delete the init work pod",
+			name: "delete the init work pod",
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testCustomCluster, workerPod1).Build(),
@@ -227,7 +209,7 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Delete the scale down work pod",
+			name: "delete the scale down work pod",
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testCustomCluster, workerPod2).Build(),
@@ -239,7 +221,7 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Delete the scale up work pod",
+			name: "delete the scale up work pod",
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
 					WithObjects(testCustomCluster, workerPod3).Build(),
@@ -264,7 +246,7 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 
 			patches := gomonkey.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodDeleted",
 				func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction) error {
-					err := errors.New("failede to delete Pod")
+					err := errors.New("failed to delete Pod")
 					return err
 				})
 			defer patches.Reset()
@@ -294,7 +276,7 @@ func TestCustomClusterController_CustomMachineToCustomClusterMapFunc(t *testing.
 		args      args
 	}{
 		{
-			name:      "Not CustomMachine Error",
+			name:      "not custommachine error",
 			wantError: true,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
@@ -305,7 +287,7 @@ func TestCustomClusterController_CustomMachineToCustomClusterMapFunc(t *testing.
 			},
 		},
 		{
-			name:      "CustomManchine test",
+			name:      "custommachine test",
 			wantError: false,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
@@ -357,7 +339,7 @@ func TestCustomClusterController_WorkerToCustomClusterMapFunc(t *testing.T) {
 		args      args
 	}{
 		{
-			name:      "Not Pod Error",
+			name:      "not pod error",
 			wantError: true,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
@@ -368,7 +350,7 @@ func TestCustomClusterController_WorkerToCustomClusterMapFunc(t *testing.T) {
 			},
 		},
 		{
-			name:      "Pod test",
+			name:      "pod test",
 			wantError: false,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
@@ -419,7 +401,7 @@ func TestCustomClusterController_ClusterToCustomClusterMapFunc(t *testing.T) {
 		args      args
 	}{
 		{
-			name:      "Not Cluster Error",
+			name:      "not cluster error",
 			wantError: true,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
@@ -430,7 +412,7 @@ func TestCustomClusterController_ClusterToCustomClusterMapFunc(t *testing.T) {
 			},
 		},
 		{
-			name:      "Cluster test",
+			name:      "cluster test",
 			wantError: false,
 			fields: fields{
 				Client: fake.NewClientBuilder().WithScheme(scheme.Scheme).
@@ -509,7 +491,7 @@ func TestCustomClusterController_deleteResource(t *testing.T) {
 		afterFunc  func()
 	}{
 		{
-			name:      "Delete the configmap cluster-config failed",
+			name:      "delete the configmap cluster-config failed",
 			wantError: true,
 			beforeFunc: func() {
 				patches.ApplyPrivateMethod(reflect.TypeOf(r), "ensureConfigMapDeleted",
@@ -560,7 +542,7 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 		afterFunc  func()
 	}{
 		{
-			name:      "Failed to delete worker pods",
+			name:      "failed to delete worker pods",
 			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "deleteWorkerPods",
@@ -573,14 +555,14 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name:      "Failed to create terminate worker",
+			name:      "failed to create terminate worker",
 			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
 						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
-						return workerPod, errors.New("failed to Creste terminate worker pods")
+						return workerPod, errors.New("failed to create terminate worker pods")
 					})
 			},
 			afterFunc: func() {
@@ -588,7 +570,7 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name:      "Cluster delete cluster but delete CRD failed",
+			name:      "cluster delete cluster but delete CRD failed",
 			wantError: true,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
@@ -600,7 +582,7 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 					})
 				patches2.ApplyPrivateMethod(reflect.TypeOf(r), "deleteResource",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, customMachine *v1alpha1.CustomMachine, kcp *controlplanev1.KubeadmControlPlane) error {
-						return errors.New("failed to deleted worker pods")
+						return errors.New("failed to delete worker pods")
 					})
 			},
 			afterFunc: func() {
@@ -609,7 +591,7 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			},
 		},
 		{
-			name:      "Termination worker pod create successful but run failed",
+			name:      "termination worker pod create successful but run failed",
 			wantError: false,
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
