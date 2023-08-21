@@ -13,6 +13,7 @@ replace k8s.io/apimachinery => k8s.io/apimachinery v0.25.9
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
+	github.com/agiledragon/gomonkey/v2 v2.10.1
 	github.com/aws/aws-sdk-go v1.44.107
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/bramvdbogaerde/go-scp v1.2.0
