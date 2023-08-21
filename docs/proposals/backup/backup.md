@@ -72,8 +72,12 @@ and make progress.
 -->
 
 - Limit the development and testing environment to on-premise clusters and [Kind](https://kind.sigs.k8s.io/). Besides, the Object Storage Service(OSS) is limited to [Minio](https://min.io/docs/minio/kubernetes/upstream/).
-- Provide only the [Restic](https://github.com/restic/restic) solution for storage involving Persistent Volumes due to the limitations of snapshot-based solutions in cross-cluster functionality. See [velero doc](https://velero.io/doc)
+- Provide only the [Restic](https://github.com/restic/restic) solution for storage involving Persistent Volumes due to the limitations of snapshot-based solutions in cross-cluster functionality. See [Velero doc](https://velero.io/doc)
+- We will remove all configurations related to vsl (pv snapshot) since the vsl method does not support cross-cloud and cross-cluster. Moreover, we currently lack the conditions to test vsl.
 - Basically, focus solely on the initial configuration, excluding subsequent configuration edit or reapply.
+- Initially, we will not implement the hook capability. We will decide on adding this feature in the future based on user feedback and requirements. 
+- 
+
 
 ### Proposal
 
@@ -158,7 +162,7 @@ This might be a good place to talk about core concepts and how they relate.
 
 - **Restic Limitations**
 Restic does not support the hostpath PV, which means it cannot be tested in a kind cluster. 
-If a backup is attempted with a hostpath type, Velero will skip this resource and continue with the subsequent resources. Reference [velero issue](https://github.com/vmware-tanzu/velero/issues/4962)
+If a backup is attempted with a hostpath type, Velero will skip this resource and continue with the subsequent resources. Reference [Velero issue](https://github.com/vmware-tanzu/velero/issues/4962)
 
 - **Testing with Kind**
 When testing with the kind cluster, it's recommended to use the busybox example instead of the nginx example provided by Velero.
@@ -221,13 +225,15 @@ proposal will be implemented, this is the place to discuss them.
 In this section, we delve into the detailed API designs for the unified backup, restore, and migration functionalities. 
 These API designs facilitate Kurator's integration with Velero to achieve the desired functionalities.
 
+Compared to Velero, we might need to make adjustments to the Unified Backup API, Unified Restore API, and Unified Migration API to reflect our new strategies and decisions.
+
 ##### Unified Backup API
 
 Here's the preliminary design for the Unified Backup API:
 
 ```console
 apiVersion: backups.kurator.dev/v1alpha1
-kind: FleetBackup
+kind: Backup
 metadata:
   name: testBackup
   namespace: default
@@ -261,6 +267,14 @@ status:
     clusterBackupStatus:
 ```
 
+###### Backup Note
+
+- The Velero support **Global Scope Resource Filtering**: When specific ns-scope resources are designated, if their descriptions involve cluster-scope resources, 
+Velero will automatically back up these essential resources without requiring users to configure them separately. However, users can still manually configure the global scope resource filtering.
+- Velero inherently supports configuration reusability to some extent through the ResourcePolicy field. 
+Users can utilize this field to reference other resource descriptions.
+Fundamentally, Kurator implements this capability more comprehensively and robustly. 
+Furthermore, since the backup name in Kurator might change (as backups cannot have duplicate names, and backups from multiple clusters reusing configurations must have distinct names), users cannot set it directly, leading us to remove this field.
 
 
 ##### Unified Restore API
@@ -269,7 +283,7 @@ Below is the initial design for the Unified Restore API:
 
 ```console
 apiVersion: backups.kurator.dev/v1alpha1
-kind: FleetRestore
+kind: Restore
 metadata:
   name: testRestore
   namespace: default
@@ -303,7 +317,7 @@ Presenting the initial design for the Unified Migration API:
 
 ```console
 apiVersion: backups.kurator.dev/v1alpha1
-kind: FleetMigration
+kind: Migration
 metadata:
   name: testMigration
   namespace: default
