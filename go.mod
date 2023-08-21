@@ -13,6 +13,7 @@ replace k8s.io/apimachinery => k8s.io/apimachinery v0.25.9
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
+	github.com/agiledragon/gomonkey/v2 v2.10.1
 	github.com/aws/aws-sdk-go v1.44.107
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/bramvdbogaerde/go-scp v1.2.0
@@ -83,7 +84,6 @@ require (
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
-	github.com/agiledragon/gomonkey/v2 v2.10.1 // indirect
 	github.com/ajeddeloh/go-json v0.0.0-20200220154158-5ae607161559 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
