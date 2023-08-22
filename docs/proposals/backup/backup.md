@@ -57,12 +57,14 @@ know that this has succeeded?
 -->
 
 - Automatically install Velero for clusters in the fleet.
+- Support automated unified backup for individual namespaces, multiple namespaces, or an entire cluster within the fleet.
 - Support automated unified backup for either multiple clusters or an individual cluster within the fleet.
 - Support automated unified restore for either multiple clusters or an individual cluster within the fleet
 - Support automated unified migration for either multiple clusters or an individual cluster within the fleet.
 - Support automated unified scheduled backup; If the current backups are not scheduled, allow users to easily convert it into scheduled backup.
 - Support filtering resources for backup, restore and migration based on type, namespace or other conditions.
 - User can view the current execution status of all backups, restores, and migrations from a single location.
+- Utilize Restic for file-level backup of Persistent Volumes (PVs) across clusters, ensuring cross-cluster and cross-cloud compatibility.
 
 #### Non-Goals
 
@@ -71,12 +73,20 @@ What is out of scope for this KEP? Listing non-goals helps to focus discussion
 and make progress.
 -->
 
-- Limit the development and testing environment to on-premise clusters and [Kind](https://kind.sigs.k8s.io/). Besides, the Object Storage Service(OSS) is limited to [Minio](https://min.io/docs/minio/kubernetes/upstream/).
-- Provide only the [Restic](https://github.com/restic/restic) solution for storage involving Persistent Volumes due to the limitations of snapshot-based solutions in cross-cluster functionality. See [Velero doc](https://velero.io/doc)
-- We will remove all configurations related to vsl (pv snapshot) since the vsl method does not support cross-cloud and cross-cluster. Moreover, we currently lack the conditions to test vsl.
-- Basically, focus solely on the initial configuration, excluding subsequent configuration edit or reapply.
-- Initially, we will not implement the hook capability. We will decide on adding this feature in the future based on user feedback and requirements. 
-- 
+
+
+- **Development Environment**: We will limit the development and testing environment to on-premise clusters and [Kind](https://kind.sigs.k8s.io/).
+- **Object Storage Service Testing**: Due to current limitations, we will only test with Minio as the Object Storage Service (OSS). Testing with other types of OSS is not within the scope of this proposal.
+- **PV Backup Solution**: We will solely rely on the [Restic](https://github.com/restic/restic) solution for storage involving Persistent Volumes.
+  This decision is based on the limitations of snapshot-based solutions in cross-cluster functionality. For more details, refer to the [Velero documentation](https://velero.io/docs/v1.12/file-system-backup/).
+- **Volume Snapshot Location(vsl)**: We will remove all configurations related to vsl.
+  The vsl method, which refers to the location where volume snapshots are stored, does not support cross-cloud and cross-cluster scenarios.
+  Moreover, we currently lack the conditions to test vsl.
+- **Hook capability**
+  In Velero, the hook capability allows users to specify custom commands to be executed during the backup or restore process.
+  These hooks can be used to capture application-consistent backups or to restore application data.
+  However, initially, we will not implement this hook capability in our integration.
+  We will decide on adding this feature in the future based on user feedback and requirements.
 
 
 ### Proposal
