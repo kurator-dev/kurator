@@ -26,6 +26,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=custommachines
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Ready",type="boolean",JSONPath=".status.ready",description="Indicates if the CustomMachine is ready."
 
 // CustomMachine is the schema for kubernetes nodes.
 type CustomMachine struct {
@@ -49,8 +50,6 @@ type CustomMachineSpec struct {
 
 // CustomMachineStatus represents the current status of the machine.
 type CustomMachineStatus struct {
-	// TODO: add state.
-	// TODO: display with kubectl
 	// Indicate whether the machines are ready.
 	Ready *bool `json:"ready,omitempty"`
 }

@@ -18,7 +18,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Indicates if the AttachedClusters are ready
+    - description: Indicates if the AttachedCluster is ready
       jsonPath: .status.ready
       name: Ready
       type: boolean

@@ -21,7 +21,7 @@ spec:
   - additionalPrinterColumns:
     - description: Represents the current phase of customCluster actuation.
       jsonPath: .status.phase
-      name: Ready
+      name: Phase
       type: string
     name: v1alpha1
     schema:
