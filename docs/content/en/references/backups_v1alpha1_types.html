@@ -1,0 +1,1512 @@
+<p>Packages:</p>
+<ul class="simple">
+<li>
+<a href="#backup.kurator.dev%2fv1alpha1">backup.kurator.dev/v1alpha1</a>
+</li>
+</ul>
+<h2 id="backup.kurator.dev/v1alpha1">backup.kurator.dev/v1alpha1</h2>
+<p>Package v1alpha1 contains API Schema definitions for the fleet v1alpha1 API group</p>
+Resource Types:
+<ul class="simple"><li>
+<a href="#backup.kurator.dev/v1alpha1.Backup">Backup</a>
+</li></ul>
+<h3 id="backup.kurator.dev/v1alpha1.Backup">Backup
+</h3>
+<p>Backup is the schema for the Backup&rsquo;s API.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+string</td>
+<td>
+<code>backup.kurator.dev/v1alpha1</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+string
+</td>
+<td>
+<code>Backup</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSpec">
+BackupSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStorage">
+BackupStorage
+</a>
+</em>
+</td>
+<td>
+<p>Storage details where the backup data should be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedule</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Schedule defines when to run the Backup using a Cron expression.
+If not set, the backup will be executed only once.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>destination</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Destination indicates the default clusters where backups should be executed.
+Can be overridden by individual Policies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policies</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSyncPolicy">
+[]BackupSyncPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policies are the rules defining how backups should be performed.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStatus">
+BackupStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.BackupPolicy">BackupPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSyncPolicy">BackupSyncPolicy</a>)
+</p>
+<p>Note: partly copied from <a href="https://github.com/vmware-tanzu/velero/pkg/apis/backup_types.go">https://github.com/vmware-tanzu/velero/pkg/apis/backup_types.go</a>
+BackupSpec defines the specification for a backup.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>resourceFilter</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.ResourceFilter">
+ResourceFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceFilter specifies which resources should be included in the backup.
+It acts as a selective criterion to determine which resources are relevant for backup.
+If not set, the backup process will consider all resources. This filter helps in optimizing the backup process by excluding unnecessary data.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ttl</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TTL is a time.Duration-parseable string describing how long the Backup should be retained for.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>orderedResources</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OrderedResources specifies the backup order of resources of specific Kind.
+The map key is the resource name and value is a list of object names separated by commas.
+Each resource name has format &ldquo;namespace/objectname&rdquo;.  For cluster resources, simply use &ldquo;objectname&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>itemOperationTimeout</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ItemOperationTimeout specifies the time used to wait for asynchronous BackupItemAction operations.
+The default value is 1 hour.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.BackupSpec">BackupSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Backup">Backup</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStorage">
+BackupStorage
+</a>
+</em>
+</td>
+<td>
+<p>Storage details where the backup data should be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>schedule</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Schedule defines when to run the Backup using a Cron expression.
+If not set, the backup will be executed only once.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>destination</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Destination indicates the default clusters where backups should be executed.
+Can be overridden by individual Policies.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policies</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSyncPolicy">
+[]BackupSyncPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policies are the rules defining how backups should be performed.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.BackupStatus">BackupStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Backup">Backup</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code><br>
+<em>
+<a href="https://godoc.org/sigs.k8s.io/cluster-api/api/v1beta1#Conditions">
+Cluster API /v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions represent the current state of the backup operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase represents the current phase of the backup operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>backupDetails</code><br>
+<em>
+[]github.com/vmware-tanzu/velero/pkg/apis/velero/v1.BackupStatus
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BackupDetails provides a detailed status for each backup in each cluster.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.BackupStorage">BackupStorage
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSpec">BackupSpec</a>, 
+<a href="#backup.kurator.dev/v1alpha1.MigrateSpec">MigrateSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>location</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStorageLocation">
+BackupStorageLocation
+</a>
+</em>
+</td>
+<td>
+<p>Location specifies the location where the backup data will be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>credentials</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Credentials to access the backup storage location.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.BackupStorageLocation">BackupStorageLocation
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStorage">BackupStorage</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>bucket</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket specifies the storage bucket name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>provider</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Provider specifies the storage provider type (e.g., aws).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>s3Url</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>S3Url provides the endpoint URL for S3-compatible storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region specifies the region of the storage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.BackupSyncPolicy">BackupSyncPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSpec">BackupSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name of the BackupSyncPolicy.
+If not provided, a default name will be generated.
+This field is recommended for users to set, so that during the restore process, customized restoration can be performed based on this name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>destination</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Destination indicates where the backup should be executed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policy</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupPolicy">
+BackupPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policy outlines the specific rules and filters applied during the backup process.
+It determines which resources are selected for backup and any specific conditions or procedures to follow.
+Users can customize this policy to ensure that the backup process aligns with their specific requirements and constraints.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.ClusterSelector">ClusterSelector
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">Destination</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>matchLabels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MatchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is &ldquo;key&rdquo;, the operator is &ldquo;In&rdquo;, and the values array contains only &ldquo;value&rdquo;.
+More info: <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors">https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.Destination">Destination
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.BackupSpec">BackupSpec</a>, 
+<a href="#backup.kurator.dev/v1alpha1.BackupSyncPolicy">BackupSyncPolicy</a>, 
+<a href="#backup.kurator.dev/v1alpha1.MigrateSpec">MigrateSpec</a>)
+</p>
+<p>Destination defines a fleet or specific clusters.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>fleet</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Fleet is the name of fleet.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterSelector</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.ClusterSelector">
+ClusterSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ClusterSelector specifies the selectors to select the clusters within the fleet.
+If unspecified, all clusters in the fleet will be selected.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.Migrate">Migrate
+</h3>
+<p>Migrate is the schema for the Migrate&rsquo;s API.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.MigrateSpec">
+MigrateSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStorage">
+BackupStorage
+</a>
+</em>
+</td>
+<td>
+<p>Storage details where the data should be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sourceCluster</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<p>SourceCluster represents the source cluster for migration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetCluster</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<p>TargetCluster represents the target clusters for migration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policy</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.MigratePolicy">
+MigratePolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policy defines the rules for the migration.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.MigrateStatus">
+MigrateStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.MigratePolicy">MigratePolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.MigrateSpec">MigrateSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>resourceFilter</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.ResourceFilter">
+ResourceFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceFilter specifies the resources to be included in the migration.
+If not set, all resources in  will be migrated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>orderedResources</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OrderedResources specifies the backup order of resources of specific Kind.
+The map key is the resource name and value is a list of object names separated by commas.
+Each resource name has format &ldquo;namespace/objectname&rdquo;.  For cluster resources, simply use &ldquo;objectname&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceMapping</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamespaceMapping is a map of source namespace names to target namespace names to migrate into.
+Any source namespaces not included in the map will be migrated into namespaces of the same name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>migrateStatus</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreStatusSpec">
+RestoreStatusSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MigrateStatus specifies which resources we should migrate the status field.
+If nil, no objects are included. Optional.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preserveNodePorts</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PreserveNodePorts specifies whether to migrate old nodePorts from source cluster to target cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>itemOperationTimeout</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
+The default value is 1 hour.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.MigrateSpec">MigrateSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Migrate">Migrate</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.BackupStorage">
+BackupStorage
+</a>
+</em>
+</td>
+<td>
+<p>Storage details where the data should be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sourceCluster</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<p>SourceCluster represents the source cluster for migration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetCluster</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.Destination">
+Destination
+</a>
+</em>
+</td>
+<td>
+<p>TargetCluster represents the target clusters for migration.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policy</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.MigratePolicy">
+MigratePolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policy defines the rules for the migration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.MigrateStatus">MigrateStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Migrate">Migrate</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code><br>
+<em>
+<a href="https://godoc.org/sigs.k8s.io/cluster-api/api/v1beta1#Conditions">
+Cluster API /v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions represent the current state of the migration operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase represents the current phase of the migration operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sourceClusterStatus</code><br>
+<em>
+github.com/vmware-tanzu/velero/pkg/apis/velero/v1.BackupStatus
+</em>
+</td>
+<td>
+<p>SourceClusterStatus provides a detailed status for backup in SourceCluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>targetClusterStatus</code><br>
+<em>
+[]github.com/vmware-tanzu/velero/pkg/apis/velero/v1.RestoreStatus
+</em>
+</td>
+<td>
+<p>TargetClusterStatus provides a detailed status for each restore in each TargetCluster.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.ResourceFilter">ResourceFilter
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.BackupPolicy">BackupPolicy</a>, 
+<a href="#backup.kurator.dev/v1alpha1.MigratePolicy">MigratePolicy</a>, 
+<a href="#backup.kurator.dev/v1alpha1.RestorePolicy">RestorePolicy</a>)
+</p>
+<p>Note: partly copied from <a href="https://github.com/&quot;github.com/vmware-tanzu/velero/pkg/apis/backup_types.go">https://github.com/&ldquo;github.com/vmware-tanzu/velero/pkg/apis/backup_types.go</a></p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>includedNamespaces</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IncludedNamespaces is a slice of namespace names to include objects from.
+If empty, all namespaces are included.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedNamespaces</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExcludedNamespaces contains a list of namespaces that are not included in the backup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>includedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IncludedResources is a slice of resource names to include in the backup.
+If empty, all resources are included.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExcludedResources is a slice of resource names that are not included in the backup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>includedClusterScopedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup.
+If set to &ldquo;*&rdquo;, all cluster-scoped resource types are included.
+The default value is empty, which means only related cluster-scoped resources are included.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedClusterScopedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup.
+If set to &ldquo;*&rdquo;, all cluster-scoped resource types are excluded. The default value is empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>includedNamespaceScopedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup.
+The default value is &ldquo;*&rdquo;.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedNamespaceScopedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup.
+If set to &ldquo;*&rdquo;, all namespace-scoped resource types are excluded. The default value is empty.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labelSelector</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#labelselector-v1-meta">
+Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>LabelSelector is a metav1.LabelSelector to filter with when adding individual objects to the backup.
+If empty or nil, all objects are included. Optional.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>orLabelSelectors</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#labelselector-v1-meta">
+[]Kubernetes meta/v1.LabelSelector
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>OrLabelSelectors is list of metav1.LabelSelector to filter with when adding individual objects to the backup.
+If multiple provided they will be joined by the OR operator.
+LabelSelector as well as OrLabelSelectors cannot co-exist in backup request, only one of them can be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>includeClusterResources</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IncludeClusterResources specifies whether cluster-scoped resources should be included for consideration in the backup.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.Restore">Restore
+</h3>
+<p>Restore is the schema for the Restore&rsquo;s API.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreSpec">
+RestoreSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>backupName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>BackupName specifies the backup on which this restore operation is based.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policies</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreSyncPolicy">
+[]RestoreSyncPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policies defines the customization rules for the restore.
+If null, the backup will be fully restored using default settings.</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreStatus">
+RestoreStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.RestorePolicy">RestorePolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreSyncPolicy">RestoreSyncPolicy</a>)
+</p>
+<p>Note: partly copied from <a href="https://github.com/vmware-tanzu/velero/pkg/apis/restore_types.go">https://github.com/vmware-tanzu/velero/pkg/apis/restore_types.go</a>
+RestorePolicy defines the specification for a Velero restore.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>resourceFilter</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.ResourceFilter">
+ResourceFilter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceFilter is the filter for the resources to be restored.
+If not set, all resources from the backup will be restored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceMapping</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NamespaceMapping is a map of source namespace names
+to target namespace names to restore into.
+Any source namespaces not included in the map will be restored into
+namespaces of the same name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>restoreStatus</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreStatusSpec">
+RestoreStatusSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RestoreStatus specifies which resources we should restore the status field.
+If nil, no objects are included.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preserveNodePorts</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PreserveNodePorts specifies whether to restore old nodePorts from backup.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>itemOperationTimeout</code><br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
+The default value is 1 hour.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.RestoreSpec">RestoreSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Restore">Restore</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>backupName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>BackupName specifies the backup on which this restore operation is based.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policies</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreSyncPolicy">
+[]RestoreSyncPolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policies defines the customization rules for the restore.
+If null, the backup will be fully restored using default settings.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.RestoreStatus">RestoreStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.Restore">Restore</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>conditions</code><br>
+<em>
+<a href="https://godoc.org/sigs.k8s.io/cluster-api/api/v1beta1#Conditions">
+Cluster API /v1beta1.Conditions
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Conditions represent the current state of the restore operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase represents the current phase of the restore operation.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>restoreDetails</code><br>
+<em>
+[]github.com/vmware-tanzu/velero/pkg/apis/velero/v1.RestoreStatus
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RestoreDetails provides a detailed status for each restore in each cluster.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.RestoreStatusSpec">RestoreStatusSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.MigratePolicy">MigratePolicy</a>, 
+<a href="#backup.kurator.dev/v1alpha1.RestorePolicy">RestorePolicy</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>includedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IncludedResources specifies the resources to which will restore the status.
+If empty, it applies to all resources.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>excludedResources</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExcludedResources specifies the resources to which will not restore the status.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="backup.kurator.dev/v1alpha1.RestoreSyncPolicy">RestoreSyncPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.RestoreSpec">RestoreSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the unique identifier for this restore policy. It should match the name in the backup policy.
+to ensure the restore policy corresponds to the correct backup policy.
+If a name provided by the user doesn&rsquo;t match any backup policy, the restore operation will fail
+and return a clear error message.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>policy</code><br>
+<em>
+<a href="#backup.kurator.dev/v1alpha1.RestorePolicy">
+RestorePolicy
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Policy indicates the rules and filters for the restore.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="admonition note">
+<p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
+</div>

@@ -1,0 +1,451 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.8.0
+  creationTimestamp: null
+  name: restores.backup.kurator.dev
+spec:
+  group: backup.kurator.dev
+  names:
+    categories:
+    - kurator-dev
+    kind: Restore
+    listKind: RestoreList
+    plural: restores
+    singular: restore
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Phase of the Restore
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Restore is the schema for the Restore's API.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              backupName:
+                description: BackupName specifies the backup on which this restore
+                  operation is based.
+                type: string
+              policies:
+                description: Policies defines the customization rules for the restore.
+                  If null, the backup will be fully restored using default settings.
+                items:
+                  properties:
+                    name:
+                      description: Name is the unique identifier for this restore
+                        policy. It should match the name in the backup policy. to
+                        ensure the restore policy corresponds to the correct backup
+                        policy. If a name provided by the user doesn't match any backup
+                        policy, the restore operation will fail and return a clear
+                        error message.
+                      type: string
+                    policy:
+                      description: Policy indicates the rules and filters for the
+                        restore.
+                      properties:
+                        itemOperationTimeout:
+                          description: ItemOperationTimeout specifies the time used
+                            to wait for RestoreItemAction operations. The default
+                            value is 1 hour.
+                          type: string
+                        namespaceMapping:
+                          additionalProperties:
+                            type: string
+                          description: NamespaceMapping is a map of source namespace
+                            names to target namespace names to restore into. Any source
+                            namespaces not included in the map will be restored into
+                            namespaces of the same name.
+                          type: object
+                        preserveNodePorts:
+                          description: PreserveNodePorts specifies whether to restore
+                            old nodePorts from backup.
+                          nullable: true
+                          type: boolean
+                        resourceFilter:
+                          description: ResourceFilter is the filter for the resources
+                            to be restored. If not set, all resources from the backup
+                            will be restored.
+                          properties:
+                            excludedClusterScopedResources:
+                              description: ExcludedClusterScopedResources is a slice
+                                of cluster-scoped resource type names to exclude from
+                                the backup. If set to "*", all cluster-scoped resource
+                                types are excluded. The default value is empty.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            excludedNamespaceScopedResources:
+                              description: ExcludedNamespaceScopedResources is a slice
+                                of namespace-scoped resource type names to exclude
+                                from the backup. If set to "*", all namespace-scoped
+                                resource types are excluded. The default value is
+                                empty.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            excludedNamespaces:
+                              description: ExcludedNamespaces contains a list of namespaces
+                                that are not included in the backup.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            excludedResources:
+                              description: ExcludedResources is a slice of resource
+                                names that are not included in the backup.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            includeClusterResources:
+                              description: IncludeClusterResources specifies whether
+                                cluster-scoped resources should be included for consideration
+                                in the backup.
+                              nullable: true
+                              type: boolean
+                            includedClusterScopedResources:
+                              description: IncludedClusterScopedResources is a slice
+                                of cluster-scoped resource type names to include in
+                                the backup. If set to "*", all cluster-scoped resource
+                                types are included. The default value is empty, which
+                                means only related cluster-scoped resources are included.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            includedNamespaceScopedResources:
+                              description: IncludedNamespaceScopedResources is a slice
+                                of namespace-scoped resource type names to include
+                                in the backup. The default value is "*".
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            includedNamespaces:
+                              description: IncludedNamespaces is a slice of namespace
+                                names to include objects from. If empty, all namespaces
+                                are included.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            includedResources:
+                              description: IncludedResources is a slice of resource
+                                names to include in the backup. If empty, all resources
+                                are included.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            labelSelector:
+                              description: LabelSelector is a metav1.LabelSelector
+                                to filter with when adding individual objects to the
+                                backup. If empty or nil, all objects are included.
+                                Optional.
+                              nullable: true
+                              properties:
+                                matchExpressions:
+                                  description: matchExpressions is a list of label
+                                    selector requirements. The requirements are ANDed.
+                                  items:
+                                    description: A label selector requirement is a
+                                      selector that contains values, a key, and an
+                                      operator that relates the key and values.
+                                    properties:
+                                      key:
+                                        description: key is the label key that the
+                                          selector applies to.
+                                        type: string
+                                      operator:
+                                        description: operator represents a key's relationship
+                                          to a set of values. Valid operators are
+                                          In, NotIn, Exists and DoesNotExist.
+                                        type: string
+                                      values:
+                                        description: values is an array of string
+                                          values. If the operator is In or NotIn,
+                                          the values array must be non-empty. If the
+                                          operator is Exists or DoesNotExist, the
+                                          values array must be empty. This array is
+                                          replaced during a strategic merge patch.
+                                        items:
+                                          type: string
+                                        type: array
+                                    required:
+                                    - key
+                                    - operator
+                                    type: object
+                                  type: array
+                                matchLabels:
+                                  additionalProperties:
+                                    type: string
+                                  description: matchLabels is a map of {key,value}
+                                    pairs. A single {key,value} in the matchLabels
+                                    map is equivalent to an element of matchExpressions,
+                                    whose key field is "key", the operator is "In",
+                                    and the values array contains only "value". The
+                                    requirements are ANDed.
+                                  type: object
+                              type: object
+                            orLabelSelectors:
+                              description: OrLabelSelectors is list of metav1.LabelSelector
+                                to filter with when adding individual objects to the
+                                backup. If multiple provided they will be joined by
+                                the OR operator. LabelSelector as well as OrLabelSelectors
+                                cannot co-exist in backup request, only one of them
+                                can be used.
+                              items:
+                                description: A label selector is a label query over
+                                  a set of resources. The result of matchLabels and
+                                  matchExpressions are ANDed. An empty label selector
+                                  matches all objects. A null label selector matches
+                                  no objects.
+                                properties:
+                                  matchExpressions:
+                                    description: matchExpressions is a list of label
+                                      selector requirements. The requirements are
+                                      ANDed.
+                                    items:
+                                      description: A label selector requirement is
+                                        a selector that contains values, a key, and
+                                        an operator that relates the key and values.
+                                      properties:
+                                        key:
+                                          description: key is the label key that the
+                                            selector applies to.
+                                          type: string
+                                        operator:
+                                          description: operator represents a key's
+                                            relationship to a set of values. Valid
+                                            operators are In, NotIn, Exists and DoesNotExist.
+                                          type: string
+                                        values:
+                                          description: values is an array of string
+                                            values. If the operator is In or NotIn,
+                                            the values array must be non-empty. If
+                                            the operator is Exists or DoesNotExist,
+                                            the values array must be empty. This array
+                                            is replaced during a strategic merge patch.
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - key
+                                      - operator
+                                      type: object
+                                    type: array
+                                  matchLabels:
+                                    additionalProperties:
+                                      type: string
+                                    description: matchLabels is a map of {key,value}
+                                      pairs. A single {key,value} in the matchLabels
+                                      map is equivalent to an element of matchExpressions,
+                                      whose key field is "key", the operator is "In",
+                                      and the values array contains only "value".
+                                      The requirements are ANDed.
+                                    type: object
+                                type: object
+                              nullable: true
+                              type: array
+                          type: object
+                        restoreStatus:
+                          description: RestoreStatus specifies which resources we
+                            should restore the status field. If nil, no objects are
+                            included.
+                          nullable: true
+                          properties:
+                            excludedResources:
+                              description: ExcludedResources specifies the resources
+                                to which will not restore the status.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                            includedResources:
+                              description: IncludedResources specifies the resources
+                                to which will restore the status. If empty, it applies
+                                to all resources.
+                              items:
+                                type: string
+                              nullable: true
+                              type: array
+                          type: object
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
+            required:
+            - backupName
+            type: object
+          status:
+            properties:
+              conditions:
+                description: Conditions represent the current state of the restore
+                  operation.
+                items:
+                  description: Condition defines an observation of a Cluster API resource
+                    operational state.
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another. This should be when the underlying condition changed.
+                        If that is not known, then using the time when the API field
+                        changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A human readable message indicating details about
+                        the transition. This field may be empty.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition
+                        in CamelCase. The specific API may choose whether or not this
+                        field is considered a guaranteed API. This field may not be
+                        empty.
+                      type: string
+                    severity:
+                      description: Severity provides an explicit classification of
+                        Reason code, so the users or machines can immediately understand
+                        the current situation and act accordingly. The Severity field
+                        MUST be set only when Status=False.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources
+                        like Available, but because arbitrary conditions can be useful
+                        (see .node.status.conditions), the ability to deconflict is
+                        important.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+              phase:
+                description: Phase represents the current phase of the restore operation.
+                type: string
+              restoreDetails:
+                description: RestoreDetails provides a detailed status for each restore
+                  in each cluster.
+                items:
+                  description: RestoreStatus captures the current status of a Velero
+                    restore
+                  properties:
+                    completionTimestamp:
+                      description: CompletionTimestamp records the time the restore
+                        operation was completed. Completion time is recorded even
+                        on failed restore. The server's time is used for StartTimestamps
+                      format: date-time
+                      nullable: true
+                      type: string
+                    errors:
+                      description: Errors is a count of all error messages that were
+                        generated during execution of the restore. The actual errors
+                        are stored in object storage.
+                      type: integer
+                    failureReason:
+                      description: FailureReason is an error that caused the entire
+                        restore to fail.
+                      type: string
+                    phase:
+                      description: Phase is the current state of the Restore
+                      enum:
+                      - New
+                      - FailedValidation
+                      - InProgress
+                      - WaitingForPluginOperations
+                      - WaitingForPluginOperationsPartiallyFailed
+                      - Completed
+                      - PartiallyFailed
+                      - Failed
+                      type: string
+                    progress:
+                      description: Progress contains information about the restore's
+                        execution progress. Note that this information is best-effort
+                        only -- if Velero fails to update it during a restore for
+                        any reason, it may be inaccurate/stale.
+                      nullable: true
+                      properties:
+                        itemsRestored:
+                          description: ItemsRestored is the number of items that have
+                            actually been restored so far
+                          type: integer
+                        totalItems:
+                          description: TotalItems is the total number of items to
+                            be restored. This number may change throughout the execution
+                            of the restore due to plugins that return additional related
+                            items to restore
+                          type: integer
+                      type: object
+                    restoreItemOperationsAttempted:
+                      description: RestoreItemOperationsAttempted is the total number
+                        of attempted async RestoreItemAction operations for this restore.
+                      type: integer
+                    restoreItemOperationsCompleted:
+                      description: RestoreItemOperationsCompleted is the total number
+                        of successfully completed async RestoreItemAction operations
+                        for this restore.
+                      type: integer
+                    restoreItemOperationsFailed:
+                      description: RestoreItemOperationsFailed is the total number
+                        of async RestoreItemAction operations for this restore which
+                        ended with an error.
+                      type: integer
+                    startTimestamp:
+                      description: StartTimestamp records the time the restore operation
+                        was started. The server's time is used for StartTimestamps
+                      format: date-time
+                      nullable: true
+                      type: string
+                    validationErrors:
+                      description: ValidationErrors is a slice of all validation errors
+                        (if applicable)
+                      items:
+                        type: string
+                      nullable: true
+                      type: array
+                    warnings:
+                      description: Warnings is a count of all warning messages that
+                        were generated during execution of the restore. The actual
+                        warnings are stored in object storage.
+                      type: integer
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

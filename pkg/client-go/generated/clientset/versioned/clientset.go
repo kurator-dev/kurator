@@ -26,6 +26,7 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	appsv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/apps/v1alpha1"
+	backupv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/backups/v1alpha1"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
@@ -34,6 +35,7 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AppsV1alpha1() appsv1alpha1.AppsV1alpha1Interface
+	BackupV1alpha1() backupv1alpha1.BackupV1alpha1Interface
 	ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface
 	FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface
 	InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface
@@ -44,6 +46,7 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	appsV1alpha1           *appsv1alpha1.AppsV1alpha1Client
+	backupV1alpha1         *backupv1alpha1.BackupV1alpha1Client
 	clusterV1alpha1        *clusterv1alpha1.ClusterV1alpha1Client
 	fleetV1alpha1          *fleetv1alpha1.FleetV1alpha1Client
 	infrastructureV1alpha1 *infrastructurev1alpha1.InfrastructureV1alpha1Client
@@ -52,6 +55,11 @@ type Clientset struct {
 // AppsV1alpha1 retrieves the AppsV1alpha1Client
 func (c *Clientset) AppsV1alpha1() appsv1alpha1.AppsV1alpha1Interface {
 	return c.appsV1alpha1
+}
+
+// BackupV1alpha1 retrieves the BackupV1alpha1Client
+func (c *Clientset) BackupV1alpha1() backupv1alpha1.BackupV1alpha1Interface {
+	return c.backupV1alpha1
 }
 
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
@@ -117,6 +125,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.backupV1alpha1, err = backupv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 	cs.clusterV1alpha1, err = clusterv1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
 		return nil, err
@@ -151,6 +163,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.appsV1alpha1 = appsv1alpha1.New(c)
+	cs.backupV1alpha1 = backupv1alpha1.New(c)
 	cs.clusterV1alpha1 = clusterv1alpha1.New(c)
 	cs.fleetV1alpha1 = fleetv1alpha1.New(c)
 	cs.infrastructureV1alpha1 = infrastructurev1alpha1.New(c)
