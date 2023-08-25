@@ -47,452 +47,467 @@ spec:
           spec:
             properties:
               destination:
-                description: Destination indicates the default clusters where backups
-                  should be executed. Can be overridden by individual Policies.
+                description: Destination indicates the clusters where backups should
+                  be performed.
                 properties:
-                  clusterSelector:
-                    description: ClusterSelector specifies the selectors to select
-                      the clusters within the fleet. If unspecified, all clusters
-                      in the fleet will be selected.
-                    properties:
-                      matchLabels:
-                        additionalProperties:
-                          type: string
-                        description: 'MatchLabels is a map of {key,value} pairs. A
-                          single {key,value} in the matchLabels map is equivalent
-                          to an element of matchExpressions, whose key field is "key",
-                          the operator is "In", and the values array contains only
-                          "value". More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors'
-                        type: object
-                    type: object
-                  fleet:
-                    description: Fleet is the name of fleet.
-                    type: string
-                required:
-                - fleet
-                type: object
-              policies:
-                description: Policies are the rules defining how backups should be
-                  performed.
-                items:
-                  properties:
-                    destination:
-                      description: Destination indicates where the backup should be
-                        executed.
+                  clusters:
+                    description: Clusters allows users to directly specify a set of
+                      destination clusters.
+                    items:
+                      description: "ObjectReference contains enough information to
+                        let you inspect or modify the referred object. --- New uses
+                        of this type are discouraged because of difficulty describing
+                        its usage when embedded in APIs. 1. Ignored fields.  It includes
+                        many fields which are not generally honored.  For instance,
+                        ResourceVersion and FieldPath are both very rarely valid in
+                        actual usage. 2. Invalid usage help.  It is impossible to
+                        add specific help for individual usage.  In most embedded
+                        usages, there are particular restrictions like, \"must refer
+                        only to types A and B\" or \"UID not honored\" or \"name must
+                        be restricted\". Those cannot be well described when embedded.
+                        3. Inconsistent validation.  Because the usages are different,
+                        the validation rules are different by usage, which makes it
+                        hard for users to predict what will happen. 4. The fields
+                        are both imprecise and overly precise.  Kind is not a precise
+                        mapping to a URL. This can produce ambiguity during interpretation
+                        and require a REST mapping.  In most cases, the dependency
+                        is on the group,resource tuple and the version of the actual
+                        struct is irrelevant. 5. We cannot easily change it.  Because
+                        this type is embedded in many locations, updates to this type
+                        will affect numerous schemas.  Don't make new APIs embed an
+                        underspecified API type they do not control. \n Instead of
+                        using this type, create a locally provided and used type that
+                        is well-focused on your reference. For example, ServiceReferences
+                        for admission registration: https://github.com/kubernetes/api/blob/release-1.17/admissionregistration/v1/types.go#L533
+                        ."
                       properties:
-                        clusterSelector:
-                          description: ClusterSelector specifies the selectors to
-                            select the clusters within the fleet. If unspecified,
-                            all clusters in the fleet will be selected.
+                        apiVersion:
+                          description: API version of the referent.
+                          type: string
+                        fieldPath:
+                          description: 'If referring to a piece of an object instead
+                            of an entire object, this string should contain a valid
+                            JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                            For example, if the object reference is to a container
+                            within a pod, this would take on a value like: "spec.containers{name}"
+                            (where "name" refers to the name of the container that
+                            triggered the event) or if no container name is specified
+                            "spec.containers[2]" (container with index 2 in this pod).
+                            This syntax is chosen only to have some well-defined way
+                            of referencing a part of an object. TODO: this design
+                            is not final and this field is subject to change in the
+                            future.'
+                          type: string
+                        kind:
+                          description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          type: string
+                        namespace:
+                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                          type: string
+                        resourceVersion:
+                          description: 'Specific resourceVersion to which this reference
+                            is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                          type: string
+                        uid:
+                          description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                          type: string
+                      type: object
+                    type: array
+                  fleet:
+                    description: Fleet represents the name of a fleet which determines
+                      a set of clusters. If Fleet is set, it will be used to determine
+                      the target clusters. If users wish to specify clusters directly,
+                      they can use the Clusters field.
+                    type: string
+                type: object
+              policy:
+                description: Policy are the rules defining how backups should be performed.
+                properties:
+                  orderedResources:
+                    additionalProperties:
+                      type: string
+                    description: 'OrderedResources specifies the backup order of resources
+                      of specific Kind. The map key is the resource name and value
+                      is a list of object names separated by commas. Each resource
+                      name has format "namespace/objectname".  For cluster resources,
+                      simply use "objectname". For example, if you have a specific
+                      order for pods, such as "pod1, pod2, pod3" with all belonging
+                      to the "ns1" namespace, and a specific order for persistentvolumes,
+                      such as "pv4, pv8", you can use the orderedResources field in
+                      YAML format as shown below: ```yaml orderedResources: pods:
+                      "ns1/pod1, ns1/pod2, ns1/pod3" persistentvolumes: "pv4, pv8"
+                      ```'
+                    nullable: true
+                    type: object
+                  resourceFilter:
+                    description: ResourceFilter specifies which resources should be
+                      included in the backup. It acts as a selective criterion to
+                      determine which resources are relevant for backup. If not set,
+                      the backup process will consider all resources. This filter
+                      helps in optimizing the backup process by excluding unnecessary
+                      data.
+                    properties:
+                      excludedClusterScopedResources:
+                        description: ExcludedClusterScopedResources is a slice of
+                          cluster-scoped resource type names to exclude from the backup.
+                          If set to "*", all cluster-scoped resource types are excluded.
+                          The default value is empty. Cannot work with IncludedResources,
+                          ExcludedResources and IncludeClusterResources.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      excludedNamespaceScopedResources:
+                        description: ExcludedNamespaceScopedResources is a slice of
+                          namespace-scoped resource type names to exclude from the
+                          backup. If set to "*", all namespace-scoped resource types
+                          are excluded. The default value is empty. Cannot work with
+                          IncludedResources, ExcludedResources and IncludeClusterResources.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      excludedNamespaces:
+                        description: ExcludedNamespaces contains a list of namespaces
+                          that are not included in the backup.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      excludedResources:
+                        description: ExcludedResources is a slice of resource names
+                          that are not included in the backup. Cannot work with IncludedClusterScopedResources,
+                          ExcludedClusterScopedResources, IncludedNamespaceScopedResources
+                          and ExcludedNamespaceScopedResources.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      includeClusterResources:
+                        description: IncludeClusterResources specifies whether cluster-scoped
+                          resources should be included for consideration in the backup.
+                          Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources,
+                          IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
+                        nullable: true
+                        type: boolean
+                      includedClusterScopedResources:
+                        description: IncludedClusterScopedResources is a slice of
+                          cluster-scoped resource type names to include in the backup.
+                          For example, we can populate this string array with ["storageclasses",
+                          "clusterroles"], then we will select all resources of type
+                          storageclasses and clusterroles, If set to "*", all cluster-scoped
+                          resource types are included. The default value is empty,
+                          which means only related cluster-scoped resources are included.
+                          Cannot work with IncludedResources, ExcludedResources and
+                          IncludeClusterResources.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      includedNamespaceScopedResources:
+                        description: IncludedNamespaceScopedResources is a slice of
+                          namespace-scoped resource type names to include in the backup.
+                          For example, we can populate this string array with ["deployments",
+                          "configmaps"], then we will select all resources of type
+                          deployments and configmaps, The default value is "*". Cannot
+                          work with IncludedResources, ExcludedResources and IncludeClusterResources.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      includedNamespaces:
+                        description: IncludedNamespaces is a list of namespace names
+                          to include objects from. If empty, all namespaces are included.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      includedResources:
+                        description: IncludedResources is a slice of API resource
+                          names to include in the backup. For example, we can populate
+                          this string array with ["deployments", "configmaps","clusterroles","storageclasses"],
+                          then we will select all resources of type deployments and
+                          configmaps. If empty, all API resources are included. Cannot
+                          work with IncludedClusterScopedResources, ExcludedClusterScopedResources,
+                          IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
+                        items:
+                          type: string
+                        nullable: true
+                        type: array
+                      labelSelector:
+                        description: LabelSelector is a metav1.LabelSelector to filter
+                          with when adding individual objects to the backup. If empty
+                          or nil, all objects are included. Optional.
+                        nullable: true
+                        properties:
+                          matchExpressions:
+                            description: matchExpressions is a list of label selector
+                              requirements. The requirements are ANDed.
+                            items:
+                              description: A label selector requirement is a selector
+                                that contains values, a key, and an operator that
+                                relates the key and values.
+                              properties:
+                                key:
+                                  description: key is the label key that the selector
+                                    applies to.
+                                  type: string
+                                operator:
+                                  description: operator represents a key's relationship
+                                    to a set of values. Valid operators are In, NotIn,
+                                    Exists and DoesNotExist.
+                                  type: string
+                                values:
+                                  description: values is an array of string values.
+                                    If the operator is In or NotIn, the values array
+                                    must be non-empty. If the operator is Exists or
+                                    DoesNotExist, the values array must be empty.
+                                    This array is replaced during a strategic merge
+                                    patch.
+                                  items:
+                                    type: string
+                                  type: array
+                              required:
+                              - key
+                              - operator
+                              type: object
+                            type: array
+                          matchLabels:
+                            additionalProperties:
+                              type: string
+                            description: matchLabels is a map of {key,value} pairs.
+                              A single {key,value} in the matchLabels map is equivalent
+                              to an element of matchExpressions, whose key field is
+                              "key", the operator is "In", and the values array contains
+                              only "value". The requirements are ANDed.
+                            type: object
+                        type: object
+                      orLabelSelectors:
+                        description: OrLabelSelectors is list of metav1.LabelSelector
+                          to filter with when adding individual objects to the backup.
+                          If multiple provided they will be joined by the OR operator.
+                          LabelSelector as well as OrLabelSelectors cannot co-exist
+                          in backup request, only one of them can be used.
+                        items:
+                          description: A label selector is a label query over a set
+                            of resources. The result of matchLabels and matchExpressions
+                            are ANDed. An empty label selector matches all objects.
+                            A null label selector matches no objects.
                           properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: A label selector requirement is a selector
+                                  that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: operator represents a key's relationship
+                                      to a set of values. Valid operators are In,
+                                      NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: values is an array of string values.
+                                      If the operator is In or NotIn, the values array
+                                      must be non-empty. If the operator is Exists
+                                      or DoesNotExist, the values array must be empty.
+                                      This array is replaced during a strategic merge
+                                      patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                required:
+                                - key
+                                - operator
+                                type: object
+                              type: array
                             matchLabels:
                               additionalProperties:
                                 type: string
-                              description: 'MatchLabels is a map of {key,value} pairs.
+                              description: matchLabels is a map of {key,value} pairs.
                                 A single {key,value} in the matchLabels map is equivalent
                                 to an element of matchExpressions, whose key field
                                 is "key", the operator is "In", and the values array
-                                contains only "value". More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors'
+                                contains only "value". The requirements are ANDed.
                               type: object
                           type: object
-                        fleet:
-                          description: Fleet is the name of fleet.
-                          type: string
-                      required:
-                      - fleet
-                      type: object
-                    name:
-                      description: Name of the BackupSyncPolicy. If not provided,
-                        a default name will be generated. This field is recommended
-                        for users to set, so that during the restore process, customized
-                        restoration can be performed based on this name.
-                      type: string
-                    policy:
-                      description: Policy outlines the specific rules and filters
-                        applied during the backup process. It determines which resources
-                        are selected for backup and any specific conditions or procedures
-                        to follow. Users can customize this policy to ensure that
-                        the backup process aligns with their specific requirements
-                        and constraints.
-                      properties:
-                        itemOperationTimeout:
-                          description: ItemOperationTimeout specifies the time used
-                            to wait for asynchronous BackupItemAction operations.
-                            The default value is 1 hour.
-                          type: string
-                        orderedResources:
-                          additionalProperties:
-                            type: string
-                          description: OrderedResources specifies the backup order
-                            of resources of specific Kind. The map key is the resource
-                            name and value is a list of object names separated by
-                            commas. Each resource name has format "namespace/objectname".  For
-                            cluster resources, simply use "objectname".
-                          nullable: true
-                          type: object
-                        resourceFilter:
-                          description: ResourceFilter specifies which resources should
-                            be included in the backup. It acts as a selective criterion
-                            to determine which resources are relevant for backup.
-                            If not set, the backup process will consider all resources.
-                            This filter helps in optimizing the backup process by
-                            excluding unnecessary data.
-                          properties:
-                            excludedClusterScopedResources:
-                              description: ExcludedClusterScopedResources is a slice
-                                of cluster-scoped resource type names to exclude from
-                                the backup. If set to "*", all cluster-scoped resource
-                                types are excluded. The default value is empty.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            excludedNamespaceScopedResources:
-                              description: ExcludedNamespaceScopedResources is a slice
-                                of namespace-scoped resource type names to exclude
-                                from the backup. If set to "*", all namespace-scoped
-                                resource types are excluded. The default value is
-                                empty.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            excludedNamespaces:
-                              description: ExcludedNamespaces contains a list of namespaces
-                                that are not included in the backup.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            excludedResources:
-                              description: ExcludedResources is a slice of resource
-                                names that are not included in the backup.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            includeClusterResources:
-                              description: IncludeClusterResources specifies whether
-                                cluster-scoped resources should be included for consideration
-                                in the backup.
-                              nullable: true
-                              type: boolean
-                            includedClusterScopedResources:
-                              description: IncludedClusterScopedResources is a slice
-                                of cluster-scoped resource type names to include in
-                                the backup. If set to "*", all cluster-scoped resource
-                                types are included. The default value is empty, which
-                                means only related cluster-scoped resources are included.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            includedNamespaceScopedResources:
-                              description: IncludedNamespaceScopedResources is a slice
-                                of namespace-scoped resource type names to include
-                                in the backup. The default value is "*".
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            includedNamespaces:
-                              description: IncludedNamespaces is a slice of namespace
-                                names to include objects from. If empty, all namespaces
-                                are included.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            includedResources:
-                              description: IncludedResources is a slice of resource
-                                names to include in the backup. If empty, all resources
-                                are included.
-                              items:
-                                type: string
-                              nullable: true
-                              type: array
-                            labelSelector:
-                              description: LabelSelector is a metav1.LabelSelector
-                                to filter with when adding individual objects to the
-                                backup. If empty or nil, all objects are included.
-                                Optional.
-                              nullable: true
-                              properties:
-                                matchExpressions:
-                                  description: matchExpressions is a list of label
-                                    selector requirements. The requirements are ANDed.
-                                  items:
-                                    description: A label selector requirement is a
-                                      selector that contains values, a key, and an
-                                      operator that relates the key and values.
-                                    properties:
-                                      key:
-                                        description: key is the label key that the
-                                          selector applies to.
-                                        type: string
-                                      operator:
-                                        description: operator represents a key's relationship
-                                          to a set of values. Valid operators are
-                                          In, NotIn, Exists and DoesNotExist.
-                                        type: string
-                                      values:
-                                        description: values is an array of string
-                                          values. If the operator is In or NotIn,
-                                          the values array must be non-empty. If the
-                                          operator is Exists or DoesNotExist, the
-                                          values array must be empty. This array is
-                                          replaced during a strategic merge patch.
-                                        items:
-                                          type: string
-                                        type: array
-                                    required:
-                                    - key
-                                    - operator
-                                    type: object
-                                  type: array
-                                matchLabels:
-                                  additionalProperties:
-                                    type: string
-                                  description: matchLabels is a map of {key,value}
-                                    pairs. A single {key,value} in the matchLabels
-                                    map is equivalent to an element of matchExpressions,
-                                    whose key field is "key", the operator is "In",
-                                    and the values array contains only "value". The
-                                    requirements are ANDed.
-                                  type: object
-                              type: object
-                            orLabelSelectors:
-                              description: OrLabelSelectors is list of metav1.LabelSelector
-                                to filter with when adding individual objects to the
-                                backup. If multiple provided they will be joined by
-                                the OR operator. LabelSelector as well as OrLabelSelectors
-                                cannot co-exist in backup request, only one of them
-                                can be used.
-                              items:
-                                description: A label selector is a label query over
-                                  a set of resources. The result of matchLabels and
-                                  matchExpressions are ANDed. An empty label selector
-                                  matches all objects. A null label selector matches
-                                  no objects.
-                                properties:
-                                  matchExpressions:
-                                    description: matchExpressions is a list of label
-                                      selector requirements. The requirements are
-                                      ANDed.
-                                    items:
-                                      description: A label selector requirement is
-                                        a selector that contains values, a key, and
-                                        an operator that relates the key and values.
-                                      properties:
-                                        key:
-                                          description: key is the label key that the
-                                            selector applies to.
-                                          type: string
-                                        operator:
-                                          description: operator represents a key's
-                                            relationship to a set of values. Valid
-                                            operators are In, NotIn, Exists and DoesNotExist.
-                                          type: string
-                                        values:
-                                          description: values is an array of string
-                                            values. If the operator is In or NotIn,
-                                            the values array must be non-empty. If
-                                            the operator is Exists or DoesNotExist,
-                                            the values array must be empty. This array
-                                            is replaced during a strategic merge patch.
-                                          items:
-                                            type: string
-                                          type: array
-                                      required:
-                                      - key
-                                      - operator
-                                      type: object
-                                    type: array
-                                  matchLabels:
-                                    additionalProperties:
-                                      type: string
-                                    description: matchLabels is a map of {key,value}
-                                      pairs. A single {key,value} in the matchLabels
-                                      map is equivalent to an element of matchExpressions,
-                                      whose key field is "key", the operator is "In",
-                                      and the values array contains only "value".
-                                      The requirements are ANDed.
-                                    type: object
-                                type: object
-                              nullable: true
-                              type: array
-                          type: object
-                        ttl:
-                          description: TTL is a time.Duration-parseable string describing
-                            how long the Backup should be retained for.
-                          type: string
-                      type: object
-                  type: object
-                type: array
+                        nullable: true
+                        type: array
+                    type: object
+                  ttl:
+                    description: TTL is a time.Duration-parseable string describing
+                      how long the Backup should be retained for.
+                    type: string
+                type: object
               schedule:
                 description: Schedule defines when to run the Backup using a Cron
-                  expression. If not set, the backup will be executed only once.
+                  expression. A cron expression is a format used to specify the execution
+                  time of recurring tasks, consisting of multiple fields representing
+                  different time units. ┌───────────── minute (0 - 59) │ ┌─────────────
+                  hour (0 - 23) │ │ ┌───────────── day of the month (1 - 31) │ │ │
+                  ┌───────────── month (1 - 12) │ │ │ │ ┌───────────── day of the
+                  week (0 - 6) (Sunday to Saturday; │ │ │ │ │                                   7
+                  is also Sunday on some systems) │ │ │ │ │ │ │ │ │ │ * * * * * For
+                  example, "30 * * * *" represents execution at the 30th minute of
+                  every hour, and "10 10,14 * * *" represents execution at 10:10 AM
+                  and 2:10 PM every day. If not set, the backup will be executed only
+                  once.
                 type: string
-              storage:
-                description: Storage details where the backup data should be stored.
-                properties:
-                  credentials:
-                    description: Credentials to access the backup storage location.
-                    type: string
-                  location:
-                    description: Location specifies the location where the backup
-                      data will be stored.
-                    properties:
-                      bucket:
-                        description: Bucket specifies the storage bucket name.
-                        type: string
-                      provider:
-                        description: Provider specifies the storage provider type
-                          (e.g., aws).
-                        type: string
-                      region:
-                        description: Region specifies the region of the storage.
-                        type: string
-                      s3Url:
-                        description: S3Url provides the endpoint URL for S3-compatible
-                          storage.
-                        type: string
-                    required:
-                    - bucket
-                    - provider
-                    - region
-                    - s3Url
-                    type: object
-                required:
-                - credentials
-                - location
-                type: object
             required:
-            - storage
+            - destination
             type: object
           status:
             properties:
               backupDetails:
-                description: BackupDetails provides a detailed status for each backup
-                  in each cluster.
+                description: Details provides a detailed status for each backup in
+                  each cluster.
                 items:
-                  description: BackupStatus captures the current status of a Velero
-                    backup.
                   properties:
-                    backupItemOperationsAttempted:
-                      description: BackupItemOperationsAttempted is the total number
-                        of attempted async BackupItemAction operations for this backup.
-                      type: integer
-                    backupItemOperationsCompleted:
-                      description: BackupItemOperationsCompleted is the total number
-                        of successfully completed async BackupItemAction operations
-                        for this backup.
-                      type: integer
-                    backupItemOperationsFailed:
-                      description: BackupItemOperationsFailed is the total number
-                        of async BackupItemAction operations for this backup which
-                        ended with an error.
-                      type: integer
-                    completionTimestamp:
-                      description: CompletionTimestamp records the time a backup was
-                        completed. Completion time is recorded even on failed backups.
-                        Completion time is recorded before uploading the backup object.
-                        The server's time is used for CompletionTimestamps
-                      format: date-time
-                      nullable: true
+                    backupNameInCluster:
+                      description: BackupNameInCluster is the name of the backup being
+                        performed within this cluster. This BackupNameInCluster is
+                        unique in Storage.
                       type: string
-                    csiVolumeSnapshotsAttempted:
-                      description: CSIVolumeSnapshotsAttempted is the total number
-                        of attempted CSI VolumeSnapshots for this backup.
-                      type: integer
-                    csiVolumeSnapshotsCompleted:
-                      description: CSIVolumeSnapshotsCompleted is the total number
-                        of successfully completed CSI VolumeSnapshots for this backup.
-                      type: integer
-                    errors:
-                      description: Errors is a count of all error messages that were
-                        generated during execution of the backup.  The actual errors
-                        are in the backup's log file in object storage.
-                      type: integer
-                    expiration:
-                      description: Expiration is when this Backup is eligible for
-                        garbage-collection.
-                      format: date-time
-                      nullable: true
-                      type: string
-                    failureReason:
-                      description: FailureReason is an error that caused the entire
-                        backup to fail.
-                      type: string
-                    formatVersion:
-                      description: FormatVersion is the backup format version, including
-                        major, minor, and patch version.
-                      type: string
-                    phase:
-                      description: Phase is the current state of the Backup.
-                      enum:
-                      - New
-                      - FailedValidation
-                      - InProgress
-                      - WaitingForPluginOperations
-                      - WaitingForPluginOperationsPartiallyFailed
-                      - Finalizing
-                      - FinalizingPartiallyFailed
-                      - Completed
-                      - PartiallyFailed
-                      - Failed
-                      - Deleting
-                      type: string
-                    progress:
-                      description: Progress contains information about the backup's
-                        execution progress. Note that this information is best-effort
-                        only -- if Velero fails to update it during a backup for any
-                        reason, it may be inaccurate/stale.
-                      nullable: true
+                    backupStatusInCluster:
+                      description: BackupStatusInCluster is the current status of
+                        the backup performed within this cluster.
                       properties:
-                        itemsBackedUp:
-                          description: ItemsBackedUp is the number of items that have
-                            actually been written to the backup tarball so far.
+                        backupItemOperationsAttempted:
+                          description: BackupItemOperationsAttempted is the total
+                            number of attempted async BackupItemAction operations
+                            for this backup.
                           type: integer
-                        totalItems:
-                          description: TotalItems is the total number of items to
-                            be backed up. This number may change throughout the execution
-                            of the backup due to plugins that return additional related
-                            items to back up, the velero.io/exclude-from-backup label,
-                            and various other filters that happen as items are processed.
+                        backupItemOperationsCompleted:
+                          description: BackupItemOperationsCompleted is the total
+                            number of successfully completed async BackupItemAction
+                            operations for this backup.
+                          type: integer
+                        backupItemOperationsFailed:
+                          description: BackupItemOperationsFailed is the total number
+                            of async BackupItemAction operations for this backup which
+                            ended with an error.
+                          type: integer
+                        completionTimestamp:
+                          description: CompletionTimestamp records the time a backup
+                            was completed. Completion time is recorded even on failed
+                            backups. Completion time is recorded before uploading
+                            the backup object. The server's time is used for CompletionTimestamps
+                          format: date-time
+                          nullable: true
+                          type: string
+                        csiVolumeSnapshotsAttempted:
+                          description: CSIVolumeSnapshotsAttempted is the total number
+                            of attempted CSI VolumeSnapshots for this backup.
+                          type: integer
+                        csiVolumeSnapshotsCompleted:
+                          description: CSIVolumeSnapshotsCompleted is the total number
+                            of successfully completed CSI VolumeSnapshots for this
+                            backup.
+                          type: integer
+                        errors:
+                          description: Errors is a count of all error messages that
+                            were generated during execution of the backup.  The actual
+                            errors are in the backup's log file in object storage.
+                          type: integer
+                        expiration:
+                          description: Expiration is when this Backup is eligible
+                            for garbage-collection.
+                          format: date-time
+                          nullable: true
+                          type: string
+                        failureReason:
+                          description: FailureReason is an error that caused the entire
+                            backup to fail.
+                          type: string
+                        formatVersion:
+                          description: FormatVersion is the backup format version,
+                            including major, minor, and patch version.
+                          type: string
+                        phase:
+                          description: Phase is the current state of the Backup.
+                          enum:
+                          - New
+                          - FailedValidation
+                          - InProgress
+                          - WaitingForPluginOperations
+                          - WaitingForPluginOperationsPartiallyFailed
+                          - Finalizing
+                          - FinalizingPartiallyFailed
+                          - Completed
+                          - PartiallyFailed
+                          - Failed
+                          - Deleting
+                          type: string
+                        progress:
+                          description: Progress contains information about the backup's
+                            execution progress. Note that this information is best-effort
+                            only -- if Velero fails to update it during a backup for
+                            any reason, it may be inaccurate/stale.
+                          nullable: true
+                          properties:
+                            itemsBackedUp:
+                              description: ItemsBackedUp is the number of items that
+                                have actually been written to the backup tarball so
+                                far.
+                              type: integer
+                            totalItems:
+                              description: TotalItems is the total number of items
+                                to be backed up. This number may change throughout
+                                the execution of the backup due to plugins that return
+                                additional related items to back up, the velero.io/exclude-from-backup
+                                label, and various other filters that happen as items
+                                are processed.
+                              type: integer
+                          type: object
+                        startTimestamp:
+                          description: StartTimestamp records the time a backup was
+                            started. Separate from CreationTimestamp, since that value
+                            changes on restores. The server's time is used for StartTimestamps
+                          format: date-time
+                          nullable: true
+                          type: string
+                        validationErrors:
+                          description: ValidationErrors is a slice of all validation
+                            errors (if applicable).
+                          items:
+                            type: string
+                          nullable: true
+                          type: array
+                        version:
+                          description: 'Version is the backup format major version.
+                            Deprecated: Please see FormatVersion'
+                          type: integer
+                        volumeSnapshotsAttempted:
+                          description: VolumeSnapshotsAttempted is the total number
+                            of attempted volume snapshots for this backup.
+                          type: integer
+                        volumeSnapshotsCompleted:
+                          description: VolumeSnapshotsCompleted is the total number
+                            of successfully completed volume snapshots for this backup.
+                          type: integer
+                        warnings:
+                          description: Warnings is a count of all warning messages
+                            that were generated during execution of the backup. The
+                            actual warnings are in the backup's log file in object
+                            storage.
                           type: integer
                       type: object
-                    startTimestamp:
-                      description: StartTimestamp records the time a backup was started.
-                        Separate from CreationTimestamp, since that value changes
-                        on restores. The server's time is used for StartTimestamps
-                      format: date-time
-                      nullable: true
+                    clusterKind:
+                      description: ClusterKind is the kind of ClusterName recorded
+                        in Kurator.
                       type: string
-                    validationErrors:
-                      description: ValidationErrors is a slice of all validation errors
-                        (if applicable).
-                      items:
-                        type: string
-                      nullable: true
-                      type: array
-                    version:
-                      description: 'Version is the backup format major version. Deprecated:
-                        Please see FormatVersion'
-                      type: integer
-                    volumeSnapshotsAttempted:
-                      description: VolumeSnapshotsAttempted is the total number of
-                        attempted volume snapshots for this backup.
-                      type: integer
-                    volumeSnapshotsCompleted:
-                      description: VolumeSnapshotsCompleted is the total number of
-                        successfully completed volume snapshots for this backup.
-                      type: integer
-                    warnings:
-                      description: Warnings is a count of all warning messages that
-                        were generated during execution of the backup. The actual
-                        warnings are in the backup's log file in object storage.
-                      type: integer
+                    clusterName:
+                      description: ClusterName is the Name of the cluster where the
+                        backup is being performed.
+                      type: string
                   type: object
                 type: array
               conditions:

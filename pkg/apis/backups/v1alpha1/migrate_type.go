@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	velerov1 "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 )
@@ -37,13 +36,14 @@ type Migrate struct {
 }
 
 type MigrateSpec struct {
-	// Storage details where the data should be stored.
-	Storage BackupStorage `json:"storage"`
-
 	// SourceCluster represents the source cluster for migration.
+	// The user needs to ensure that SourceCluster points to only ONE cluster.
+	// Because the current migration only supports migrating from one SourceCluster to one or more TargetCluster.
+	// +required
 	SourceCluster *Destination `json:"sourceCluster"`
 
 	// TargetCluster represents the target clusters for migration.
+	// +required
 	TargetCluster *Destination `json:"targetCluster"`
 
 	// Policy defines the rules for the migration.
@@ -53,13 +53,22 @@ type MigrateSpec struct {
 
 type MigratePolicy struct {
 	// ResourceFilter specifies the resources to be included in the migration.
-	// If not set, all resources in  will be migrated.
+	// If not set, all resources in source cluster will be migrated.
 	// +optional
 	ResourceFilter *ResourceFilter `json:"resourceFilter,omitempty"`
 
 	// OrderedResources specifies the backup order of resources of specific Kind.
 	// The map key is the resource name and value is a list of object names separated by commas.
 	// Each resource name has format "namespace/objectname".  For cluster resources, simply use "objectname".
+	// For example, if you have a specific order for pods, such as "pod1, pod2, pod3" with all belonging to the "ns1" namespace,
+	// and a specific order for persistentvolumes, such as "pv4, pv8", you can use the orderedResources field in YAML format as shown below:
+	//
+	// ```yaml
+	// orderedResources:
+	//  pods: "ns1/pod1, ns1/pod2, ns1/pod3"
+	//  persistentvolumes: "pv4, pv8"
+	// ```
+	//
 	// +optional
 	// +nullable
 	OrderedResources map[string]string `json:"orderedResources,omitempty"`
@@ -73,17 +82,12 @@ type MigratePolicy struct {
 	// If nil, no objects are included. Optional.
 	// +optional
 	// +nullable
-	MigrateStatus *RestoreStatusSpec `json:"migrateStatus,omitempty"`
+	MigrateStatus *PreserveStatus `json:"migrateStatus,omitempty"`
 
 	// PreserveNodePorts specifies whether to migrate old nodePorts from source cluster to target cluster.
 	// +optional
 	// +nullable
 	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
-
-	// ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
-	// The default value is 1 hour.
-	// +optional
-	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
 }
 
 type MigrateStatus struct {
@@ -96,8 +100,17 @@ type MigrateStatus struct {
 	Phase string `json:"phase,omitempty"`
 
 	// SourceClusterStatus provides a detailed status for backup in SourceCluster.
-	SourceClusterStatus *velerov1.BackupStatus `json:"sourceClusterStatus,omitempty"`
+	SourceClusterStatus *BackupDetails `json:"sourceClusterStatus,omitempty"`
 
 	// TargetClusterStatus provides a detailed status for each restore in each TargetCluster.
-	TargetClusterStatus []*velerov1.RestoreStatus `json:"targetClusterStatus,omitempty"`
+	TargetClusterStatus []*RestoreDetails `json:"targetClusterStatus,omitempty"`
+}
+
+// MigrateList contains a list of Migrate.
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type MigrateList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Migrate `json:"items"`
 }

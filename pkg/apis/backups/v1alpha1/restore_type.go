@@ -38,27 +38,21 @@ type Restore struct {
 
 type RestoreSpec struct {
 	// BackupName specifies the backup on which this restore operation is based.
+	// +required
 	BackupName string `json:"backupName"`
 
-	// Policies defines the customization rules for the restore.
+	// Destination indicates the clusters where restore should be performed.
+	// if not set, all the clusters from Backup.spec.destination will perform restore.
+	// +optional
+	Destination *Destination `json:"destination,omitempty"`
+
+	// Policy defines the customization rules for the restore.
 	// If null, the backup will be fully restored using default settings.
 	// +optional
-	Policies []*RestoreSyncPolicy `json:"policies,omitempty"`
+	Policy *RestorePolicy `json:"policy,omitempty"`
 }
 
-type RestoreSyncPolicy struct {
-	// Name is the unique identifier for this restore policy. It should match the name in the backup policy.
-	// to ensure the restore policy corresponds to the correct backup policy.
-	// If a name provided by the user doesn't match any backup policy, the restore operation will fail
-	// and return a clear error message.
-	Name string `json:"name"`
-
-	// Policy indicates the rules and filters for the restore.
-	// +optional
-	Policy RestorePolicy `json:"policy,omitempty"`
-}
-
-// Note: partly copied from https://github.com/vmware-tanzu/velero/pkg/apis/restore_types.go
+// Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/restore_types.go
 // RestorePolicy defines the specification for a Velero restore.
 type RestorePolicy struct {
 	// ResourceFilter is the filter for the resources to be restored.
@@ -73,31 +67,41 @@ type RestorePolicy struct {
 	// +optional
 	NamespaceMapping map[string]string `json:"namespaceMapping,omitempty"`
 
-	// RestoreStatus specifies which resources we should restore the status field.
-	// If nil, no objects are included.
+	// PreserveStatus specifies which resources we should restore the status field.
+	// If unset, no status will be restored.
 	// +optional
 	// +nullable
-	RestoreStatus *RestoreStatusSpec `json:"restoreStatus,omitempty"`
+	PreserveStatus *PreserveStatus `json:"preserveStatus,omitempty"`
 
 	// PreserveNodePorts specifies whether to restore old nodePorts from backup.
+	// If not specified, default to false.
 	// +optional
 	// +nullable
 	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
-
-	// ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
-	// The default value is 1 hour.
-	// +optional
-	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
 }
 
-type RestoreStatusSpec struct {
-	// IncludedResources specifies the resources to which will restore the status.
-	// If empty, it applies to all resources.
+// PreserveStatus specifies which resources we should restore the status field.
+// The logic implemented is that everything in the included list except those items in the excluded list should be included.
+// '*' in the includes list means "include everything", but it is not valid in the exclude list.
+type PreserveStatus struct {
+	// IncludedResources determines which resources will have their status restored.
+	// By default, if this list is empty, it means the status for ALL resources will be restored.
+	// For example:
+	// - If you want to restore the status only for deployments and services, set:
+	//   includedResources: ["deployments", "services"]
+	// - If you leave it empty, the status for all resources will be restored.
+	// Note: If a resource is listed in both IncludedResources and ExcludedResources, the exclusion takes precedence.
 	// +optional
 	// +nullable
 	IncludedResources []string `json:"includedResources,omitempty"`
 
-	// ExcludedResources specifies the resources to which will not restore the status.
+	// ExcludedResources lists out the resources that will NOT have their status restored.
+	// By default, if this list is empty, it means the status for NO resources will be excluded from restoration.
+	// For instance:
+	// - If you want to prevent restoring the status for pods and configmaps, set:
+	//   excludedResources: ["pods", "configmaps"]
+	// - If you leave it empty, no resources are excluded, and all will have their status restored (unless specified otherwise in IncludedResources).
+	// Note: Exclusions listed here take precedence over inclusions. So, if a resource is listed in both, its status will NOT be restored.
 	// +optional
 	// +nullable
 	ExcludedResources []string `json:"excludedResources,omitempty"`
@@ -112,7 +116,35 @@ type RestoreStatus struct {
 	// +optional
 	Phase string `json:"phase,omitempty"`
 
-	// RestoreDetails provides a detailed status for each restore in each cluster.
+	// Details provides a detailed status for each restore in each cluster.
 	// +optional
-	RestoreDetails []*velerov1.RestoreStatus `json:"restoreDetails,omitempty"`
+	Details []*RestoreDetails `json:"restoreDetails,omitempty"`
+}
+
+type RestoreDetails struct {
+	// ClusterName is the Name of the cluster where the restore is being performed.
+	// +optional
+	ClusterName string `json:"clusterName,omitempty"`
+
+	// ClusterKind is the kind of ClusterName recorded in Kurator.
+	// +optional
+	ClusterKind string `json:"clusterKind,omitempty"`
+
+	// RestoreNameInCluster is the name of the restore being performed within this cluster.
+	// This RestoreNameInCluster is unique in Storage.
+	// +optional
+	RestoreNameInCluster string `json:"restoreNameInCluster,omitempty"`
+
+	// RestoreStatusInCluster is the current status of the restore performed within this cluster.
+	// +optional
+	RestoreStatusInCluster *velerov1.RestoreStatus `json:"restoreStatusInCluster,omitempty"`
+}
+
+// RestoreList contains a list of Restore.
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type RestoreList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Restore `json:"items"`
 }

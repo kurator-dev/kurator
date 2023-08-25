@@ -16,17 +16,22 @@ limitations under the License.
 
 package v1alpha1
 
-import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
-// Destination defines a fleet or specific clusters.
+// Destination defines a target set of clusters, either through a fleet or by specifying them directly.
 type Destination struct {
-	// Fleet is the name of fleet.
-	// +required
-	Fleet string `json:"fleet"`
-	// ClusterSelector specifies the selectors to select the clusters within the fleet.
-	// If unspecified, all clusters in the fleet will be selected.
+	// Fleet represents the name of a fleet which determines a set of clusters.
+	// If Fleet is set, it will be used to determine the target clusters.
+	// If users wish to specify clusters directly, they can use the Clusters field.
 	// +optional
-	ClusterSelector *ClusterSelector `json:"clusterSelector,omitempty"`
+	Fleet string `json:"fleet,omitempty"`
+
+	// Clusters allows users to directly specify a set of destination clusters.
+	// +optional
+	Clusters []*corev1.ObjectReference `json:"clusters,omitempty"`
 }
 
 type ClusterSelector struct {
@@ -36,9 +41,9 @@ type ClusterSelector struct {
 	MatchLabels map[string]string `json:"matchLabels,omitempty"`
 }
 
-// Note: partly copied from https://github.com/"github.com/vmware-tanzu/velero/pkg/apis/backup_types.go
+// Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
 type ResourceFilter struct {
-	// IncludedNamespaces is a slice of namespace names to include objects from.
+	// IncludedNamespaces is a list of namespace names to include objects from.
 	// If empty, all namespaces are included.
 	// +optional
 	// +nullable
@@ -49,38 +54,53 @@ type ResourceFilter struct {
 	// +nullable
 	ExcludedNamespaces []string `json:"excludedNamespaces,omitempty"`
 
-	// IncludedResources is a slice of resource names to include in the backup.
-	// If empty, all resources are included.
+	// IncludedResources is a slice of API resource names to include in the backup.
+	// For example, we can populate this string array with ["deployments", "configmaps","clusterroles","storageclasses"], then we will select all resources of type deployments and configmaps.
+	// If empty, all API resources are included.
+	// Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
 	// +optional
 	// +nullable
 	IncludedResources []string `json:"includedResources,omitempty"`
 
 	// ExcludedResources is a slice of resource names that are not included in the backup.
+	// Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
 	// +optional
 	// +nullable
 	ExcludedResources []string `json:"excludedResources,omitempty"`
 
+	// IncludeClusterResources specifies whether cluster-scoped resources should be included for consideration in the backup.
+	// Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
+	// +optional
+	// +nullable
+	IncludeClusterResources *bool `json:"includeClusterResources,omitempty"`
+
 	// IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup.
+	// For example, we can populate this string array with ["storageclasses", "clusterroles"], then we will select all resources of type storageclasses and clusterroles,
 	// If set to "*", all cluster-scoped resource types are included.
 	// The default value is empty, which means only related cluster-scoped resources are included.
+	// Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
 	// +optional
 	// +nullable
 	IncludedClusterScopedResources []string `json:"includedClusterScopedResources,omitempty"`
 
 	// ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup.
 	// If set to "*", all cluster-scoped resource types are excluded. The default value is empty.
+	// Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
 	// +optional
 	// +nullable
 	ExcludedClusterScopedResources []string `json:"excludedClusterScopedResources,omitempty"`
 
 	// IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup.
+	// For example, we can populate this string array with ["deployments", "configmaps"], then we will select all resources of type deployments and configmaps,
 	// The default value is "*".
+	// Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
 	// +optional
 	// +nullable
 	IncludedNamespaceScopedResources []string `json:"includedNamespaceScopedResources,omitempty"`
 
 	// ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup.
 	// If set to "*", all namespace-scoped resource types are excluded. The default value is empty.
+	// Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
 	// +optional
 	// +nullable
 	ExcludedNamespaceScopedResources []string `json:"excludedNamespaceScopedResources,omitempty"`
@@ -97,9 +117,4 @@ type ResourceFilter struct {
 	// +optional
 	// +nullable
 	OrLabelSelectors []*metav1.LabelSelector `json:"orLabelSelectors,omitempty"`
-
-	// IncludeClusterResources specifies whether cluster-scoped resources should be included for consideration in the backup.
-	// +optional
-	// +nullable
-	IncludeClusterResources *bool `json:"includeClusterResources,omitempty"`
 }
