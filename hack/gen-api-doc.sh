@@ -19,7 +19,7 @@ if ! [ -x "$(command -v gen-crd-api-reference-docs)" ]; then
     util::install_tools github.com/ahmetb/gen-crd-api-reference-docs 45bac9a # 2023-03-28
 fi
 
-API_GROUPS=("cluster" "infra" "fleet" "apps")
+API_GROUPS=("cluster" "infra" "fleet" "apps" "backups")
 
 for APIGROUP in "${API_GROUPS[@]}"
 do
