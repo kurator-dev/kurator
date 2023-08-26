@@ -3,11 +3,7 @@ title: Unified Backup, Restore, and Migration with Velero in Kurator
 authors:
 - "@Xieql"
 reviewers:
-- "@robot"
-- TBD
 approvers:
-- "@robot"
-- TBD
 
 creation-date: 2023-08-18
 
@@ -47,7 +43,7 @@ The proposal aims to enhance Kurator by introducing unified backup, restore, and
 
 With the increasing complexity and distribution of cloud-native applications, there's a pressing need for a unified system that can efficiently handle backup, restore, and migration tasks. 
 
-By introducing these capabilities in Kurator, we aim to provide users with a robust solution that offers a unified operational view, simplifying the process of migrating applications and data across clusters.
+By introducing these capabilities in Kurator, we aim to provide users with a robust solution that offers a unified operational view, simplifying the process of backup, restore and migrate applications and data across clusters.
 
 #### Goals
 
@@ -56,15 +52,22 @@ List the specific goals of the KEP. What is it trying to achieve? How will we
 know that this has succeeded?
 -->
 
-- Automatically install Velero for clusters in the fleet.
-- Support automated unified backup for individual namespaces, multiple namespaces, or an entire cluster within the fleet.
-- Support automated unified backup for either multiple clusters or an individual cluster within the fleet.
-- Support automated unified restore for either multiple clusters or an individual cluster within the fleet
-- Support automated unified migration for either multiple clusters or an individual cluster within the fleet.
-- Support automated unified scheduled backup; If the current backups are not scheduled, allow users to easily convert it into scheduled backup.
-- Support filtering resources for backup, restore and migration based on type, namespace or other conditions.
-- User can view the current execution status of all backups, restores, and migrations from a single location.
-- Utilize Restic for file-level backup of Persistent Volumes (PVs) across clusters, ensuring cross-cluster and cross-cloud compatibility.
+The following three capabilities only require users to declare the desired API state in one place, and Kurator will automatically handle all subsequent operations, 
+including the installation of Velero on each cluster, execution of specific operations, and unified aggregation of the status of each operation.
+
+- **unified backup**
+    - Support for individual namespaces, multiple namespaces, or an entire cluster within the fleet.
+    - Support for almost any type of Kubernetes volume, such as EFS, AzureFile, NFS, emptyDir, local, or any other volume type.
+    - Support for different policy with customization rules and resources filter based on `name`, `namespace` or `label`.
+    - Support for apply those policy in multiple clusters or an individual cluster within the fleet.
+    - Support for scheduled backup.
+- **unified backup**
+    - Support for restore all resource from backup.
+    - Support for partly restore by resources filter for each backup policy.
+- **unified migrate**
+    - Support for migrate the cluster' resource from one source cluster to one or multi target clusters.
+    - Support for customization rules and resources filter.
+
 
 #### Non-Goals
 
@@ -73,20 +76,11 @@ What is out of scope for this KEP? Listing non-goals helps to focus discussion
 and make progress.
 -->
 
-
-
-- **Development Environment**: We will limit the development and testing environment to on-premise clusters and [Kind](https://kind.sigs.k8s.io/).
-- **Object Storage Service Testing**: Due to current limitations, we will only test with Minio as the Object Storage Service (OSS). Testing with other types of OSS is not within the scope of this proposal.
-- **PV Backup Solution**: We will solely rely on the [Restic](https://github.com/restic/restic) solution for storage involving Persistent Volumes.
-  This decision is based on the limitations of snapshot-based solutions in cross-cluster functionality. For more details, refer to the [Velero documentation](https://velero.io/docs/v1.12/file-system-backup/).
-- **Volume Snapshot Location(vsl)**: We will remove all configurations related to vsl.
-  The vsl method, which refers to the location where volume snapshots are stored, does not support cross-cloud and cross-cluster scenarios.
-  Moreover, we currently lack the conditions to test vsl.
-- **Hook capability**
-  In Velero, the hook capability allows users to specify custom commands to be executed during the backup or restore process.
-  These hooks can be used to capture application-consistent backups or to restore application data.
-  However, initially, we will not implement this hook capability in our integration.
-  We will decide on adding this feature in the future based on user feedback and requirements.
+- **support for Volume Snapshot** Many commonly used types, such as EFS and NFS, do not have a native snapshot concept. 
+Besides, Snapshot will need tie to a specific storage platform. 
+Moreover,  we currently lack the conditions to test Snapshot.
+- **support for velero advanced features** Initially, we will not implement the advanced features like hook capability in our integration.
+We will decide on adding this feature in the future based on user feedback and requirements.
 
 
 ### Proposal
@@ -105,14 +99,14 @@ The core of this proposal revolves around three primary tasks:
 1. **Design of Custom Resource Definitions (CRDs)** Design three distinct CRDs to encapsulate the functionalities of unified backup, restore, and migration:
 
 - Unified Backup: 
-    - Parameters used during Velero installation for backup.
+    - Storage that details where the backup data should be stored.
     - Options for enabling scheduled backups and defining the associated scheduling strategy.
     - Capability to segment multiple sub-clusters within the fleet arbitrarily (achieved through 'select') and apply different backup strategies for these sub-cluster groups.
 - Unified Restore: 
     - Unified backup which Restore based on.
     - Options for restore partial content.
 - Unified Migration: 
-    - Parameters used during Velero installation for backup.
+    - Storage that details where the backup data should be stored.
     - One migration source.
     - One or more migration destination clusters.
 
@@ -169,13 +163,10 @@ Go in to as much detail as necessary here.
 This might be a good place to talk about core concepts and how they relate.
 -->
 
-
-- **Restic Limitations**
-Restic does not support the hostpath PV, which means it cannot be tested in a kind cluster. 
-If a backup is attempted with a hostpath type, Velero will skip this resource and continue with the subsequent resources. Reference [Velero issue](https://github.com/vmware-tanzu/velero/issues/4962)
-
-- **Testing with Kind**
-When testing with the kind cluster, it's recommended to use the busybox example instead of the nginx example provided by Velero.
+- **hostPath volumes will be skipped when backup**
+If we want backup an application with hostPath volumes, we need change hostPath type to local type, 
+or Velero will skip this resource with hostPath volumes and continue with the subsequent resources.
+It is Worth mentioning is that Kind cluster use hostPath volumes. see [Velero issue](https://github.com/vmware-tanzu/velero/issues/4962)
 
 - **Backup Frequency**
 If the backup frequency is set too short, with the default backup retention period of 30 days, it might lead to a large amount of data in the OSS, potentially causing system crashes. 
@@ -183,15 +174,6 @@ It's advisable to highlight this in the documentation for users.
 
 - **Velero Readiness**
 Kurator needs to ensure that Velero is ready on each cluster (including the ability to connect to the specified OSS) before proceeding with further operations.
-
-- **Velero Version Differences**
-There are significant differences in fields between Velero versions before and after 1.10. 
-
-- **Local Cluster Testing**
-For local cluster testing, if there's no storage class (SC) available, it's essential to install an SC to ensure the busybox example with PV runs correctly. 
-It's recommended to set the PV type to local instead of hostpath.
-
-
 
 
 #### Risks and Mitigations
@@ -212,10 +194,8 @@ It is necessary to remind users to ensure that the resources are in a normal sta
 By integrating Velero, we aim to minimize this risk, but it's essential to have regular checks and validations.
 
 - **Version Compatibility**
-As mentioned, different versions of Velero have different fields. 
-There's a risk of compatibility issues if clusters are running different versions. It's crucial to ensure all clusters run a supported version of Velero. 
-The most recent version of Velero is 1.12, and it has been tested exclusively with versions ranging from 1.25.7 to 1.27.3.
-
+It is recommended that users use a newer version of Kubernetes, as older versions are not tested with Velero. 
+For example, in the latest version of Velero, versions prior to 1.25 have not been tested.
 
 - **Resource Limitations**
 Intensive backup operations might strain the resources of the OSS or the clusters.
@@ -242,49 +222,212 @@ Compared to Velero, we might need to make adjustments to the Unified Backup API,
 Here's the preliminary design for the Unified Backup API:
 
 ```console
-apiVersion: backups.kurator.dev/v1alpha1
-kind: Backup
-metadata:
-  name: testBackup
-  namespace: default
-spec:
-  schedule:
-    open: true
-    cron: 0 0 * * *
-  destination:
-    fleet: quickstart
-  veleroInstall:
-    xxx
-  backupPolicies:
-    - destination:
-        clusterSelector:
-          matchLabels:
-            env: test
-      backupPolicy:
-        xxx
-    - destination:
-        clusterSelector:
-          matchLabels:
-            env: dev
-      backupPolicy:
-        xxx
-status:
-  - clusterName:
-    clusterBackupStatus:
-  - clusterName:
-    clusterBackupStatus:
-  - clusterName:
-    clusterBackupStatus:
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Schedule",type="string",JSONPath=".spec.schedule",description="Schedule defines when to run the Backup using a Cron expression.If not set, the backup will be executed only once"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Phase of the Backup"
+
+// Backup is the schema for the Backup's API.
+type Backup struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              BackupSpec   `json:"spec,omitempty"`
+	Status            BackupStatus `json:"status,omitempty"`
+}
+
+type BackupSpec struct {
+	// Storage details where the backup data should be stored.
+	Storage BackupStorage `json:"storage"`
+
+	// Schedule defines when to run the Backup using a Cron expression.
+	// If not set, the backup will be executed only once.
+	// +optional
+	Schedule string `json:"schedule,omitempty"`
+
+	// Destination indicates the default clusters where backups should be executed.
+	// Can be overridden by individual Policies.
+	// +optional
+	Destination *Destination `json:"destination,omitempty"`
+
+	// Policies are the rules defining how backups should be performed.
+	// +optional
+	Policies []*BackupSyncPolicy `json:"policies,omitempty"`
+}
+
+type BackupStorage struct {
+	// Location specifies the location where the backup data will be stored.
+	Location BackupStorageLocation `json:"location"`
+
+	// Credentials to access the backup storage location.
+	Credentials string `json:"credentials"`
+}
+
+type BackupStorageLocation struct {
+	// Bucket specifies the storage bucket name.
+	Bucket string `json:"bucket"`
+	// Provider specifies the storage provider type (e.g., aws).
+	Provider string `json:"provider"`
+	// S3Url provides the endpoint URL for S3-compatible storage.
+	S3Url string `json:"s3Url"`
+	// Region specifies the region of the storage.
+	Region string `json:"region"`
+}
+
+type BackupSyncPolicy struct {
+	// Name of the BackupSyncPolicy.
+	// If not provided, a default name will be generated.
+	// This field is recommended for users to set, so that during the restore process, customized restoration can be performed based on this name.
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// Destination indicates where the backup should be executed.
+	// +optional
+	Destination Destination `json:"destination,omitempty"`
+
+	// Policy outlines the specific rules and filters applied during the backup process.
+	// It determines which resources are selected for backup and any specific conditions or procedures to follow.
+	// Users can customize this policy to ensure that the backup process aligns with their specific requirements and constraints.
+	// +optional
+	Policy BackupPolicy `json:"policy,omitempty"`
+}
+
+// Note: partly copied from https://github.com/vmware-tanzu/velero/pkg/apis/backup_types.go
+// BackupSpec defines the specification for a backup.
+type BackupPolicy struct {
+	// ResourceFilter specifies which resources should be included in the backup.
+	// It acts as a selective criterion to determine which resources are relevant for backup.
+	// If not set, the backup process will consider all resources. This filter helps in optimizing the backup process by excluding unnecessary data.
+	// +optional
+	ResourceFilter *ResourceFilter `json:"resourceFilter,omitempty"`
+
+	// TTL is a time.Duration-parseable string describing how long the Backup should be retained for.
+	// +optional
+	TTL metav1.Duration `json:"ttl,omitempty"`
+
+	// OrderedResources specifies the backup order of resources of specific Kind.
+	// The map key is the resource name and value is a list of object names separated by commas.
+	// Each resource name has format "namespace/objectname".  For cluster resources, simply use "objectname".
+	// +optional
+	// +nullable
+	OrderedResources map[string]string `json:"orderedResources,omitempty"`
+
+	// ItemOperationTimeout specifies the time used to wait for asynchronous BackupItemAction operations.
+	// The default value is 1 hour.
+	// +optional
+	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
+}
+
+type BackupStatus struct {
+	// Conditions represent the current state of the backup operation.
+	// +optional
+	Conditions capiv1.Conditions `json:"conditions,omitempty"`
+
+	// Phase represents the current phase of the backup operation.
+	// +optional
+	Phase string `json:"phase,omitempty"`
+
+	// BackupDetails provides a detailed status for each backup in each cluster.
+	// +optional
+	BackupDetails []*velerov1.BackupStatus `json:"backupDetails,omitempty"`
+}
 ```
 
-###### Backup Note
+Here is the details about `Destination` and `ResourceFilter`
 
-- The Velero support **Global Scope Resource Filtering**: When specific ns-scope resources are designated, if their descriptions involve cluster-scope resources, 
+```console
+// Destination defines a fleet or specific clusters.
+type Destination struct {
+	// Fleet is the name of fleet.
+	// +required
+	Fleet string `json:"fleet"`
+	// ClusterSelector specifies the selectors to select the clusters within the fleet.
+	// If unspecified, all clusters in the fleet will be selected.
+	// +optional
+	ClusterSelector *ClusterSelector `json:"clusterSelector,omitempty"`
+}
+
+type ClusterSelector struct {
+	// MatchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value".
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	// +optional
+	MatchLabels map[string]string `json:"matchLabels,omitempty"`
+}
+
+// Note: partly copied from https://github.com/"github.com/vmware-tanzu/velero/pkg/apis/backup_types.go
+type ResourceFilter struct {
+	// IncludedNamespaces is a slice of namespace names to include objects from.
+	// If empty, all namespaces are included.
+	// +optional
+	// +nullable
+	IncludedNamespaces []string `json:"includedNamespaces,omitempty"`
+
+	// ExcludedNamespaces contains a list of namespaces that are not included in the backup.
+	// +optional
+	// +nullable
+	ExcludedNamespaces []string `json:"excludedNamespaces,omitempty"`
+
+	// IncludedResources is a slice of resource names to include in the backup.
+	// If empty, all resources are included.
+	// +optional
+	// +nullable
+	IncludedResources []string `json:"includedResources,omitempty"`
+
+	// ExcludedResources is a slice of resource names that are not included in the backup.
+	// +optional
+	// +nullable
+	ExcludedResources []string `json:"excludedResources,omitempty"`
+
+	// IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup.
+	// If set to "*", all cluster-scoped resource types are included.
+	// The default value is empty, which means only related cluster-scoped resources are included.
+	// +optional
+	// +nullable
+	IncludedClusterScopedResources []string `json:"includedClusterScopedResources,omitempty"`
+
+	// ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup.
+	// If set to "*", all cluster-scoped resource types are excluded. The default value is empty.
+	// +optional
+	// +nullable
+	ExcludedClusterScopedResources []string `json:"excludedClusterScopedResources,omitempty"`
+
+	// IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup.
+	// The default value is "*".
+	// +optional
+	// +nullable
+	IncludedNamespaceScopedResources []string `json:"includedNamespaceScopedResources,omitempty"`
+
+	// ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup.
+	// If set to "*", all namespace-scoped resource types are excluded. The default value is empty.
+	// +optional
+	// +nullable
+	ExcludedNamespaceScopedResources []string `json:"excludedNamespaceScopedResources,omitempty"`
+
+	// LabelSelector is a metav1.LabelSelector to filter with when adding individual objects to the backup.
+	// If empty or nil, all objects are included. Optional.
+	// +optional
+	// +nullable
+	LabelSelector *metav1.LabelSelector `json:"labelSelector,omitempty"`
+
+	// OrLabelSelectors is list of metav1.LabelSelector to filter with when adding individual objects to the backup.
+	// If multiple provided they will be joined by the OR operator.
+	// LabelSelector as well as OrLabelSelectors cannot co-exist in backup request, only one of them can be used.
+	// +optional
+	// +nullable
+	OrLabelSelectors []*metav1.LabelSelector `json:"orLabelSelectors,omitempty"`
+
+	// IncludeClusterResources specifies whether cluster-scoped resources should be included for consideration in the backup.
+	// +optional
+	// +nullable
+	IncludeClusterResources *bool `json:"includeClusterResources,omitempty"`
+}
+```
+
+
+The Velero support **Global Scope Resource Filtering**: When specific ns-scope resources are designated, if their descriptions involve cluster-scope resources, 
 Velero will automatically back up these essential resources without requiring users to configure them separately. However, users can still manually configure the global scope resource filtering.
-- Velero inherently supports configuration reusability to some extent through the ResourcePolicy field. 
-Users can utilize this field to reference other resource descriptions.
-Fundamentally, Kurator implements this capability more comprehensively and robustly. 
-Furthermore, since the backup name in Kurator might change (as backups cannot have duplicate names, and backups from multiple clusters reusing configurations must have distinct names), users cannot set it directly, leading us to remove this field.
 
 
 ##### Unified Restore API
@@ -292,33 +435,101 @@ Furthermore, since the backup name in Kurator might change (as backups cannot ha
 Below is the initial design for the Unified Restore API:
 
 ```console
-apiVersion: backups.kurator.dev/v1alpha1
-kind: Restore
-metadata:
-  name: testRestore
-  namespace: default
-spec:
-  fleetBackup: testBackup
-  restorePolicies:
-    - destination:
-        clusterSelector:
-          matchLabels:
-            policy: policy1
-      restorePolicy:
-        xxx
-    - destination:
-        clusterSelector:
-          matchLabels:
-            policy: policy2
-      restorePolicy:
-        xxx
-status:
-  - clusterName:
-    clusterRestoreStatus:
-  - clusterName:
-    clusterRestoreStatus:
-  - clusterName:
-    clusterRestoreStatus:
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Phase of the Restore"
+
+// Restore is the schema for the Restore's API.
+type Restore struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              RestoreSpec   `json:"spec,omitempty"`
+	Status            RestoreStatus `json:"status,omitempty"`
+}
+
+type RestoreSpec struct {
+	// BackupName specifies the backup on which this restore operation is based.
+	BackupName string `json:"backupName"`
+
+	// Policies defines the customization rules for the restore.
+	// If null, the backup will be fully restored using default settings.
+	// +optional
+	Policies []*RestoreSyncPolicy `json:"policies,omitempty"`
+}
+
+type RestoreSyncPolicy struct {
+	// Name is the unique identifier for this restore policy. It should match the name in the backup policy.
+	// to ensure the restore policy corresponds to the correct backup policy.
+	// If a name provided by the user doesn't match any backup policy, the restore operation will fail
+	// and return a clear error message.
+	Name string `json:"name"`
+
+	// Policy indicates the rules and filters for the restore.
+	// +optional
+	Policy RestorePolicy `json:"policy,omitempty"`
+}
+
+// Note: partly copied from https://github.com/vmware-tanzu/velero/pkg/apis/restore_types.go
+// RestorePolicy defines the specification for a Velero restore.
+type RestorePolicy struct {
+	// ResourceFilter is the filter for the resources to be restored.
+	// If not set, all resources from the backup will be restored.
+	// +optional
+	ResourceFilter *ResourceFilter `json:"resourceFilter,omitempty"`
+
+	// NamespaceMapping is a map of source namespace names
+	// to target namespace names to restore into.
+	// Any source namespaces not included in the map will be restored into
+	// namespaces of the same name.
+	// +optional
+	NamespaceMapping map[string]string `json:"namespaceMapping,omitempty"`
+
+	// RestoreStatus specifies which resources we should restore the status field.
+	// If nil, no objects are included.
+	// +optional
+	// +nullable
+	RestoreStatus *RestoreStatusSpec `json:"restoreStatus,omitempty"`
+
+	// PreserveNodePorts specifies whether to restore old nodePorts from backup.
+	// +optional
+	// +nullable
+	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
+
+	// ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
+	// The default value is 1 hour.
+	// +optional
+	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
+}
+
+type RestoreStatusSpec struct {
+	// IncludedResources specifies the resources to which will restore the status.
+	// If empty, it applies to all resources.
+	// +optional
+	// +nullable
+	IncludedResources []string `json:"includedResources,omitempty"`
+
+	// ExcludedResources specifies the resources to which will not restore the status.
+	// +optional
+	// +nullable
+	ExcludedResources []string `json:"excludedResources,omitempty"`
+}
+
+type RestoreStatus struct {
+	// Conditions represent the current state of the restore operation.
+	// +optional
+	Conditions capiv1.Conditions `json:"conditions,omitempty"`
+
+	// Phase represents the current phase of the restore operation.
+	// +optional
+	Phase string `json:"phase,omitempty"`
+
+	// RestoreDetails provides a detailed status for each restore in each cluster.
+	// +optional
+	RestoreDetails []*velerov1.RestoreStatus `json:"restoreDetails,omitempty"`
+}
 ```
 
 ##### Unified Migration API
@@ -326,28 +537,85 @@ status:
 Presenting the initial design for the Unified Migration API:
 
 ```console
-apiVersion: backups.kurator.dev/v1alpha1
-kind: Migration
-metadata:
-  name: testMigration
-  namespace: default
-spec:
-  originCluster:
-  destination:
-    clusterSelector:
-      matchLabels:
-        target: target1
-  # same as backupPolicy
-  migrationPolicies
-    xxx
-status:
-  migrationStatus:
-  - originClusterName:
-    originClustereStatus:
-  - destinationClusterName:
-    destinationClusterStatus:
-  - destinationClusterName:
-    destinationClusterStatus:
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Phase of the Migrate"
+
+// Migrate is the schema for the Migrate's API.
+type Migrate struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              MigrateSpec   `json:"spec,omitempty"`
+	Status            MigrateStatus `json:"status,omitempty"`
+}
+
+type MigrateSpec struct {
+	// Storage details where the data should be stored.
+	Storage BackupStorage `json:"storage"`
+
+	// SourceCluster represents the source cluster for migration.
+	SourceCluster *Destination `json:"sourceCluster"`
+
+	// TargetCluster represents the target clusters for migration.
+	TargetCluster *Destination `json:"targetCluster"`
+
+	// Policy defines the rules for the migration.
+	// +optional
+	Policy *MigratePolicy `json:"policy,omitempty"`
+}
+
+type MigratePolicy struct {
+	// ResourceFilter specifies the resources to be included in the migration.
+	// If not set, all resources in  will be migrated.
+	// +optional
+	ResourceFilter *ResourceFilter `json:"resourceFilter,omitempty"`
+
+	// OrderedResources specifies the backup order of resources of specific Kind.
+	// The map key is the resource name and value is a list of object names separated by commas.
+	// Each resource name has format "namespace/objectname".  For cluster resources, simply use "objectname".
+	// +optional
+	// +nullable
+	OrderedResources map[string]string `json:"orderedResources,omitempty"`
+
+	// NamespaceMapping is a map of source namespace names to target namespace names to migrate into.
+	// Any source namespaces not included in the map will be migrated into namespaces of the same name.
+	// +optional
+	NamespaceMapping map[string]string `json:"namespaceMapping,omitempty"`
+
+	// MigrateStatus specifies which resources we should migrate the status field.
+	// If nil, no objects are included. Optional.
+	// +optional
+	// +nullable
+	MigrateStatus *RestoreStatusSpec `json:"migrateStatus,omitempty"`
+
+	// PreserveNodePorts specifies whether to migrate old nodePorts from source cluster to target cluster.
+	// +optional
+	// +nullable
+	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
+
+	// ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
+	// The default value is 1 hour.
+	// +optional
+	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
+}
+
+type MigrateStatus struct {
+	// Conditions represent the current state of the migration operation.
+	// +optional
+	Conditions capiv1.Conditions `json:"conditions,omitempty"`
+
+	// Phase represents the current phase of the migration operation.
+	// +optional
+	Phase string `json:"phase,omitempty"`
+
+	// SourceClusterStatus provides a detailed status for backup in SourceCluster.
+	SourceClusterStatus *velerov1.BackupStatus `json:"sourceClusterStatus,omitempty"`
+
+	// TargetClusterStatus provides a detailed status for each restore in each TargetCluster.
+	TargetClusterStatus []*velerov1.RestoreStatus `json:"targetClusterStatus,omitempty"`
+}
 ```
 
 #### Flow Diagrams
@@ -360,9 +628,7 @@ These diagrams illustrate the various steps involved in backup, restore, and mig
 
 This is the sequence diagram for unified backup.
 
-{{< image width="100%"
-    link="./image/backup.svg"
-    >}}
+![backup](./image/backup.svg)
 
 ##### Restore Flow Diagram
 
@@ -372,9 +638,7 @@ The flow for unified restore is quite similar with unified backup, with the main
 
 Here's the flow diagram for unified migration.
 
-{{< image width="100%"
-    link="./image/migration.svg"
-    >}}
+![migrate](./image/migrate.svg)
 
 #### Test Plan
 
