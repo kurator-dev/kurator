@@ -28,7 +28,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
 // +kubebuilder:subresource:status
-//
+
 // Application is the schema for the application's API.
 type Application struct {
 	metav1.TypeMeta   `json:",inline"`

@@ -26,7 +26,7 @@ import (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Ready",type="boolean",JSONPath=".status.ready",description="Indicates if the AttachedClusters are ready"
+// +kubebuilder:printcolumn:name="Ready",type="boolean",JSONPath=".status.ready",description="Indicates if the AttachedCluster is ready"
 
 // AttachedCluster is the schema for the external cluster that are not created by kurator.
 type AttachedCluster struct {

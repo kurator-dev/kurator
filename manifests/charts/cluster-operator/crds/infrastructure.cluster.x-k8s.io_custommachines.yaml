@@ -15,7 +15,12 @@ spec:
     singular: custommachine
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: Indicates if the CustomMachine is ready.
+      jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: CustomMachine is the schema for kubernetes nodes.
@@ -182,8 +187,7 @@ spec:
             description: Current status of the machine.
             properties:
               ready:
-                description: 'TODO: add state. TODO: display with kubectl Indicate
-                  whether the machines are ready.'
+                description: Indicate whether the machines are ready.
                 type: boolean
             type: object
         type: object
