@@ -81,6 +81,8 @@ type PluginConfig struct {
 	Grafana *GrafanaConfig `json:"grafana,omitempty"`
 	// Policy defines the configuration for the ploicy management.
 	Policy *PolicyConfig `json:"policy,omitempty"`
+	// Backup defines the configuration for the backup engine(Velero).
+	Backup *BackupConfig `json:"backup,omitempty"`
 }
 
 type MetricConfig struct {
@@ -246,6 +248,72 @@ type PodSecurityPolicy struct {
 	// +kubebuilder:default=Audit
 	// +optional
 	ValidationFailureAction string `json:"validationFailureAction,omitempty"`
+}
+
+// BackupConfig defines the configuration for the Velero backup engine.
+type BackupConfig struct {
+	// Chart defines the helm chart config of the velero.
+	// default values is
+	//
+	// chart:
+	//   repository: https://vmware-tanzu.github.io/helm-charts
+	//   name: velero
+	//   version: 5.0.2
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+
+	// Storage details where the backup data should be stored.
+	Storage BackupStorage `json:"storage"`
+
+	// VeleroImage Details of the container image to use in the Velero deployment & daemonset
+	// default values is
+	//
+	//  repository: velero/velero
+	//  tag: v1.11.1
+	//  pullPolicy: IfNotPresent
+	//
+	// +optional
+	VeleroImage apiextensionsv1.JSON `json:"veleroImage,omitempty"`
+
+	// InitContainers to add to the Velero deployment's pod spec.
+	// default values is
+	//
+	// - name: velero-plugin-for-aws
+	//   image: velero/velero-plugin-for-aws:v1.7.1
+	//   imagePullPolicy: IfNotPresent
+	//   volumeMounts:
+	//     - mountPath: /target
+	//       name: plugins
+	//
+	// +optional
+	InitContainers apiextensionsv1.JSON `json:"initContainers,omitempty"`
+}
+
+type BackupStorage struct {
+	// Location specifies the location where the backup data will be stored.
+	Location BackupStorageLocation `json:"location"`
+
+	// Credentials to access the backup storage location.
+	Credentials BackupCredentials `json:"credentials"`
+}
+
+type BackupStorageLocation struct {
+	// Bucket specifies the storage bucket name.
+	Bucket string `json:"bucket"`
+	// Provider specifies the storage provider type (e.g., aws).
+	Provider string `json:"provider"`
+	// S3Url provides the endpoint URL for S3-compatible storage.
+	S3Url string `json:"s3Url"`
+	// Region specifies the region of the storage.
+	Region string `json:"region"`
+}
+
+type BackupCredentials struct {
+	// AccessKeyID is the identifier for the access key.
+	AccessKeyID string `json:"accessKeyID"`
+	// SecretAccessKey is the secret access key associated with AccessKeyID
+	SecretAccessKey string `json:"secretAccessKey"`
 }
 
 // FleetStatus defines the observed state of the fleet
