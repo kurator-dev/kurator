@@ -39,11 +39,15 @@ This section is for explicitly listing the motivation, goals, and non-goals of
 this KEP.  Describe why the change is important and the benefits to users.
 -->
 
-The proposal aims to enhance Kurator by introducing unified backup, restore, and migration capabilities.
+In a multi-cloud environment, operators face the challenge of regularly backing up their Kubernetes cluster resources to comply with compliance and disaster recovery requirements. 
+Manual backups for each cluster are time-consuming and error-prone.
 
-With the increasing complexity and distribution of cloud-native applications, there's a pressing need for a unified system that can efficiently handle backup, restore, and migration tasks. 
+Meanwhile, in Continuous Integration and Continuous Deployment (CI/CD) environments, DevOps engineers need precise control over selecting and backing up specific Kubernetes cluster resources as per their needs.
 
-By introducing these capabilities in Kurator, we aim to provide users with a robust solution that offers a unified operational view, simplifying the process of backup, restore and migrate applications and data across clusters.
+To address these challenges, this proposal aims to enhance Kurator by introducing unified backup, restore, and migration capabilities.
+
+By incorporating these capabilities into Kurator, we aim to provide users with a robust and streamlined solution. 
+This will offer a unified operational view, simplifying the process of backing up, restoring, and migrating applications and data across clusters.
 
 #### Goals
 
@@ -94,30 +98,13 @@ The "Design Details" section below is for the real
 nitty-gritty.
 -->
 
-The core of this proposal revolves around three primary tasks:
+This proposal aims to introduce unified backup, restore, and migration capabilities into Kurator. The main objectives of this proposal are as follows:
 
-1. **Design of Custom Resource Definitions (CRDs)** Design three distinct CRDs to encapsulate the functionalities of unified backup, restore, and migration:
+Custom Resource Definitions (CRDs): Design three CRDs to encompass the functionalities of unified backup, restore, and migration. These CRDs will provide a structured approach for defining storage locations, scheduling backups, restoring partial content, and specifying migration sources and destinations.
 
-- Unified Backup: 
-    - Options for enabling scheduled backups and defining the associated scheduling strategy.
-    - Capability to segment multiple sub-clusters within the fleet arbitrarily (achieved through 'select') and apply different backup strategies for these sub-cluster groups.
-- Unified Restore: 
-    - Unified backup which Restore based on.
-    - Options for restore partial content.
-- Unified Migration: 
-    - One migration source.
-    - One or more migration destination clusters.
+Fleet-Manager Implementation: The fleet-manager component will be responsible for monitoring the CRDs and executing the defined functionalities. It will install Velero on fleet clusters and handle potential errors or exceptions to ensure smooth operations.
 
-1. **Implementation through Fleet-Manager** The fleet-manager will actively monitor these CRDs. Based on user configurations, it will:
-
-- Install Velero on each fleet clusters.
-- Execute the functionalities of unified backup, restore, and migration as defined by the CRDs.
-- Handle potential errors or exceptions, ensuring smooth operations.
-
-1. **Status Aggregation** The fleet-manager will:
-
-- Aggregate backup and restoration statuses from each cluster, reflecting them within the CRD's status section.
-- Summarize migration stages, updating the CRD's status section accordingly.
+By incorporating these enhancements, Kurator will offer users a robust and streamlined solution for managing backup, restore, and migration tasks, simplifying the overall operational process
 
 #### User Stories (Optional)
 
@@ -132,9 +119,7 @@ bogged down.
 
 **User Role**: Operator managing multi-cluster Kubernetes environments
 
-**Scenario**: In a multi-cloud environment, operations engineers need to periodically back up their Kubernetes cluster resources to meet compliance and disaster recovery requirements. Manually backing up each cluster is time-consuming and prone to errors.
-
-**Feature**: Use the automated Velero installation tool, supporting automatic unified backup, restore, and migration settings for multiple clusters in the fleet. Configure backup policies for multiple clusters at once and automatically execute them as scheduled.
+**Feature**: With the enhanced Kurator, Operator can easily configure backup policies for multiple clusters simultaneously and schedule automated backups.
 
 **Value**: Provides a streamlined, automated way to manage backup and recovery across multiple clusters uniformly. Reduces human errors, ensuring data continuity and compliance.
 
@@ -144,9 +129,7 @@ bogged down.
 
 **User Role**: DevOps Engineer
 
-**Scenario**: In a Continuous Integration and Continuous Deployment (CI/CD) environment, DevOps engineers need to be able to precisely select Kubernetes cluster resources to back up and restore as needed.
-
-**Feature**: Supports scheduled backups and the ability to filter resources for backup and restore based on Type, Namespace, and other conditions.
+**Feature**: The enhanced Kurator offers advanced functionality such as flexible resource filtering options based on Type, Namespace, and other conditions allows engineer to precisely choose the resources to back up, restore and migrate cluster resource as needed.
 
 **Value**: Ability to flexibly choose backup resources and precisely restore needed resources, making the DevOps process more efficient and flexible.
 
@@ -247,7 +230,7 @@ type BackupSpec struct {
 	// +optional
 	Schedule string `json:"schedule,omitempty"`
 
-	// Destination indicates the default clusters where backups should be performed.
+	// Destination indicates the clusters where backups should be performed.
 	// +optional
 	Destination *Destination `json:"destination,omitempty"`
 
@@ -256,8 +239,8 @@ type BackupSpec struct {
 	Policy *BackupPolicy `json:"policy,omitempty"`
 }
 
-// Note: partly copied from https://github.com/vmware-tanzu/velero/pkg/apis/backup_types.go
-// BackupSpec defines the specification for a backup.
+// Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
+// BackupPolicy defines the specification for a backup policy.
 type BackupPolicy struct {
 	// ResourceFilter specifies which resources should be included in the backup.
 	// It acts as a selective criterion to determine which resources are relevant for backup.
@@ -284,11 +267,6 @@ type BackupPolicy struct {
 	// +optional
 	// +nullable
 	OrderedResources map[string]string `json:"orderedResources,omitempty"`
-
-	// ItemOperationTimeout specifies the time used to wait for asynchronous BackupItemAction operations.
-	// The default value is 1 hour.
-	// +optional
-	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
 }
 
 type BackupStatus struct {
@@ -365,9 +343,9 @@ type ClusterSelector struct {
 	MatchLabels map[string]string `json:"matchLabels,omitempty"`
 }
 
-// Note: partly copied from https://github.com/"github.com/vmware-tanzu/velero/pkg/apis/backup_types.go
+// Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
 type ResourceFilter struct {
-	// IncludedNamespaces is a slice of namespace names to include objects from.
+	// IncludedNamespaces is a list of namespace names to include objects from.
 	// If empty, all namespaces are included.
 	// +optional
 	// +nullable
@@ -378,9 +356,9 @@ type ResourceFilter struct {
 	// +nullable
 	ExcludedNamespaces []string `json:"excludedNamespaces,omitempty"`
 
-	// IncludedResources is a slice of resource names to include in the backup.
-	// For example, we can populate this string array with "deployments" and "configmaps", then we will select all resources of type deployments and configmaps,
-	// If empty, all resources are included.
+	// IncludedResources is a slice of API resource names to include in the backup.
+	// For example, we can populate this string array with "deployments" and "configmaps", then we will select all resources of type deployments and configmaps.
+	// If empty, all API resources are included.
 	// Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
 	// +optional
 	// +nullable
@@ -497,24 +475,20 @@ type RestorePolicy struct {
 	// +optional
 	NamespaceMapping map[string]string `json:"namespaceMapping,omitempty"`
 
-	// RestoreStatus specifies which resources we should restore the status field.
-	// If nil, no objects are included.
+	// ReserveStatus specifies which resources we should restore the status field.
+	// If unset, no status will be restored.
 	// +optional
 	// +nullable
-	RestoreStatus *RestoreStatusSpec `json:"restoreStatus,omitempty"`
+	ReserveStatus  *ReserveStatusSpec `json:"restoreStatus,omitempty"`
 
 	// PreserveNodePorts specifies whether to restore old nodePorts from backup.
+	// 
 	// +optional
 	// +nullable
 	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
-
-	// ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
-	// The default value is 1 hour.
-	// +optional
-	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
 }
 
-type RestoreStatusSpec struct {
+type ReserveStatusSpec struct {
 	// IncludedResources specifies the resources to which will restore the status.
 	// If empty, it applies to all resources.
 	// +optional
@@ -610,6 +584,13 @@ type MigratePolicy struct {
 	// OrderedResources specifies the backup order of resources of specific Kind.
 	// The map key is the resource name and value is a list of object names separated by commas.
 	// Each resource name has format "namespace/objectname".  For cluster resources, simply use "objectname".
+	// For example, if you have a specific order for pods, such as "pod1, pod2, pod3" with all belonging to the "ns1" namespace,
+	// and a specific order for persistentvolumes, such as "pv4, pv8", you can use the orderedResources field in YAML format as shown below:
+	// ```yaml
+	// orderedResources:
+	//  pods: "ns1/pod1, ns1/pod2, ns1/pod3"
+	//  persistentvolumes: "pv4, pv8"
+	// ```
 	// +optional
 	// +nullable
 	OrderedResources map[string]string `json:"orderedResources,omitempty"`
@@ -629,11 +610,6 @@ type MigratePolicy struct {
 	// +optional
 	// +nullable
 	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
-
-	// ItemOperationTimeout specifies the time used to wait for RestoreItemAction operations.
-	// The default value is 1 hour.
-	// +optional
-	ItemOperationTimeout metav1.Duration `json:"itemOperationTimeout,omitempty"`
 }
 
 type MigrateStatus struct {
