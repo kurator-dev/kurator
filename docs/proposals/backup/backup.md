@@ -357,7 +357,7 @@ type ResourceFilter struct {
 	ExcludedNamespaces []string `json:"excludedNamespaces,omitempty"`
 
 	// IncludedResources is a slice of API resource names to include in the backup.
-	// For example, we can populate this string array with "deployments" and "configmaps", then we will select all resources of type deployments and configmaps.
+	// For example, we can populate this string array with ["deployments", "configmaps","clusterroles","storageclasses"], then we will select all resources of type deployments and configmaps.
 	// If empty, all API resources are included.
 	// Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
 	// +optional
@@ -377,7 +377,7 @@ type ResourceFilter struct {
 	IncludeClusterResources *bool `json:"includeClusterResources,omitempty"`
 
 	// IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup.
-	// For example, we can populate this string array with "storageclasses" and "clusterroles", then we will select all resources of type storageclasses and clusterroles,
+	// For example, we can populate this string array with ["storageclasses", "clusterroles"], then we will select all resources of type storageclasses and clusterroles,
 	// If set to "*", all cluster-scoped resource types are included.
 	// The default value is empty, which means only related cluster-scoped resources are included.
 	// Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
@@ -393,7 +393,7 @@ type ResourceFilter struct {
 	ExcludedClusterScopedResources []string `json:"excludedClusterScopedResources,omitempty"`
 
 	// IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup.
-	// For example, we can populate this string array with "deployments" and "configmaps", then we will select all resources of type deployments and configmaps,
+	// For example, we can populate this string array with ["deployments", "configmaps"], then we will select all resources of type deployments and configmaps,
 	// The default value is "*".
 	// Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
 	// +optional
@@ -482,7 +482,7 @@ type RestorePolicy struct {
 	ReserveStatus  *ReserveStatusSpec `json:"restoreStatus,omitempty"`
 
 	// PreserveNodePorts specifies whether to restore old nodePorts from backup.
-	// 
+	// If not specified, default to false.
 	// +optional
 	// +nullable
 	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
@@ -565,6 +565,8 @@ type Migrate struct {
 
 type MigrateSpec struct {
 	// SourceCluster represents the source cluster for migration.
+	// The user needs to ensure that SourceCluster points to only ONE cluster.
+	// Because the current migration only supports migrating from one SourceCluster to one or more TargetCluster.
 	SourceCluster *Destination `json:"sourceCluster"`
 
 	// TargetCluster represents the target clusters for migration.
