@@ -145,12 +145,19 @@ spec:
                           data should be stored.
                         properties:
                           credentials:
-                            description: Credentials refers to the Kubernetes secret
-                              containing the AccessKeyID and SecretAccessKey required
-                              to access the backup storage location. The secret might,
-                              for example, contain fields such as `accessKeyID` and
-                              `secretAccessKey` to store the credentials.
-                            type: string
+                            description: Credentials represents the reference to the
+                              secret for the object store. The secret must contain
+                              the fields `accessKeyID` and `secretAccessKey` to access
+                              the backup storage location.
+                            properties:
+                              secretName:
+                                description: SecretName is the name of the secret
+                                  that holds the object store configuration. The path
+                                  of object store configuration must be `objstore.yml`
+                                type: string
+                            required:
+                            - secretName
+                            type: object
                           location:
                             description: Location specifies where the backup data
                               will be stored.

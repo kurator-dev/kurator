@@ -217,13 +217,14 @@ BackupStorageLocation
 <td>
 <code>credentials</code><br>
 <em>
-string
+<a href="#fleet.kurator.dev/v1alpha1.ObjectStoreConfig">
+ObjectStoreConfig
+</a>
 </em>
 </td>
 <td>
-<p>Credentials refers to the Kubernetes secret containing the AccessKeyID and SecretAccessKey
-required to access the backup storage location. The secret might, for example,
-contain fields such as <code>accessKeyID</code> and <code>secretAccessKey</code> to store the credentials.</p>
+<p>Credentials represents the reference to the secret for the object store.
+The secret must contain the fields <code>accessKeyID</code> and <code>secretAccessKey</code> to access the backup storage location.</p>
 </td>
 </tr>
 </tbody>
@@ -693,6 +694,7 @@ by default thanos sidecar will be installed in thanos sidecar mode.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupStorage">BackupStorage</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
 </p>
 <div class="md-typeset__scrollwrap">

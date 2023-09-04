@@ -283,12 +283,11 @@ type BackupStorage struct {
 	// Location specifies where the backup data will be stored.
 	Location BackupStorageLocation `json:"location"`
 
-	// Credentials refers to the Kubernetes secret containing the AccessKeyID and SecretAccessKey
-	// required to access the backup storage location. The secret might, for example,
-	// contain fields such as `accessKeyID` and `secretAccessKey` to store the credentials.
-	Credentials string `json:"credentials"`
+	// Credentials represents the reference to the secret for the object store.
+	// The secret must contain the fields `accessKeyID` and `secretAccessKey` to access the backup storage location.
+	// +required
+	Credentials ObjectStoreConfig `json:"credentials"`
 }
-
 
 type BackupStorageLocation struct {
 	// Bucket specifies the storage bucket name.

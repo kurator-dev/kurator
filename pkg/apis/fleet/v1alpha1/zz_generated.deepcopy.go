@@ -53,6 +53,7 @@ func (in *BackupConfig) DeepCopy() *BackupConfig {
 func (in *BackupStorage) DeepCopyInto(out *BackupStorage) {
 	*out = *in
 	out.Location = in.Location
+	out.Credentials = in.Credentials
 	return
 }
 
