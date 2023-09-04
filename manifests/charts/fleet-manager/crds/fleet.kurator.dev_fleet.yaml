@@ -115,9 +115,10 @@ spec:
                     description: Backup defines the configuration for the backup engine(Velero).
                     properties:
                       chart:
-                        description: "Chart defines the helm chart config of the velero.
-                          default values is \n chart: repository: https://vmware-tanzu.github.io/helm-charts
-                          name: velero version: 5.0.2"
+                        description: "Chart defines the helm chart configuration of
+                          the backup engine. The default value is: \n chart: repository:
+                          https://vmware-tanzu.github.io/helm-charts name: velero
+                          version: 5.0.2"
                         properties:
                           name:
                             description: Name defines the name of the chart. Default
@@ -132,35 +133,27 @@ spec:
                               Default value depends on the kind of the component.
                             type: string
                         type: object
-                      initContainers:
-                        description: "InitContainers to add to the Velero deployment's
-                          pod spec. default values is \n - name: velero-plugin-for-aws
-                          image: velero/velero-plugin-for-aws:v1.7.1 imagePullPolicy:
-                          IfNotPresent volumeMounts: - mountPath: /target name: plugins"
+                      extraArgs:
+                        description: "ExtraArgs provides the extra chart values for
+                          the backup engine chart. For example, use the following
+                          configuration to change the image tag or pull policy: \n
+                          extraArgs: image: repository: velero/velero tag: v1.11.1
+                          pullPolicy: IfNotPresent"
                         x-kubernetes-preserve-unknown-fields: true
                       storage:
-                        description: Storage details where the backup data should
-                          be stored.
+                        description: Storage provides details on where the backup
+                          data should be stored.
                         properties:
                           credentials:
-                            description: Credentials to access the backup storage
-                              location.
-                            properties:
-                              accessKeyID:
-                                description: AccessKeyID is the identifier for the
-                                  access key.
-                                type: string
-                              secretAccessKey:
-                                description: SecretAccessKey is the secret access
-                                  key associated with AccessKeyID
-                                type: string
-                            required:
-                            - accessKeyID
-                            - secretAccessKey
-                            type: object
+                            description: Credentials refers to the Kubernetes secret
+                              containing the AccessKeyID and SecretAccessKey required
+                              to access the backup storage location. The secret might,
+                              for example, contain fields such as `accessKeyID` and
+                              `secretAccessKey` to store the credentials.
+                            type: string
                           location:
-                            description: Location specifies the location where the
-                              backup data will be stored.
+                            description: Location specifies where the backup data
+                              will be stored.
                             properties:
                               bucket:
                                 description: Bucket specifies the storage bucket name.
@@ -186,12 +179,6 @@ spec:
                         - credentials
                         - location
                         type: object
-                      veleroImage:
-                        description: "VeleroImage Details of the container image to
-                          use in the Velero deployment & daemonset default values
-                          is \n repository: velero/velero tag: v1.11.1 pullPolicy:
-                          IfNotPresent"
-                        x-kubernetes-preserve-unknown-fields: true
                     required:
                     - storage
                     type: object

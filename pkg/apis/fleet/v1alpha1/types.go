@@ -250,10 +250,10 @@ type PodSecurityPolicy struct {
 	ValidationFailureAction string `json:"validationFailureAction,omitempty"`
 }
 
-// BackupConfig defines the configuration for the Velero backup engine.
+// BackupConfig defines the configuration for backups.
 type BackupConfig struct {
-	// Chart defines the helm chart config of the velero.
-	// default values is
+	// Chart defines the helm chart configuration of the backup engine.
+	// The default value is:
 	//
 	// chart:
 	//   repository: https://vmware-tanzu.github.io/helm-charts
@@ -263,40 +263,32 @@ type BackupConfig struct {
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
 
-	// Storage details where the backup data should be stored.
+	// Storage provides details on where the backup data should be stored.
 	Storage BackupStorage `json:"storage"`
 
-	// VeleroImage Details of the container image to use in the Velero deployment & daemonset
-	// default values is
+	// ExtraArgs provides the extra chart values for the backup engine chart.
+	// For example, use the following configuration to change the image tag or pull policy:
 	//
-	//  repository: velero/velero
-	//  tag: v1.11.1
-	//  pullPolicy: IfNotPresent
-	//
-	// +optional
-	VeleroImage apiextensionsv1.JSON `json:"veleroImage,omitempty"`
-
-	// InitContainers to add to the Velero deployment's pod spec.
-	// default values is
-	//
-	// - name: velero-plugin-for-aws
-	//   image: velero/velero-plugin-for-aws:v1.7.1
-	//   imagePullPolicy: IfNotPresent
-	//   volumeMounts:
-	//     - mountPath: /target
-	//       name: plugins
+	// extraArgs:
+	//   image:
+	//     repository: velero/velero
+	//     tag: v1.11.1
+	//     pullPolicy: IfNotPresent
 	//
 	// +optional
-	InitContainers apiextensionsv1.JSON `json:"initContainers,omitempty"`
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
 
 type BackupStorage struct {
-	// Location specifies the location where the backup data will be stored.
+	// Location specifies where the backup data will be stored.
 	Location BackupStorageLocation `json:"location"`
 
-	// Credentials to access the backup storage location.
-	Credentials BackupCredentials `json:"credentials"`
+	// Credentials refers to the Kubernetes secret containing the AccessKeyID and SecretAccessKey
+	// required to access the backup storage location. The secret might, for example,
+	// contain fields such as `accessKeyID` and `secretAccessKey` to store the credentials.
+	Credentials string `json:"credentials"`
 }
+
 
 type BackupStorageLocation struct {
 	// Bucket specifies the storage bucket name.
@@ -307,13 +299,6 @@ type BackupStorageLocation struct {
 	S3Url string `json:"s3Url"`
 	// Region specifies the region of the storage.
 	Region string `json:"region"`
-}
-
-type BackupCredentials struct {
-	// AccessKeyID is the identifier for the access key.
-	AccessKeyID string `json:"accessKeyID"`
-	// SecretAccessKey is the secret access key associated with AccessKeyID
-	SecretAccessKey string `json:"secretAccessKey"`
 }
 
 // FleetStatus defines the observed state of the fleet
