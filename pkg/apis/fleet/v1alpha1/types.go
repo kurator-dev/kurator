@@ -283,10 +283,14 @@ type BackupStorage struct {
 	// Location specifies where the backup data will be stored.
 	Location BackupStorageLocation `json:"location"`
 
-	// Credentials represents the reference to the secret for the object store.
-	// The secret must contain the fields `accessKeyID` and `secretAccessKey` to access the backup storage location.
+	// SecretName represents the name of the secret containing the object store credentials.
+	// To access the backup storage location, the secret must include the following keys:
+	//
+	// - `s3-access-key`: The access key ID for S3 authentication.
+	// - `s3-secret-key`: The secret access key for S3 authentication.
+	//
 	// +required
-	Credentials ObjectStoreConfig `json:"credentials"`
+	SecretName string `json:"secretName"`
 }
 
 type BackupStorageLocation struct {

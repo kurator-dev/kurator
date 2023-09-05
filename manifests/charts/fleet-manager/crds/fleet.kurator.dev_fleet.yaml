@@ -144,20 +144,6 @@ spec:
                         description: Storage provides details on where the backup
                           data should be stored.
                         properties:
-                          credentials:
-                            description: Credentials represents the reference to the
-                              secret for the object store. The secret must contain
-                              the fields `accessKeyID` and `secretAccessKey` to access
-                              the backup storage location.
-                            properties:
-                              secretName:
-                                description: SecretName is the name of the secret
-                                  that holds the object store configuration. The path
-                                  of object store configuration must be `objstore.yml`
-                                type: string
-                            required:
-                            - secretName
-                            type: object
                           location:
                             description: Location specifies where the backup data
                               will be stored.
@@ -182,9 +168,17 @@ spec:
                             - region
                             - s3Url
                             type: object
+                          secretName:
+                            description: "SecretName represents the name of the secret
+                              containing the object store credentials. To access the
+                              backup storage location, the secret must include the
+                              following keys: \n - `s3-access-key`: The access key
+                              ID for S3 authentication. - `s3-secret-key`: The secret
+                              access key for S3 authentication."
+                            type: string
                         required:
-                        - credentials
                         - location
+                        - secretName
                         type: object
                     required:
                     - storage

@@ -215,16 +215,18 @@ BackupStorageLocation
 </tr>
 <tr>
 <td>
-<code>credentials</code><br>
+<code>secretName</code><br>
 <em>
-<a href="#fleet.kurator.dev/v1alpha1.ObjectStoreConfig">
-ObjectStoreConfig
-</a>
+string
 </em>
 </td>
 <td>
-<p>Credentials represents the reference to the secret for the object store.
-The secret must contain the fields <code>accessKeyID</code> and <code>secretAccessKey</code> to access the backup storage location.</p>
+<p>SecretName represents the name of the secret containing the object store credentials.
+To access the backup storage location, the secret must include the following keys:</p>
+<ul>
+<li><code>s3-access-key</code>: The access key ID for S3 authentication.</li>
+<li><code>s3-secret-key</code>: The secret access key for S3 authentication.</li>
+</ul>
 </td>
 </tr>
 </tbody>
@@ -694,7 +696,6 @@ by default thanos sidecar will be installed in thanos sidecar mode.</p>
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#fleet.kurator.dev/v1alpha1.BackupStorage">BackupStorage</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
 </p>
 <div class="md-typeset__scrollwrap">
