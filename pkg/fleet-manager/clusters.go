@@ -70,7 +70,7 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 	for _, cluster := range fleet.Spec.Clusters {
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
-		currentCluster, err := f.getFleetClusterInterface(ctx, cluster.Kind, clusterKey)
+		currentCluster, err := getFleetClusterInterface(ctx, f.Client, cluster.Kind, clusterKey)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				log.Error(err, "unable to fetch cluster", "cluster", clusterKey, "kind", cluster.Kind)
@@ -190,7 +190,7 @@ func (f *FleetManager) reconcileClustersOnDelete(ctx context.Context, fleet *fle
 	for _, cluster := range fleet.Spec.Clusters {
 		// cluster namespace can be not set, always use fleet namespace as a fleet can only include clusters in the same namespace.
 		clusterKey := types.NamespacedName{Name: cluster.Name, Namespace: fleet.Namespace}
-		currentCluster, err := f.getFleetClusterInterface(ctx, cluster.Kind, clusterKey)
+		currentCluster, err := getFleetClusterInterface(ctx, f.Client, cluster.Kind, clusterKey)
 		if err != nil {
 			if !apierrors.IsNotFound(err) {
 				log.Error(err, "unable to fetch cluster", "cluster", clusterKey)
