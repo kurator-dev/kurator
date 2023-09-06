@@ -268,18 +268,18 @@ string
 </em>
 </td>
 <td>
-<p>Provider specifies the storage provider type (e.g., aws).</p>
+<p>Provider specifies the storage provider type (e.g., aws, gcp, azure).</p>
 </td>
 </tr>
 <tr>
 <td>
-<code>s3Url</code><br>
+<code>endpoint</code><br>
 <em>
 string
 </em>
 </td>
 <td>
-<p>S3Url provides the endpoint URL for S3-compatible storage.</p>
+<p>Endpoint provides the endpoint URL for the storage.</p>
 </td>
 </tr>
 <tr>
@@ -291,6 +291,17 @@ string
 </td>
 <td>
 <p>Region specifies the region of the storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>config</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Config is a map for additional provider-specific configurations.</p>
 </td>
 </tr>
 </tbody>

@@ -296,12 +296,14 @@ type BackupStorage struct {
 type BackupStorageLocation struct {
 	// Bucket specifies the storage bucket name.
 	Bucket string `json:"bucket"`
-	// Provider specifies the storage provider type (e.g., aws).
+	// Provider specifies the storage provider type (e.g., aws, gcp, azure).
 	Provider string `json:"provider"`
-	// S3Url provides the endpoint URL for S3-compatible storage.
-	S3Url string `json:"s3Url"`
+	// Endpoint provides the endpoint URL for the storage.
+	Endpoint string `json:"endpoint"`
 	// Region specifies the region of the storage.
 	Region string `json:"region"`
+	// Config is a map for additional provider-specific configurations.
+	Config map[string]string `json:"config,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet

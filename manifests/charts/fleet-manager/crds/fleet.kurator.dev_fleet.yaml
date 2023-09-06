@@ -151,22 +151,28 @@ spec:
                               bucket:
                                 description: Bucket specifies the storage bucket name.
                                 type: string
+                              config:
+                                additionalProperties:
+                                  type: string
+                                description: Config is a map for additional provider-specific
+                                  configurations.
+                                type: object
+                              endpoint:
+                                description: Endpoint provides the endpoint URL for
+                                  the storage.
+                                type: string
                               provider:
                                 description: Provider specifies the storage provider
-                                  type (e.g., aws).
+                                  type (e.g., aws, gcp, azure).
                                 type: string
                               region:
                                 description: Region specifies the region of the storage.
                                 type: string
-                              s3Url:
-                                description: S3Url provides the endpoint URL for S3-compatible
-                                  storage.
-                                type: string
                             required:
                             - bucket
+                            - endpoint
                             - provider
                             - region
-                            - s3Url
                             type: object
                           secretName:
                             description: "SecretName represents the name of the secret
