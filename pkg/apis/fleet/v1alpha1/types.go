@@ -286,8 +286,8 @@ type BackupStorage struct {
 	// SecretName represents the name of the secret containing the object store credentials.
 	// To access the backup storage location, the secret must include the following keys:
 	//
-	// - `username`: The access-key/account/username for authentication.
-	// - `password`: The secret-key/password for authentication.
+	// - `access-key`: The access-key/account/username for object storage authentication.
+	// - `secret-key`: The secret-key/password for object storage authentication.
 	// 
 	// +required
 	SecretName string `json:"secretName"`
