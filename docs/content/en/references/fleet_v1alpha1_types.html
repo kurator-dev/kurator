@@ -111,10 +111,208 @@ FleetStatus
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.BackupConfig">BackupConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<p>BackupConfig defines the configuration for backups.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart configuration of the backup engine.
+The default value is:</p>
+<p>chart:
+repository: <a href="https://vmware-tanzu.github.io/helm-charts">https://vmware-tanzu.github.io/helm-charts</a>
+name: velero
+version: 5.0.2</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupStorage">
+BackupStorage
+</a>
+</em>
+</td>
+<td>
+<p>Storage provides details on where the backup data should be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs provides the extra chart values for the backup engine chart.
+For example, use the following configuration to change the image tag or pull policy:</p>
+<p>extraArgs:
+image:
+repository: velero/velero
+tag: v1.11.1
+pullPolicy: IfNotPresent</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.BackupStorage">BackupStorage
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupConfig">BackupConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>location</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupStorageLocation">
+BackupStorageLocation
+</a>
+</em>
+</td>
+<td>
+<p>Location specifies where the backup data will be stored.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>secretName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SecretName represents the name of the secret containing the object store credentials.
+To access the backup storage location, the secret must include the following keys:</p>
+<ul>
+<li><code>access-key</code>: The access-key/account/username for object storage authentication.</li>
+<li><code>secret-key</code>: The secret-key/password for object storage authentication.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.BackupStorageLocation">BackupStorageLocation
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupStorage">BackupStorage</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>bucket</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket specifies the storage bucket name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>provider</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Provider specifies the storage provider type (e.g., aws, gcp, azure).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Endpoint provides the endpoint URL for the storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region specifies the region of the storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>config</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>Config is a map for additional provider-specific configurations.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="fleet.kurator.dev/v1alpha1.ChartConfig">ChartConfig
 </h3>
 <p>
 (<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupConfig">BackupConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>, 
@@ -592,6 +790,19 @@ PolicyConfig
 </td>
 <td>
 <p>Policy defines the configuration for the ploicy management.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>backup</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.BackupConfig">
+BackupConfig
+</a>
+</em>
+</td>
+<td>
+<p>Backup defines the configuration for the backup engine(Velero).</p>
 </td>
 </tr>
 </tbody>

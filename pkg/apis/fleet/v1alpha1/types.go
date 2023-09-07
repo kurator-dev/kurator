@@ -81,6 +81,8 @@ type PluginConfig struct {
 	Grafana *GrafanaConfig `json:"grafana,omitempty"`
 	// Policy defines the configuration for the ploicy management.
 	Policy *PolicyConfig `json:"policy,omitempty"`
+	// Backup defines the configuration for the backup engine(Velero).
+	Backup *BackupConfig `json:"backup,omitempty"`
 }
 
 type MetricConfig struct {
@@ -246,6 +248,62 @@ type PodSecurityPolicy struct {
 	// +kubebuilder:default=Audit
 	// +optional
 	ValidationFailureAction string `json:"validationFailureAction,omitempty"`
+}
+
+// BackupConfig defines the configuration for backups.
+type BackupConfig struct {
+	// Chart defines the helm chart configuration of the backup engine.
+	// The default value is:
+	//
+	// chart:
+	//   repository: https://vmware-tanzu.github.io/helm-charts
+	//   name: velero
+	//   version: 5.0.2
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+
+	// Storage provides details on where the backup data should be stored.
+	Storage BackupStorage `json:"storage"`
+
+	// ExtraArgs provides the extra chart values for the backup engine chart.
+	// For example, use the following configuration to change the image tag or pull policy:
+	//
+	// extraArgs:
+	//   image:
+	//     repository: velero/velero
+	//     tag: v1.11.1
+	//     pullPolicy: IfNotPresent
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+}
+
+type BackupStorage struct {
+	// Location specifies where the backup data will be stored.
+	Location BackupStorageLocation `json:"location"`
+
+	// SecretName represents the name of the secret containing the object store credentials.
+	// To access the backup storage location, the secret must include the following keys:
+	//
+	// - `access-key`: The access-key/account/username for object storage authentication.
+	// - `secret-key`: The secret-key/password for object storage authentication.
+	// 
+	// +required
+	SecretName string `json:"secretName"`
+}
+
+type BackupStorageLocation struct {
+	// Bucket specifies the storage bucket name.
+	Bucket string `json:"bucket"`
+	// Provider specifies the storage provider type (e.g., aws, gcp, azure).
+	Provider string `json:"provider"`
+	// Endpoint provides the endpoint URL for the storage.
+	Endpoint string `json:"endpoint"`
+	// Region specifies the region of the storage.
+	Region string `json:"region"`
+	// Config is a map for additional provider-specific configurations.
+	Config map[string]string `json:"config,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet
