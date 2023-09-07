@@ -315,7 +315,9 @@ spec:
                 properties:
                   clusters:
                     description: Clusters allows users to directly specify a set of
-                      destination clusters.
+                      destination clusters. It should be used exclusively to select
+                      clusters described within the Fleet. If Fleet is set, it takes
+                      precedence over the Clusters field.
                     items:
                       description: "ObjectReference contains enough information to
                         let you inspect or modify the referred object. --- New uses
@@ -391,7 +393,9 @@ spec:
                 properties:
                   clusters:
                     description: Clusters allows users to directly specify a set of
-                      destination clusters.
+                      destination clusters. It should be used exclusively to select
+                      clusters described within the Fleet. If Fleet is set, it takes
+                      precedence over the Clusters field.
                     items:
                       description: "ObjectReference contains enough information to
                         let you inspect or modify the referred object. --- New uses
