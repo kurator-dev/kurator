@@ -1,0 +1,81 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: "velero-cluster1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "backup"
+    fleet.kurator.dev/component: "velero"
+  ownerReferences:
+  - apiVersion: "fleet.kurator.dev/v1alpha1"
+    kind: "Fleet"
+    name: "fleet-1"
+    uid: "xxxxxx"
+spec:
+  type: "default"
+  interval: 5m0s
+  url: "https://vmware-tanzu.github.io/helm-charts"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: "velero-cluster1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "backup"
+    fleet.kurator.dev/component: "velero"
+  ownerReferences:
+  - apiVersion: "fleet.kurator.dev/v1alpha1"
+    kind: "Fleet"
+    name: "fleet-1"
+    uid: "xxxxxx"
+spec:
+  chart:
+    spec:
+      chart: "velero"
+      version: "5.0.2"
+      sourceRef:
+        kind: HelmRepository
+        name: "velero-cluster1"
+  values:
+    configuration:
+      backupStorageLocation:
+      - bucket: velero
+        config:
+          region: minio
+          s3ForcePathStyle: true
+          s3Url: http://x.x.x.x:x
+        provider: aws
+    credentials:
+      secretContents:
+        cloud: |-
+          [default]
+          aws_access_key_id=xxx
+          aws_secret_access_key=xxx
+    defaultVolumesToFsBackup: true
+    deployNodeAgent: true
+    image:
+      repository: velero/velero
+      tag: v1.11.1
+    initContainers:
+    - image: velero/velero-plugin-for-aws:v1.7.1
+      name: velero-plugin-for-aws
+      volumeMounts:
+      - mountPath: /target
+        name: plugins
+    snapshotsEnabled: false
+    
+  interval: 1m0s
+  install:
+    createNamespace: true
+  targetNamespace: "velero"
+  storageNamespace: "velero"
+  timeout: 15m0s
+  kubeConfig:
+    secretRef:
+      name: cluster1
+      key: kubeconfig.yaml

@@ -1,0 +1,18 @@
+type: default
+repo: https://vmware-tanzu.github.io/helm-charts
+name: velero
+version: 5.0.2
+targetNamespace: velero
+values:
+  image:
+    repository: velero/velero
+    tag: v1.11.1
+  deployNodeAgent: true
+  defaultVolumesToFsBackup: true
+  snapshotsEnabled: false
+  initContainers:
+    - image: velero/velero-plugin-for-aws:v1.7.1
+      name: velero-plugin-for-aws
+      volumeMounts:
+        - mountPath: /target
+          name: plugins

@@ -18,6 +18,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"strings"
 
@@ -34,12 +35,14 @@ const (
 	MetricPluginName  = "metric"
 	GrafanaPluginName = "grafana"
 	KyvernoPluginName = "kyverno"
+	BackupPluginName  = "backup"
 
 	ThanosComponentName        = "thanos"
 	PrometheusComponentName    = "prometheus"
 	GrafanaComponentName       = "grafana"
 	KyvernoComponentName       = "kyverno"
 	KyvernoPolicyComponentName = "kyverno-policies"
+	VeleroComponentName        = "velero"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -174,7 +177,7 @@ func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 	return renderFleetPlugin(fsys, thanosCfg)
 }
 
-func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
+func RenderPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
 	promChart, err := getFleetPluginChart(fsys, PrometheusComponentName)
 	if err != nil {
 		return nil, err
@@ -211,6 +214,77 @@ func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1
 	}
 
 	return renderFleetPlugin(fsys, promCfg)
+}
+
+type veleroObjectStoreLocation struct {
+	Bucket   string                          `json:"bucket"`
+	Provider string                          `json:"provider"`
+	Config   veleroObjectStoreLocationConfig `json:"config"`
+}
+type veleroObjectStoreLocationConfig struct {
+	S3Url            string `json:"s3Url"`
+	Region           string `json:"region"`
+	S3ForcePathStyle bool   `json:"s3ForcePathStyle"`
+}
+
+func RenderVelero(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, backupCfg *fleetv1a1.BackupConfig, accessKey, secretKey string) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, VeleroComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, backupCfg.Chart)
+
+	// get default values
+	defaultValues := c.Values
+	if err != nil {
+		return nil, err
+	}
+
+	// get custom values
+	customValues := map[string]interface{}{
+		"configuration": map[string]interface{}{
+			"backupStorageLocation": []veleroObjectStoreLocation{
+				{
+					Bucket:   backupCfg.Storage.Location.Bucket,
+					Provider: backupCfg.Storage.Location.Provider,
+					Config: veleroObjectStoreLocationConfig{
+						S3Url:            backupCfg.Storage.Location.Endpoint,
+						Region:           backupCfg.Storage.Location.Region,
+						S3ForcePathStyle: true,
+					},
+				},
+			},
+		},
+		"credentials": map[string]interface{}{
+			"secretContents": map[string]interface{}{
+				"cloud": fmt.Sprintf(
+					"[default]\naws_access_key_id=%s\naws_secret_access_key=%s",
+					accessKey,
+					secretKey,
+				),
+			},
+		},
+	}
+	extraValues, err := toMap(backupCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+	// add custom extraValues to customValues
+	customValues = transform.MergeMaps(customValues, extraValues)
+
+	// replace the default values with custom values to obtain the actual values.
+	values := transform.MergeMaps(defaultValues, customValues)
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           BackupPluginName,
+		Component:      VeleroComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
 }
 
 func mergeChartConfig(origin *ChartConfig, target *fleetv1a1.ChartConfig) {

@@ -231,7 +231,7 @@ func TestRenderThanos(t *testing.T) {
 	}
 }
 
-func TestRendPrometheus(t *testing.T) {
+func TestRenderPrometheus(t *testing.T) {
 	cases := []struct {
 		name  string
 		fleet types.NamespacedName
@@ -270,7 +270,7 @@ func TestRendPrometheus(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RendPrometheus(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RenderPrometheus(manifestFS, tc.fleet, tc.ref, FleetCluster{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -278,6 +278,83 @@ func TestRendPrometheus(t *testing.T) {
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("prometheus", tc.name)
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
+func TestRenderVelero(t *testing.T) {
+	cases := []struct {
+		name  string
+		fleet types.NamespacedName
+		ref   *metav1.OwnerReference
+		in    *v1alpha1.BackupConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			in: &v1alpha1.BackupConfig{
+				Storage: v1alpha1.BackupStorage{
+					Location: v1alpha1.BackupStorageLocation{
+						Bucket:   "velero",
+						Provider: "aws",
+						Endpoint: "http://x.x.x.x:x",
+						Region:   "minio",
+					},
+					SecretName: "backup-secret",
+				},
+			},
+		},
+		{
+			name: "custom-values",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			in: &v1alpha1.BackupConfig{
+				Storage: v1alpha1.BackupStorage{
+					Location: v1alpha1.BackupStorageLocation{
+						Bucket:   "velero",
+						Provider: "aws",
+						Endpoint: "http://x.x.x.x:x",
+						Region:   "minio",
+					},
+					SecretName: "backup-secret",
+				},
+				ExtraArgs: apiextensionsv1.JSON{
+					Raw: []byte("{\"image\": {\n  \"repository\": \"velero/velero\",\n  \"tag\": \"v1.10.1\",\n  \"pullPolicy\": \"IfNotPresent\"\n}}"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderVelero(manifestFS, tc.fleet, tc.ref, FleetCluster{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.in, "xxx", "xxx")
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("backup", tc.name)
 			assert.NoError(t, err)
 
 			assert.Equal(t, string(getExpected), string(got))
