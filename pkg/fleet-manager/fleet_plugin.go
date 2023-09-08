@@ -41,29 +41,41 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 	var resources kube.ResourceList
 
 	if fleet.Spec.Plugin != nil {
-		result, ctrlResult, err := f.reconcileMetricPlugin(ctx, fleet, fleetClusters)
-		if err != nil || ctrlResult.RequeueAfter > 0 {
-			return ctrlResult, err
+		type reconcileResult struct {
+			result     kube.ResourceList
+			ctrlResult ctrl.Result
+			err        error
 		}
-		resources = append(resources, result...)
 
-		result, ctrlResult, err = f.reconcileGrafanaPlugin(ctx, fleet)
-		if err != nil || ctrlResult.RequeueAfter > 0 {
-			return ctrlResult, err
-		}
-		resources = append(resources, result...)
+		resultsChannel := make(chan reconcileResult, 4)
 
-		result, ctrlResult, err = f.reconcileKyvernoPlugin(ctx, fleet, fleetClusters)
-		if err != nil || ctrlResult.RequeueAfter > 0 {
-			return ctrlResult, err
-		}
-		resources = append(resources, result...)
+		go func() {
+			result, ctrlResult, err := f.reconcileMetricPlugin(ctx, fleet, fleetClusters)
+			resultsChannel <- reconcileResult{result, ctrlResult, err}
+		}()
 
-		result, ctrlResult, err = f.reconcileBackupPlugin(ctx, fleet, fleetClusters)
-		if err != nil || ctrlResult.RequeueAfter > 0 {
-			return ctrlResult, err
+		go func() {
+			result, ctrlResult, err := f.reconcileGrafanaPlugin(ctx, fleet)
+			resultsChannel <- reconcileResult{result, ctrlResult, err}
+		}()
+
+		go func() {
+			result, ctrlResult, err := f.reconcileKyvernoPlugin(ctx, fleet, fleetClusters)
+			resultsChannel <- reconcileResult{result, ctrlResult, err}
+		}()
+
+		go func() {
+			result, ctrlResult, err := f.reconcileBackupPlugin(ctx, fleet, fleetClusters)
+			resultsChannel <- reconcileResult{result, ctrlResult, err}
+		}()
+
+		for i := 0; i < 4; i++ {
+			res := <-resultsChannel
+			if res.err != nil || res.ctrlResult.RequeueAfter > 0 {
+				return res.ctrlResult, res.err
+			}
+			resources = append(resources, res.result...)
 		}
-		resources = append(resources, result...)
 	}
 
 	return f.reconcilePluginResources(ctx, fleet, resources)
