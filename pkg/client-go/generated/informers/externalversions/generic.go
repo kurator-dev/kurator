@@ -24,6 +24,7 @@ import (
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 	v1alpha1 "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
+	backupsv1alpha1 "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
@@ -58,6 +59,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=apps.kurator.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("applications"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Apps().V1alpha1().Applications().Informer()}, nil
+
+		// Group=backup.kurator.dev, Version=v1alpha1
+	case backupsv1alpha1.SchemeGroupVersion.WithResource("backups"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Backup().V1alpha1().Backups().Informer()}, nil
 
 		// Group=cluster.kurator.dev, Version=v1alpha1
 	case clusterv1alpha1.SchemeGroupVersion.WithResource("attachedclusters"):

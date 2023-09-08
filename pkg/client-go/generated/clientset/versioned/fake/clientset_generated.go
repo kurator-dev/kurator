@@ -27,6 +27,8 @@ import (
 	clientset "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
 	appsv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/apps/v1alpha1"
 	fakeappsv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/apps/v1alpha1/fake"
+	backupv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/backups/v1alpha1"
+	fakebackupv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/backups/v1alpha1/fake"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
 	fakeclusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1/fake"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1"
@@ -88,6 +90,11 @@ var (
 // AppsV1alpha1 retrieves the AppsV1alpha1Client
 func (c *Clientset) AppsV1alpha1() appsv1alpha1.AppsV1alpha1Interface {
 	return &fakeappsv1alpha1.FakeAppsV1alpha1{Fake: &c.Fake}
+}
+
+// BackupV1alpha1 retrieves the BackupV1alpha1Client
+func (c *Clientset) BackupV1alpha1() backupv1alpha1.BackupV1alpha1Interface {
+	return &fakebackupv1alpha1.FakeBackupV1alpha1{Fake: &c.Fake}
 }
 
 // ClusterV1alpha1 retrieves the ClusterV1alpha1Client
