@@ -351,7 +351,7 @@ func TestRenderVelero(t *testing.T) {
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.in, "xxx", "xxx")
+			}, tc.in, "xxx")
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("backup", tc.name)

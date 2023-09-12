@@ -283,12 +283,18 @@ type BackupStorage struct {
 	// Location specifies where the backup data will be stored.
 	Location BackupStorageLocation `json:"location"`
 
-	// SecretName represents the name of the secret containing the object store credentials.
-	// To access the backup storage location, the secret must include the following keys:
+	// The structure of the secret varies depending on the object storage provider:
 	//
-	// - `access-key`: The access-key/account/username for object storage authentication.
-	// - `secret-key`: The secret-key/password for object storage authentication.
-	// 
+	// - For AWS S3, Minio or Huawei Cloud, the secret should contain the following keys:
+	//   - `access-key`: The access key for S3 authentication.
+	//   - `secret-key`: The secret key for S3 authentication.
+	//
+	// - For GCP, the secret should be created according to the official GCP documentation.
+	//   see https://github.com/vmware-tanzu/velero-plugin-for-gcp/blob/main/README.md
+	//
+	// - For Azure, the secret should be created according to the official Azure documentation.
+	//   see https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure/blob/main/README.md
+	//
 	// +required
 	SecretName string `json:"secretName"`
 }
@@ -296,13 +302,30 @@ type BackupStorage struct {
 type BackupStorageLocation struct {
 	// Bucket specifies the storage bucket name.
 	Bucket string `json:"bucket"`
-	// Provider specifies the storage provider type (e.g., aws, gcp, azure).
+	// Provider specifies the storage provider type (e.g., aws, huaweicloud, gcp, azure).
 	Provider string `json:"provider"`
 	// Endpoint provides the endpoint URL for the storage.
 	Endpoint string `json:"endpoint"`
 	// Region specifies the region of the storage.
-	Region string `json:"region"`
+	// +optional
+	Region string `json:"region,omitempty"`
 	// Config is a map for additional provider-specific configurations.
+	// TODO: enable Config, here is what user can set:
+	//    #  region:
+	//    #  s3ForcePathStyle:
+	//    #  s3Url:
+	//    #  kmsKeyId:
+	//    #  resourceGroup:
+	//    #  The ID of the subscription containing the storage account, if different from the cluster’s subscription. (Azure only)
+	//    #  subscriptionId:
+	//    #  storageAccount:
+	//    #  publicUrl:
+	//    #  Name of the GCP service account to use for this backup storage location. Specify the
+	//    #  service account here if you want to use workload identity instead of providing the key file.(GCP only)
+	//    #  serviceAccount:
+	//    #  Option to skip certificate validation or not if insecureSkipTLSVerify is set to be true, the client side should set the
+	//    #  flag. For Velero client Command like velero backup describe, velero backup logs needs to add the flag --insecure-skip-tls-verify
+	//    #  insecureSkipTLSVerify:
 	Config map[string]string `json:"config,omitempty"`
 }
 

@@ -18,6 +18,7 @@ package fleet
 
 import (
 	"context"
+	"sync"
 
 	hrapiv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
@@ -47,30 +48,33 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			err        error
 		}
 
-		resultsChannel := make(chan reconcileResult, 4)
+		type reconcileFunc func(context.Context, *fleetapi.Fleet, map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error)
+
+		funcs := []reconcileFunc{
+			f.reconcileMetricPlugin,
+			f.reconcileGrafanaPlugin,
+			f.reconcileKyvernoPlugin,
+			f.reconcileBackupPlugin,
+		}
+
+		resultsChannel := make(chan reconcileResult, len(funcs))
+		var wg sync.WaitGroup
+
+		for _, fn := range funcs {
+			wg.Add(1)
+			go func(fn reconcileFunc) {
+				defer wg.Done()
+				result, ctrlResult, err := fn(ctx, fleet, fleetClusters)
+				resultsChannel <- reconcileResult{result, ctrlResult, err}
+			}(fn)
+		}
 
 		go func() {
-			result, ctrlResult, err := f.reconcileMetricPlugin(ctx, fleet, fleetClusters)
-			resultsChannel <- reconcileResult{result, ctrlResult, err}
+			wg.Wait()
+			close(resultsChannel)
 		}()
 
-		go func() {
-			result, ctrlResult, err := f.reconcileGrafanaPlugin(ctx, fleet)
-			resultsChannel <- reconcileResult{result, ctrlResult, err}
-		}()
-
-		go func() {
-			result, ctrlResult, err := f.reconcileKyvernoPlugin(ctx, fleet, fleetClusters)
-			resultsChannel <- reconcileResult{result, ctrlResult, err}
-		}()
-
-		go func() {
-			result, ctrlResult, err := f.reconcileBackupPlugin(ctx, fleet, fleetClusters)
-			resultsChannel <- reconcileResult{result, ctrlResult, err}
-		}()
-
-		for i := 0; i < 4; i++ {
-			res := <-resultsChannel
+		for res := range resultsChannel {
 			if res.err != nil || res.ctrlResult.RequeueAfter > 0 {
 				return res.ctrlResult, res.err
 			}

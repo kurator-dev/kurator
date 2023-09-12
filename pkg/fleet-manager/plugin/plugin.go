@@ -18,7 +18,6 @@ package plugin
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/fs"
 	"strings"
 
@@ -227,7 +226,14 @@ type veleroObjectStoreLocationConfig struct {
 	S3ForcePathStyle bool   `json:"s3ForcePathStyle"`
 }
 
-func RenderVelero(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, backupCfg *fleetv1a1.BackupConfig, accessKey, secretKey string) ([]byte, error) {
+func RenderVelero(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	backupCfg *fleetv1a1.BackupConfig,
+	veleroSecretName string,
+) ([]byte, error) {
 	// get and merge the chart config
 	c, err := getFleetPluginChart(fsys, VeleroComponentName)
 	if err != nil {
@@ -240,6 +246,9 @@ func RenderVelero(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 	if err != nil {
 		return nil, err
 	}
+	// add providerValues to default values
+	providerValues := getProviderValues(backupCfg.Storage.Location.Provider)
+	defaultValues = transform.MergeMaps(defaultValues, providerValues)
 
 	// get custom values
 	customValues := map[string]interface{}{
@@ -257,13 +266,8 @@ func RenderVelero(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 			},
 		},
 		"credentials": map[string]interface{}{
-			"secretContents": map[string]interface{}{
-				"cloud": fmt.Sprintf(
-					"[default]\naws_access_key_id=%s\naws_secret_access_key=%s",
-					accessKey,
-					secretKey,
-				),
-			},
+			"useSecret":      true,
+			"existingSecret": veleroSecretName,
 		},
 	}
 	extraValues, err := toMap(backupCfg.ExtraArgs)
@@ -314,4 +318,54 @@ func toMap(args apiextensionsv1.JSON) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func getProviderValues(provider string) map[string]interface{} {
+	switch provider {
+	case "AWS":
+		return buildAWSProviderValues()
+	case "HuaWeiCloud":
+		return buildHuaWeiCloudProviderValues()
+	case "GCP":
+		return buildGCPProviderValues()
+	case "Azure":
+		return buildAzureProviderValues()
+	default:
+		return nil
+	}
+}
+
+// buildAWSProviderValues constructs the default provider values for AWS.
+func buildAWSProviderValues() map[string]interface{} {
+	values := map[string]interface{}{}
+
+	// currently, the default provider-related extra configuration only sets up initContainers
+	initContainersConfig := map[string]interface{}{
+		"initContainers": []interface{}{
+			map[string]interface{}{
+				"image": "velero/velero-plugin-for-aws:v1.7.1",
+				"name":  "velero-plugin-for-aws",
+				"volumeMounts": []interface{}{
+					map[string]interface{}{
+						"mountPath": "/target",
+						"name":      "plugins",
+					},
+				},
+			},
+		},
+	}
+	values = transform.MergeMaps(values, initContainersConfig)
+
+	return values
+}
+
+// TODO： accomplish those function after investigation
+func buildHuaWeiCloudProviderValues() map[string]interface{} {
+	return nil
+}
+func buildGCPProviderValues() map[string]interface{} {
+	return nil
+}
+func buildAzureProviderValues() map[string]interface{} {
+	return nil
 }

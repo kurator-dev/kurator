@@ -15,11 +15,13 @@ package fleet
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -32,8 +34,20 @@ import (
 const (
 	AccessKey = "access-key"
 	SecretKey = "secret-key"
+
+	AWS         = "aws"
+	HuaWeiCloud = "huaweicloud"
+	GCP         = "gcp"
+	Azure       = "azure"
+
+	AWSObjStoreSecretName         = "kurator-velero-s3"
+	HuaWeiCloudObjStoreSecretName = "kurator-velero-obs"
+	GCPObjStoreSecretName         = "kurator-velero-gcs"
+	AzureObjStoreSecretName       = "kurator-velero-abs"
 )
 
+// reconcileBackupPlugin reconciles the backup plugin configuration and installation across multiple clusters.
+// It generates and applies Velero Helm configurations based on the specified backup plugin settings in the fleet specification.
 func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha1.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
@@ -49,11 +63,15 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 		Name:      fleet.Name,
 	}
 
-	// fetch accessKey and secretKey from secret.
-	accessKey, secretKey, err := getObjStoreCredentials(ctx, f.Client, fleet.Namespace, fleet.Spec.Plugin.Backup.Storage.SecretName)
+	// handle provider-specific details
+	objStoreProvider := veleroCfg.Storage.Location.Provider
+	// newSecret is a variable used to store the newly created secret object which contains the necessary credentials for the object storage provider. The specific structure and content of the secret vary depending on the provider.
+	// providerValues is a map that stores default configurations associated with the specific provider. These configurations are necessary for the proper functioning of the Velero tool with the provider. Currently, this includes configurations for initContainers.
+	newSecret, err := f.getProviderDetails(ctx, veleroCfg.Storage.SecretName, objStoreProvider, fleetNN)
 	if err != nil {
 		return nil, ctrl.Result{}, err
 	}
+
 	fleetOwnerRef := ownerReference(fleet)
 	var resources kube.ResourceList
 	for key, cluster := range fleetClusters {
@@ -62,7 +80,7 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
-		}, veleroCfg, accessKey, secretKey)
+		}, veleroCfg, newSecret.Name)
 		if err != nil {
 			return nil, ctrl.Result{}, err
 		}
@@ -85,6 +103,60 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 	}
 
 	return resources, ctrl.Result{}, nil
+}
+
+// getProviderDetails retrieves the secret and provider values based on the specified object storage provider.
+func (f *FleetManager) getProviderDetails(ctx context.Context, secretName, objStoreProvider string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
+	var newSecret *corev1.Secret
+	var err error
+
+	switch objStoreProvider {
+	case AWS:
+		newSecret, err = f.buildAWSSecret(ctx, secretName, fleetNN)
+	case HuaWeiCloud:
+		newSecret, err = f.buildHuaWeiCloudSecret(ctx, secretName, fleetNN)
+	case GCP:
+		newSecret, err = f.buildGCPSecret(ctx, secretName, fleetNN)
+	case Azure:
+		newSecret, err = f.buildAzureSecret(ctx, secretName, fleetNN)
+	default:
+		return nil, fmt.Errorf("unknown objStoreProvider: %v", objStoreProvider)
+	}
+
+	return newSecret, err
+}
+
+// buildAWSSecret constructs a secret for AWS with the necessary credentials.
+func (f *FleetManager) buildAWSSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
+	// fetch essential information from the user's secret
+	accessKey, secretKey, err := getObjStoreCredentials(ctx, f.Client, fleetNN.Namespace, secretName)
+	if err != nil {
+		return nil, err
+	}
+
+	// build an S3 secret for Velero using the accessKey and secretKey
+	newSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      AWSObjStoreSecretName,
+			Namespace: fleetNN.Namespace,
+		},
+		Type: corev1.SecretTypeOpaque,
+		Data: map[string][]byte{
+			"cloud": []byte(fmt.Sprintf("[default]\naws_access_key_id=%s\naws_secret_access_key=%s", accessKey, secretKey)),
+		},
+	}
+	return newSecret, nil
+}
+
+// TODO： accomplish those function after investigation
+func (f *FleetManager) buildHuaWeiCloudSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
+	return nil, nil
+}
+func (f *FleetManager) buildGCPSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
+	return nil, nil
+}
+func (f *FleetManager) buildAzureSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
+	return nil, nil
 }
 
 func getObjStoreCredentials(ctx context.Context, client client.Client, namespace, secretName string) (accessKey, secretKey string, err error) {

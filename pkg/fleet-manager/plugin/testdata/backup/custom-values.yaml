@@ -52,10 +52,8 @@ spec:
         provider: aws
     credentials:
       secretContents:
-        cloud: |-
-          [default]
-          aws_access_key_id=xxx
-          aws_secret_access_key=xxx
+        "useSecret": true,
+        "existingSecret": kurator-velero-s3,
     defaultVolumesToFsBackup: true
     deployNodeAgent: true
     image:
