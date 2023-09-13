@@ -310,7 +310,6 @@ type BackupStorageLocation struct {
 	// +optional
 	Region string `json:"region,omitempty"`
 	// Config is a map for additional provider-specific configurations.
-	// TODO: enable Config, here is what user can set:
 	//    #  region:
 	//    #  s3ForcePathStyle:
 	//    #  s3Url:
@@ -326,6 +325,7 @@ type BackupStorageLocation struct {
 	//    #  Option to skip certificate validation or not if insecureSkipTLSVerify is set to be true, the client side should set the
 	//    #  flag. For Velero client Command like velero backup describe, velero backup logs needs to add the flag --insecure-skip-tls-verify
 	//    #  insecureSkipTLSVerify:
+	// +optional
 	Config map[string]string `json:"config,omitempty"`
 }
 

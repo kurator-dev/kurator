@@ -43,7 +43,6 @@ spec:
         name: "kyverno-cluster1"
   values:
     fullnameOverride: kyverno
-    
   interval: 1m0s
   install:
     createNamespace: true

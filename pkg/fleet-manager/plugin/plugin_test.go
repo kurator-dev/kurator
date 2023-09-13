@@ -287,10 +287,11 @@ func TestRenderPrometheus(t *testing.T) {
 
 func TestRenderVelero(t *testing.T) {
 	cases := []struct {
-		name  string
-		fleet types.NamespacedName
-		ref   *metav1.OwnerReference
-		in    *v1alpha1.BackupConfig
+		name          string
+		fleet         types.NamespacedName
+		ref           *metav1.OwnerReference
+		in            *v1alpha1.BackupConfig
+		newSecretName string
 	}{
 		{
 			name: "default",
@@ -315,9 +316,10 @@ func TestRenderVelero(t *testing.T) {
 					SecretName: "backup-secret",
 				},
 			},
+			newSecretName: "kurator-velero-s3",
 		},
 		{
-			name: "custom-values",
+			name: "custom-values-s3",
 			fleet: types.NamespacedName{
 				Name:      "fleet-1",
 				Namespace: "default",
@@ -335,6 +337,10 @@ func TestRenderVelero(t *testing.T) {
 						Provider: "aws",
 						Endpoint: "http://x.x.x.x:x",
 						Region:   "minio",
+						Config: map[string]string{
+							"s3Url":  "s3.us-east-2.amazonaws.com",
+							"region": "us-east-2",
+						},
 					},
 					SecretName: "backup-secret",
 				},
@@ -342,6 +348,35 @@ func TestRenderVelero(t *testing.T) {
 					Raw: []byte("{\"image\": {\n  \"repository\": \"velero/velero\",\n  \"tag\": \"v1.10.1\",\n  \"pullPolicy\": \"IfNotPresent\"\n}}"),
 				},
 			},
+			newSecretName: "kurator-velero-s3",
+		},
+		{
+			name: "custom-values-obs",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			in: &v1alpha1.BackupConfig{
+				Storage: v1alpha1.BackupStorage{
+					Location: v1alpha1.BackupStorageLocation{
+						Bucket:   "kurator-backup",
+						Provider: "huaweicloud",
+						Endpoint: "http://obs.cn-south-1.myhuaweicloud.com",
+						Region:   "cn-south-1",
+					},
+					SecretName: "backup-secret",
+				},
+				ExtraArgs: apiextensionsv1.JSON{
+					Raw: []byte("{\"image\": {\n  \"repository\": \"velero/velero\",\n  \"tag\": \"v1.10.1\",\n  \"pullPolicy\": \"IfNotPresent\"\n}}"),
+				},
+			},
+			newSecretName: "kurator-velero-obs",
 		},
 	}
 
@@ -351,7 +386,7 @@ func TestRenderVelero(t *testing.T) {
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.in, "xxx")
+			}, tc.in, tc.newSecretName)
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("backup", tc.name)

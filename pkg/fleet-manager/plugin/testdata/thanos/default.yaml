@@ -51,7 +51,6 @@ spec:
       enabled: false
     storegateway:
       enabled: true
-    
   interval: 1m0s
   install:
     createNamespace: true

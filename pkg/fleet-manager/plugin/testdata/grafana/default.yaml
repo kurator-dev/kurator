@@ -47,7 +47,6 @@ spec:
     fullnameOverride: grafana
     service:
       type: LoadBalancer
-    
   interval: 1m0s
   install:
     createNamespace: true

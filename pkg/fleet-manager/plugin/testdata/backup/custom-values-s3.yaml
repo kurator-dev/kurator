@@ -51,9 +51,8 @@ spec:
           s3Url: http://x.x.x.x:x
         provider: aws
     credentials:
-      secretContents:
-        "useSecret": true,
-        "existingSecret": kurator-velero-s3,
+      existingSecret: kurator-velero-s3
+      useSecret: true
     defaultVolumesToFsBackup: true
     deployNodeAgent: true
     image:
@@ -67,7 +66,6 @@ spec:
       - mountPath: /target
         name: plugins
     snapshotsEnabled: false
-    
   interval: 1m0s
   install:
     createNamespace: true

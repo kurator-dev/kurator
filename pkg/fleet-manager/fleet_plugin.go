@@ -18,6 +18,7 @@ package fleet
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	hrapiv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
@@ -36,6 +37,8 @@ const (
 	PrometheusThanosServiceName = "prometheus-prometheus-thanos"
 
 	NoneClusterIP = "None"
+
+	FleetPluinLabel = "fleet.kurator.dev/fleet-plugin"
 )
 
 func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
@@ -74,11 +77,27 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			close(resultsChannel)
 		}()
 
+		var errs []error
+		var ctrlResults []ctrl.Result
+
 		for res := range resultsChannel {
-			if res.err != nil || res.ctrlResult.RequeueAfter > 0 {
-				return res.ctrlResult, res.err
+			if res.err != nil {
+				errs = append(errs, res.err)
+			}
+			if res.ctrlResult.RequeueAfter > 0 {
+				ctrlResults = append(ctrlResults, res.ctrlResult)
 			}
 			resources = append(resources, res.result...)
+		}
+
+		if len(errs) > 0 {
+			// Combine all errors into one error message
+			return ctrl.Result{}, fmt.Errorf("encountered multiple errors: %v", errs)
+		}
+
+		if len(ctrlResults) > 0 {
+			// Handle multiple ctrlResults
+			return ctrlResults[0], nil // TODO: if we need strategy about RequeueAfter
 		}
 	}
 
@@ -108,11 +127,11 @@ func (f *FleetManager) reconcilePluginResources(ctx context.Context, fleet *flee
 	helmReleases := &hrapiv2b1.HelmReleaseList{}
 	fleetLabels := fleetResourceLables(fleet.Name)
 	if err := f.Client.List(ctx, helmRepos, client.InNamespace(fleet.Namespace), fleetLabels); err != nil {
-		log.Error(err, "failed to list helm repositories")
+		log.Error(err, "failed to list helm repository")
 		return ctrl.Result{}, err
 	}
 	if err := f.Client.List(ctx, helmReleases, client.InNamespace(fleet.Namespace), fleetLabels); err != nil {
-		log.Error(err, "failed to list helm repositories")
+		log.Error(err, "failed to list helm release")
 		return ctrl.Result{}, err
 	}
 

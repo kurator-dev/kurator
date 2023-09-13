@@ -69,7 +69,6 @@ spec:
           secretName: thanos-objstore
         service:
           type: LoadBalancer
-    
   interval: 1m0s
   install:
     createNamespace: true

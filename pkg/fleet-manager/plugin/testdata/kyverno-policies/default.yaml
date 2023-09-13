@@ -46,7 +46,6 @@ spec:
     podSecuritySeverity: medium
     podSecurityStandard: baseline
     validationFailureAction: Audit
-    
   interval: 1m0s
   install:
     createNamespace: true

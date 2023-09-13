@@ -44,20 +44,21 @@ spec:
   values:
     configuration:
       backupStorageLocation:
-      - bucket: velero
+      - bucket: kurator-backup
         config:
-          region: minio
+          region: cn-south-1
           s3ForcePathStyle: true
-          s3Url: http://x.x.x.x:x
+          s3Url: http://obs.cn-south-1.myhuaweicloud.com
         provider: aws
     credentials:
-      existingSecret: kurator-velero-s3
+      existingSecret: kurator-velero-obs
       useSecret: true
     defaultVolumesToFsBackup: true
     deployNodeAgent: true
     image:
+      pullPolicy: IfNotPresent
       repository: velero/velero
-      tag: v1.11.1
+      tag: v1.10.1
     initContainers:
     - image: velero/velero-plugin-for-aws:v1.7.1
       name: velero-plugin-for-aws
