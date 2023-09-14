@@ -23,15 +23,13 @@ import (
 
 // Destination defines a target set of clusters, either through a fleet or by specifying them directly.
 type Destination struct {
-	// Fleet represents the name of a fleet which determines a set of clusters.
-	// If Fleet is set, it will be used to determine the target clusters.
-	// If users wish to specify clusters directly, they can use the Clusters field.
-	// +optional
-	Fleet string `json:"fleet,omitempty"`
+	// Fleet represents the name of a fleet which determines a set of target clusters within the namespace.
+	// This field is required to identify the context for cluster selection.
+	// +required
+	Fleet string `json:"fleet"`
 
-	// Clusters allows users to directly specify a set of destination clusters.
-	// It should be used exclusively to select clusters described within the Fleet.
-	// If Fleet is set, it takes precedence over the Clusters field.
+	// Clusters allows users to specify a subset of clusters within the selected fleet for targeted operations.
+	// If not set, it implies that the operation is targeted at all clusters within the specified fleet.
 	// +optional
 	Clusters []*corev1.ObjectReference `json:"clusters,omitempty"`
 }
