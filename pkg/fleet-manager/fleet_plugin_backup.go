@@ -160,7 +160,7 @@ func (f *FleetManager) buildAWSSecret(ctx context.Context, secretName string, fl
 			Name:      s3SecretName,
 			Namespace: ObjStoreSecretNamespace,
 			Labels: map[string]string{
-				FleetPluinLabel: plugin.BackupPluginName,
+				FleetPluginName: plugin.BackupPluginName,
 			},
 		},
 		Type: corev1.SecretTypeOpaque,

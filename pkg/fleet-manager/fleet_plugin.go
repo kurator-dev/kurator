@@ -37,8 +37,6 @@ const (
 	PrometheusThanosServiceName = "prometheus-prometheus-thanos"
 
 	NoneClusterIP = "None"
-
-	FleetPluinLabel = "fleet.kurator.dev/plugin-typo"
 )
 
 func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
