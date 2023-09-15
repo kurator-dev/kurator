@@ -42,10 +42,10 @@ import (
 const (
 	FleetKind      = "Fleet"
 	FleetFinalizer = "fleet.kurator.dev"
-)
 
-const RequeueAfter = 5 * time.Second
-const FleetLabel = "fleet.kurator.dev/fleet-name"
+	RequeueAfter = 5 * time.Second
+	FleetLabel   = "fleet.kurator.dev/fleet-name"
+)
 
 // FleetManager reconciles a Cluster object
 type FleetManager struct {

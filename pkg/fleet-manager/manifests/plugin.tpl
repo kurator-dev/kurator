@@ -47,7 +47,7 @@ spec:
         name: "{{ .ResourceName }}"
 {{- if or .Chart.Values  .Values }}
   values:
-    {{- merge .Values .Chart.Values | toYaml | nindent 4 }}
+    {{- merge .Values .Chart.Values | toYaml | trim | nindent 4 }}
 {{- end }}
   interval: 1m0s
   install:

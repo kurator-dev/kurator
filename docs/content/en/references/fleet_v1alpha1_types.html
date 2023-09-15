@@ -221,11 +221,17 @@ string
 </em>
 </td>
 <td>
-<p>SecretName represents the name of the secret containing the object store credentials.
-To access the backup storage location, the secret must include the following keys:</p>
+<p>The structure of the secret varies depending on the object storage provider:</p>
 <ul>
-<li><code>access-key</code>: The access-key/account/username for object storage authentication.</li>
-<li><code>secret-key</code>: The secret-key/password for object storage authentication.</li>
+<li><p>For AWS S3, Minio or Huawei Cloud, the secret should contain the following keys:</p>
+<ul>
+<li><code>access-key</code>: The access key for S3 authentication.</li>
+<li><code>secret-key</code>: The secret key for S3 authentication.</li>
+</ul></li>
+<li><p>For GCP, the secret should be created according to the official GCP documentation.
+see <a href="https://github.com/vmware-tanzu/velero-plugin-for-gcp/blob/main/README.md">https://github.com/vmware-tanzu/velero-plugin-for-gcp/blob/main/README.md</a></p></li>
+<li><p>For Azure, the secret should be created according to the official Azure documentation.
+see <a href="https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure/blob/main/README.md">https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure/blob/main/README.md</a></p></li>
 </ul>
 </td>
 </tr>
@@ -268,7 +274,7 @@ string
 </em>
 </td>
 <td>
-<p>Provider specifies the storage provider type (e.g., aws, gcp, azure).</p>
+<p>Provider specifies the storage provider type (e.g., aws, huaweicloud, gcp, azure).</p>
 </td>
 </tr>
 <tr>
@@ -290,6 +296,7 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Region specifies the region of the storage.</p>
 </td>
 </tr>
@@ -301,7 +308,23 @@ map[string]string
 </em>
 </td>
 <td>
-<p>Config is a map for additional provider-specific configurations.</p>
+<em>(Optional)</em>
+<p>Config is a map for additional provider-specific configurations.
+#  region:
+#  s3ForcePathStyle:
+#  s3Url:
+#  kmsKeyId:
+#  resourceGroup:
+#  The ID of the subscription containing the storage account, if different from the cluster’s subscription. (Azure only)
+#  subscriptionId:
+#  storageAccount:
+#  publicUrl:
+#  Name of the GCP service account to use for this backup storage location. Specify the
+#  service account here if you want to use workload identity instead of providing the key file.(GCP only)
+#  serviceAccount:
+#  Option to skip certificate validation or not if insecureSkipTLSVerify is set to be true, the client side should set the
+#  flag. For Velero client Command like velero backup describe, velero backup logs needs to add the flag &ndash;insecure-skip-tls-verify
+#  insecureSkipTLSVerify:</p>
 </td>
 </tr>
 </tbody>

@@ -65,7 +65,7 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 		resources = append(resources, kyvernoResources...)
 	}
 
-	log.V(4).Info("wait for grafana helm release to be reconciled")
+	log.V(4).Info("wait for kyverno helm release to be reconciled")
 	if !f.helmReleaseReady(ctx, fleet, resources) {
 		// wait for HelmRelease to be ready
 		return nil, ctrl.Result{

@@ -18,6 +18,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"strings"
 
@@ -34,12 +35,14 @@ const (
 	MetricPluginName  = "metric"
 	GrafanaPluginName = "grafana"
 	KyvernoPluginName = "kyverno"
+	BackupPluginName  = "backup"
 
 	ThanosComponentName        = "thanos"
 	PrometheusComponentName    = "prometheus"
 	GrafanaComponentName       = "grafana"
 	KyvernoComponentName       = "kyverno"
 	KyvernoPolicyComponentName = "kyverno-policies"
+	VeleroComponentName        = "velero"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -174,7 +177,7 @@ func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 	return renderFleetPlugin(fsys, thanosCfg)
 }
 
-func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
+func RenderPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
 	promChart, err := getFleetPluginChart(fsys, PrometheusComponentName)
 	if err != nil {
 		return nil, err
@@ -213,6 +216,86 @@ func RendPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1
 	return renderFleetPlugin(fsys, promCfg)
 }
 
+type veleroObjectStoreLocation struct {
+	Bucket   string                 `json:"bucket"`
+	Provider string                 `json:"provider"`
+	Config   map[string]interface{} `json:"config"`
+}
+
+func RenderVelero(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	backupCfg *fleetv1a1.BackupConfig,
+	veleroSecretName string,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, VeleroComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, backupCfg.Chart)
+
+	// get default values
+	defaultValues := c.Values
+	// providerValues is a map that stores default configurations associated with the specific provider. These configurations are necessary for the proper functioning of the Velero tool with the provider. Currently, this includes configurations for initContainers.
+	providerValues, err := getProviderValues(backupCfg.Storage.Location.Provider)
+	if err != nil {
+		return nil, err
+	}
+	// add providerValues to default values
+	defaultValues = transform.MergeMaps(defaultValues, providerValues)
+
+	// get custom values
+	customValues := map[string]interface{}{}
+	locationConfig := stringMapToInterfaceMap(backupCfg.Storage.Location.Config)
+	// generate velero config. "backupCfg.Storage.Location.Endpoint" and "backupCfg.Storage.Location.Region" will overwrite the value of "backupCfg.Storage.Location.config"
+	// because "backupCfg.Storage.Location.config" is optional, it should take effect only when current setting is not enough.
+	Config := transform.MergeMaps(locationConfig, map[string]interface{}{
+		"s3Url":            backupCfg.Storage.Location.Endpoint,
+		"region":           backupCfg.Storage.Location.Region,
+		"s3ForcePathStyle": true,
+	})
+	provider := getProviderFrombackupCfg(backupCfg)
+	configurationValues := map[string]interface{}{
+		"configuration": map[string]interface{}{
+			"backupStorageLocation": []veleroObjectStoreLocation{
+				{
+					Bucket:   backupCfg.Storage.Location.Bucket,
+					Provider: provider,
+					Config:   Config,
+				},
+			},
+		},
+		"credentials": map[string]interface{}{
+			"useSecret":      true,
+			"existingSecret": veleroSecretName,
+		},
+	}
+	// add custom configurationValues to customValues
+	customValues = transform.MergeMaps(customValues, configurationValues)
+	extraValues, err := toMap(backupCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+	// add custom extraValues to customValues
+	customValues = transform.MergeMaps(customValues, extraValues)
+
+	// replace the default values with custom values to obtain the actual values.
+	values := transform.MergeMaps(defaultValues, customValues)
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           BackupPluginName,
+		Component:      VeleroComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
 func mergeChartConfig(origin *ChartConfig, target *fleetv1a1.ChartConfig) {
 	if target == nil {
 		return
@@ -240,4 +323,75 @@ func toMap(args apiextensionsv1.JSON) (map[string]interface{}, error) {
 		return nil, err
 	}
 	return m, nil
+}
+
+func stringMapToInterfaceMap(args map[string]string) map[string]interface{} {
+	m := make(map[string]interface{})
+	for s, s2 := range args {
+		m[s] = s2
+	}
+
+	return m
+}
+
+// getProviderValues return the map that stores default configurations associated with the specific provider.
+// The provider parameter can be one of the following values: "aws", "huaweicloud", "gcp", "azure".
+func getProviderValues(provider string) (map[string]interface{}, error) {
+	switch provider {
+	case "aws":
+		return buildAWSProviderValues(), nil
+	case "huaweicloud":
+		return buildHuaWeiCloudProviderValues(), nil
+	case "gcp":
+		return buildGCPProviderValues(), nil
+	case "azure":
+		return buildAzureProviderValues(), nil
+	default:
+		return nil, fmt.Errorf("unknown objStoreProvider: %v", provider)
+	}
+}
+
+// buildAWSProviderValues constructs the default provider values for AWS.
+func buildAWSProviderValues() map[string]interface{} {
+	values := map[string]interface{}{}
+
+	// currently, the default provider-related extra configuration only sets up initContainers
+	initContainersConfig := map[string]interface{}{
+		"initContainers": []interface{}{
+			map[string]interface{}{
+				"image": "velero/velero-plugin-for-aws:v1.7.1",
+				"name":  "velero-plugin-for-aws",
+				"volumeMounts": []interface{}{
+					map[string]interface{}{
+						"mountPath": "/target",
+						"name":      "plugins",
+					},
+				},
+			},
+		},
+	}
+	values = transform.MergeMaps(values, initContainersConfig)
+
+	return values
+}
+
+func buildHuaWeiCloudProviderValues() map[string]interface{} {
+	return buildAWSProviderValues()
+}
+
+// TODO： accomplish those function after investigation
+func buildGCPProviderValues() map[string]interface{} {
+	return nil
+}
+func buildAzureProviderValues() map[string]interface{} {
+	return nil
+}
+
+func getProviderFrombackupCfg(backupCfg *fleetv1a1.BackupConfig) string {
+	provider := backupCfg.Storage.Location.Provider
+	// there no "huaweicloud" provider in velero
+	if provider == "huaweicloud" {
+		provider = "aws"
+	}
+	return provider
 }
