@@ -38,7 +38,7 @@ const (
 
 	NoneClusterIP = "None"
 
-	FleetPluinLabel = "fleet.kurator.dev/fleet-plugin"
+	FleetPluinLabel = "fleet.kurator.dev/plugin-typo"
 )
 
 func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
@@ -84,7 +84,7 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			if res.err != nil {
 				errs = append(errs, res.err)
 			}
-			if res.ctrlResult.RequeueAfter > 0 {
+			if res.ctrlResult.Requeue || res.ctrlResult.RequeueAfter > 0 {
 				ctrlResults = append(ctrlResults, res.ctrlResult)
 			}
 			resources = append(resources, res.result...)

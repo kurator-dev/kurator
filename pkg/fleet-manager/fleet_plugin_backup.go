@@ -41,10 +41,10 @@ const (
 	GCP         = "gcp"
 	Azure       = "azure"
 
-	AWSObjStoreSecretName         = "kurator-velero-s3"
-	HuaWeiCloudObjStoreSecretName = "kurator-velero-obs"
-	GCPObjStoreSecretName         = "kurator-velero-gcs"
-	AzureObjStoreSecretName       = "kurator-velero-abs"
+	AWSObjStoreSecretNameSuffix         = "-velero-s3"
+	HuaWeiCloudObjStoreSecretNameSuffix = "-velero-obs"
+	GCPObjStoreSecretNameSuffix         = "-velero-gcs"
+	AzureObjStoreSecretNameSuffix       = "-velero-abs"
 
 	ObjStoreSecretNamespace = "velero"
 )
@@ -54,12 +54,12 @@ const (
 func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha1.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	if fleet.Spec.Plugin.Backup == nil {
+	veleroCfg := fleet.Spec.Plugin.Backup
+
+	if veleroCfg == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil
 		return nil, ctrl.Result{}, nil
 	}
-
-	veleroCfg := fleet.Spec.Plugin.Backup
 
 	fleetNN := types.NamespacedName{
 		Namespace: fleet.Namespace,
@@ -132,9 +132,9 @@ func (f *FleetManager) buildNewSecret(ctx context.Context, secretName, objStoreP
 
 	switch objStoreProvider {
 	case AWS:
-		newSecret, err = f.buildAWSSecret(ctx, secretName, fleetNN)
+		newSecret, err = f.buildAWSSecret(ctx, secretName, fleetNN, fleetNN.Name+AWSObjStoreSecretNameSuffix)
 	case HuaWeiCloud:
-		newSecret, err = f.buildHuaWeiCloudSecret(ctx, secretName, fleetNN)
+		newSecret, err = f.buildHuaWeiCloudSecret(ctx, secretName, fleetNN, fleetNN.Name+HuaWeiCloudObjStoreSecretNameSuffix)
 	case GCP:
 		newSecret, err = f.buildGCPSecret(ctx, secretName, fleetNN)
 	case Azure:
@@ -147,7 +147,7 @@ func (f *FleetManager) buildNewSecret(ctx context.Context, secretName, objStoreP
 }
 
 // buildAWSSecret constructs a secret for AWS with the necessary credentials.
-func (f *FleetManager) buildAWSSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
+func (f *FleetManager) buildAWSSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName, s3SecretName string) (*corev1.Secret, error) {
 	// fetch essential information from the user's secret
 	accessKey, secretKey, err := getObjStoreCredentials(ctx, f.Client, fleetNN.Namespace, secretName)
 	if err != nil {
@@ -157,7 +157,7 @@ func (f *FleetManager) buildAWSSecret(ctx context.Context, secretName string, fl
 	// build an S3 secret for Velero using the accessKey and secretKey
 	newSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      AWSObjStoreSecretName,
+			Name:      s3SecretName,
 			Namespace: ObjStoreSecretNamespace,
 			Labels: map[string]string{
 				FleetPluinLabel: plugin.BackupPluginName,
@@ -171,28 +171,8 @@ func (f *FleetManager) buildAWSSecret(ctx context.Context, secretName string, fl
 	return newSecret, nil
 }
 
-func (f *FleetManager) buildHuaWeiCloudSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName) (*corev1.Secret, error) {
-	// fetch essential information from the user's secret
-	accessKey, secretKey, err := getObjStoreCredentials(ctx, f.Client, fleetNN.Namespace, secretName)
-	if err != nil {
-		return nil, err
-	}
-
-	// build an S3 secret for Velero using the accessKey and secretKey
-	newSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      HuaWeiCloudObjStoreSecretName,
-			Namespace: ObjStoreSecretNamespace,
-			Labels: map[string]string{
-				FleetPluinLabel: plugin.BackupPluginName,
-			},
-		},
-		Type: corev1.SecretTypeOpaque,
-		Data: map[string][]byte{
-			"cloud": []byte(fmt.Sprintf("[default]\naws_access_key_id=%s\naws_secret_access_key=%s", accessKey, secretKey)),
-		},
-	}
-	return newSecret, nil
+func (f *FleetManager) buildHuaWeiCloudSecret(ctx context.Context, secretName string, fleetNN types.NamespacedName, huaweiyunSecretName string) (*corev1.Secret, error) {
+	return f.buildAWSSecret(ctx, secretName, fleetNN, huaweiyunSecretName)
 }
 
 // TODO： accomplish those function after investigation
