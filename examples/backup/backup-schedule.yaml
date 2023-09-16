@@ -1,0 +1,18 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: schedule-matchlabels
+  namespace: default
+spec:
+  schedule: "0 0 * * *" # Runs at midnight every day.
+  destination:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member2
+  policy:
+    resourceFilter:
+      labelSelector:
+        matchLabels:
+          env: test
+    ttl: 240h # 10 * 24 hours

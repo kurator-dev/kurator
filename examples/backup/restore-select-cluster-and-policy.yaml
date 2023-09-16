@@ -1,0 +1,16 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Restore
+metadata:
+  name: quickstart
+  namespace: default
+spec:
+  backupName: minimal
+  destination:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member1
+  policy:
+    resourceFilter:
+      includedNamespaces:
+        - kurator-backup

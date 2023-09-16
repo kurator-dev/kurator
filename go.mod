@@ -37,6 +37,7 @@ require (
 	github.com/prometheus-operator/prometheus-operator/pkg/client v0.56.3
 	github.com/prometheus/common v0.37.0
 	github.com/prometheus/prometheus v1.8.2-0.20220315145411-881111fec433
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5

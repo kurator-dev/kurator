@@ -1,0 +1,20 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  creationTimestamp: null
+  labels:
+    fleet.kurator.dev/fleet-name: quickstart
+    fleet.kurator.dev/plugin: backup
+    kurator.dev/migrate-name: label-selector
+  name: kurator-member2-migrate-label-selector
+  namespace: velero
+spec:
+  csiSnapshotTimeout: 0s
+  hooks: {}
+  itemOperationTimeout: 0s
+  labelSelector:
+    matchLabels:
+      app: busybox2
+  metadata: {}
+  ttl: 240h0m0s
+status: {}

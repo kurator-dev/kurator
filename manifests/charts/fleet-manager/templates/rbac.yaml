@@ -24,6 +24,16 @@ rules:
       - update
       - watch
   - apiGroups:
+      - backup.kurator.dev
+    resources:
+      - '*'
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
       - kustomize.toolkit.fluxcd.io
     resources:
       - kustomizations

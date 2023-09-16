@@ -1,0 +1,18 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  creationTimestamp: null
+  labels:
+    fleet.kurator.dev/fleet-name: quickstart
+    fleet.kurator.dev/plugin: backup
+    kurator.dev/migrate-name: custom-policy
+  name: kurator-member1-migrate-custom-policy
+  namespace: velero
+spec:
+  backupName: kurator-member1-migrate-include-ns
+  hooks: {}
+  itemOperationTimeout: 0s
+  labelSelector:
+    matchLabels:
+      env: test
+status: {}

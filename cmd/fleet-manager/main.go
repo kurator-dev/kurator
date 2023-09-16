@@ -35,6 +35,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"kurator.dev/kurator/cmd/fleet-manager/application"
+	"kurator.dev/kurator/cmd/fleet-manager/backup"
 	"kurator.dev/kurator/cmd/fleet-manager/options"
 	"kurator.dev/kurator/cmd/fleet-manager/scheme"
 	fleet "kurator.dev/kurator/pkg/fleet-manager"
@@ -138,7 +139,11 @@ func run(ctx context.Context, opts *options.Options) error {
 	}
 
 	if err = application.InitControllers(ctx, opts, mgr); err != nil {
-		return fmt.Errorf("application init fail, %w", err)
+		return fmt.Errorf("application init controllers fail, %w", err)
+	}
+
+	if err = backup.InitControllers(ctx, opts, mgr); err != nil {
+		return fmt.Errorf("backup init controllers fail, %w", err)
 	}
 
 	log.Info("starting manager", "version", version.Get().String())

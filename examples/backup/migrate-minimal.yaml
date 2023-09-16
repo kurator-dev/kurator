@@ -1,0 +1,20 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Migrate
+metadata:
+  name: minimal
+  namespace: default
+spec:
+  sourceCluster:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member1
+  targetCluster:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member2
+  policy:
+    resourceFilter:
+      includedNamespaces:
+        - kurator-backup

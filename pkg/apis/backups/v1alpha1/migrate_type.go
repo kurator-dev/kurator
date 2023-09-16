@@ -40,14 +40,13 @@ type MigrateSpec struct {
 	// The user needs to ensure that SourceCluster points to only ONE cluster.
 	// Because the current migration only supports migrating from one SourceCluster to one or more TargetCluster.
 	// +required
-	SourceCluster *Destination `json:"sourceCluster"`
+	SourceCluster Destination `json:"sourceCluster"`
 
-	// TargetCluster represents the target clusters for migration.
+	// TargetClusters represents the target clusters for migration.
 	// +required
-	TargetCluster *Destination `json:"targetCluster"`
+	TargetClusters Destination `json:"targetCluster"`
 
 	// Policy defines the rules for the migration.
-	// +optional
 	Policy *MigratePolicy `json:"policy,omitempty"`
 }
 
@@ -90,6 +89,36 @@ type MigratePolicy struct {
 	PreserveNodePorts *bool `json:"preserveNodePorts,omitempty"`
 }
 
+// MigratePhase is a string representation of the lifecycle phase of a Migrate instance
+// +kubebuilder:validation:Enum=New;FailedValidation;WaitingForSource;InProgress;Completed;Failed
+type MigratePhase string
+
+const (
+	// MigratePhaseNew means the migrate has been created but not
+	// yet processed by the RestoreController
+	MigratePhaseNew MigratePhase = "New"
+
+	// MigratePhaseFailedValidation means the migrate has failed
+	// the controller's validations and therefore will not run.
+	MigratePhaseFailedValidation MigratePhase = "FailedValidation"
+
+	// MigratePhaseWaitingForSource means the migrate is currently fetching source cluster resource.
+	MigratePhaseWaitingForSource MigratePhase = "WaitingForSource"
+
+	// MigratePhaseSourceReady means the migrate is already currently fetched source cluster resource.
+	MigratePhaseSourceReady MigratePhase = "SourceReady"
+
+	// MigratePhaseInProgress means the migrate is currently executing migrating.
+	MigratePhaseInProgress MigratePhase = "InProgress"
+
+	// MigratePhaseCompleted means the migrate has run successfully
+	// without errors.
+	MigratePhaseCompleted MigratePhase = "Completed"
+
+	// MigratePhaseFailed means the migrate was unable to execute.
+	MigratePhaseFailed MigratePhase = "Failed"
+)
+
 type MigrateStatus struct {
 	// Conditions represent the current state of the migration operation.
 	// +optional
@@ -97,13 +126,13 @@ type MigrateStatus struct {
 
 	// Phase represents the current phase of the migration operation.
 	// +optional
-	Phase string `json:"phase,omitempty"`
+	Phase MigratePhase `json:"phase,omitempty"`
 
 	// SourceClusterStatus provides a detailed status for backup in SourceCluster.
 	SourceClusterStatus *BackupDetails `json:"sourceClusterStatus,omitempty"`
 
 	// TargetClusterStatus provides a detailed status for each restore in each TargetCluster.
-	TargetClusterStatus []*RestoreDetails `json:"targetClusterStatus,omitempty"`
+	TargetClustersStatus []*RestoreDetails `json:"targetClusterStatus,omitempty"`
 }
 
 // MigrateList contains a list of Migrate.

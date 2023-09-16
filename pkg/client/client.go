@@ -27,6 +27,7 @@ import (
 	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	promclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/sirupsen/logrus"
+	veleroclient "github.com/vmware-tanzu/velero/pkg/generated/clientset/versioned"
 	helmclient "helm.sh/helm/v3/pkg/kube"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,6 +45,7 @@ type Client struct {
 
 	karmada karmadaclientset.Interface
 	prom    promclient.Interface
+	velero  veleroclient.Interface
 }
 
 func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
@@ -57,6 +59,7 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 	crdClientSet := crdclientset.NewForConfigOrDie(c)
 	karmadaClient := karmadaclientset.NewForConfigOrDie(c)
 	promClient := promclient.NewForConfigOrDie(c)
+	veleroClient := veleroclient.NewForConfigOrDie(c)
 
 	return &Client{
 		kube:    kubeClient,
@@ -64,6 +67,7 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 		crd:     crdClientSet,
 		karmada: karmadaClient,
 		prom:    promClient,
+		velero:  veleroClient,
 	}, nil
 }
 
@@ -85,6 +89,10 @@ func (c *Client) HelmClient() *helmclient.Client {
 
 func (c *Client) PromClient() promclient.Interface {
 	return c.prom
+}
+
+func (c *Client) VeleroClient() veleroclient.Interface {
+	return c.velero
 }
 
 func (c *Client) UpdateResource(obj interface{}) error {
