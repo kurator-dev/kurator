@@ -201,6 +201,19 @@ github.com/vmware-tanzu/velero/pkg/apis/velero/v1.BackupStatus
 <p>BackupStatusInCluster is the current status of the backup performed within this cluster.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>scheduleStatusInCluster</code><br>
+<em>
+github.com/vmware-tanzu/velero/pkg/apis/velero/v1.ScheduleStatus
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ScheduleStatusInCluster represents the current status of the scheduled backup within this cluster.
+It is utilized only when the Schedule is set.</p>
+</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1100,7 +1113,8 @@ string
 </em>
 </td>
 <td>
-<p>BackupName specifies the backup on which this restore operation is based.</p>
+<p>BackupName specifies the backup on which this restore operation is based.
+Corresponds to the object name in the CRD &ldquo;backup.kurator.dev&rdquo;.</p>
 </td>
 </tr>
 <tr>
@@ -1326,7 +1340,8 @@ string
 </em>
 </td>
 <td>
-<p>BackupName specifies the backup on which this restore operation is based.</p>
+<p>BackupName specifies the backup on which this restore operation is based.
+Corresponds to the object name in the CRD &ldquo;backup.kurator.dev&rdquo;.</p>
 </td>
 </tr>
 <tr>

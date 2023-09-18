@@ -43,7 +43,7 @@ spec:
             properties:
               backupName:
                 description: BackupName specifies the backup on which this restore
-                  operation is based.
+                  operation is based. Corresponds to the object name in the CRD "backup.kurator.dev".
                 type: string
               destination:
                 description: Destination indicates the clusters where restore should

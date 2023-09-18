@@ -125,6 +125,11 @@ type BackupDetails struct {
 	// BackupStatusInCluster is the current status of the backup performed within this cluster.
 	// +optional
 	BackupStatusInCluster *velerov1.BackupStatus `json:"backupStatusInCluster,omitempty"`
+
+	// ScheduleStatusInCluster represents the current status of the scheduled backup within this cluster.
+	// It is utilized only when the Schedule is set.
+	// +optional
+	ScheduleStatusInCluster *velerov1.ScheduleStatus `json:"scheduleStatusInCluster,omitempty"`
 }
 
 // BackupList contains a list of Backup.

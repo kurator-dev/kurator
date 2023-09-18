@@ -65,6 +65,11 @@ func (in *BackupDetails) DeepCopyInto(out *BackupDetails) {
 		*out = new(v1.BackupStatus)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ScheduleStatusInCluster != nil {
+		in, out := &in.ScheduleStatusInCluster, &out.ScheduleStatusInCluster
+		*out = new(v1.ScheduleStatus)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

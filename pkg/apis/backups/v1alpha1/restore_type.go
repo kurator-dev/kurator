@@ -38,6 +38,7 @@ type Restore struct {
 
 type RestoreSpec struct {
 	// BackupName specifies the backup on which this restore operation is based.
+	// Corresponds to the object name in the CRD "backup.kurator.dev".
 	// +required
 	BackupName string `json:"backupName"`
 

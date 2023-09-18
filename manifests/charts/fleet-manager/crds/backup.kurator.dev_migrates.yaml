@@ -662,6 +662,31 @@ spec:
                     description: ClusterName is the Name of the cluster where the
                       backup is being performed.
                     type: string
+                  scheduleStatusInCluster:
+                    description: ScheduleStatusInCluster represents the current status
+                      of the scheduled backup within this cluster. It is utilized
+                      only when the Schedule is set.
+                    properties:
+                      lastBackup:
+                        description: LastBackup is the last time a Backup was run
+                          for this Schedule schedule
+                        format: date-time
+                        nullable: true
+                        type: string
+                      phase:
+                        description: Phase is the current phase of the Schedule
+                        enum:
+                        - New
+                        - Enabled
+                        - FailedValidation
+                        type: string
+                      validationErrors:
+                        description: ValidationErrors is a slice of all validation
+                          errors (if applicable)
+                        items:
+                          type: string
+                        type: array
+                    type: object
                 type: object
               targetClusterStatus:
                 description: TargetClusterStatus provides a detailed status for each
