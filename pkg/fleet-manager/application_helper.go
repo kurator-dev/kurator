@@ -31,6 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
@@ -180,88 +181,88 @@ func (a *ApplicationManager) generateKubeConfig(fleetCluster ClusterInterface) *
 
 // syncKustomizationForCluster ensures that the Kustomization object is in sync with Flux's requirements for the object.
 func (a *ApplicationManager) syncKustomizationForCluster(ctx context.Context, app *applicationapi.Application, kustomization *applicationapi.Kustomization, kubeConfig *fluxmeta.KubeConfigReference, kustomizationName string) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
 	// Create a target Kustomization object with details extracted from the provided application's Kustomization spec
 	targetKustomization := &kustomizev1beta2.Kustomization{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      kustomizationName,
-			Namespace: app.Namespace,
-			Labels: map[string]string{
-				ApplicationLabel: app.Name,
-			},
-			OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
+		ObjectMeta: buildObjectMetaWithApplication(kustomizationName, app),
+	}
+
+	targetKustomizationSpec := kustomizev1beta2.KustomizationSpec{
+		// Populate the Kustomization spec with information from the provided Kustomization spec
+		// Include all relevant details for the Kustomization, like DependsOn, Interval, RetryInterval, KubeConfig, Path, and more.
+		DependsOn:     kustomization.DependsOn,
+		Interval:      kustomization.Interval,
+		RetryInterval: kustomization.RetryInterval,
+		KubeConfig:    kubeConfig,
+		Path:          kustomization.Path,
+		Prune:         kustomization.Prune,
+		Patches:       kustomization.Patches,
+		Images:        kustomization.Images,
+		SourceRef: kustomizev1beta2.CrossNamespaceSourceReference{
+			Kind: findSourceKind(app),
+			Name: generateSourceName(app),
 		},
-		Spec: kustomizev1beta2.KustomizationSpec{
-			// Populate the Kustomization spec with information from the provided Kustomization spec
-			// Include all relevant details for the Kustomization, like DependsOn, Interval, RetryInterval, KubeConfig, Path, and more.
-			DependsOn:     kustomization.DependsOn,
-			Interval:      kustomization.Interval,
-			RetryInterval: kustomization.RetryInterval,
-			KubeConfig:    kubeConfig,
-			Path:          kustomization.Path,
-			Prune:         kustomization.Prune,
-			Patches:       kustomization.Patches,
-			Images:        kustomization.Images,
-			SourceRef: kustomizev1beta2.CrossNamespaceSourceReference{
-				Kind: findSourceKind(app),
-				Name: generateSourceName(app),
-			},
-			Suspend:         kustomization.Suspend,
-			TargetNamespace: kustomization.TargetNamespace,
-			Timeout:         kustomization.Timeout,
-			Force:           kustomization.Force,
-			Components:      kustomization.Components,
-		},
+		Suspend:         kustomization.Suspend,
+		TargetNamespace: kustomization.TargetNamespace,
+		Timeout:         kustomization.Timeout,
+		Force:           kustomization.Force,
+		Components:      kustomization.Components,
 	}
 
 	// If available, apply Kustomization CommonMetadata data to the target Kustomization
 	if kustomization.CommonMetadata != nil {
-		targetKustomization.Spec.CommonMetadata = &kustomizev1beta2.CommonMetadata{
+		targetKustomizationSpec.CommonMetadata = &kustomizev1beta2.CommonMetadata{
 			Annotations: kustomization.CommonMetadata.Annotations,
 			Labels:      kustomization.CommonMetadata.Labels,
 		}
 	}
 
-	// Synchronize the target Kustomization object with the Kubernetes API server
-	return a.syncResource(ctx, targetKustomization, KustomizationKind)
+	// sync Kustomization resource
+	syncResult, syncError := controllerutil.CreateOrUpdate(ctx, a.Client, targetKustomization, func() error {
+		targetKustomization.Spec = targetKustomizationSpec
+		return nil
+	})
+
+	if syncError != nil {
+		return ctrl.Result{}, fmt.Errorf("error sync Kustomization for cluster, application: %s, error: %v", app.Name, syncError)
+	}
+	log.Info("sync Kustomization operation result:", "result", syncResult)
+	return ctrl.Result{}, nil
 }
 
 // syncHelmReleaseForCluster ensures that the HelmRelease object is in sync with Flux's requirements for the object.
 func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app *applicationapi.Application, helmRelease *applicationapi.HelmRelease, kubeConfig *fluxmeta.KubeConfigReference, helmReleaseName string) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
 	// Create a target HelmRelease object with details extracted from the provided application's HelmRelease spec
 	targetHelmRelease := &helmv2b1.HelmRelease{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      helmReleaseName,
-			Namespace: app.Namespace,
-			Labels: map[string]string{
-				ApplicationLabel: app.Name,
-			},
-			OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
-		},
-		Spec: helmv2b1.HelmReleaseSpec{
-			// Populate the HelmRelease spec with information from the provided HelmRelease spec
-			// Include all relevant details for the HelmRelease, like Interval, KubeConfig, Suspend, ReleaseName, and more.
-			Interval:           helmRelease.Interval,
-			KubeConfig:         kubeConfig,
-			Suspend:            helmRelease.Suspend,
-			ReleaseName:        helmRelease.ReleaseName,
-			TargetNamespace:    helmRelease.TargetNamespace,
-			DependsOn:          helmRelease.DependsOn,
-			Timeout:            helmRelease.Timeout,
-			MaxHistory:         helmRelease.MaxHistory,
-			ServiceAccountName: helmRelease.ServiceAccountName,
-			PersistentClient:   helmRelease.PersistentClient,
-			Install:            helmRelease.Install,
-			Upgrade:            helmRelease.Upgrade,
-			Rollback:           helmRelease.Rollback,
-			Uninstall:          helmRelease.Uninstall,
-			ValuesFrom:         helmRelease.ValuesFrom,
-			Values:             helmRelease.Values,
-		},
+		ObjectMeta: buildObjectMetaWithApplication(helmReleaseName, app),
+	}
+	targetHelmReleaseSpec := helmv2b1.HelmReleaseSpec{
+		// Populate the HelmRelease spec with information from the provided HelmRelease spec
+		// Include all relevant details for the HelmRelease, like Interval, KubeConfig, Suspend, ReleaseName, and more.
+		Interval:           helmRelease.Interval,
+		KubeConfig:         kubeConfig,
+		Suspend:            helmRelease.Suspend,
+		ReleaseName:        helmRelease.ReleaseName,
+		TargetNamespace:    helmRelease.TargetNamespace,
+		DependsOn:          helmRelease.DependsOn,
+		Timeout:            helmRelease.Timeout,
+		MaxHistory:         helmRelease.MaxHistory,
+		ServiceAccountName: helmRelease.ServiceAccountName,
+		PersistentClient:   helmRelease.PersistentClient,
+		Install:            helmRelease.Install,
+		Upgrade:            helmRelease.Upgrade,
+		Rollback:           helmRelease.Rollback,
+		Uninstall:          helmRelease.Uninstall,
+		ValuesFrom:         helmRelease.ValuesFrom,
+		Values:             helmRelease.Values,
 	}
 
 	// If available, apply HelmRelease Chart.ObjectMeta data to the target HelmRelease
 	if helmRelease.Chart.ObjectMeta != nil {
-		targetHelmRelease.Spec.Chart.ObjectMeta = &helmv2b1.HelmChartTemplateObjectMeta{
+		targetHelmReleaseSpec.Chart.ObjectMeta = &helmv2b1.HelmChartTemplateObjectMeta{
 			Labels:      helmRelease.Chart.ObjectMeta.Labels,
 			Annotations: helmRelease.Chart.ObjectMeta.Annotations,
 		}
@@ -269,7 +270,7 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 
 	// Apply the HelmRelease Chart.HelmChartTemplateSpec data to the target HelmRelease
 	charSpec := helmRelease.Chart.Spec
-	targetHelmRelease.Spec.Chart.Spec = helmv2b1.HelmChartTemplateSpec{
+	targetHelmReleaseSpec.Chart.Spec = helmv2b1.HelmChartTemplateSpec{
 		Chart:   charSpec.Chart,
 		Version: charSpec.Version,
 		SourceRef: helmv2b1.CrossNamespaceObjectReference{
@@ -281,187 +282,64 @@ func (a *ApplicationManager) syncHelmReleaseForCluster(ctx context.Context, app 
 		ValuesFiles:       charSpec.ValuesFiles,
 	}
 
-	// Synchronize the target HelmRelease object with the Kubernetes API server
-	return a.syncResource(ctx, targetHelmRelease, HelmReleaseKind)
+	// sync HelmRelease resource
+	syncResult, syncError := controllerutil.CreateOrUpdate(ctx, a.Client, targetHelmRelease, func() error {
+		targetHelmRelease.Spec = targetHelmReleaseSpec
+		return nil
+	})
+
+	if syncError != nil {
+		return ctrl.Result{}, fmt.Errorf("error sync HelmRelease for cluster, application: %s, error: %v", app.Name, syncError)
+	}
+	log.Info("sync HelmRelease operation result:", "result", syncResult)
+	return ctrl.Result{}, nil
 }
 
 // syncSourceResource synchronizes the source resource based on the application's source specification.
 func (a *ApplicationManager) syncSourceResource(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+	var syncError error
+	var syncResult controllerutil.OperationResult
 	kind := findSourceKind(app)
 	// Based on the source kind, create the appropriate source object and synchronize it with the Kubernetes API server
 	switch kind {
 	case GitRepoKind:
 		targetSource := &sourcev1beta2.GitRepository{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      generateSourceName(app),
-				Namespace: app.Namespace,
-				Labels: map[string]string{
-					ApplicationLabel: app.Name,
-				},
-				OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
-			},
-			Spec: *app.Spec.Source.GitRepository,
+			ObjectMeta: buildObjectMetaWithApplication(generateSourceName(app), app),
 		}
-		return a.syncResource(ctx, targetSource, GitRepoKind)
+
+		// sync GitRepository resource
+		syncResult, syncError = controllerutil.CreateOrUpdate(ctx, a.Client, targetSource, func() error {
+			targetSource.Spec = *app.Spec.Source.GitRepository
+			return nil
+		})
 	case HelmRepoKind:
 		targetSource := &sourcev1beta2.HelmRepository{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      generateSourceName(app),
-				Namespace: app.Namespace,
-				Labels: map[string]string{
-					ApplicationLabel: app.Name,
-				},
-				OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
-			},
-			Spec: *app.Spec.Source.HelmRepository,
+			ObjectMeta: buildObjectMetaWithApplication(generateSourceName(app), app),
 		}
-		return a.syncResource(ctx, targetSource, HelmRepoKind)
+
+		// sync HelmRepository resource
+		syncResult, syncError = controllerutil.CreateOrUpdate(ctx, a.Client, targetSource, func() error {
+			targetSource.Spec = *app.Spec.Source.HelmRepository
+			return nil
+		})
 	case OCIRepoKind:
 		targetSource := &sourcev1beta2.OCIRepository{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      generateSourceName(app),
-				Namespace: app.Namespace,
-				Labels: map[string]string{
-					ApplicationLabel: app.Name,
-				},
-				OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
-			},
-			Spec: *app.Spec.Source.OCIRepository,
+			ObjectMeta: buildObjectMetaWithApplication(generateSourceName(app), app),
 		}
-		return a.syncResource(ctx, targetSource, OCIRepoKind)
+
+		// sync OCIRepository resource
+		syncResult, syncError = controllerutil.CreateOrUpdate(ctx, a.Client, targetSource, func() error {
+			targetSource.Spec = *app.Spec.Source.OCIRepository
+			return nil
+		})
 	}
+
+	if syncError != nil {
+		return ctrl.Result{}, fmt.Errorf("error sync: %s for application: %s, error: %v", kind, app.Name, syncError)
+	}
+	log.Info("sync sourceResource operation result:", "sourceResource", kind, "result", syncResult)
 	return ctrl.Result{}, nil
-}
-
-// createEmptyObject generates an uninitialized instance of the specified resource type.
-// This function aids in resource synchronization operations, providing a blank slate for either retrieval or creation.
-// If the provided resourceKind isn't recognized, the function returns nil.
-func createEmptyObject(resourceKind string) client.Object {
-	switch resourceKind {
-	case GitRepoKind:
-		return &sourcev1beta2.GitRepository{}
-	case HelmRepoKind:
-		return &sourcev1beta2.HelmRepository{}
-	case OCIRepoKind:
-		return &sourcev1beta2.OCIRepository{}
-	case KustomizationKind:
-		return &kustomizev1beta2.Kustomization{}
-	case HelmReleaseKind:
-		return &helmv2b1.HelmRelease{}
-	default:
-		return nil
-	}
-}
-
-// syncResource synchronizes the given `targetSource` resource with the corresponding resource in the Kubernetes API server.
-// The resource is identified by its name and namespace, which are obtained from the `targetSource` object.
-// If the resource already exists, it is updated with the contents of the `targetSource` object.
-// If the resource does not exist, it is created using the contents of the `targetSource` object.
-// Returns an error if the synchronization or creation of the resource fails.
-func (a *ApplicationManager) syncResource(ctx context.Context, targetSource client.Object, resourceKind string) (ctrl.Result, error) {
-	log := ctrl.LoggerFrom(ctx)
-
-	// try to get the current resource from the API server
-	resourceKey := client.ObjectKey{
-		Name:      targetSource.GetName(),
-		Namespace: targetSource.GetNamespace(),
-	}
-	currentResource := createEmptyObject(resourceKind)
-	err := a.Client.Get(ctx, resourceKey, currentResource)
-	if err != nil && !apierrors.IsNotFound(err) {
-		log.Error(err, fmt.Sprintf("failed to get %s", resourceKind), resourceKind, resourceKey)
-		return ctrl.Result{}, err
-	}
-
-	// if not found, create it
-	if apierrors.IsNotFound(err) {
-		if err := a.Client.Create(ctx, targetSource); err != nil {
-			if !apierrors.IsAlreadyExists(err) {
-				log.Error(err, fmt.Sprintf("failed to create %s", resourceKind), resourceKind, resourceKey)
-				return ctrl.Result{}, err
-			}
-		}
-		return ctrl.Result{}, nil
-	}
-
-	// if already exist, update it
-	// The following is a type assertion in Go. Type assertion is used here instead of reflection due to its safety and simplicity.
-	switch resourceKind {
-	case GitRepoKind:
-		err = a.updateGitRepository(ctx, currentResource.(*sourcev1beta2.GitRepository), targetSource.(*sourcev1beta2.GitRepository))
-	case HelmRepoKind:
-		err = a.updateHelmRepository(ctx, currentResource.(*sourcev1beta2.HelmRepository), targetSource.(*sourcev1beta2.HelmRepository))
-	case OCIRepoKind:
-		err = a.updateOCIRepository(ctx, currentResource.(*sourcev1beta2.OCIRepository), targetSource.(*sourcev1beta2.OCIRepository))
-	case KustomizationKind:
-		err = a.updateKustomization(ctx, currentResource.(*kustomizev1beta2.Kustomization), targetSource.(*kustomizev1beta2.Kustomization))
-	case HelmReleaseKind:
-		err = a.updateHelmRelease(ctx, currentResource.(*helmv2b1.HelmRelease), targetSource.(*helmv2b1.HelmRelease))
-	default:
-		log.Error(err, fmt.Sprintf("resource type %s is not supported", resourceKind))
-		return ctrl.Result{}, nil
-	}
-	// If there is a conflict during the update, it indicates that the resource may have been updated by the Flux controller.
-	// In this case, the handler should requeue the resource and wait for the next reconciliation.
-	if apierrors.IsConflict(err) {
-		return ctrl.Result{RequeueAfter: RequeueAfter}, nil
-	}
-	if err != nil && !apierrors.IsConflict(err) {
-		log.Error(err, fmt.Sprintf("failed to update %s", resourceKind), resourceKind, resourceKey)
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
-}
-
-// updateGitRepository updates the state of a current GitRepository resource to match the provided target GitRepository resource.
-// This function is used by syncResource to keep the actual state of GitRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateGitRepository(ctx context.Context, currentResource *sourcev1beta2.GitRepository, targetSource *sourcev1beta2.GitRepository) error {
-	currentResource.Spec = targetSource.Spec
-	if err := a.Client.Update(ctx, currentResource); err != nil {
-		return err
-	}
-	return nil
-}
-
-// updateHelmRepository updates the state of a current HelmRepository resource to match the provided target HelmRepository resource.
-// This function is used by syncResource to keep the actual state of HelmRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateHelmRepository(ctx context.Context, currentResource *sourcev1beta2.HelmRepository, targetSource *sourcev1beta2.HelmRepository) error {
-	currentResource.Spec = targetSource.Spec
-	if err := a.Client.Update(ctx, currentResource); err != nil {
-		return err
-	}
-	return nil
-}
-
-// updateOCIRepository updates the state of a current OCIRepository resource to match the provided target OCIRepository resource.
-// This function is used by syncResource to keep the actual state of OCIRepository resources in sync with the desired state.
-func (a *ApplicationManager) updateOCIRepository(ctx context.Context, currentResource *sourcev1beta2.OCIRepository, targetSource *sourcev1beta2.OCIRepository) error {
-	currentResource.Spec = targetSource.Spec
-	if err := a.Client.Update(ctx, currentResource); err != nil {
-		return err
-	}
-	return nil
-}
-
-// updateKustomization updates the state of a current Kustomization resource to match the provided target Kustomization resource.
-// This function is used by syncResource to keep the actual state of Kustomization resources in sync with the desired state.
-func (a *ApplicationManager) updateKustomization(ctx context.Context, currentResource *kustomizev1beta2.Kustomization, targetSource *kustomizev1beta2.Kustomization) error {
-	currentResource.Spec = targetSource.Spec
-	if err := a.Client.Update(ctx, currentResource); err != nil {
-		return err
-	}
-	return nil
-}
-
-// updateHelmRelease updates the state of a current HelmRelease resource to match the provided target HelmRelease resource.
-// This function is used by syncResource to keep the actual state of HelmRelease resources in sync with the desired state.
-func (a *ApplicationManager) updateHelmRelease(ctx context.Context, currentResource *helmv2b1.HelmRelease, targetSource *helmv2b1.HelmRelease) error {
-	currentResource.Spec = targetSource.Spec
-	if err := a.Client.Update(ctx, currentResource); err != nil {
-		return err
-	}
-	return nil
 }
 
 // TODO: An application can only have one specified source type. In case of none or multiple source types are specified, should not do these check here, it should be done via validating webhook.
@@ -581,4 +459,15 @@ func doLabelsMatchSelector(labels map[string]string, selector *applicationapi.Cl
 	}
 
 	return true
+}
+
+func buildObjectMetaWithApplication(name string, app *applicationapi.Application) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:      name,
+		Namespace: app.Namespace,
+		Labels: map[string]string{
+			ApplicationLabel: app.Name,
+		},
+		OwnerReferences: []metav1.OwnerReference{generateApplicationOwnerRef(app)},
+	}
 }
