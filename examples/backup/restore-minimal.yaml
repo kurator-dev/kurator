@@ -4,4 +4,4 @@ metadata:
   name: minimal
   namespace: default
 spec:
-  backupName: include-ns
+  backupName: specific-ns

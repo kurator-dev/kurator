@@ -19,12 +19,34 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	velerov1 "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 )
+
+// buildVeleroBackupInstanceForTest is a helper function for testing for buildVeleroBackupInstance, which constructs a Velero Backup instance with a specified TypeMeta.
+func buildVeleroBackupInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta *metav1.TypeMeta) *velerov1.Backup {
+	veleroBackup := buildVeleroBackupInstance(backupSpec, labels, veleroBackupName)
+	veleroBackup.TypeMeta = *typeMeta // set TypeMeta for test
+	return veleroBackup
+}
+
+// buildVeleroScheduleInstanceForTest is a helper function for testing buildVeleroScheduleInstance, which constructs a Velero Schedule instance with a specified TypeMeta.
+func buildVeleroScheduleInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta *metav1.TypeMeta) *velerov1.Schedule {
+	veleroSchedule := buildVeleroScheduleInstance(backupSpec, labels, veleroBackupName)
+	veleroSchedule.TypeMeta = *typeMeta
+	return veleroSchedule
+}
+
+// buildVeleroRestoreInstanceForTest is a helper function for testing buildVeleroScheduleInstance, which constructs a Velero Restore instance with a specified TypeMeta.
+func buildVeleroRestoreInstanceForTest(restoreSpec *backupapi.RestoreSpec, labels map[string]string, veleroBackupName, veleroRestoreName string, typeMeta *metav1.TypeMeta) *velerov1.Restore {
+	veleroRestore := buildVeleroRestoreInstance(restoreSpec, labels, veleroBackupName, veleroRestoreName)
+	veleroRestore.TypeMeta = *typeMeta
+	return veleroRestore
+}
 
 func TestBuildVeleroBackupInstance(t *testing.T) {
 	cases := []struct {

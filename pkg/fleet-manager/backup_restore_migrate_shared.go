@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 	"time"
 
@@ -25,26 +26,52 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
 )
 
+const (
+	// BackupNameLabel is the label key used to identify a schedule by name.
+	BackupNameLabel = "kurator.dev/backup-name"
+	// RestoreNameLabel is the label key used to identify a restore by name.
+	RestoreNameLabel = "kurator.dev/restore-name"
+	// MigrateNameLabel is the label key used to identify a migrate by name.
+	MigrateNameLabel = "kurator.dev/migrate-name"
+
+	BackupKind  = "backup"
+	RestoreKind = "restore"
+	MigrateKind = "migrate"
+
+	// VeleroNamespace defines the default namespace where all Velero resources are created. It's a constant namespace used by Velero.
+	VeleroNamespace = "velero"
+
+	BackupFinalizer  = "backup.kurator.dev"
+	RestoreFinalizer = "restore.kurator.dev"
+	MigrateFinalizer = "migrate.kurator.dev"
+
+	// StatusSyncInterval specifies the interval for requeueing when synchronizing status. It determines how frequently the status should be checked and updated.
+	StatusSyncInterval = 30 * time.Second
+)
+
 // fetchDestinationClusters retrieves the clusters from the specified destination and filters them based on the 'Clusters' defined in the destination. It returns a map of selected clusters along with any error encountered during the process.
-func (b *BackupManager) fetchDestinationClusters(ctx context.Context, namespace string, destination backupapi.Destination) (map[ClusterKey]*fleetCluster, error) {
+func fetchDestinationClusters(ctx context.Context, kubeClient client.Client, namespace string, destination backupapi.Destination) (map[ClusterKey]*fleetCluster, error) {
 	// Fetch fleet instance
 	fleet := &fleetapi.Fleet{}
 	fleetKey := client.ObjectKey{
 		Namespace: namespace,
 		Name:      destination.Fleet,
 	}
-	if err := b.Client.Get(ctx, fleetKey, fleet); err != nil {
+	if err := kubeClient.Get(ctx, fleetKey, fleet); err != nil {
 		return nil, fmt.Errorf("failed to retrieve fleet instance '%s' in namespace '%s': %w", destination.Fleet, namespace, err)
 	}
 
-	fleetClusters, err := buildFleetClusters(ctx, b.Client, fleet)
+	fleetClusters, err := buildFleetClusters(ctx, kubeClient, fleet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build fleet clusters from fleet instance '%s': %w", fleet.Name, err)
 	}
@@ -82,19 +109,19 @@ func (b *BackupManager) fetchDestinationClusters(ctx context.Context, namespace 
 // - string: The name of the fleet where the restore's set of fleetClusters resides.
 // - map[ClusterKey]*fleetCluster: A map of cluster keys to fleet clusters.
 // - error: An error object indicating any issues encountered during the operation.
-func (b *BackupManager) fetchRestoreDestinationClusters(ctx context.Context, restore *backupapi.Restore) (string, map[ClusterKey]*fleetCluster, error) {
+func (r *RestoreManager) fetchRestoreDestinationClusters(ctx context.Context, restore *backupapi.Restore) (string, map[ClusterKey]*fleetCluster, error) {
 	// Retrieve the referred backup in the current Kurator host cluster
 	key := client.ObjectKey{
 		Name:      restore.Spec.BackupName,
 		Namespace: restore.Namespace,
 	}
 	referredBackup := &backupapi.Backup{}
-	if err := b.Client.Get(ctx, key, referredBackup); err != nil {
+	if err := r.Client.Get(ctx, key, referredBackup); err != nil {
 		return "", nil, fmt.Errorf("failed to retrieve the referred backup '%s': %w", restore.Spec.BackupName, err)
 	}
 
 	// Get the base clusters from the referred backup
-	baseClusters, err := b.fetchDestinationClusters(ctx, restore.Namespace, referredBackup.Spec.Destination)
+	baseClusters, err := fetchDestinationClusters(ctx, r.Client, restore.Namespace, referredBackup.Spec.Destination)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to fetch fleet clusters for the backup '%s': %w", referredBackup.Name, err)
 	}
@@ -105,7 +132,7 @@ func (b *BackupManager) fetchRestoreDestinationClusters(ctx context.Context, res
 	}
 
 	// If the restore destination is set, try to get the clusters from the restore destination
-	restoreClusters, err := b.fetchDestinationClusters(ctx, restore.Namespace, *restore.Spec.Destination)
+	restoreClusters, err := fetchDestinationClusters(ctx, r.Client, restore.Namespace, *restore.Spec.Destination)
 	if err != nil {
 		return "", nil, fmt.Errorf("failed to fetch restore clusters for the restore '%s': %w", restore.Name, err)
 	}
@@ -131,22 +158,6 @@ func isFleetClusterSubset(baseClusters, subsetClusters map[ClusterKey]*fleetClus
 		}
 	}
 	return true
-}
-
-func (b *BackupManager) fetchMigrateSourceClusters(ctx context.Context, namespace string, destination backupapi.Destination) (sourceClusterName, sourceClusterNameKind string, sourceCluster *fleetCluster, err error) {
-	fleetClusters, err := b.fetchDestinationClusters(ctx, namespace, destination)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	// SourceCluster must contain one Clusters, it is ensured by admission webhook
-	for key, value := range fleetClusters {
-		sourceClusterName = key.Name
-		sourceClusterNameKind = key.Kind
-		sourceCluster = value
-	}
-
-	return sourceClusterName, sourceClusterNameKind, sourceCluster, err
 }
 
 // buildVeleroBackupInstance constructs a Velero Backup instance configured to perform a backup operation on the specified cluster.
@@ -213,7 +224,6 @@ func buildVeleroRestoreInstance(restoreSpec *backupapi.RestoreSpec, labels map[s
 	return veleroRestore
 }
 
-// buildVeleroRestoreInstance constructs a Velero Backup instance configured to perform a backup operation on the specified cluster using migrate config.
 func buildVeleroRestoreInstanceUsingMigrate(migrateSpec *backupapi.MigrateSpec, labels map[string]string, veleroBackupName, veleroRestoreName string) *velerov1.Restore {
 	restoreParam := &backupapi.RestoreSpec{}
 	if migrateSpec.Policy != nil {
@@ -247,70 +257,17 @@ func buildVeleroBackupSpec(backupPolicy *backupapi.BackupPolicy) velerov1.Backup
 	}
 }
 
-// buildVeleroBackupInstanceForTest is a helper function for testing for buildVeleroBackupInstance, which constructs a Velero Backup instance with a specified TypeMeta.
-func buildVeleroBackupInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta *metav1.TypeMeta) *velerov1.Backup {
-	veleroBackup := buildVeleroBackupInstance(backupSpec, labels, veleroBackupName)
-	veleroBackup.TypeMeta = *typeMeta // set TypeMeta for test
-	return veleroBackup
-}
+func syncVeleroObj(ctx context.Context, clusterKey ClusterKey, cluster *fleetCluster, veleroObj client.Object) error {
+	// Get the client
+	clusterClient := cluster.client.CtrlRuntimeClient()
 
-// buildVeleroScheduleInstanceForTest is a helper function for testing buildVeleroScheduleInstance, which constructs a Velero Schedule instance with a specified TypeMeta.
-func buildVeleroScheduleInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta *metav1.TypeMeta) *velerov1.Schedule {
-	veleroSchedule := buildVeleroScheduleInstance(backupSpec, labels, veleroBackupName)
-	veleroSchedule.TypeMeta = *typeMeta
-	return veleroSchedule
-}
+	// create or update veleroRestore
+	_, syncErr := controllerutil.CreateOrUpdate(ctx, clusterClient, veleroObj, func() error {
+		// the veleroObj already contains the desired state, and there's no need for any additional modifications in this mutateFn.
+		return nil
+	})
 
-// buildVeleroRestoreInstanceForTest is a helper function for testing buildVeleroScheduleInstance, which constructs a Velero Restore instance with a specified TypeMeta.
-func buildVeleroRestoreInstanceForTest(restoreSpec *backupapi.RestoreSpec, labels map[string]string, veleroBackupName, veleroRestoreName string, typeMeta *metav1.TypeMeta) *velerov1.Restore {
-	veleroRestore := buildVeleroRestoreInstance(restoreSpec, labels, veleroBackupName, veleroRestoreName)
-	veleroRestore.TypeMeta = *typeMeta
-	return veleroRestore
-}
-
-func createVeleroBackupInstance(cluster *fleetCluster, veleroBackup *velerov1.Backup) error {
-	// Get the kubeclient.Interface instance
-	kubeClient := cluster.client.VeleroClient()
-
-	// Get the namespace of the Backups
-	namespace := veleroBackup.Namespace
-
-	// Create the new Backups
-	if _, err := kubeClient.VeleroV1().Backups(namespace).Create(context.TODO(), veleroBackup, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	return nil
-}
-
-func createVeleroScheduleInstance(cluster *fleetCluster, veleroSchedule *velerov1.Schedule) error {
-	// Get the kubeclient.Interface instance
-	kubeClient := cluster.client.VeleroClient()
-
-	// Get the namespace of the Schedules
-	namespace := veleroSchedule.Namespace
-
-	// Create the new Schedules
-	if _, err := kubeClient.VeleroV1().Schedules(namespace).Create(context.TODO(), veleroSchedule, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	return nil
-}
-
-func createVeleroRestoreInstance(cluster *fleetCluster, veleroRestore *velerov1.Restore) error {
-	// Get the kubeclient.Interface instance
-	kubeClient := cluster.client.VeleroClient()
-
-	// Get the namespace of the veleroRestore
-	namespace := veleroRestore.Namespace
-
-	// Create the new veleroRestore
-	if _, err := kubeClient.VeleroV1().Restores(namespace).Create(context.TODO(), veleroRestore, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	return nil
+	return syncErr
 }
 
 // allBackupsCompleted checks if all Velero backup statuses in the cluster have been collected and verifies if they have successfully completed.
@@ -334,82 +291,38 @@ func allRestoreCompleted(clusterDetails []*backupapi.RestoreDetails) bool {
 	return true
 }
 
-// deleteCRDInstances deletes instances of various CRDs based on the specified label key and value.
-// It iterates over all destination clusters and performs the deletion for the specified resource type.
+// deleteResourcesInClusters deletes instances of a Kubernetes resource based on the specified label key and value.
+// It iterates over all destination clusters and performs the deletion.
 // Parameters:
 // - ctx: context to carry out the API requests
-// - namespace: the namespace where the CRDs are located
-// - labelKey: the key of the label to filter the CRDs
-// - labelValue: the value of the label to filter the CRDs
+// - labelKey: the key of the label to filter the resources
+// - labelValue: the value of the label to filter the resources
 // - destinationClusters: a map containing information about the destination clusters
-// - resourceType: the type of the resource to be deleted (e.g., VeleroBackupKind, VeleroScheduleKind, VeleroRestoreKind)
+// - objList: an empty instance of the resource list object to be filled with retrieved data. It should implement client.ObjectList.
 // Returns:
 // - error: if any error occurs during the deletion process
-func deleteCRDInstances(ctx context.Context, labelKey string, labelValue string, destinationClusters map[ClusterKey]*fleetCluster, resourceType string) error {
-	// Create a label selector to find all Velero backups related to the current backup
-	labelSelector := metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			labelKey: labelValue,
-		},
-	}
-	listOptions := metav1.ListOptions{
-		LabelSelector: labels.Set(labelSelector.MatchLabels).String(),
-	}
-
+// deleteResourcesInClusters deletes instances of a Kubernetes resource based on the specified label key and value.
+func deleteResourcesInClusters(ctx context.Context, namespace, labelKey string, labelValue string, destinationClusters map[ClusterKey]*fleetCluster, objList client.ObjectList) error {
 	// Iterate over each destination cluster
-	for _, cluster := range destinationClusters {
-		var listErr error
-		var deleteErr error
+	for _, clusterAccess := range destinationClusters {
+		// List the resources using the helper function
+		if err := listResourcesFromClusterClient(ctx, namespace, labelKey, labelValue, *clusterAccess, objList); err != nil {
+			return err
+		}
 
-		veleroClient := cluster.client.VeleroClient().VeleroV1()
-		switch resourceType {
-		case VeleroBackupKind:
-			var backupList *velerov1.BackupList
-			if backupList, listErr = veleroClient.Backups(VeleroNamespace).List(ctx, listOptions); listErr != nil {
-				return listErr
-			}
-			if len(backupList.Items) == 0 {
-				// All selected items are already deleted
-				return nil
-			}
-			// Delete all backups
-			for _, backup := range backupList.Items {
-				deleteErr = veleroClient.Backups(VeleroNamespace).Delete(ctx, backup.GetName(), metav1.DeleteOptions{})
-				if deleteErr != nil && !apierrors.IsNotFound(deleteErr) {
-					return deleteErr
-				}
-			}
-		case VeleroScheduleKind:
-			var scheduleList *velerov1.ScheduleList
-			if scheduleList, listErr = veleroClient.Schedules(VeleroNamespace).List(ctx, listOptions); listErr != nil {
-				return listErr
-			}
-			if len(scheduleList.Items) == 0 {
-				// All selected items are already deleted
-				return nil
-			}
-			// Delete all schedules
-			for _, schedule := range scheduleList.Items {
-				deleteErr = veleroClient.Schedules(VeleroNamespace).Delete(ctx, schedule.GetName(), metav1.DeleteOptions{})
-				if deleteErr != nil && !apierrors.IsNotFound(deleteErr) {
-					return deleteErr
-				}
-			}
-		case VeleroRestoreKind:
-			var restoreList *velerov1.RestoreList
-			if restoreList, listErr = veleroClient.Restores(VeleroNamespace).List(ctx, listOptions); listErr != nil {
-				return listErr
-			}
-			if len(restoreList.Items) == 0 {
-				// All selected items are already deleted
-				return nil
-			}
-			// Delete all restores
-			for _, restore := range restoreList.Items {
-				deleteErr = veleroClient.Restores(VeleroNamespace).Delete(ctx, restore.GetName(), metav1.DeleteOptions{})
-				if deleteErr != nil && !apierrors.IsNotFound(deleteErr) {
-					return deleteErr
-				}
+		// Extract Items using reflection
+		itemsValue := reflect.ValueOf(objList).Elem().FieldByName("Items")
+		if !itemsValue.IsValid() {
+			return fmt.Errorf("failed to extract 'Items' from object list using reflection")
+		}
+
+		for i := 0; i < itemsValue.Len(); i++ {
+			item := itemsValue.Index(i).Addr().Interface().(client.Object)
+
+			clusterClient := clusterAccess.client.CtrlRuntimeClient()
+
+			if err := clusterClient.Delete(ctx, item); err != nil && !apierrors.IsNotFound(err) {
+				return err
 			}
 		}
 	}
@@ -439,10 +352,6 @@ func generateVeleroResourceObjectMeta(veleroResourceName string, labels map[stri
 
 func generateVeleroResourceName(clusterName, creatorKind, creatorName string) string {
 	return clusterName + "-" + creatorKind + "-" + creatorName
-}
-
-func migrateBackupCompleted(migrate *backupapi.Migrate) bool {
-	return migrate.Status.Phase == backupapi.MigratePhaseSourceReady || migrate.Status.Phase == backupapi.MigratePhaseInProgress
 }
 
 // MostRecentCompletedBackup returns the most recent backup that's completed from a list of backups.
@@ -487,4 +396,79 @@ func GetCronInterval(cronExpr string) (time.Duration, error) {
 	interval := nextNextRun.Sub(nextRun) + delay
 
 	return interval, nil
+}
+
+// getResourceFromClusterClient retrieves a specific Kubernetes resource from the provided cluster.
+func getResourceFromClusterClient(ctx context.Context, name, namespace string, clusterAccess fleetCluster, obj client.Object) error {
+	clusterClient := clusterAccess.client.CtrlRuntimeClient()
+
+	resourceKey := types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}
+	return clusterClient.Get(ctx, resourceKey, obj)
+}
+
+// listResourcesFromClusterClient retrieves resources from a cluster based on the provided namespace and label.
+func listResourcesFromClusterClient(ctx context.Context, namespace string, labelKey string, labelValue string, clusterAccess fleetCluster, objList client.ObjectList) error {
+	// Create the cluster client
+	clusterClient := clusterAccess.client.CtrlRuntimeClient()
+	// Create the label selector
+	labelSelector := labels.Set(map[string]string{labelKey: labelValue}).AsSelector()
+
+	// List the resources
+	opts := &client.ListOptions{
+		Namespace:     namespace,
+		LabelSelector: labelSelector,
+	}
+	return clusterClient.List(ctx, objList, opts)
+}
+
+// syncVeleroRestoreStatus synchronizes the status of Velero restore resources across different clusters.
+// Note: Returns the modified ClusterDetails to capture internal changes due to Go's slice behavior.
+func syncVeleroRestoreStatus(ctx context.Context, destinationClusters map[ClusterKey]*fleetCluster, ClusterDetails []*backupapi.RestoreDetails, restoreCreatorKind, restoreCreatorName string) ([]*backupapi.RestoreDetails, error) {
+	log := ctrl.LoggerFrom(ctx)
+
+	// Initialize a map to store the velero restore status of each cluster currently recorded. The combination of detail.ClusterName, detail.ClusterKind, and detail.BackupNameInCluster uniquely identifies a Velero restore object.
+	statusMap := make(map[string]*backupapi.RestoreDetails)
+	for _, detail := range ClusterDetails {
+		key := fmt.Sprintf("%s-%s-%s", detail.ClusterName, detail.ClusterKind, detail.RestoreNameInCluster)
+		statusMap[key] = detail
+	}
+	// Loop through each target cluster to retrieve the status of Velero restore resources using the client associated with the respective target cluster.
+	for clusterKey, clusterAccess := range destinationClusters {
+		name := generateVeleroResourceName(clusterKey.Name, restoreCreatorKind, restoreCreatorName)
+		veleroRestore := &velerov1.Restore{}
+		// Use the client of the target cluster to get the status of Velero restore resources
+		err := getResourceFromClusterClient(ctx, name, VeleroNamespace, *clusterAccess, veleroRestore)
+		if err != nil {
+			log.Error(err, "failed to get velero restore instance for sync status", "restoreName", name)
+			return nil, err
+		}
+
+		key := fmt.Sprintf("%s-%s-%s", clusterKey.Name, clusterKey.Kind, veleroRestore.Name)
+		if detail, exists := statusMap[key]; exists {
+			detail.RestoreStatusInCluster = &veleroRestore.Status
+		} else {
+			currentRestoreDetails := &backupapi.RestoreDetails{
+				ClusterName:            clusterKey.Name,
+				ClusterKind:            clusterKey.Kind,
+				RestoreNameInCluster:   veleroRestore.Name,
+				RestoreStatusInCluster: &veleroRestore.Status,
+			}
+			ClusterDetails = append(ClusterDetails, currentRestoreDetails)
+		}
+	}
+
+	return ClusterDetails, nil
+}
+
+// isMigrateSourceReady checks if the 'SourceReadyCondition' of a Migrate object is set to 'True'.
+func isMigrateSourceReady(migrate *backupapi.Migrate) bool {
+	for _, condition := range migrate.Status.Conditions {
+		if condition.Type == backupapi.SourceReadyCondition && condition.Status == "True" {
+			return true
+		}
+	}
+	return false
 }

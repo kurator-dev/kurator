@@ -1,13 +1,16 @@
 apiVersion: backup.kurator.dev/v1alpha1
-kind: Backup
+kind: Restore
 metadata:
-  name: include-ns
+  name: specific-ns
   namespace: default
 spec:
+  backupName: minimal
   destination:
     fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member1
   policy:
     resourceFilter:
       includedNamespaces:
         - kurator-backup
-    ttl: 720h  # 30 * 24 hours

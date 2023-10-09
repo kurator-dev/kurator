@@ -94,9 +94,9 @@ type MigratePolicy struct {
 type MigratePhase string
 
 const (
-	// MigratePhaseNew means the migrate has been created but not
+	// MigratePhasePending means the migrate has been created but not
 	// yet processed by the RestoreController
-	MigratePhaseNew MigratePhase = "New"
+	MigratePhasePending MigratePhase = "Pending"
 
 	// MigratePhaseFailedValidation means the migrate has failed
 	// the controller's validations and therefore will not run.
@@ -104,9 +104,6 @@ const (
 
 	// MigratePhaseWaitingForSource means the migrate is currently fetching source cluster resource.
 	MigratePhaseWaitingForSource MigratePhase = "WaitingForSource"
-
-	// MigratePhaseSourceReady means the migrate is already currently fetched source cluster resource.
-	MigratePhaseSourceReady MigratePhase = "SourceReady"
 
 	// MigratePhaseInProgress means the migrate is currently executing migrating.
 	MigratePhaseInProgress MigratePhase = "InProgress"
@@ -117,6 +114,11 @@ const (
 
 	// MigratePhaseFailed means the migrate was unable to execute.
 	MigratePhaseFailed MigratePhase = "Failed"
+)
+
+const (
+	// SourceReadyCondition reports on whether the resource of backup in source cluster is ready.
+	SourceReadyCondition capiv1.ConditionType = "sourceReady"
 )
 
 type MigrateStatus struct {
@@ -142,4 +144,12 @@ type MigrateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Migrate `json:"items"`
+}
+
+func (m *Migrate) GetConditions() capiv1.Conditions {
+	return m.Status.Conditions
+}
+
+func (m *Migrate) SetConditions(conditions capiv1.Conditions) {
+	m.Status.Conditions = conditions
 }

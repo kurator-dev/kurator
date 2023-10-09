@@ -1,15 +1,19 @@
 apiVersion: backup.kurator.dev/v1alpha1
-kind: Restore
+kind: Migrate
 metadata:
-  name: quickstart
+  name: specific-ns
   namespace: default
 spec:
-  backupName: minimal
-  destination:
+  sourceCluster:
     fleet: quickstart
     clusters:
       - kind: AttachedCluster
         name: kurator-member1
+  targetCluster:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member2
   policy:
     resourceFilter:
       includedNamespaces:
