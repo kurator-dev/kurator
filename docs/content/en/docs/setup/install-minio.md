@@ -17,7 +17,7 @@ cat <<EOF | helm install minio oci://registry-1.docker.io/bitnamicharts/minio -n
 auth:
   rootPassword: minio123
   rootUser: minio
-defaultBuckets: thanos
+defaultBuckets: thanos,velero
 accessKey:
   password: minio
 secretKey:
@@ -51,6 +51,19 @@ EOF
 
 ```console
 kubectl create secret generic thanos-objstore --from-file=objstore.yml=./objstore.yaml
+```
+
+*Optional*, Create a secret for Velero:
+
+```console
+kubectl create secret generic minio-credentials --from-literal=access-key=minio --from-literal=secret-key=minio123
+```
+
+confirm your minio service ip
+
+```console
+export MINIO_SERVICE_IP=$(kubectl get svc --namespace monitoring minio --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
+echo $MINIO_SERVICE_IP
 ```
 
 ## Cleanup
