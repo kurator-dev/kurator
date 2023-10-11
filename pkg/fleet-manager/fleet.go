@@ -40,11 +40,11 @@ import (
 )
 
 const (
-	FleetKind      = "Fleet"
 	FleetFinalizer = "fleet.kurator.dev"
 
 	RequeueAfter = 5 * time.Second
-	FleetLabel   = "fleet.kurator.dev/fleet-name"
+	// TODO: remove as we have `FleetNameLabel`
+	FleetLabel = "fleet.kurator.dev/fleet-name"
 )
 
 // FleetManager reconciles a Cluster object

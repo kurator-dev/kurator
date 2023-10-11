@@ -34,16 +34,16 @@ const (
 	ManagedByFleetManager = "fleet-manager"
 )
 
-func fleetResourceLables(fleetName string) client.MatchingLabels {
+func fleetResourceLabels(fleetName string) client.MatchingLabels {
 	return map[string]string{
-		ManagedByLabel: "fleet-manager",
+		ManagedByLabel: ManagedByFleetManager,
 		FleetNameLabel: fleetName,
 	}
 }
 
-func fleetMetricResourceLables(fleetName string) client.MatchingLabels {
+func fleetMetricResourceLabels(fleetName string) client.MatchingLabels {
 	return map[string]string{
-		ManagedByLabel:  "fleet-manager",
+		ManagedByLabel:  ManagedByFleetManager,
 		FleetNameLabel:  fleetName,
 		FleetPluginName: "metric",
 	}
@@ -83,7 +83,7 @@ func convertToSubset(endpoints sets.Set[string]) []corev1.EndpointSubset {
 func ownerReference(fleet *fleetv1a1.Fleet) *metav1.OwnerReference {
 	return &metav1.OwnerReference{
 		APIVersion: fleetv1a1.GroupVersion.String(),
-		Kind:       "Fleet", // TODO: use pkg typemeta
+		Kind:       fleet.Kind,
 		Name:       fleet.Name,
 		UID:        fleet.UID,
 	}
