@@ -550,7 +550,7 @@ Destination
 </em>
 </td>
 <td>
-<p>TargetCluster represents the target clusters for migration.</p>
+<p>TargetClusters represents the target clusters for migration.</p>
 </td>
 </tr>
 <tr>
@@ -563,7 +563,6 @@ MigratePolicy
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Policy defines the rules for the migration.</p>
 </td>
 </tr>
@@ -586,6 +585,13 @@ MigrateStatus
 </table>
 </div>
 </div>
+<h3 id="backup.kurator.dev/v1alpha1.MigratePhase">MigratePhase
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#backup.kurator.dev/v1alpha1.MigrateStatus">MigrateStatus</a>)
+</p>
+<p>MigratePhase is a string representation of the lifecycle phase of a Migrate instance</p>
 <h3 id="backup.kurator.dev/v1alpha1.MigratePolicy">MigratePolicy
 </h3>
 <p>
@@ -722,7 +728,7 @@ Destination
 </em>
 </td>
 <td>
-<p>TargetCluster represents the target clusters for migration.</p>
+<p>TargetClusters represents the target clusters for migration.</p>
 </td>
 </tr>
 <tr>
@@ -735,7 +741,6 @@ MigratePolicy
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>Policy defines the rules for the migration.</p>
 </td>
 </tr>
@@ -777,7 +782,9 @@ Cluster API /v1beta1.Conditions
 <td>
 <code>phase</code><br>
 <em>
-string
+<a href="#backup.kurator.dev/v1alpha1.MigratePhase">
+MigratePhase
+</a>
 </em>
 </td>
 <td>

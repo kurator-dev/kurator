@@ -390,7 +390,7 @@ spec:
                 - fleet
                 type: object
               targetCluster:
-                description: TargetCluster represents the target clusters for migration.
+                description: TargetClusters represents the target clusters for migration.
                 properties:
                   clusters:
                     description: Clusters allows users to specify a subset of clusters
@@ -522,6 +522,13 @@ spec:
                 type: array
               phase:
                 description: Phase represents the current phase of the migration operation.
+                enum:
+                - New
+                - FailedValidation
+                - WaitingForSource
+                - InProgress
+                - Completed
+                - Failed
                 type: string
               sourceClusterStatus:
                 description: SourceClusterStatus provides a detailed status for backup
