@@ -67,13 +67,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 		return nil
 	}
 
-	ownerref := metav1.OwnerReference{
-		APIVersion: fleetapi.GroupVersion.String(),
-		Kind:       FleetKind,
-		Name:       fleet.Name,
-		UID:        fleet.UID,
-	}
-
+	ownerref := ownerReference(fleet)
 	sa := corev1.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -81,7 +75,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 			Labels: map[string]string{
 				FleetLabel: fleet.Name,
 			},
-			OwnerReferences: []metav1.OwnerReference{ownerref},
+			OwnerReferences: []metav1.OwnerReference{*ownerref},
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServiceAccount",
@@ -121,7 +115,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 			Labels: map[string]string{
 				FleetLabel: fleet.Name,
 			},
-			OwnerReferences: []metav1.OwnerReference{ownerref},
+			OwnerReferences: []metav1.OwnerReference{*ownerref},
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",
@@ -201,13 +195,7 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 		return nil
 	}
 
-	ownerref := metav1.OwnerReference{
-		APIVersion: fleetapi.GroupVersion.String(),
-		Kind:       FleetKind,
-		Name:       fleet.Name,
-		UID:        fleet.UID,
-	}
-
+	ownerref := ownerReference(fleet)
 	// pod not found, create it
 	initCmd := "echo y | karmadactl deinit -n " + namespace
 	pod = corev1.Pod{
@@ -217,7 +205,7 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 			Labels: map[string]string{
 				FleetLabel: fleet.Name,
 			},
-			OwnerReferences: []metav1.OwnerReference{ownerref},
+			OwnerReferences: []metav1.OwnerReference{*ownerref},
 		},
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Pod",

@@ -136,7 +136,7 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      svcNN.Name,
 				Namespace: svcNN.Namespace,
-				Labels:    fleetMetricResourceLables(fleet.Name),
+				Labels:    fleetMetricResourceLabels(fleet.Name),
 				OwnerReferences: []metav1.OwnerReference{
 					ownerReference,
 				},
@@ -269,7 +269,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      objSecret.Name,
 			Namespace: MonitoringNamespace, // TODO: make it configurable
-			Labels:    fleetMetricResourceLables(fleet.Name),
+			Labels:    fleetMetricResourceLabels(fleet.Name),
 		},
 		Data: objSecret.Data,
 	}

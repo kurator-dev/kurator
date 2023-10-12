@@ -123,7 +123,7 @@ func (f *FleetManager) reconcilePluginResources(ctx context.Context, fleet *flee
 
 	helmRepos := &sourcev1beta2.HelmRepositoryList{}
 	helmReleases := &hrapiv2b1.HelmReleaseList{}
-	fleetLabels := fleetResourceLables(fleet.Name)
+	fleetLabels := fleetResourceLabels(fleet.Name)
 	if err := f.Client.List(ctx, helmRepos, client.InNamespace(fleet.Namespace), fleetLabels); err != nil {
 		log.Error(err, "failed to list helm repository")
 		return ctrl.Result{}, err
