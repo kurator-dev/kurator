@@ -71,6 +71,7 @@ docker.fleet-manager: fleet-manager
 .PHONY: docker-push
 docker-push: docker
 	docker push ${IMAGE_HUB}/cluster-operator:${IMAGE_TAG}
+	docker push ${IMAGE_HUB}/fleet-manager:${IMAGE_TAG}
 
 .PHONY: lint
 lint: golangci-lint lint-copyright lint-markdown lint-shellcheck
