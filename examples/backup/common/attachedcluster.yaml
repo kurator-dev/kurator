@@ -1,0 +1,19 @@
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: AttachedCluster
+metadata:
+  name: kurator-member1
+  namespace: default
+spec:
+  kubeconfig:
+    name: kurator-member1
+    key: kurator-member1.config
+---
+apiVersion: cluster.kurator.dev/v1alpha1
+kind: AttachedCluster
+metadata:
+  name: kurator-member2
+  namespace: default
+spec:
+  kubeconfig:
+    name: kurator-member2
+    key: kurator-member2.config

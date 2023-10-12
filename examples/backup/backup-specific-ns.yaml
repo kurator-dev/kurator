@@ -1,0 +1,13 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: specific-ns
+  namespace: default
+spec:
+  destination:
+    fleet: quickstart
+  policy:
+    resourceFilter:
+      includedNamespaces:
+        - kurator-backup
+    ttl: 720h  # 30 * 24 hours

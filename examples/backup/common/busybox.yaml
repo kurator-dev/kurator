@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kurator-backup
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox
+  namespace: kurator-backup
+spec:
+  containers:
+    - name: test-container
+      image: busybox
+      command: ["/bin/sh", "-c", "echo Hello Kurator!  && sleep 3600"]
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-pvc
+  namespace: kurator-backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-with-pv
+  namespace: kurator-backup
+spec:
+  containers:
+    - name: test-container
+      image: busybox
+      command: ["/bin/sh", "-c", "echo Hello Kurator!! > /test-pvc/hello.txt && sleep 3600"]
+      volumeMounts:
+        - name: test-volume
+          mountPath: /test-pvc
+  volumes:
+    - name: test-volume
+      persistentVolumeClaim:
+        claimName: test-pvc
