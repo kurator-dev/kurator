@@ -127,7 +127,6 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 		cluster.Status.Phase = string(capiv1.ClusterPhaseProvisioning)
 		conditions.MarkFalse(cluster, clusterv1alpha1.ReadyCondition, clusterv1alpha1.ProvisioningReason, capiv1.ConditionSeverityError, "Provisioning")
 		controllerutil.AddFinalizer(cluster, ClusterFinalizer)
-		return ctrl.Result{}, nil
 	}
 
 	// Handle deletion reconciliation loop.

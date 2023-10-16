@@ -128,7 +128,6 @@ func (f *FleetManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.
 	if !controllerutil.ContainsFinalizer(fleet, FleetFinalizer) {
 		fleet.Status.Phase = fleetapi.RunningPhase
 		controllerutil.AddFinalizer(fleet, FleetFinalizer)
-		return ctrl.Result{}, nil
 	}
 
 	// Handle deletion reconciliation loop.

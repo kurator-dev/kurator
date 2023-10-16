@@ -134,7 +134,6 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 	// Add finalizer if not exist to void the race condition.
 	if !controllerutil.ContainsFinalizer(app, ApplicationFinalizer) {
 		controllerutil.AddFinalizer(app, ApplicationFinalizer)
-		return ctrl.Result{}, nil
 	}
 
 	// there only one fleet, so pre-fetch it here.
