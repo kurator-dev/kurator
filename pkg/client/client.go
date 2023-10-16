@@ -46,8 +46,9 @@ type Client struct {
 	crd  crdclientset.Interface
 	helm *helmclient.Client
 
-	karmada           karmadaclientset.Interface
-	prom              promclient.Interface
+	karmada karmadaclientset.Interface
+	prom    promclient.Interface
+	// it currently only support k8s core API and velero API, because only these schemes are registered
 	ctrlRuntimeClient client.Client
 }
 

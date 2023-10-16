@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -141,7 +142,13 @@ func buildVeleroBackupSpec(backupPolicy *backupapi.BackupPolicy) velerov1.Backup
 	}
 }
 
-func syncVeleroObj(ctx context.Context, clusterKey ClusterKey, cluster *fleetCluster, veleroObj client.Object) error {
+func newSyncVeleroTaskFunc(ctx context.Context, clusterAccess *fleetCluster, obj client.Object) func() error {
+	return func() error {
+		return syncVeleroObj(ctx, clusterAccess, obj)
+	}
+}
+
+func syncVeleroObj(ctx context.Context, cluster *fleetCluster, veleroObj client.Object) error {
 	// Get the client
 	clusterClient := cluster.client.CtrlRuntimeClient()
 
@@ -231,8 +238,9 @@ func generateVeleroResourceObjectMeta(veleroResourceName string, labels map[stri
 	}
 }
 
-func generateVeleroResourceName(clusterName, creatorKind, creatorName string) string {
-	return clusterName + "-" + creatorKind + "-" + creatorName
+// generateVeleroResourceName generate a name uniquely across object store
+func generateVeleroResourceName(clusterName, creatorKind, creatorNamespace, creatorName string) string {
+	return clusterName + "-" + creatorKind + "-" + creatorNamespace + "-" + creatorName
 }
 
 // MostRecentCompletedBackup returns the most recent backup that's completed from a list of backups.
@@ -303,4 +311,26 @@ func listResourcesFromClusterClient(ctx context.Context, namespace string, label
 		LabelSelector: labelSelector,
 	}
 	return clusterClient.List(ctx, objList, opts)
+}
+
+// parallelProcess runs the provided tasks concurrently and collects any errors.
+func parallelProcess(tasks []func() error) []error {
+	var errs []error
+	var errMutex sync.Mutex
+	var wg sync.WaitGroup
+
+	for _, task := range tasks {
+		wg.Add(1)
+		go func(task func() error) {
+			defer wg.Done()
+			if err := task(); err != nil {
+				errMutex.Lock()
+				errs = append(errs, err)
+				errMutex.Unlock()
+			}
+		}(task)
+	}
+
+	wg.Wait()
+	return errs
 }
