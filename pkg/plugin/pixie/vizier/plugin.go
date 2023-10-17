@@ -25,7 +25,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"sync"
 
 	"github.com/hashicorp/go-multierror"
 	karmadautil "github.com/karmada-io/karmada/pkg/util"
@@ -177,22 +176,19 @@ func (p *Plugin) waitCRDReady(cluster string, crdList helmclient.ResourceList) e
 		return err
 	}
 
-	var (
-		wg       = sync.WaitGroup{}
-		multiErr *multierror.Error
-	)
-	for _, r := range crdList {
-		wg.Add(1)
-		go func(crd *resource.Info) {
-			defer wg.Done()
-			if err := util.WaitCRDReady(clusterCRDClient, crd.Name, p.options.WaitInterval, p.options.WaitTimeout); err != nil {
-				multiErr = multierror.Append(multiErr, fmt.Errorf("wait cluster %s CRD %s ready fail, %w", cluster, crd.Name, err))
+	g := &multierror.Group{}
+	for _, crd := range crdList {
+		resource := crd
+		g.Go(func() error {
+			err := util.WaitCRDReady(clusterCRDClient, resource.Name, p.options.WaitInterval, p.options.WaitTimeout)
+			if err != nil {
+				return fmt.Errorf("wait cluster %s CRD %s ready fail, %w", cluster, resource.Name, err)
 			}
-		}(r)
+			return nil
+		})
 	}
-	wg.Wait()
 
-	return multiErr.ErrorOrNil()
+	return g.Wait().ErrorOrNil()
 }
 
 func (p *Plugin) applyTemplates(helmClient helmclient.Interface, cluster string) (helmclient.ResourceList, error) {
