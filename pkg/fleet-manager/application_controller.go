@@ -125,8 +125,7 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 	}
 
 	defer func() {
-		patchOpts := []patch.Option{}
-		if err := patchHelper.Patch(ctx, app, patchOpts...); err != nil {
+		if err := patchHelper.Patch(ctx, app); err != nil {
 			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch application %s", req.NamespacedName)})
 		}
 	}()

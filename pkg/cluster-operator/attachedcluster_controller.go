@@ -74,8 +74,7 @@ func (a *AttachedClusterController) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	defer func() {
-		patchOpts := []patch.Option{}
-		if err := patchHelper.Patch(ctx, attachedCluster, patchOpts...); err != nil {
+		if err := patchHelper.Patch(ctx, attachedCluster); err != nil {
 			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch fleet %s", req.NamespacedName)})
 		}
 	}()

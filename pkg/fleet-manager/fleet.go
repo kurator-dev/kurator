@@ -118,8 +118,7 @@ func (f *FleetManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.
 	}
 
 	defer func() {
-		patchOpts := []patch.Option{}
-		if err := patchHelper.Patch(ctx, fleet, patchOpts...); err != nil {
+		if err := patchHelper.Patch(ctx, fleet); err != nil {
 			reterr = utilerrors.NewAggregate([]error{reterr, errors.Wrapf(err, "failed to patch fleet %s", req.NamespacedName)})
 		}
 	}()
