@@ -49,10 +49,6 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
-var (
-	log = ctrl.Log.WithName("cluster-controller")
-)
-
 const (
 	// ClusterFinalizer allows ClusterController to clean up associated resources before removing it from apiserver.
 	ClusterFinalizer = "cluster.cluster.kurator.dev"
@@ -452,6 +448,8 @@ func (r *ClusterController) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *ClusterController) SecretToClusterFunc(o client.Object) []ctrl.Request {
+	log := ctrl.Log.WithName("cluster-controller")
+
 	obj, ok := o.(*corev1.Secret)
 	if !ok {
 		panic(fmt.Sprintf("Expected a Secret but got a %T", o))

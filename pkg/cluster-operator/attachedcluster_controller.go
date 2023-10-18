@@ -29,7 +29,6 @@ import (
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -54,20 +53,20 @@ func (a *AttachedClusterController) SetupWithManager(ctx context.Context, mgr ct
 }
 
 func (a *AttachedClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
-	log := ctrl.LoggerFrom(ctx)
+	log := ctrl.LoggerFrom(ctx).WithValues("attachedCluster", req.NamespacedName)
+
 	// Fetch the attachedCluster instance.
 	attachedCluster := &clusterv1alpha1.AttachedCluster{}
 	if err := a.Client.Get(ctx, req.NamespacedName, attachedCluster); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Info("attachedCluster is not exist", "attachedCluster", req)
+			log.Info("attachedCluster is not exist")
 			return ctrl.Result{}, nil
 		}
 
 		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
 	}
-	log = log.WithValues("attachedCluster", klog.KObj(attachedCluster))
-	ctx = ctrl.LoggerInto(ctx, log)
+
 	patchHelper, err := patch.NewHelper(attachedCluster, a.Client)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to init patch helper for fleet %s", req.NamespacedName)

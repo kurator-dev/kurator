@@ -60,8 +60,7 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 		controlplaneSpecified = false
 	}
 
-	fleetKey := client.ObjectKeyFromObject(fleet)
-	log := ctrl.LoggerFrom(ctx).WithValues("fleet", fleetKey)
+	log := ctrl.LoggerFrom(ctx)
 	var unreadyClusters int32
 	var result ctrl.Result
 	var readyClusters []ClusterInterface
@@ -184,7 +183,7 @@ func (f *FleetManager) reconcileClusters(ctx context.Context, fleet *fleetapi.Fl
 }
 
 func (f *FleetManager) reconcileClustersOnDelete(ctx context.Context, fleet *fleetapi.Fleet) (ctrl.Result, error) {
-	log := ctrl.LoggerFrom(ctx).WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
+	log := ctrl.LoggerFrom(ctx)
 	var result ctrl.Result
 	// Loop over cluster, and add labels to the cluster
 	for _, cluster := range fleet.Spec.Clusters {

@@ -79,7 +79,7 @@ func (r *CustomClusterController) reconcileScaleUp(ctx context.Context, customCl
 
 		// Delete the scaleUp worker.
 		if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterScaleUpAction); err != nil {
-			log.Error(err, "failed to delete scaleUp worker pod", "customCluster", customCluster.Name)
+			log.Error(err, "failed to delete scaleUp worker pod")
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.ScaledUpCondition)

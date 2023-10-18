@@ -24,7 +24,6 @@ import (
 	"helm.sh/helm/v3/pkg/kube"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
@@ -34,7 +33,7 @@ import (
 // reconcileGrafanaPlugin reconciles the Grafana plugin.
 // The fleetClusters parameter is currently unused, but is included to match the function signature of other functions in reconcilePlugins.
 func (f *FleetManager) reconcileGrafanaPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
-	log := ctrl.LoggerFrom(ctx).WithValues("fleet", client.ObjectKeyFromObject(fleet))
+	log := ctrl.LoggerFrom(ctx)
 
 	if fleet.Spec.Plugin.Grafana == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil

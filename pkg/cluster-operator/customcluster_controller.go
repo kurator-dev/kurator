@@ -25,7 +25,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/klog/v2"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	capiutil "sigs.k8s.io/cluster-api/util"
@@ -143,21 +142,20 @@ func (r *CustomClusterController) SetupWithManager(ctx context.Context, mgr ctrl
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
-	log := ctrl.LoggerFrom(ctx)
+	log := ctrl.LoggerFrom(ctx).WithValues("customCluster", req.NamespacedName)
 
 	// Fetch the customCluster instance.
 	customCluster := &v1alpha1.CustomCluster{}
 	if err := r.Client.Get(ctx, req.NamespacedName, customCluster); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Info("customCluster does not exist", "customCluster", req)
+			log.Info("customCluster does not exist")
 			return ctrl.Result{}, nil
 		}
-		log.Error(err, "failed to find customCluster", "customCluster", req)
+		log.Error(err, "failed to find customCluster")
 		// Error reading the object - requeue the request.
 		return ctrl.Result{}, err
 	}
-	log = log.WithValues("customCluster", klog.KObj(customCluster))
-	ctx = ctrl.LoggerInto(ctx, log)
+
 	// ensure customCluster status no nil
 	if len(customCluster.Status.Phase) == 0 {
 		customCluster.Status.Phase = v1alpha1.PendingPhase
@@ -172,7 +170,7 @@ func (r *CustomClusterController) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 	}
 	if len(clusterName) == 0 {
-		log.Info("failed to get cluster from customCluster.GetOwnerReferences", "customCluster", req)
+		log.Info("failed to get cluster from customCluster.GetOwnerReferences")
 		return ctrl.Result{}, nil
 	}
 	clusterKey := client.ObjectKey{

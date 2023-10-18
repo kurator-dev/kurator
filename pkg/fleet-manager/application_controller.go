@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/cluster-api/util/patch"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -108,6 +107,8 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 }
 
 func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+	log := ctrl.LoggerFrom(ctx).WithValues("application", req.NamespacedName)
+
 	app := &applicationapi.Application{}
 	if err := a.Get(ctx, req.NamespacedName, app); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -115,9 +116,6 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 		}
 		return ctrl.Result{}, errors.Wrapf(err, "failed to get application %s", req.NamespacedName)
 	}
-
-	log := ctrl.LoggerFrom(ctx)
-	log = log.WithValues("application", klog.KObj(app))
 
 	patchHelper, err := patch.NewHelper(app, a.Client)
 	if err != nil {

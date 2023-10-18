@@ -104,9 +104,12 @@ func (f *FleetManager) objectToFleetFunc(o client.Object) []ctrl.Request {
 }
 
 func (f *FleetManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.Result, reterr error) {
+	log := ctrl.LoggerFrom(ctx).WithValues("fleet", req.NamespacedName)
+
 	fleet := &fleetapi.Fleet{}
 	if err := f.Get(ctx, req.NamespacedName, fleet); err != nil {
 		if apiserrors.IsNotFound(err) {
+			log.Info("fleet is not exist")
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, errors.Wrapf(err, "failed to get fleet %s", req.NamespacedName)
@@ -144,7 +147,6 @@ func (f *FleetManager) Reconcile(ctx context.Context, req ctrl.Request) (_ ctrl.
 
 func (f *FleetManager) reconcile(ctx context.Context, fleet *fleetapi.Fleet) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-	log = log.WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
 
 	// Install fleet control plane
 	if err := f.reconcileControlPlane(ctx, fleet); err != nil {

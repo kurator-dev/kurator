@@ -50,12 +50,13 @@ func (r *CustomMachineController) SetupWithManager(ctx context.Context, mgr ctrl
 }
 
 func (r *CustomMachineController) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := ctrl.LoggerFrom(ctx)
+	log := ctrl.LoggerFrom(ctx).WithValues("customMachine", req.NamespacedName)
+
 	// Fetch the CustomMachine instance.
 	customMachine := &v1alpha1.CustomMachine{}
 	if err := r.Client.Get(ctx, req.NamespacedName, customMachine); err != nil {
 		if apierrors.IsNotFound(err) {
-			log.Info("customMachine is not exist", "customMachine", req)
+			log.Info("customMachine is not exist")
 			return ctrl.Result{}, nil
 		}
 
