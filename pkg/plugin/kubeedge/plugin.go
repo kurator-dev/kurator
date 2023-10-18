@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/go-multierror"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -248,23 +247,16 @@ func (p *KubeEdgePlugin) installKeadm() (string, error) {
 }
 
 func (p *KubeEdgePlugin) checkReady() error {
-	var (
-		wg       = sync.WaitGroup{}
-		multiErr *multierror.Error
-	)
+	g := &multierror.Group{}
 
-	for _, c := range p.installArgs.Clusters {
-		wg.Add(1)
-		go func(cluster string) {
-			defer wg.Done()
-			if err := waitCloudcoreReady(p.Client, p.options, cluster, p.installArgs.Namespace); err != nil {
-				_ = multierror.Append(multiErr, err)
-			}
-		}(c)
+	for _, cluster := range p.installArgs.Clusters {
+		c := cluster
+		g.Go(func() error {
+			return waitCloudcoreReady(p.Client, p.options, c, p.installArgs.Namespace)
+		})
 	}
-	wg.Wait()
 
-	return multiErr.ErrorOrNil()
+	return g.Wait().ErrorOrNil()
 }
 
 func (p *KubeEdgePlugin) exposeCloudcore() error {

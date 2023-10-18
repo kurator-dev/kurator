@@ -24,7 +24,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"sync"
 
 	"github.com/hashicorp/go-multierror"
 	policyv1alpha1 "github.com/karmada-io/karmada/pkg/apis/policy/v1alpha1"
@@ -414,37 +413,30 @@ func (p *IstioPlugin) createPrimaryIstioOperator() error {
 }
 
 func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
-	var (
-		wg       = sync.WaitGroup{}
-		multiErr *multierror.Error
-	)
+	g := &multierror.Group{}
 
 	for _, remote := range p.args.Remotes {
-		logrus.Infof("Begin to install istio in cluster %s", remote)
-		if err := waitSecertReady(p.Client, p.options, remote, caSecret); err != nil {
+		currentRemote := remote
+
+		logrus.Infof("Begin to install istio in cluster %s", currentRemote)
+		if err := waitSecertReady(p.Client, p.options, currentRemote, caSecret); err != nil {
 			return fmt.Errorf("wait cacert timeout, %w", err)
 		}
 
-		if err := p.createIstioRemoteSecret(remote); err != nil {
+		if err := p.createIstioRemoteSecret(currentRemote); err != nil {
 			return nil
 		}
 
-		if err := p.createRemoteIstioOperator(remote, remotePilotAddress); err != nil {
+		if err := p.createRemoteIstioOperator(currentRemote, remotePilotAddress); err != nil {
 			return err
 		}
 
-		wg.Add(1)
-		go func(cluster string) {
-			defer wg.Done()
-			err := waitIngressgatewayReady(p.Client, p.options, cluster)
-			if err != nil {
-				multiErr = multierror.Append(multiErr, err)
-			}
-		}(remote)
+		g.Go(func() error {
+			return waitIngressgatewayReady(p.Client, p.options, currentRemote)
+		})
 	}
-	wg.Wait()
 
-	return multiErr.ErrorOrNil()
+	return g.Wait().ErrorOrNil()
 }
 
 func (p *IstioPlugin) clusterNetwork(cluster string) string {
