@@ -336,6 +336,7 @@ map[string]string
 <p>
 (<em>Appears on:</em>
 <a href="#fleet.kurator.dev/v1alpha1.BackupConfig">BackupConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorageConfig">DistributedStorageConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>, 
@@ -388,6 +389,156 @@ string
 <em>(Optional)</em>
 <p>Version defines the version of the chart.
 Default value depends on the kind of the component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.DistributedStorage">DistributedStorage
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorageConfig">DistributedStorageConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>dataDirHostPath</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The path on the host where config and data can be persisted.
+If the storagecluster is deleted, please clean up the configuration files in this file path.
+e.g. /var/lib/rook</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>monitor</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.MonSpec">
+MonSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Monitor is the daemon that monitors the status of the ceph cluster.
+Responsible for collecting cluster information, updating cluster information, and publishing cluster information.
+Including monmap, osdmap, PGmap, mdsmap, etc.
+A spec for mon related options</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>manager</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.MgrSpec">
+MgrSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Manager is the daemon runs alongside monitor daemon,to provide additional monitoring and interfaces to external monitoring and management systems.
+A spec for mgr related options</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.StorageScopeSpec">
+StorageScopeSpec
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>A spec for available storage in the cluster and how it should be used</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.DistributedStorageConfig">DistributedStorageConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart configuration of the distributed storage engine.
+The default value is:</p>
+<p>chart:
+repository: <a href="https://charts.rook.io/release">https://charts.rook.io/release</a>
+name: rook
+version: 1.11.11</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>storage</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorage">
+DistributedStorage
+</a>
+</em>
+</td>
+<td>
+<p>Storage provides detailed settings for unified distributed storage.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs provides the extra chart values for rook chart.
+For example, use the following configuration to change the pull policy:</p>
+<p>extraArgs:
+image:
+pullPolicy: Always</p>
 </td>
 </tr>
 </tbody>
@@ -726,6 +877,200 @@ by default thanos sidecar will be installed in thanos sidecar mode.</p>
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.MgrSpec">MgrSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorage">DistributedStorage</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Count is the number of manager to run
+Default is two, one for use and one for standby.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code><br>
+<em>
+github.com/rook/rook/pkg/apis/ceph.rook.io/v1.AnnotationsSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Use Annotations/labels to achieve the goal of placing two managers on different nodes.
+The annotations-related configuration to add/set on each Pod related object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+github.com/rook/rook/pkg/apis/ceph.rook.io/v1.LabelsSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The labels-related configuration to add/set on each Pod related object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>placement</code><br>
+<em>
+github.com/rook/rook/pkg/apis/ceph.rook.io/v1.PlacementSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.MonSpec">MonSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorage">DistributedStorage</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>count</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Count is the number of Ceph monitors.
+Default is three and preferably an odd number.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code><br>
+<em>
+github.com/rook/rook/pkg/apis/ceph.rook.io/v1.AnnotationsSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>In a ceph cluster, it is recommended that the monitor pod be deployed on a different node in order to ensure high availability of data.
+In practice, you can label the node where the monitor pod is deployed with Annotation/Labels.
+Then use kubernetes node affinity rules to achieve the goal of deploying the monitor to different nodes.
+The annotations-related configuration to add/set on each Pod related object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+github.com/rook/rook/pkg/apis/ceph.rook.io/v1.LabelsSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Similar to Annotation, but more graphical than Annotation.
+The labels-related configuration to add/set on each Pod related object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>placement</code><br>
+<em>
+github.com/rook/rook/pkg/apis/ceph.rook.io/v1.PlacementSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.Node">Node
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.StorageScopeSpec">StorageScopeSpec</a>)
+</p>
+<p>Each individual node can specify configuration to override the cluster level settings and defaults.
+If a node does not specify any configuration then it will inherit the cluster level settings.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Name should match its kubernetes.io/hostname label</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>StorageDeviceSelection</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.StorageDeviceSelection">
+StorageDeviceSelection
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>StorageDeviceSelection</code> are embedded into this type.)
+</p>
+<em>(Optional)</em>
+<p>Specify which storage drives the osd deployed in this node can manage.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="fleet.kurator.dev/v1alpha1.ObjectStoreConfig">ObjectStoreConfig
 </h3>
 <p>
@@ -826,6 +1171,19 @@ BackupConfig
 </td>
 <td>
 <p>Backup defines the configuration for the backup engine(Velero).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>distributedStorage</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorageConfig">
+DistributedStorageConfig
+</a>
+</em>
+</td>
+<td>
+<p>DistributedStorage define the configuration for the distributed storage(Implemented with Rook)</p>
 </td>
 </tr>
 </tbody>
@@ -1035,6 +1393,103 @@ bool
 </td>
 <td>
 <p>Enabled indicates whether the exporters are enabled.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.StorageDeviceSelection">StorageDeviceSelection
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.Node">Node</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.StorageScopeSpec">StorageScopeSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>devices</code><br>
+<em>
+[]github.com/rook/rook/pkg/apis/ceph.rook.io/v1.Device
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of devices to use as storage devices
+A list of individual device names belonging to this node to include in the storage cluster
+e.g. <code>sda</code> or  <code>/dev/disk/by-id/ata-XXXX</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.StorageScopeSpec">StorageScopeSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.DistributedStorage">DistributedStorage</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>nodes</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.Node">
+[]Node
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>useAllNodes</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>indicating if all nodes in the cluster should be used for storage according to the cluster level storage selection and configuration values.
+If individual nodes are specified under the nodes field, then useAllNodes must be set to false.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>StorageDeviceSelection</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.StorageDeviceSelection">
+StorageDeviceSelection
+</a>
+</em>
+</td>
+<td>
+<p>
+(Members of <code>StorageDeviceSelection</code> are embedded into this type.)
+</p>
+<p>Select device information used by osd. For more information see the design of the selection below.</p>
 </td>
 </tr>
 </tbody>
