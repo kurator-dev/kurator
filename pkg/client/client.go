@@ -27,13 +27,17 @@ import (
 	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	promclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/sirupsen/logrus"
+	veleroapi "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	helmclient "helm.sh/helm/v3/pkg/kube"
+	corev1 "k8s.io/api/core/v1"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	kubeclient "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
 
@@ -44,6 +48,8 @@ type Client struct {
 
 	karmada karmadaclientset.Interface
 	prom    promclient.Interface
+	// it currently only support k8s core API and velero API, because only these schemes are registered
+	ctrlRuntimeClient client.Client
 }
 
 func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
@@ -58,12 +64,27 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 	karmadaClient := karmadaclientset.NewForConfigOrDie(c)
 	promClient := promclient.NewForConfigOrDie(c)
 
+	// create Scheme to add velero resource
+	scheme := runtime.NewScheme()
+	if err := corev1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to add corev1 to scheme: %v", err)
+	}
+	if err := veleroapi.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to add veleroapi to scheme: %v", err)
+	}
+	// create controller-runtime client with scheme
+	ctrlRuntimeClient, err := client.New(c, client.Options{Scheme: scheme})
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
-		kube:    kubeClient,
-		helm:    helmClient,
-		crd:     crdClientSet,
-		karmada: karmadaClient,
-		prom:    promClient,
+		kube:              kubeClient,
+		helm:              helmClient,
+		crd:               crdClientSet,
+		karmada:           karmadaClient,
+		prom:              promClient,
+		ctrlRuntimeClient: ctrlRuntimeClient,
 	}, nil
 }
 
@@ -178,4 +199,8 @@ func (c *Client) NewClusterHelmClient(clusterName string) (helmclient.Interface,
 
 	clusterGetter := NewRESTClientGetter(clusterConfig)
 	return helmclient.New(clusterGetter), nil
+}
+
+func (c *Client) CtrlRuntimeClient() client.Client {
+	return c.ctrlRuntimeClient
 }
