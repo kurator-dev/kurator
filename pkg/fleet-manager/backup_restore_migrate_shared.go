@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"sync"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -311,26 +310,4 @@ func listResourcesFromClusterClient(ctx context.Context, namespace string, label
 		LabelSelector: labelSelector,
 	}
 	return clusterClient.List(ctx, objList, opts)
-}
-
-// parallelProcess runs the provided tasks concurrently and collects any errors.
-func parallelProcess(tasks []func() error) []error {
-	var errs []error
-	var errMutex sync.Mutex
-	var wg sync.WaitGroup
-
-	for _, task := range tasks {
-		wg.Add(1)
-		go func(task func() error) {
-			defer wg.Done()
-			if err := task(); err != nil {
-				errMutex.Lock()
-				errs = append(errs, err)
-				errMutex.Unlock()
-			}
-		}(task)
-	}
-
-	wg.Wait()
-	return errs
 }
