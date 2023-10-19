@@ -1,29 +1,12 @@
 ---
 title: "Kurator Fleet Backup Plugin Configuration Guide"
-linkTitle: "Kurator Fleet Backup Plugin Configuration Guide"
-weight: 40
+linkTitle: "Manage Fleet Backup Plugin"
+weight: 10
 description: >
-  The easiest way to manage multi cluster backup plugin with fleet.
+  Configure backup plugin for Fleet to enable Kurator's capabilities.
 ---
 
 To support Kurator's unified backup, restore, and migration features, it's imperative to first configure the backup plugin for [Fleet](https://kurator.dev/docs/references/fleet-api/#fleet). This guide will walk you through configuring the [Velero](https://velero.io/)-based backup plugin for Fleet, laying the groundwork for Kurator's unified backup, restore, and migration capabilities.
-
-## Architecture
-
-Before diving into the specifics, let's take a moment to understand the overall architecture and how various components interact with each other. Below is the architecture diagram of the Kurator Fleet Backup Plugin.
-
-{{< image width="100%"
-    link="./image/backup-arch.svg"
-    >}}
-
-The diagram illustrates:
-
-- **Fleet Manager**: The central management entity, responsible for orchestrating the operations.
-- **Velero Integration**: How the backup and restore processes are handled using Velero.
-- **Object Storage**: The external storage solutions, such as Minio or cloud providers, where the backups are stored.
-- **Interactions**: The arrows depict the flow of data and interactions between various components.
-
-With this architectural view in mind, let's proceed with the essential setup steps and configurations required to implement this architecture.
 
 ## Prerequisites
 
