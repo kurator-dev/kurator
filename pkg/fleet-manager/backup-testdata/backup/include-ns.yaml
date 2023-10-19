@@ -1,0 +1,19 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  creationTimestamp: null
+  labels:
+    fleet.kurator.dev/fleet-name: quickstart
+    fleet.kurator.dev/plugin: backup
+    kurator.dev/backup-name: include-ns
+  name: kurator-member1-backup-default-include-ns
+  namespace: velero
+spec:
+  csiSnapshotTimeout: 0s
+  hooks: {}
+  includedNamespaces:
+  - kurator-backup
+  itemOperationTimeout: 0s
+  metadata: {}
+  ttl: 720h0m0s
+status: {}
