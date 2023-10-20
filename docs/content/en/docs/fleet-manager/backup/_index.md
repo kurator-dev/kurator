@@ -1,13 +1,15 @@
 ---
-title: "Unified Backup, Restore, and Migrate"
+title: "Unified Backup, Restore, and Migration"
 linkTitle: "Unified Backup"
 weight: 40
 description: >
   The easiest way to manage multi cluster Unified Backup, Restore, and Migration with Fleet.
 ---
 
-Kurator introduces a unified solution for backup, restore, and migration across multiple clusters in Fleet.
-This feature, integrated with [Velero](https://velero.io/), simplifies the process of managing backups, restoring data, and migrating resources across clusters through a streamlined one-click operation.
+Kurator provides a unified solution for backup, restore, and migration of applications and their related cluster resources across multiple Fleet clusters. 
+This approach addresses the challenges of managing these tasks across various environments, ensuring clarity and consistency for users.
+
+Through its integration with [Velero](https://velero.io/), Kurator delivers a one-click solution with a unified status view. This empowers users with efficient management and clear visibility into application backups, restores, and migrations across Fleet clusters.
 
 The following are the main benefits of this feature.
 
@@ -29,12 +31,14 @@ Below is the architecture diagram of the Kurator Fleet Backup feature.
 link="./image/backup-arch.svg"
 >}}
 
-The diagram illustrates:
+### Key Components Overview
 
-- **Fleet Manager**: The central management entity, responsible for orchestrating the operations.
-- **Velero Integration**: How the backup and restore processes are handled using Velero.
+- **Kurator Fleet Manager**: The core management component, responsible for managing fleet and backup engines.
+
+- **Backup Engine**: This component handles the backup and restore processes.
+
 - **Object Storage**: The external storage solutions, such as Minio or cloud providers, where the backups are stored.
-- **Interactions**: The arrows depict the flow of data and interactions between various components.
+
 
 To use Kurator for backup, restore, and migration scenarios, you must first configure and install the necessary backup engine plugin.
 Please refer to the subsequent sections for detailed guidance on plugin configuration and instructions for each specific operation.
