@@ -247,7 +247,7 @@ type MonSpec struct {
     // +kubebuilder:validation:Minimum=0
     // +kubebuilder:validation:Maximum=9
     // +optional
-    Count int `json:"count,omitempty"`
+    Count *int `json:"count,omitempty"`
     
     // In a ceph cluster, it is recommended that the monitor pod be deployed on a different node in order to ensure high availability of data.
     // In practice, you can label the node where the monitor pod is deployed with Annotation/Labels.
@@ -277,7 +277,7 @@ type MgrSpec struct {
     // +kubebuilder:validation:Minimum=0
     // +kubebuilder:validation:Maximum=2
     // +optional
-    Count int `json:"count,omitempty"`
+    Count *int `json:"count,omitempty"`
 
     // Use Annotations/labels to achieve the goal of placing two managers on different nodes.
     // The annotations-related configuration to add/set on each Pod related object.
@@ -388,7 +388,6 @@ StorageClusterSpec:
     storage:
         # Cluster-level configuration, used by nodes not specifically specified in the configuration.
         # The specially designated nodes use their own configuration, as shown below.
-        useAllDevices: true
         nodes:
           - name: "172.17.4.201"
             devices:
