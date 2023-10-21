@@ -1,0 +1,15 @@
+apiVersion: velero.io/v1
+kind: Restore
+metadata:
+  creationTimestamp: null
+  labels:
+    fleet.kurator.dev/fleet-name: quickstart
+    fleet.kurator.dev/plugin: backup
+    kurator.dev/restore-name: minimal
+  name: kurator-member1-restore-default-minimal
+  namespace: velero
+spec:
+  backupName: kurator-member1-backup-include-ns
+  hooks: {}
+  itemOperationTimeout: 0s
+status: {}
