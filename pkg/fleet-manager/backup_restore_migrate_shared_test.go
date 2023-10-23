@@ -27,19 +27,20 @@ import (
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 )
 
-const backupTestDataPath = "backup-testdata/backup/"
+const backupTestDataPath = "testdata/backup/"
+const restoreTestDataPath = "testdata/restore/"
 
 // buildVeleroBackupInstanceForTest is a helper function for testing for buildVeleroBackupInstance, which constructs a Velero Backup instance with a specified TypeMeta.
-func buildVeleroBackupInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta *metav1.TypeMeta) *velerov1.Backup {
+func buildVeleroBackupInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta metav1.TypeMeta) *velerov1.Backup {
 	veleroBackup := buildVeleroBackupInstance(backupSpec, labels, veleroBackupName)
-	veleroBackup.TypeMeta = *typeMeta // set TypeMeta for test
+	veleroBackup.TypeMeta = typeMeta // set TypeMeta for test
 	return veleroBackup
 }
 
 // buildVeleroScheduleInstanceForTest is a helper function for testing buildVeleroScheduleInstance, which constructs a Velero Schedule instance with a specified TypeMeta.
-func buildVeleroScheduleInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta *metav1.TypeMeta) *velerov1.Schedule {
+func buildVeleroScheduleInstanceForTest(backupSpec *backupapi.BackupSpec, labels map[string]string, veleroBackupName string, typeMeta metav1.TypeMeta) *velerov1.Schedule {
 	veleroSchedule := buildVeleroScheduleInstance(backupSpec, labels, veleroBackupName)
-	veleroSchedule.TypeMeta = *typeMeta
+	veleroSchedule.TypeMeta = typeMeta
 	return veleroSchedule
 }
 
@@ -117,7 +118,7 @@ func TestBuildVeleroBackupInstance(t *testing.T) {
 		},
 	}
 
-	typeMeta := &metav1.TypeMeta{
+	typeMeta := metav1.TypeMeta{
 		APIVersion: "velero.io/v1",
 		Kind:       "Backup",
 	}
@@ -187,7 +188,7 @@ func TestBuildVeleroScheduleInstance(t *testing.T) {
 		},
 	}
 
-	typeMeta := &metav1.TypeMeta{
+	typeMeta := metav1.TypeMeta{
 		APIVersion: "velero.io/v1",
 		Kind:       "Schedule",
 	}
@@ -426,6 +427,233 @@ func TestGetCronInterval(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expected, interval)
 			}
+		})
+	}
+}
+
+// buildVeleroRestoreInstanceForTest is a helper function for testing buildVeleroScheduleInstance, which constructs a Velero Restore instance with a specified TypeMeta.
+func buildVeleroRestoreInstanceForTest(restoreSpec *backupapi.RestoreSpec, labels map[string]string, veleroBackupName, veleroRestoreName string, typeMeta metav1.TypeMeta) *velerov1.Restore {
+	veleroRestore := buildVeleroRestoreInstance(restoreSpec, labels, veleroBackupName, veleroRestoreName)
+	veleroRestore.TypeMeta = typeMeta
+	return veleroRestore
+}
+
+func TestBuildVeleroRestoreInstance(t *testing.T) {
+	cases := []struct {
+		name        string
+		description string
+		creatorName string
+		// velero backup can be created by kurator restore or migrate
+		creatorKind      string
+		creatorLabel     string
+		clusterName      string
+		creatorNamespace string
+		veleroBackupName string
+		restoreSpec      *backupapi.RestoreSpec
+	}{
+		{
+			name: "minimal",
+			description: "Test the minimal restore scenario where the Velero restore instance is created by Kurator 'Restore' with the creator name 'include-ns'. " +
+				"The restore targets the 'kurator-member1' cluster using the backup named 'include-ns'.",
+			creatorName:      "minimal",
+			creatorKind:      RestoreKind,
+			creatorLabel:     RestoreNameLabel,
+			clusterName:      "kurator-member1",
+			creatorNamespace: "default",
+			veleroBackupName: "kurator-member1-backup-include-ns",
+			restoreSpec: &backupapi.RestoreSpec{
+				BackupName: "include-ns",
+				Destination: &backupapi.Destination{
+					Fleet: "quickstart",
+					Clusters: []*corev1.ObjectReference{
+						{
+							Kind: "AttachedCluster",
+							Name: "kurator-member1",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "custom-policy",
+			description: "Test the custom policy restore scenario where resources are filtered based on the 'env: test' label. " +
+				"The Velero restore instance is created by Kurator 'Migrate' with the creator name 'include-ns', targeting the 'kurator-member1' cluster.",
+			creatorName:      "custom-policy",
+			creatorNamespace: "default",
+			creatorKind:      MigrateKind,
+			creatorLabel:     MigrateNameLabel,
+			clusterName:      "kurator-member1",
+			veleroBackupName: "kurator-member1-migrate-include-ns",
+			restoreSpec: &backupapi.RestoreSpec{
+				BackupName: "include-ns",
+				Destination: &backupapi.Destination{
+					Fleet: "quickstart",
+					Clusters: []*corev1.ObjectReference{
+						{
+							Kind: "AttachedCluster",
+							Name: "kurator-member1",
+						},
+					},
+				},
+				Policy: &backupapi.RestorePolicy{
+					ResourceFilter: &backupapi.ResourceFilter{
+						LabelSelector: &metav1.LabelSelector{
+							MatchLabels: map[string]string{
+								"env": "test",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	typeMeta := metav1.TypeMeta{
+		APIVersion: "velero.io/v1",
+		Kind:       "Restore",
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			// get expect restore yaml
+			expectedYAML, err := getExpectedRestore(tc.name)
+			assert.NoError(t, err)
+
+			// just for test, the real fleet name may not record in `tc.restoreSpec.Destination.Fleet`
+			restoreLabels := generateVeleroInstanceLabel(tc.creatorLabel, tc.creatorName, tc.restoreSpec.Destination.Fleet)
+			restoreName := generateVeleroResourceName(tc.clusterName, tc.creatorKind, tc.creatorNamespace, tc.creatorName)
+
+			// get actual restore yaml
+			actualBackup := buildVeleroRestoreInstanceForTest(tc.restoreSpec, restoreLabels, tc.veleroBackupName, restoreName, typeMeta)
+			actualYAML, err := yaml.Marshal(actualBackup)
+			if err != nil {
+				t.Fatalf("failed to marshal actual output to YAML: %v", err)
+			}
+
+			assert.Equal(t, string(expectedYAML), string(actualYAML))
+		})
+	}
+}
+
+func getExpectedRestore(caseName string) ([]byte, error) {
+	return os.ReadFile(restoreTestDataPath + caseName + ".yaml")
+}
+
+func TestIsFleetClusterSubset(t *testing.T) {
+	tests := []struct {
+		name           string
+		baseClusters   map[ClusterKey]*fleetCluster
+		subsetClusters map[ClusterKey]*fleetCluster
+		wantResult     bool
+	}{
+		{
+			name: "Subset is a true subset of base",
+			baseClusters: map[ClusterKey]*fleetCluster{
+				{"Kind1", "Name1"}: {},
+				{"Kind2", "Name2"}: {},
+			},
+			subsetClusters: map[ClusterKey]*fleetCluster{
+				{"Kind1", "Name1"}: {},
+			},
+			wantResult: true,
+		},
+		{
+			name: "Subset is not a subset of base",
+			baseClusters: map[ClusterKey]*fleetCluster{
+				{"Kind1", "Name1"}: {},
+			},
+			subsetClusters: map[ClusterKey]*fleetCluster{
+				{"Kind2", "Name2"}: {},
+			},
+			wantResult: false,
+		},
+		{
+			name:           "Both base and subset are empty",
+			baseClusters:   map[ClusterKey]*fleetCluster{},
+			subsetClusters: map[ClusterKey]*fleetCluster{},
+			wantResult:     true,
+		},
+		{
+			name:         "Base is empty, but subset is not",
+			baseClusters: map[ClusterKey]*fleetCluster{},
+			subsetClusters: map[ClusterKey]*fleetCluster{
+				{"Kind1", "Name1"}: {},
+			},
+			wantResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult := isFleetClusterSubset(tt.baseClusters, tt.subsetClusters)
+			assert.Equal(t, tt.wantResult, gotResult)
+		})
+	}
+}
+
+func TestAllRestoreCompleted(t *testing.T) {
+	tests := []struct {
+		name           string
+		restoreDetails []*backupapi.RestoreDetails
+		wantResult     bool
+	}{
+		{
+			name: "All restores are completed",
+			restoreDetails: []*backupapi.RestoreDetails{
+				{
+					RestoreStatusInCluster: &velerov1.RestoreStatus{
+						Phase: velerov1.RestorePhaseCompleted,
+					},
+				},
+				{
+					RestoreStatusInCluster: &velerov1.RestoreStatus{
+						Phase: velerov1.RestorePhaseCompleted,
+					},
+				},
+			},
+			wantResult: true,
+		},
+		{
+			name: "Not all restores are completed",
+			restoreDetails: []*backupapi.RestoreDetails{
+				{
+					RestoreStatusInCluster: &velerov1.RestoreStatus{
+						Phase: velerov1.RestorePhaseCompleted,
+					},
+				},
+				{
+					RestoreStatusInCluster: &velerov1.RestoreStatus{
+						Phase: "InProgress",
+					},
+				},
+			},
+			wantResult: false,
+		},
+		{
+			name:           "No restore details",
+			restoreDetails: []*backupapi.RestoreDetails{},
+			wantResult:     true, // No details means nothing to check for completion
+		},
+		{
+			name: "Some restore details lack a status",
+			restoreDetails: []*backupapi.RestoreDetails{
+				{
+					RestoreStatusInCluster: nil,
+				},
+				{
+					RestoreStatusInCluster: &velerov1.RestoreStatus{
+						Phase: velerov1.RestorePhaseCompleted,
+					},
+				},
+			},
+			wantResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotResult := allRestoreCompleted(tt.restoreDetails)
+			assert.Equal(t, tt.wantResult, gotResult)
 		})
 	}
 }
