@@ -1,0 +1,11 @@
+apiVersion: fleet.kurator.dev/v1alpha1
+kind: Fleet
+metadata:
+  name: quickstart
+  namespace: default
+spec:
+  clusters:
+    - name: ""
+      kind: AttachedCluster
+    - name: kurator-member2
+      kind: ""
