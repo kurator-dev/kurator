@@ -1,0 +1,18 @@
+apiVersion: backups.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: conflicting-namespaces-example
+  namespace: default
+spec:
+  schedule: "0 0 * * *"
+  policy:
+    resourceFilter:
+      includedNamespaces:
+        - my-namespace
+      excludedNamespaces:
+        - my-namespace
+  destination:
+    fleet: quickstart
+    clusters:
+      - name: kurator-member1
+        kind: AttachedCluster

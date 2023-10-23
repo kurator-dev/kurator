@@ -1,0 +1,14 @@
+apiVersion: backups.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: negative-ttl-example
+  namespace: default
+spec:
+  schedule: "0 0 * * *"
+  policy:
+    ttl: -1h
+  destination:
+    fleet: quickstart
+    clusters:
+      - name: kurator-member1
+        kind: AttachedCluster

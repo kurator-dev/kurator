@@ -1,0 +1,10 @@
+apiVersion: backups.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: missing-cluster-name-example
+  namespace: default
+spec:
+  destination:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster

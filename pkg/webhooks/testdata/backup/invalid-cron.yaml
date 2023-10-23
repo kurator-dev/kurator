@@ -1,0 +1,12 @@
+apiVersion: backups.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: invalid-cron-example
+  namespace: default
+spec:
+  schedule: "invalid-cron-format"
+  destination:
+    fleet: quickstart
+    clusters:
+      - name: kurator-member1
+        kind: AttachedCluster

@@ -21,8 +21,11 @@ import (
 	"net"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
+
+	"kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 )
 
 func validateIP(IP string, fldPath *field.Path) field.ErrorList {
@@ -54,5 +57,74 @@ func validateDNS1123Domain(domain string, fldPath *field.Path) field.ErrorList {
 	if errs := validation.IsDNS1123Subdomain(domain); len(errs) > 0 {
 		allErrs = append(allErrs, field.Invalid(fldPath, domain, strings.Join(errs, "; ")))
 	}
+	return allErrs
+}
+
+func validateDestinationClusters(clusters []*corev1.ObjectReference) field.ErrorList {
+	var allErrs field.ErrorList
+
+	for _, clusterRef := range clusters {
+		if len(clusterRef.Name) == 0 {
+			allErrs = append(allErrs, field.Required(field.NewPath("destination", "clusters", "name"), "Name of the referenced cluster is required"))
+		}
+		if clusterRef.Kind == "" {
+			allErrs = append(allErrs, field.Required(field.NewPath("destination", "clusters", "kind"), "Kind of the referenced cluster is required"))
+		}
+	}
+
+	return allErrs
+}
+
+// validateResourceFilter remains the same as before, just moved to this file
+func validateResourceFilter(filter *v1alpha1.ResourceFilter) field.ErrorList {
+	var allErrs field.ErrorList
+
+	if filter == nil {
+		return allErrs
+	}
+
+	// Validate IncludedNamespaces and ExcludedNamespaces
+	for _, includedNS := range filter.IncludedNamespaces {
+		for _, excludedNS := range filter.ExcludedNamespaces {
+			if includedNS == excludedNS {
+				allErrs = append(allErrs, field.Invalid(field.NewPath("resourceFilter", "includedNamespaces"), includedNS, "Namespace is already in excludedNamespaces"))
+			}
+		}
+	}
+
+	// Validate IncludedResources and ExcludedResources
+	for _, includedRes := range filter.IncludedResources {
+		for _, excludedRes := range filter.ExcludedResources {
+			if includedRes == excludedRes {
+				allErrs = append(allErrs, field.Invalid(field.NewPath("resourceFilter", "includedResources"), includedRes, "Resource is already in excludedResources"))
+			}
+		}
+	}
+
+	// Validate IncludedClusterScopedResources and ExcludedClusterScopedResources
+	for _, includedClusterRes := range filter.IncludedClusterScopedResources {
+		for _, excludedClusterRes := range filter.ExcludedClusterScopedResources {
+			if includedClusterRes == excludedClusterRes {
+				allErrs = append(allErrs, field.Invalid(field.NewPath("resourceFilter", "includedClusterScopedResources"), includedClusterRes, "ClusterScopedResource is already in excludedClusterScopedResources"))
+			}
+		}
+	}
+
+	// Validate IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources
+	for _, includedNamespaceRes := range filter.IncludedNamespaceScopedResources {
+		for _, excludedNamespaceRes := range filter.ExcludedNamespaceScopedResources {
+			if includedNamespaceRes == excludedNamespaceRes {
+				allErrs = append(allErrs, field.Invalid(field.NewPath("resourceFilter", "includedNamespaceScopedResources"), includedNamespaceRes, "NamespaceScopedResource is already in excludedNamespaceScopedResources"))
+			}
+		}
+	}
+
+	// Check IncludeClusterResources against IncludedClusterScopedResources and ExcludedClusterScopedResources
+	if filter.IncludeClusterResources != nil && *filter.IncludeClusterResources {
+		if len(filter.IncludedClusterScopedResources) > 0 || len(filter.ExcludedClusterScopedResources) > 0 {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("resourceFilter", "includeClusterResources"), *filter.IncludeClusterResources, "Cannot be set when IncludedClusterScopedResources or ExcludedClusterScopedResources is set"))
+		}
+	}
+
 	return allErrs
 }
