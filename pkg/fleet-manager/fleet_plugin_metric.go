@@ -33,7 +33,6 @@ import (
 	"k8s.io/utils/pointer"
 	capiutil "sigs.k8s.io/cluster-api/util"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
@@ -234,7 +233,7 @@ func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *fle
 }
 
 func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
-	log := ctrl.LoggerFrom(ctx).WithValues("fleet", client.ObjectKeyFromObject(fleet))
+	log := ctrl.LoggerFrom(ctx)
 
 	if fleet.Spec.Plugin.Metric == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil

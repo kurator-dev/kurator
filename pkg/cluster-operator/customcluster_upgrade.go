@@ -40,7 +40,7 @@ func (r *CustomClusterController) reconcileUpgrade(ctx context.Context, customCl
 	if err1 != nil {
 		conditions.MarkFalse(customCluster, v1alpha1.UpgradeCondition, v1alpha1.UpgradeWorkerCreateFailed,
 			clusterv1.ConditionSeverityWarning, "upgrade worker is failed to create %s/%s.", customCluster.Namespace, customCluster.Name)
-		log.Error(err1, "failed to ensure that upgrade WorkerPod is created", "customCluster", customCluster.Name)
+		log.Error(err1, "failed to ensure that upgrade WorkerPod is created")
 		return ctrl.Result{}, err1
 	}
 
@@ -63,7 +63,7 @@ func (r *CustomClusterController) reconcileUpgrade(ctx context.Context, customCl
 
 		// Delete the upgrading worker.
 		if err := r.ensureWorkerPodDeleted(ctx, customCluster, CustomClusterUpgradeAction); err != nil {
-			log.Error(err, "failed to delete upgrade worker pod", "customCluster", customCluster.Name)
+			log.Error(err, "failed to delete upgrade worker pod")
 			return ctrl.Result{}, err
 		}
 		conditions.MarkTrue(customCluster, v1alpha1.UpgradeCondition)
