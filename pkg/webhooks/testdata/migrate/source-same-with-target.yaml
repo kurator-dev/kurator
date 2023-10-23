@@ -1,0 +1,16 @@
+apiVersion: kurator.dev/v1alpha1
+kind: Migrate
+metadata:
+  name: source-same-with-target
+  namespace: default
+spec:
+  sourceCluster:
+    fleet: quickstart
+    clusters:
+      - name: same-cluster
+        kind: Cluster
+  targetCluster:
+    fleet: quickstart
+    clusters:
+      - name: same-cluster
+        kind: Cluster
