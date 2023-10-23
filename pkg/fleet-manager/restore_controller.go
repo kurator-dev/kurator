@@ -88,7 +88,7 @@ func (r *RestoreManager) reconcileRestore(ctx context.Context, restore *backupap
 
 	fleetName, destinationClusters, err := r.fetchRestoreDestinationClusters(ctx, restore)
 	if err != nil {
-		log.Error(err, "failed to fetch destination clusters for restore", "restoreName", restore.Name)
+		log.Error(err, "failed to fetch destination clusters for restore")
 		return ctrl.Result{}, err
 	}
 
@@ -101,7 +101,7 @@ func (r *RestoreManager) reconcileRestore(ctx context.Context, restore *backupap
 	// Collect target clusters velero restore resource status to current restore
 	restore.Status.Details, err = syncVeleroRestoreStatus(ctx, destinationClusters, restore.Status.Details, RestoreKind, restore.Namespace, restore.Name)
 	if err != nil {
-		log.Error(err, "failed to sync velero restore status for restore", "restoreName", restore.Name)
+		log.Error(err, "failed to sync velero restore status for restore")
 		return ctrl.Result{}, err
 	}
 
@@ -150,13 +150,12 @@ func (r *RestoreManager) reconcileDeleteRestore(ctx context.Context, restore *ba
 	defer func() {
 		if shouldRemoveFinalizer {
 			controllerutil.RemoveFinalizer(restore, RestoreFinalizer)
-			log.Info("Removed finalizer", "restoreName", restore.Name)
 		}
 	}()
 
 	_, destinationClusters, err := r.fetchRestoreDestinationClusters(ctx, restore)
 	if err != nil {
-		log.Error(err, "failed to fetch destination clusters when deleting restore", "restoreName", restore.Name)
+		log.Error(err, "failed to fetch destination clusters when deleting restore")
 		shouldRemoveFinalizer = true
 		return ctrl.Result{}, err
 	}
@@ -164,7 +163,7 @@ func (r *RestoreManager) reconcileDeleteRestore(ctx context.Context, restore *ba
 	restoreList := &velerov1.RestoreList{}
 	// Delete all related velero restore instance
 	if err := deleteResourcesInClusters(ctx, VeleroNamespace, RestoreNameLabel, restore.Name, destinationClusters, restoreList); err != nil {
-		log.Error(err, "failed to delete velero restore Instances when delete restore", "restoreName", restore.Name)
+		log.Error(err, "failed to delete velero restore Instances when delete restore")
 		return ctrl.Result{}, err
 	}
 
