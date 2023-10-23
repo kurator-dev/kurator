@@ -1,0 +1,12 @@
+apiVersion: backups.kurator.dev/v1alpha1
+kind: Restore
+metadata:
+  name: conflicting-namespaces-restore
+spec:
+  backupName: test-backup
+  policy:
+    resourceFilter:
+      includedNamespaces:
+        - "namespace1"
+      excludedNamespaces:
+        - "namespace1"

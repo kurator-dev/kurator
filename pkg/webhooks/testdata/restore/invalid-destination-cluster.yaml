@@ -1,0 +1,9 @@
+apiVersion: backups.kurator.dev/v1alpha1
+kind: Restore
+metadata:
+  name: missing-cluster-name-restore
+spec:
+  backupName: test-backup
+  destination:
+    clusters:
+      - name: kurator-member1
