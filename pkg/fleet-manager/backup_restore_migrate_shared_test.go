@@ -22,6 +22,7 @@ import (
 	velerov1 "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	capiv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	"sigs.k8s.io/yaml"
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
@@ -656,4 +657,148 @@ func TestAllRestoreCompleted(t *testing.T) {
 			assert.Equal(t, tt.wantResult, gotResult)
 		})
 	}
+}
+
+func TestIsMigrateSourceReady(t *testing.T) {
+	tests := []struct {
+		name     string
+		migrate  *backupapi.Migrate
+		expected bool
+	}{
+		{
+			name: "SourceReadyCondition is True",
+			migrate: &backupapi.Migrate{
+				Status: backupapi.MigrateStatus{
+					Conditions: capiv1.Conditions{
+						{
+							Type:   backupapi.SourceReadyCondition,
+							Status: "True",
+						},
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "SourceReadyCondition is not True",
+			migrate: &backupapi.Migrate{
+				Status: backupapi.MigrateStatus{
+					Conditions: capiv1.Conditions{
+						{
+							Type:   backupapi.SourceReadyCondition,
+							Status: "False",
+						},
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "SourceReadyCondition does not exist",
+			migrate: &backupapi.Migrate{
+				Status: backupapi.MigrateStatus{
+					Conditions: capiv1.Conditions{
+						{
+							Type:   "AnotherCondition",
+							Status: "True",
+						},
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isMigrateSourceReady(tt.migrate)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestBuildVeleroBackupFromMigrate(t *testing.T) {
+	tests := []struct {
+		name             string
+		migrateSpec      *backupapi.MigrateSpec
+		labels           map[string]string
+		veleroBackupName string
+		expected         *velerov1.BackupSpec
+	}{
+		{
+			name: "all values set",
+			migrateSpec: &backupapi.MigrateSpec{
+				Policy: &backupapi.MigratePolicy{
+					ResourceFilter: &backupapi.ResourceFilter{
+						IncludedNamespaces: []string{"ns1", "ns2"},
+						ExcludedResources:  []string{"pods"},
+					},
+					OrderedResources: map[string]string{
+						"pods":              "ns1/pod1, ns1/pod2, ns1/pod3",
+						"persistentvolumes": "pv4, pv8",
+					},
+				},
+			},
+			labels: map[string]string{
+				"test": "value",
+			},
+			veleroBackupName: "test-backup",
+			expected: &velerov1.BackupSpec{
+				IncludedNamespaces: []string{"ns1", "ns2"},
+				ExcludedResources:  []string{"pods"},
+				OrderedResources: map[string]string{
+					"pods":              "ns1/pod1, ns1/pod2, ns1/pod3",
+					"persistentvolumes": "pv4, pv8",
+				},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := buildVeleroBackupFromMigrate(tt.migrateSpec, tt.labels, tt.veleroBackupName)
+			assert.Equal(t, tt.expected, &result.Spec)
+		})
+	}
+}
+
+func TestBuildVeleroRestoreFromMigrate(t *testing.T) {
+	tests := []struct {
+		name        string
+		migrateSpec *backupapi.MigrateSpec
+		expected    *velerov1.RestoreSpec
+	}{
+		{
+			name: "all values set",
+			migrateSpec: &backupapi.MigrateSpec{
+				Policy: &backupapi.MigratePolicy{
+					NamespaceMapping: map[string]string{"src": "dst"},
+					MigrateStatus: &backupapi.PreserveStatus{
+						IncludedResources: []string{"deployments", "services"},
+						ExcludedResources: []string{"pods"},
+					},
+					PreserveNodePorts: boolPtr(true),
+				},
+			},
+			expected: &velerov1.RestoreSpec{
+				NamespaceMapping: map[string]string{"src": "dst"},
+				RestoreStatus: &velerov1.RestoreStatusSpec{
+					IncludedResources: []string{"deployments", "services"},
+					ExcludedResources: []string{"pods"},
+				},
+				PreserveNodePorts: boolPtr(true),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := buildVeleroRestoreFromMigrate(tt.migrateSpec, nil, "", "")
+			assert.Equal(t, tt.expected, &got.Spec)
+		})
+	}
+}
+
+func boolPtr(b bool) *bool {
+	return &b
 }

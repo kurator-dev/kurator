@@ -102,11 +102,11 @@ const (
 	// the controller's validations and therefore will not run.
 	MigratePhaseFailedValidation MigratePhase = "FailedValidation"
 
-	// MigratePhaseWaitingForSource means the migrate is currently fetching source cluster resource.
-	MigratePhaseWaitingForSource MigratePhase = "WaitingForSource"
+	// MigratePhaseBackupInProgress indicates that the backup phase of the migrate is currently in progress.
+	MigratePhaseBackupInProgress MigratePhase = "BackupInProgress"
 
-	// MigratePhaseInProgress means the migrate is currently executing migrating.
-	MigratePhaseInProgress MigratePhase = "InProgress"
+	// MigratePhaseRestoreInProgress indicates that the restore phase of the migrate is currently in progress.
+	MigratePhaseRestoreInProgress MigratePhase = "RestoreInProgress"
 
 	// MigratePhaseCompleted means the migrate has run successfully
 	// without errors.

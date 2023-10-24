@@ -457,3 +457,40 @@ func syncVeleroRestoreStatus(ctx context.Context, destinationClusters map[Cluste
 
 	return clusterDetails, nil
 }
+
+// isMigrateSourceReady checks if the 'SourceReadyCondition' of a Migrate object is set to 'True'.
+func isMigrateSourceReady(migrate *backupapi.Migrate) bool {
+	for _, condition := range migrate.Status.Conditions {
+		if condition.Type == backupapi.SourceReadyCondition && condition.Status == "True" {
+			return true
+		}
+	}
+	return false
+}
+
+// buildVeleroBackupFromMigrate constructs a Velero Backup instance based on the provided migrate specification.
+func buildVeleroBackupFromMigrate(migrateSpec *backupapi.MigrateSpec, labels map[string]string, veleroBackupName string) *velerov1.Backup {
+	// Only consider migrateSpec.Policy.ResourceFilter and migrateSpec.Policy.OrderedResources when building the Velero backup.
+	backupParam := &backupapi.BackupSpec{}
+	if migrateSpec.Policy != nil {
+		backupParam.Policy = &backupapi.BackupPolicy{
+			ResourceFilter:   migrateSpec.Policy.ResourceFilter,
+			OrderedResources: migrateSpec.Policy.OrderedResources,
+		}
+	}
+	return buildVeleroBackupInstance(backupParam, labels, veleroBackupName)
+}
+
+// buildVeleroRestoreFromMigrate constructs a Velero Restore instance based on the provided migrate specification.
+func buildVeleroRestoreFromMigrate(migrateSpec *backupapi.MigrateSpec, labels map[string]string, veleroBackupName, veleroRestoreName string) *velerov1.Restore {
+	// Only consider migrateSpec.Policy.NamespaceMapping, migrateSpec.Policy.PreserveNodePorts, and migrateSpec.Policy.MigrateStatus when building the Velero restore.
+	restoreParam := &backupapi.RestoreSpec{}
+	if migrateSpec.Policy != nil {
+		restoreParam.Policy = &backupapi.RestorePolicy{
+			NamespaceMapping:  migrateSpec.Policy.NamespaceMapping,
+			PreserveNodePorts: migrateSpec.Policy.PreserveNodePorts,
+			PreserveStatus:    migrateSpec.Policy.MigrateStatus,
+		}
+	}
+	return buildVeleroRestoreInstance(restoreParam, labels, veleroBackupName, veleroRestoreName)
+}

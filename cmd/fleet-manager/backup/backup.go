@@ -37,5 +37,13 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		return err
 	}
 
+	if err := (&fleet.MigrateManager{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+		log.Error(err, "unable to create controller", "controller", "Restore")
+		return err
+	}
+
 	return nil
 }
