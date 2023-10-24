@@ -1,6 +1,6 @@
 ---
-title: "Kurator Fleet Backup Plugin Configuration Guide"
-linkTitle: "Manage Fleet Backup Plugin"
+title: "Install Backup Plugin"
+linkTitle: "Install Backup Plugin"
 weight: 10
 description: >
   Configure backup plugin for Fleet to enable Kurator's capabilities.
