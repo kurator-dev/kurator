@@ -389,25 +389,22 @@ type DistributedStorage struct {
 type MonSpec struct {
 	// Count is the number of Ceph monitors.
 	// Default is three and preferably an odd number.
-	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=9
 	// +optional
 	Count *int `json:"count,omitempty"`
 
-	// In a ceph cluster, it is recommended that the monitor pod be deployed on a different node in order to ensure high availability of data.
-	// In practice, you can label the node where the monitor pod is deployed with Annotation/Labels.
-	// Then use kubernetes node affinity rules to achieve the goal of deploying the monitor to different nodes.
-	// The annotations-related configuration to add/set on each Pod related object.
+	// The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.
 	// +nullable
 	// +optional
-	Annotations rookv1.AnnotationsSpec `json:"annotations,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// Similar to Annotation, but more graphical than Annotation.
-	// The labels-related configuration to add/set on each Pod related object.
+	// The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +nullable
 	// +optional
-	Labels rookv1.LabelsSpec `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).
 	// +kubebuilder:pruning:PreserveUnknownFields
@@ -419,22 +416,21 @@ type MonSpec struct {
 type MgrSpec struct {
 	// Count is the number of manager to run
 	// Default is two, one for use and one for standby.
-	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=2
 	// +optional
 	Count *int `json:"count,omitempty"`
 
-	// Use Annotations/labels to achieve the goal of placing two managers on different nodes.
-	// The annotations-related configuration to add/set on each Pod related object.
+	// The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.
 	// +nullable
 	// +optional
-	Annotations rookv1.AnnotationsSpec `json:"annotations,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// The labels-related configuration to add/set on each Pod related object.
+	// The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +nullable
 	// +optional
-	Labels rookv1.LabelsSpec `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 
 	// The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).
 	// +kubebuilder:pruning:PreserveUnknownFields

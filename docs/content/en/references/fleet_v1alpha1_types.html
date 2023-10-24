@@ -910,25 +910,24 @@ Default is two, one for use and one for standby.</p>
 <td>
 <code>annotations</code><br>
 <em>
-github.com/rook/rook/pkg/apis/ceph.rook.io/v1.AnnotationsSpec
+map[string]string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Use Annotations/labels to achieve the goal of placing two managers on different nodes.
-The annotations-related configuration to add/set on each Pod related object.</p>
+<p>The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>labels</code><br>
 <em>
-github.com/rook/rook/pkg/apis/ceph.rook.io/v1.LabelsSpec
+map[string]string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>The labels-related configuration to add/set on each Pod related object.</p>
+<p>The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.</p>
 </td>
 </tr>
 <tr>
@@ -980,28 +979,25 @@ Default is three and preferably an odd number.</p>
 <td>
 <code>annotations</code><br>
 <em>
-github.com/rook/rook/pkg/apis/ceph.rook.io/v1.AnnotationsSpec
+map[string]string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>In a ceph cluster, it is recommended that the monitor pod be deployed on a different node in order to ensure high availability of data.
-In practice, you can label the node where the monitor pod is deployed with Annotation/Labels.
-Then use kubernetes node affinity rules to achieve the goal of deploying the monitor to different nodes.
-The annotations-related configuration to add/set on each Pod related object.</p>
+<p>The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.</p>
 </td>
 </tr>
 <tr>
 <td>
 <code>labels</code><br>
 <em>
-github.com/rook/rook/pkg/apis/ceph.rook.io/v1.LabelsSpec
+map[string]string
 </em>
 </td>
 <td>
 <em>(Optional)</em>
 <p>Similar to Annotation, but more graphical than Annotation.
-The labels-related configuration to add/set on each Pod related object.</p>
+The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.</p>
 </td>
 </tr>
 <tr>

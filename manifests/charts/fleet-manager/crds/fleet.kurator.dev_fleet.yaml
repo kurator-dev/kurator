@@ -254,31 +254,23 @@ spec:
                             properties:
                               annotations:
                                 additionalProperties:
-                                  additionalProperties:
-                                    type: string
-                                  description: Annotations are annotations
-                                  type: object
-                                description: Use Annotations/labels to achieve the
-                                  goal of placing two managers on different nodes.
-                                  The annotations-related configuration to add/set
-                                  on each Pod related object.
+                                  type: string
+                                description: The annotation-related configuration
+                                  to add/set on each Pod related object. Including
+                                  Pod， Deployment.
                                 nullable: true
                                 type: object
-                                x-kubernetes-preserve-unknown-fields: true
                               count:
                                 description: Count is the number of manager to run
                                   Default is two, one for use and one for standby.
                                 maximum: 2
-                                minimum: 0
+                                minimum: 1
                                 type: integer
                               labels:
                                 additionalProperties:
-                                  additionalProperties:
-                                    type: string
-                                  description: Labels are label for a given daemons
-                                  type: object
-                                description: The labels-related configuration to add/set
-                                  on each Pod related object.
+                                  type: string
+                                description: The label-related configuration to add/set
+                                  on each Pod related object. Including Pod， Deployment.
                                 nullable: true
                                 type: object
                                 x-kubernetes-preserve-unknown-fields: true
@@ -1663,37 +1655,25 @@ spec:
                             properties:
                               annotations:
                                 additionalProperties:
-                                  additionalProperties:
-                                    type: string
-                                  description: Annotations are annotations
-                                  type: object
-                                description: In a ceph cluster, it is recommended
-                                  that the monitor pod be deployed on a different
-                                  node in order to ensure high availability of data.
-                                  In practice, you can label the node where the monitor
-                                  pod is deployed with Annotation/Labels. Then use
-                                  kubernetes node affinity rules to achieve the goal
-                                  of deploying the monitor to different nodes. The
-                                  annotations-related configuration to add/set on
-                                  each Pod related object.
+                                  type: string
+                                description: The annotation-related configuration
+                                  to add/set on each Pod related object. Including
+                                  Pod， Deployment.
                                 nullable: true
                                 type: object
-                                x-kubernetes-preserve-unknown-fields: true
                               count:
                                 description: Count is the number of Ceph monitors.
                                   Default is three and preferably an odd number.
                                 maximum: 9
-                                minimum: 0
+                                minimum: 1
                                 type: integer
                               labels:
                                 additionalProperties:
-                                  additionalProperties:
-                                    type: string
-                                  description: Labels are label for a given daemons
-                                  type: object
+                                  type: string
                                 description: Similar to Annotation, but more graphical
-                                  than Annotation. The labels-related configuration
-                                  to add/set on each Pod related object.
+                                  than Annotation. The label-related configuration
+                                  to add/set on each Pod related object. Including
+                                  Pod， Deployment.
                                 nullable: true
                                 type: object
                                 x-kubernetes-preserve-unknown-fields: true

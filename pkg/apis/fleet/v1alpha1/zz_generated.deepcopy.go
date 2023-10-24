@@ -395,36 +395,16 @@ func (in *MgrSpec) DeepCopyInto(out *MgrSpec) {
 	}
 	if in.Annotations != nil {
 		in, out := &in.Annotations, &out.Annotations
-		*out = make(cephrookiov1.AnnotationsSpec, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
-			var outVal map[string]string
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = make(cephrookiov1.Annotations, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
-			(*out)[key] = outVal
+			(*out)[key] = val
 		}
 	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
-		*out = make(cephrookiov1.LabelsSpec, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
-			var outVal map[string]string
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = make(cephrookiov1.Labels, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
-			(*out)[key] = outVal
+			(*out)[key] = val
 		}
 	}
 	if in.Placement != nil {
@@ -457,36 +437,16 @@ func (in *MonSpec) DeepCopyInto(out *MonSpec) {
 	}
 	if in.Annotations != nil {
 		in, out := &in.Annotations, &out.Annotations
-		*out = make(cephrookiov1.AnnotationsSpec, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
-			var outVal map[string]string
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = make(cephrookiov1.Annotations, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
-			(*out)[key] = outVal
+			(*out)[key] = val
 		}
 	}
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
-		*out = make(cephrookiov1.LabelsSpec, len(*in))
+		*out = make(map[string]string, len(*in))
 		for key, val := range *in {
-			var outVal map[string]string
-			if val == nil {
-				(*out)[key] = nil
-			} else {
-				in, out := &val, &outVal
-				*out = make(cephrookiov1.Labels, len(*in))
-				for key, val := range *in {
-					(*out)[key] = val
-				}
-			}
-			(*out)[key] = outVal
+			(*out)[key] = val
 		}
 	}
 	if in.Placement != nil {
