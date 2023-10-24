@@ -16,7 +16,6 @@ package fleet
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -32,12 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
-)
-
-const (
-	// MigrationDelay ensures the restore operation happens after the backup.
-	// This helps avoid potential issues due to timing synchronization.
-	MigrationDelay = 1 * time.Second
 )
 
 // MigrateManager reconciles a Migrate object
@@ -97,8 +90,8 @@ func (m *MigrateManager) reconcileMigrate(ctx context.Context, migrate *backupap
 	// Update the migrate phase
 	phase := migrate.Status.Phase
 	if len(phase) == 0 || phase == backupapi.MigratePhasePending {
-		migrate.Status.Phase = backupapi.MigratePhaseWaitingForSource
-		log.Info("Migrate Phase changes", "phase", backupapi.MigratePhaseWaitingForSource)
+		migrate.Status.Phase = backupapi.MigratePhaseBackupInProgress
+		log.Info("Migrate Phase changes", "phase", backupapi.MigratePhaseBackupInProgress)
 	}
 
 	// The actual migration operation can be divided into two stages
@@ -160,6 +153,9 @@ func (m *MigrateManager) reconcileMigrateBackup(ctx context.Context, migrate *ba
 
 	if veleroBackup.Status.Phase == velerov1.BackupPhaseCompleted {
 		conditions.MarkTrue(migrate, backupapi.SourceReadyCondition)
+	} else {
+		log.Info("Waiting for source backup to be ready", "sourceBackupName", sourceBackupName)
+		return ctrl.Result{RequeueAfter: RequeueAfter}, nil
 	}
 
 	return ctrl.Result{}, nil
@@ -169,22 +165,15 @@ func (m *MigrateManager) reconcileMigrateBackup(ctx context.Context, migrate *ba
 func (m *MigrateManager) reconcileMigrateRestore(ctx context.Context, migrate *backupapi.Migrate) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	// If source cluster's backup resource is not ready, return directly.
-	if !isMigrateSourceReady(migrate) {
-		return ctrl.Result{RequeueAfter: RequeueAfter}, nil
-	}
-
 	targetClusters, err := fetchDestinationClusters(ctx, m.Client, migrate.Namespace, migrate.Spec.TargetClusters)
 	if err != nil {
 		log.Error(err, "Failed to fetch target clusters for migration")
 		return ctrl.Result{}, fmt.Errorf("fetching target clusters: %w", err)
 	}
 
-	if migrate.Status.Phase != backupapi.MigratePhaseInProgress {
-		migrate.Status.Phase = backupapi.MigratePhaseInProgress
-		log.Info("Migrate Phase changes", "phase", backupapi.MigratePhaseInProgress)
-		// Ensure the restore point is created after the backup.
-		time.Sleep(MigrationDelay)
+	if migrate.Status.Phase != backupapi.MigratePhaseBackupInProgress {
+		migrate.Status.Phase = backupapi.MigratePhaseRestoreInProgress
+		log.Info("Migrate Phase changes", "phase", backupapi.MigratePhaseRestoreInProgress)
 	}
 
 	// referredBackupName is same in different target clusters velero restore, because the velero backup will sync to current cluster.
