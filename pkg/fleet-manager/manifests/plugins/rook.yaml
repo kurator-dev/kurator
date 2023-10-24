@@ -1,0 +1,5 @@
+type: default
+repo: https://charts.rook.io/release
+name: rook-ceph
+version: 1.11.11
+targetNamespace: rook-ceph

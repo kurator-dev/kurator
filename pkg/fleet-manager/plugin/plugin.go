@@ -24,6 +24,7 @@ import (
 
 	"github.com/fluxcd/pkg/runtime/transform"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
+	rookv1 "github.com/rook/rook/pkg/apis/ceph.rook.io/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -32,10 +33,12 @@ import (
 )
 
 const (
-	MetricPluginName  = "metric"
-	GrafanaPluginName = "grafana"
-	KyvernoPluginName = "kyverno"
-	BackupPluginName  = "backup"
+	MetricPluginName          = "metric"
+	GrafanaPluginName         = "grafana"
+	KyvernoPluginName         = "kyverno"
+	BackupPluginName          = "backup"
+	StorageOperatorPluginName = "storage-operator"
+	ClusterStoragePluginName  = "cluster-storage"
 
 	ThanosComponentName        = "thanos"
 	PrometheusComponentName    = "prometheus"
@@ -43,6 +46,8 @@ const (
 	KyvernoComponentName       = "kyverno"
 	KyvernoPolicyComponentName = "kyverno-policies"
 	VeleroComponentName        = "velero"
+	RookOperatorComponentName  = "rook"
+	RookClusterComponentName   = "rook-ceph"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -288,6 +293,138 @@ func RenderVelero(
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           BackupPluginName,
 		Component:      VeleroComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+// Build configuration of the rendering rook-operator.
+func RendeStorageOperator(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	distributedStorageCfg *fleetv1a1.DistributedStorageConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, RookOperatorComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, distributedStorageCfg.Chart)
+
+	values, err := toMap(distributedStorageCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           StorageOperatorPluginName,
+		Component:      RookOperatorComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+// Build configuration of the rendering rook-ceph-cluster.
+func RenderClusterStorage(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	distributedStorageCfg *fleetv1a1.DistributedStorageConfig,
+) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, RookClusterComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, distributedStorageCfg.Chart)
+
+	// get default values
+	defaultValues := c.Values
+	// In the rook, the Labels, annotation and Placement of Monitor and manager are configured under the Labels, annotation and Placement fields.
+	// So it need to be rebuild customValues using user settings in distributedStorage.
+	customValues := map[string]interface{}{
+		"mon": map[string]interface{}{
+			"count": distributedStorageCfg.Storage.Monitor.Count,
+		},
+		"mgr": map[string]interface{}{
+			"count": distributedStorageCfg.Storage.Manager.Count,
+		},
+		"labels": map[string]interface{}{
+			"mon": distributedStorageCfg.Storage.Monitor.Labels,
+			"mgr": distributedStorageCfg.Storage.Manager.Labels,
+		},
+		"annotations": map[string]interface{}{
+			"mon": distributedStorageCfg.Storage.Monitor.Annotations,
+			"mgr": distributedStorageCfg.Storage.Manager.Annotations,
+		},
+		"placement": map[string]interface{}{
+			"mon": distributedStorageCfg.Storage.Monitor.Placement,
+			"mgr": distributedStorageCfg.Storage.Manager.Placement,
+		},
+	}
+	for _, v := range customValues {
+		mapValue, ok := v.(map[string]interface{})
+		if !ok {
+			panic(fmt.Sprintf("Expected a map but got a %T", v))
+		}
+		for key, value := range mapValue {
+			switch value.(type) {
+			case *int:
+				if value.(*int) == nil {
+					delete(mapValue, key)
+				}
+			case map[string]string:
+				if value.(map[string]string) == nil {
+					delete(mapValue, key)
+				}
+			case rookv1.PlacementSpec:
+				if value.(rookv1.PlacementSpec) == nil {
+					delete(mapValue, key)
+				}
+			}
+		}
+	}
+	customValues["dataDirHostPath"] = distributedStorageCfg.Storage.DataDirHostPath
+	customValues["storage"] = distributedStorageCfg.Storage.Storage
+	for key, value := range customValues {
+		switch value.(type) {
+		case map[string]interface{}:
+			if len(value.(map[string]interface{})) == 0 {
+				delete(customValues, key)
+			}
+		case *string:
+			if value.(*string) == nil {
+				delete(customValues, key)
+			}
+		case *fleetv1a1.StorageScopeSpec:
+			if value.(*fleetv1a1.StorageScopeSpec) == nil {
+				delete(customValues, key)
+			}
+		}
+	}
+	cephClusterValue := make(map[string]interface{})
+	cephClusterValue["cephClusterSpec"] = customValues
+
+	extraValues, err := toMap(distributedStorageCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+	// Add custom extraValues to cephClusterValue.
+	cephClusterValue = transform.MergeMaps(cephClusterValue, extraValues)
+	// Replace the default values with custom values to obtain the actual values.
+	values := transform.MergeMaps(defaultValues, cephClusterValue)
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           ClusterStoragePluginName,
+		Component:      RookClusterComponentName,
 		Fleet:          fleetNN,
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,

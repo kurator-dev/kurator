@@ -1,0 +1,60 @@
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: "rook-ceph-cluster1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "cluster-storage"
+    fleet.kurator.dev/component: "rook-ceph"
+  ownerReferences:
+  - apiVersion: "fleet.kurator.dev/v1alpha1"
+    kind: "Fleet"
+    name: "fleet-1"
+    uid: "xxxxxx"
+spec:
+  type: "default"
+  interval: 5m0s
+  url: "https://charts.rook.io/release"
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: "rook-ceph-cluster1"
+  namespace: "default"
+  labels:
+    app.kubernetes.io/managed-by: fleet-manager
+    fleet.kurator.dev/name: "fleet-1"
+    fleet.kurator.dev/plugin: "cluster-storage"
+    fleet.kurator.dev/component: "rook-ceph"
+  ownerReferences:
+  - apiVersion: "fleet.kurator.dev/v1alpha1"
+    kind: "Fleet"
+    name: "fleet-1"
+    uid: "xxxxxx"
+spec:
+  chart:
+    spec:
+      chart: "rook-ceph-cluster"
+      version: "1.11.11"
+      sourceRef:
+        kind: HelmRepository
+        name: "rook-ceph-cluster1"
+  values:
+    cephClusterSpec:
+      dataDirHostPath: /var/lib/rook
+      mgr:
+        count: 2
+      mon:
+        count: 3
+  interval: 1m0s
+  install:
+    createNamespace: true
+  targetNamespace: "rook-ceph"
+  storageNamespace: "rook-ceph"
+  timeout: 15m0s
+  kubeConfig:
+    secretRef:
+      name: cluster1
+      key: kubeconfig.yaml
