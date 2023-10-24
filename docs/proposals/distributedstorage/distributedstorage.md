@@ -171,18 +171,18 @@ type PluginConfig struct {
     Policy *PolicyConfig `json:"policy,omitempty"`
     // Backup defines the configuration for the backup engine(Velero).
     Backup *BackupConfig `json:"backup,omitempty"`
-    // DistributedStroage define the configuration for the distributed stroage(Implemented with Rook)
-    DistributedStroage *DistributedStroageConfig `json:"distributedStroage,omitempty"`
+    // DistributedStorage define the configuration for the distributed storage(Implemented with Rook)
+    DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
 }
 
-type DistributedStroageConfig struct {
-    // Chart defines the helm chart configuration of the backup engine.
+type DistributedStorageConfig struct {
+    // Chart defines the helm chart configuration of the distributed storage engine.
     // The default value is:
     //
     // chart:
     //   repository: https://charts.rook.io/release
     //   name: rook
-    //   version: 1.12.3
+    //   version: 1.11.11
     //
     // +optional
     Chart *ChartConfig `json:"chart,omitempty"`
@@ -203,12 +203,12 @@ type DistributedStroageConfig struct {
 
 // Note: partly copied from https://github.com/rook/rook/blob/release-1.10/pkg/apis/ceph.rook.io/v1/types.go
 type DistributedStorage struct {
-    // The path on the host where config and data can be persisted. Must be set.
+    // The path on the host where config and data can be persisted.
     // If the storagecluster is deleted, please clean up the configuration files in this file path.
     // e.g. /var/lib/rook
     // +kubebuilder:validation:Pattern=`^/(\S+)`
     // +optional
-    DataDirHostPath string `json:"dataDirHostPath,omitempty"`
+    DataDirHostPath *string `json:"dataDirHostPath,omitempty"`
 
     // Monitor is the daemon that monitors the status of the ceph cluster.
     // Responsible for collecting cluster information, updating cluster information, and publishing cluster information.
@@ -216,18 +216,18 @@ type DistributedStorage struct {
     // A spec for mon related options
     // +optional
     // +nullable
-    Monitor MonSpec `json:"monitor,omitempty"`
+    Monitor *MonSpec `json:"monitor,omitempty"`
 
     // Manager is the daemon runs alongside monitor daemon,to provide additional monitoring and interfaces to external monitoring and management systems.
     // A spec for mgr related options
     // +optional
     // +nullable
-    Manager MgrSpec `json:"manager,omitempty"`
+    Manager *MgrSpec `json:"manager,omitempty"`
 
     // A spec for available storage in the cluster and how it should be used
     // +optional
     // +nullable
-    Storage StorageScopeSpec `json:"storage,omitempty"`
+    Storage *StorageScopeSpec `json:"storage,omitempty"`
 }
 ```
 
@@ -244,25 +244,22 @@ When the number of monitors is 3, it requires 2 active monitors to work properly
 type MonSpec struct {
     // Count is the number of Ceph monitors.
     // Default is three and preferably an odd number.
-    // +kubebuilder:validation:Minimum=0
+    // +kubebuilder:validation:Minimum=1
     // +kubebuilder:validation:Maximum=9
     // +optional
-    Count int `json:"count,omitempty"`
+    Count *int `json:"count,omitempty"`
     
-    // In a ceph cluster, it is recommended that the monitor pod be deployed on a different node in order to ensure high availability of data.
-    // In practice, you can label the node where the monitor pod is deployed with Annotation/Labels.
-    // Then use kubernetes node affinity rules to achieve the goal of deploying the monitor to different nodes.
-    // The annotations-related configuration to add/set on each Pod related object.
+    // The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.
     // +nullable
     // +optional
-    Annotations rookv1.AnnotationsSpec `json:"annotations,omitempty"`
+    Annotations map[string]string `json:"annotations,omitempty"`
 
     // Similar to Annotation, but more graphical than Annotation.
-    // The labels-related configuration to add/set on each Pod related object.
+    // The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.
     // +kubebuilder:pruning:PreserveUnknownFields
     // +nullable
     // +optional
-    Labels rookv1.LabelsSpec `json:"labels,omitempty"`
+    Labels map[string]string `json:"labels,omitempty"`
 
     // The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).
     // +kubebuilder:pruning:PreserveUnknownFields
@@ -274,22 +271,21 @@ type MonSpec struct {
 type MgrSpec struct {
     // Count is the number of manager to run
     // Default is two, one for use and one for standby.
-    // +kubebuilder:validation:Minimum=0
+    // +kubebuilder:validation:Minimum=1
     // +kubebuilder:validation:Maximum=2
     // +optional
-    Count int `json:"count,omitempty"`
+    Count *int `json:"count,omitempty"`
 
-    // Use Annotations/labels to achieve the goal of placing two managers on different nodes.
-    // The annotations-related configuration to add/set on each Pod related object.
+    // The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.
     // +nullable
     // +optional
-    Annotations rookv1.AnnotationsSpec `json:"annotations,omitempty"`
+    Annotations map[string]string `json:"annotations,omitempty"`
 
-    // The labels-related configuration to add/set on each Pod related object.
+    // The labels-related configuration to add/set on each Pod related object. Including Pod， Deployment.
     // +kubebuilder:pruning:PreserveUnknownFields
     // +nullable
     // +optional
-    Labels rookv1.LabelsSpec `json:"labels,omitempty"`
+    Labels map[string]string `json:"labels,omitempty"`
 
     // The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).
     // +kubebuilder:pruning:PreserveUnknownFields
@@ -314,7 +310,7 @@ type StorageScopeSpec struct {
     UseAllNodes bool `json:"useAllNodes,omitempty"`
    
     // Select device information used by osd. For more information see the design of the selection below.
-    StroageDeviceSelection `json:",inline"`
+    StorageDeviceSelection `json:",inline"`
 
     // OSDStore is the backend storage type used for creating the OSDs
     // Default OSDStore type is bluestore which can directly manages bare devices
@@ -333,7 +329,7 @@ type Node struct {
     // +kubebuilder:pruning:PreserveUnknownFields
     // +nullable
     // +optional
-    StroageDeviceSelection `json:",inline"`
+    StorageDeviceSelection `json:",inline"`
 }
 
 // This type of cluster can specify devices for OSDs, both at the cluster and individual node level, for selecting which storage resources will be included in the cluster.
@@ -341,13 +337,7 @@ type Node struct {
 // If these settings are not available, osd will also run on the specified nodes and listen for the status of the storage devices on the nodes. 
 // Once a specified device is plugged into a node, osd formats and plugs that device into osd for use.
 // More info please refer to https://github.com/rook/rook/blob/master/Documentation/Getting-Started/quickstart.md#prerequisites
-type StroageDeviceSelection struct {
-    // Whether to consume all the storage devices found on a machine
-    // indicating whether all devices found on nodes in the cluster should be automatically consumed by OSDs. 
-    //Not recommended unless you have a very controlled environment where you will not risk formatting of devices with existing data.
-    // +optional
-    UseAllDevices *bool `json:"useAllDevices,omitempty"`
-
+type StorageDeviceSelection struct {
     // List of devices to use as storage devices
     // A list of individual device names belonging to this node to include in the storage cluster
     // e.g. `sda` or  `/dev/disk/by-id/ata-XXXX`
@@ -394,7 +384,6 @@ StorageClusterSpec:
     storage:
         # Cluster-level configuration, used by nodes not specifically specified in the configuration.
         # The specially designated nodes use their own configuration, as shown below.
-        useAllDevices: true
         nodes:
           - name: "172.17.4.201"
             devices:

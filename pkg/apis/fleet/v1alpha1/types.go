@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	rookv1 "github.com/rook/rook/pkg/apis/ceph.rook.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -83,6 +84,8 @@ type PluginConfig struct {
 	Policy *PolicyConfig `json:"policy,omitempty"`
 	// Backup defines the configuration for the backup engine(Velero).
 	Backup *BackupConfig `json:"backup,omitempty"`
+	// DistributedStorage define the configuration for the distributed storage(Implemented with Rook)
+	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
 }
 
 type MetricConfig struct {
@@ -327,6 +330,151 @@ type BackupStorageLocation struct {
 	//    #  insecureSkipTLSVerify:
 	// +optional
 	Config map[string]string `json:"config,omitempty"`
+}
+
+type DistributedStorageConfig struct {
+	// Chart defines the helm chart configuration of the distributed storage engine.
+	// The default value is:
+	//
+	// chart:
+	//   repository: https://charts.rook.io/release
+	//   name: rook
+	//   version: 1.11.11
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+
+	//Storage provides detailed settings for unified distributed storage.
+	Storage *DistributedStorage `json:"storage"`
+
+	// ExtraArgs provides the extra chart values for rook chart.
+	// For example, use the following configuration to change the pull policy:
+	//
+	// extraArgs:
+	//   image:
+	//     pullPolicy: Always
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+}
+
+type DistributedStorage struct {
+	// The path on the host where config and data can be persisted.
+	// If the storagecluster is deleted, please clean up the configuration files in this file path.
+	// e.g. /var/lib/rook
+	// +kubebuilder:validation:Pattern=`^/(\S+)`
+	// +optional
+	DataDirHostPath *string `json:"dataDirHostPath,omitempty"`
+
+	// Monitor is the daemon that monitors the status of the ceph cluster.
+	// Responsible for collecting cluster information, updating cluster information, and publishing cluster information.
+	// Including monmap, osdmap, PGmap, mdsmap, etc.
+	// A spec for mon related options
+	// +optional
+	// +nullable
+	Monitor *MonSpec `json:"monitor,omitempty"`
+
+	// Manager is the daemon runs alongside monitor daemon,to provide additional monitoring and interfaces to external monitoring and management systems.
+	// A spec for mgr related options
+	// +optional
+	// +nullable
+	Manager *MgrSpec `json:"manager,omitempty"`
+
+	// A spec for available storage in the cluster and how it should be used
+	// +optional
+	// +nullable
+	Storage *StorageScopeSpec `json:"storage,omitempty"`
+}
+
+type MonSpec struct {
+	// Count is the number of Ceph monitors.
+	// Default is three and preferably an odd number.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=9
+	// +optional
+	Count *int `json:"count,omitempty"`
+
+	// The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.
+	// +nullable
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Similar to Annotation, but more graphical than Annotation.
+	// The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	Placement rookv1.PlacementSpec `json:"placement,omitempty"`
+}
+
+type MgrSpec struct {
+	// Count is the number of manager to run
+	// Default is two, one for use and one for standby.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=2
+	// +optional
+	Count *int `json:"count,omitempty"`
+
+	// The annotation-related configuration to add/set on each Pod related object. Including Pod， Deployment.
+	// +nullable
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// The label-related configuration to add/set on each Pod related object. Including Pod， Deployment.
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// The placement-related configuration to pass to kubernetes (affinity, node selector, tolerations).
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	Placement rookv1.PlacementSpec `json:"placement,omitempty"`
+}
+
+type StorageScopeSpec struct {
+	// +nullable
+	// +optional
+	Nodes []Node `json:"nodes,omitempty"`
+
+	// indicating if all nodes in the cluster should be used for storage according to the cluster level storage selection and configuration values.
+	// If individual nodes are specified under the nodes field, then useAllNodes must be set to false.
+	// +optional
+	UseAllNodes bool `json:"useAllNodes,omitempty"`
+
+	// Select device information used by osd. For more information see the design of the selection below.
+	StorageDeviceSelection `json:",inline"`
+}
+
+// Each individual node can specify configuration to override the cluster level settings and defaults.
+// If a node does not specify any configuration then it will inherit the cluster level settings.
+type Node struct {
+	// Name should match its kubernetes.io/hostname label
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// Specify which storage drives the osd deployed in this node can manage.
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	StorageDeviceSelection `json:",inline"`
+}
+
+type StorageDeviceSelection struct {
+	// List of devices to use as storage devices
+	// A list of individual device names belonging to this node to include in the storage cluster
+	// e.g. `sda` or  `/dev/disk/by-id/ata-XXXX`
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	Devices []rookv1.Device `json:"devices,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet
