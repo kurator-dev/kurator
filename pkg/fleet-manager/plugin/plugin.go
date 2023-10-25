@@ -24,7 +24,6 @@ import (
 
 	"github.com/fluxcd/pkg/runtime/transform"
 	sourcev1b2 "github.com/fluxcd/source-controller/api/v1beta2"
-	rookv1 "github.com/rook/rook/pkg/apis/ceph.rook.io/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -350,69 +349,105 @@ func RenderClusterStorage(
 	defaultValues := c.Values
 	// In the rook, the Labels, annotation and Placement of Monitor and manager are configured under the Labels, annotation and Placement fields.
 	// So it need to be rebuild customValues using user settings in distributedStorage.
-	customValues := map[string]interface{}{
-		"mon": map[string]interface{}{
-			"count": distributedStorageCfg.Storage.Monitor.Count,
-		},
-		"mgr": map[string]interface{}{
-			"count": distributedStorageCfg.Storage.Manager.Count,
-		},
-		"labels": map[string]interface{}{
-			"mon": distributedStorageCfg.Storage.Monitor.Labels,
-			"mgr": distributedStorageCfg.Storage.Manager.Labels,
-		},
-		"annotations": map[string]interface{}{
-			"mon": distributedStorageCfg.Storage.Monitor.Annotations,
-			"mgr": distributedStorageCfg.Storage.Manager.Annotations,
-		},
-		"placement": map[string]interface{}{
-			"mon": distributedStorageCfg.Storage.Monitor.Placement,
-			"mgr": distributedStorageCfg.Storage.Manager.Placement,
-		},
+	customValues := make(map[string]interface{})
+	if distributedStorageCfg.Storage.DataDirHostPath != nil {
+		customValues["dataDirHostPath"] = distributedStorageCfg.Storage.DataDirHostPath
 	}
-	for _, v := range customValues {
-		mapValue, ok := v.(map[string]interface{})
-		if !ok {
-			panic(fmt.Sprintf("Expected a map but got a %T", v))
+	if distributedStorageCfg.Storage.Storage != nil {
+		customValues["storage"] = distributedStorageCfg.Storage.Storage
+	}
+	if distributedStorageCfg.Storage.Monitor != nil {
+		monitorCfg := distributedStorageCfg.Storage.Monitor
+		if monitorCfg.Count != nil {
+			monitorMap := make(map[string]interface{})
+			monitorMap["count"] = monitorCfg.Count
+			customValues["mon"] = monitorMap
 		}
-		for key, value := range mapValue {
-			switch value.(type) {
-			case *int:
-				if value.(*int) == nil {
-					delete(mapValue, key)
-				}
-			case map[string]string:
-				if value.(map[string]string) == nil {
-					delete(mapValue, key)
-				}
-			case rookv1.PlacementSpec:
-				if value.(rookv1.PlacementSpec) == nil {
-					delete(mapValue, key)
-				}
+		if monitorCfg.Labels != nil {
+			_, ok := customValues["labels"]
+			if !ok {
+				monitorMap := make(map[string]interface{})
+				monitorMap["mon"] = monitorCfg.Labels
+				customValues["labels"] = monitorMap
+			} else {
+				monitorMap := customValues["labels"].(map[string]interface{})
+				monitorMap["mon"] = monitorCfg.Labels
+				customValues["labels"] = monitorMap
 			}
 		}
-	}
-	customValues["dataDirHostPath"] = distributedStorageCfg.Storage.DataDirHostPath
-	customValues["storage"] = distributedStorageCfg.Storage.Storage
-	for key, value := range customValues {
-		switch value.(type) {
-		case map[string]interface{}:
-			if len(value.(map[string]interface{})) == 0 {
-				delete(customValues, key)
+		if monitorCfg.Annotations != nil {
+			_, ok := customValues["annotations"]
+			if !ok {
+				monitorMap := make(map[string]interface{})
+				monitorMap["mon"] = monitorCfg.Annotations
+				customValues["annotations"] = monitorMap
+			} else {
+				monitorMap := customValues["annotations"].(map[string]interface{})
+				monitorMap["mon"] = monitorCfg.Annotations
+				customValues["annptations"] = monitorMap
 			}
-		case *string:
-			if value.(*string) == nil {
-				delete(customValues, key)
-			}
-		case *fleetv1a1.StorageScopeSpec:
-			if value.(*fleetv1a1.StorageScopeSpec) == nil {
-				delete(customValues, key)
+		}
+		if monitorCfg.Placement != nil {
+			_, ok := customValues["placement"]
+			if !ok {
+				monitorMap := make(map[string]interface{})
+				monitorMap["mon"] = monitorCfg.Placement
+				customValues["placement"] = monitorMap
+			} else {
+				monitorMap := customValues["placement"].(map[string]interface{})
+				monitorMap["mon"] = monitorCfg.Placement
+				customValues["placement"] = monitorMap
 			}
 		}
 	}
+	if distributedStorageCfg.Storage.Manager != nil {
+		managerCfg := distributedStorageCfg.Storage.Manager
+		if managerCfg.Count != nil {
+			managerMap := make(map[string]interface{})
+			managerMap["count"] = managerCfg.Count
+			customValues["mgr"] = managerMap
+		}
+		if managerCfg.Labels != nil {
+			_, ok := customValues["labels"]
+			if !ok {
+				managerMap := make(map[string]interface{})
+				managerMap["mgr"] = managerCfg.Labels
+				customValues["labels"] = managerMap
+			} else {
+				managerMap := customValues["labels"].(map[string]interface{})
+				managerMap["mgr"] = managerCfg.Labels
+				customValues["labels"] = managerMap
+			}
+		}
+		if managerCfg.Annotations != nil {
+			_, ok := customValues["annotations"]
+			if !ok {
+				managerMap := make(map[string]interface{})
+				managerMap["mgr"] = managerCfg.Annotations
+				customValues["annotations"] = managerMap
+			} else {
+				managerMap := customValues["annotations"].(map[string]interface{})
+				managerMap["mgr"] = managerCfg.Annotations
+				customValues["annotations"] = managerMap
+			}
+		}
+		if managerCfg.Placement != nil {
+			_, ok := customValues["placement"]
+			if !ok {
+				managerMap := make(map[string]interface{})
+				managerMap["mgr"] = managerCfg.Placement
+				customValues["placement"] = managerMap
+			} else {
+				managerMap := customValues["placement"].(map[string]interface{})
+				managerMap["mgr"] = managerCfg.Placement
+				customValues["placement"] = managerMap
+			}
+		}
+	}
+
 	cephClusterValue := make(map[string]interface{})
 	cephClusterValue["cephClusterSpec"] = customValues
-
+	fmt.Println(9, customValues)
 	extraValues, err := toMap(distributedStorageCfg.ExtraArgs)
 	if err != nil {
 		return nil, err

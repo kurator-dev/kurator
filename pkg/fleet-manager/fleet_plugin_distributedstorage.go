@@ -73,26 +73,23 @@ func (f *FleetManager) reconcileDistributedStoragePlugin(ctx context.Context, fl
 	}
 
 	// After Rook operator are created, starts to install rook-ceph
-	if distributedStorageCfg.Storage == nil {
-		// reconcilePluginResources will delete all resources if plugin is nil
-		return nil, ctrl.Result{}, nil
-	}
+	if distributedStorageCfg.Storage != nil {
+		for key, cluster := range fleetClusters {
+			b, err := plugin.RenderClusterStorage(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+				Name:       key.Name,
+				SecretName: cluster.Secret,
+				SecretKey:  cluster.SecretKey,
+			}, distributedStorageCfg)
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
 
-	for key, cluster := range fleetClusters {
-		b, err := plugin.RenderClusterStorage(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
-			Name:       key.Name,
-			SecretName: cluster.Secret,
-			SecretKey:  cluster.SecretKey,
-		}, distributedStorageCfg)
-		if err != nil {
-			return nil, ctrl.Result{}, err
+			rookCephResources, err := util.PatchResources(b)
+			if err != nil {
+				return nil, ctrl.Result{}, err
+			}
+			resources = append(resources, rookCephResources...)
 		}
-
-		rookCephResources, err := util.PatchResources(b)
-		if err != nil {
-			return nil, ctrl.Result{}, err
-		}
-		resources = append(resources, rookCephResources...)
 	}
 
 	if !f.helmReleaseReady(ctx, fleet, resources) {
