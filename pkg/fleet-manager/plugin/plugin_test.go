@@ -396,3 +396,148 @@ func TestRenderVelero(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderStorageOperator(t *testing.T) {
+	configPath := "/var/lib/rook"
+	configPathPoint := &configPath
+	monitorCount := 3
+	managerCount := 2
+
+	cases := []struct {
+		name   string
+		fleet  types.NamespacedName
+		ref    *metav1.OwnerReference
+		config *v1alpha1.DistributedStorageConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.DistributedStorageConfig{
+				Storage: &v1alpha1.DistributedStorage{
+					DataDirHostPath: configPathPoint,
+					Monitor: &v1alpha1.MonSpec{
+						Count: &monitorCount,
+					},
+					Manager: &v1alpha1.MgrSpec{
+						Count: &managerCount,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RendeStorageOperator(manifestFS, tc.fleet, tc.ref, FleetCluster{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.config)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("distributedstorage", tc.name)
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
+func TestRenderClusterStorage(t *testing.T) {
+	configPath := "/var/lib/rook"
+	configPathPoint := &configPath
+	monitorCount := 3
+	managerCount := 2
+
+	cases := []struct {
+		name   string
+		fleet  types.NamespacedName
+		ref    *metav1.OwnerReference
+		config *v1alpha1.DistributedStorageConfig
+	}{
+		{
+			name: "ceph-cluster-default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.DistributedStorageConfig{
+				Storage: &v1alpha1.DistributedStorage{
+					DataDirHostPath: configPathPoint,
+					Monitor: &v1alpha1.MonSpec{
+						Count: &monitorCount,
+					},
+					Manager: &v1alpha1.MgrSpec{
+						Count: &managerCount,
+					},
+				},
+			},
+		}, {
+			name: "ceph-cluster-handle",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.DistributedStorageConfig{
+				Storage: &v1alpha1.DistributedStorage{
+					DataDirHostPath: configPathPoint,
+					Monitor: &v1alpha1.MonSpec{
+						Count: &monitorCount,
+						Annotations: map[string]string{
+							"role": "MonitorNodeAnnotation",
+						},
+						Labels: map[string]string{
+							"role": "MonitorNodeLabel",
+						},
+					},
+					Manager: &v1alpha1.MgrSpec{
+						Count: &managerCount,
+						Annotations: map[string]string{
+							"role": "ManagerNodeAnnotation",
+						},
+						Labels: map[string]string{
+							"role": "ManagerNodeLabel",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderClusterStorage(manifestFS, tc.fleet, tc.ref, FleetCluster{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.config)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("distributedstorage", tc.name)
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}

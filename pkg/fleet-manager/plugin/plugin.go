@@ -32,10 +32,12 @@ import (
 )
 
 const (
-	MetricPluginName  = "metric"
-	GrafanaPluginName = "grafana"
-	KyvernoPluginName = "kyverno"
-	BackupPluginName  = "backup"
+	MetricPluginName          = "metric"
+	GrafanaPluginName         = "grafana"
+	KyvernoPluginName         = "kyverno"
+	BackupPluginName          = "backup"
+	StorageOperatorPluginName = "storage-operator"
+	ClusterStoragePluginName  = "cluster-storage"
 
 	ThanosComponentName        = "thanos"
 	PrometheusComponentName    = "prometheus"
@@ -43,6 +45,8 @@ const (
 	KyvernoComponentName       = "kyverno"
 	KyvernoPolicyComponentName = "kyverno-policies"
 	VeleroComponentName        = "velero"
+	RookOperatorComponentName  = "rook"
+	RookClusterComponentName   = "rook-ceph"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -294,6 +298,179 @@ func RenderVelero(
 		Chart:          *c,
 		Values:         values,
 	})
+}
+
+// Build configuration of the rendering rook-operator.
+func RendeStorageOperator(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	distributedStorageCfg *fleetv1a1.DistributedStorageConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, RookOperatorComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, distributedStorageCfg.Chart)
+
+	values, err := toMap(distributedStorageCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           StorageOperatorPluginName,
+		Component:      RookOperatorComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+// Build configuration of the rendering rook-ceph-cluster.
+func RenderClusterStorage(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	distributedStorageCfg *fleetv1a1.DistributedStorageConfig,
+) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, RookClusterComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, distributedStorageCfg.Chart)
+
+	// get default values
+	defaultValues := c.Values
+	// In the rook, the Labels, annotation and Placement of Monitor and manager are configured under the Labels, annotation and Placement fields.
+	// So it need to be rebuild customValues using user settings in distributedStorage.
+
+	customValues := buildStorageClusterValue(*distributedStorageCfg)
+	cephClusterValue := make(map[string]interface{})
+	cephClusterValue["cephClusterSpec"] = customValues
+	extraValues, err := toMap(distributedStorageCfg.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+	// Add custom extraValues to cephClusterValue.
+	cephClusterValue = transform.MergeMaps(cephClusterValue, extraValues)
+	// Replace the default values with custom values to obtain the actual values.
+	values := transform.MergeMaps(defaultValues, cephClusterValue)
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           ClusterStoragePluginName,
+		Component:      RookClusterComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+// According to distributedStorageCfg, generate the configuration for rook-ceph
+func buildStorageClusterValue(distributedStorageCfg fleetv1a1.DistributedStorageConfig) map[string]interface{} {
+	customValues := make(map[string]interface{})
+	if distributedStorageCfg.Storage.DataDirHostPath != nil {
+		customValues["dataDirHostPath"] = distributedStorageCfg.Storage.DataDirHostPath
+	}
+	if distributedStorageCfg.Storage.Storage != nil {
+		customValues["storage"] = distributedStorageCfg.Storage.Storage
+	}
+	if distributedStorageCfg.Storage.Monitor != nil {
+		monitorCfg := distributedStorageCfg.Storage.Monitor
+		if monitorCfg.Count != nil {
+			monitorMap := make(map[string]interface{})
+			monitorMap["count"] = monitorCfg.Count
+			customValues["mon"] = monitorMap
+		}
+		if monitorCfg.Labels != nil {
+			_, ok := customValues["labels"]
+			if !ok {
+				labelsMap := make(map[string]interface{})
+				labelsMap["mon"] = monitorCfg.Labels
+				customValues["labels"] = labelsMap
+			} else {
+				labelsMap := customValues["labels"].(map[string]interface{})
+				labelsMap["mon"] = monitorCfg.Labels
+				customValues["labels"] = labelsMap
+			}
+		}
+		if monitorCfg.Annotations != nil {
+			_, ok := customValues["annotations"]
+			if !ok {
+				annotationsMap := make(map[string]interface{})
+				annotationsMap["mon"] = monitorCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			} else {
+				annotationsMap := customValues["annotations"].(map[string]interface{})
+				annotationsMap["mon"] = monitorCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			}
+		}
+		if monitorCfg.Placement != nil {
+			_, ok := customValues["placement"]
+			if !ok {
+				placementMap := make(map[string]interface{})
+				placementMap["mon"] = monitorCfg.Placement
+				customValues["placement"] = placementMap
+			} else {
+				placementMap := customValues["placement"].(map[string]interface{})
+				placementMap["mon"] = monitorCfg.Placement
+				customValues["placement"] = placementMap
+			}
+		}
+	}
+	if distributedStorageCfg.Storage.Manager != nil {
+		managerCfg := distributedStorageCfg.Storage.Manager
+		if managerCfg.Count != nil {
+			managerMap := make(map[string]interface{})
+			managerMap["count"] = managerCfg.Count
+			customValues["mgr"] = managerMap
+		}
+		if managerCfg.Labels != nil {
+			_, ok := customValues["labels"]
+			if !ok {
+				labelsMap := make(map[string]interface{})
+				labelsMap["mgr"] = managerCfg.Labels
+				customValues["labels"] = labelsMap
+			} else {
+				labelsMap := customValues["labels"].(map[string]interface{})
+				labelsMap["mgr"] = managerCfg.Labels
+				customValues["labels"] = labelsMap
+			}
+		}
+		if managerCfg.Annotations != nil {
+			_, ok := customValues["annotations"]
+			if !ok {
+				annotationsMap := make(map[string]interface{})
+				annotationsMap["mgr"] = managerCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			} else {
+				annotationsMap := customValues["annotations"].(map[string]interface{})
+				annotationsMap["mgr"] = managerCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			}
+		}
+		if managerCfg.Placement != nil {
+			_, ok := customValues["placement"]
+			if !ok {
+				placementMap := make(map[string]interface{})
+				placementMap["mgr"] = managerCfg.Placement
+				customValues["placement"] = placementMap
+			} else {
+				placementMap := customValues["placement"].(map[string]interface{})
+				placementMap["mgr"] = managerCfg.Placement
+				customValues["placement"] = placementMap
+			}
+		}
+	}
+	return customValues
 }
 
 func mergeChartConfig(origin *ChartConfig, target *fleetv1a1.ChartConfig) {

@@ -56,6 +56,7 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			f.reconcileGrafanaPlugin,
 			f.reconcileKyvernoPlugin,
 			f.reconcileBackupPlugin,
+			f.reconcileDistributedStoragePlugin,
 		}
 
 		resultsChannel := make(chan reconcileResult, len(funcs))
