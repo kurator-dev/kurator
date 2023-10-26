@@ -349,105 +349,10 @@ func RenderClusterStorage(
 	defaultValues := c.Values
 	// In the rook, the Labels, annotation and Placement of Monitor and manager are configured under the Labels, annotation and Placement fields.
 	// So it need to be rebuild customValues using user settings in distributedStorage.
-	customValues := make(map[string]interface{})
-	if distributedStorageCfg.Storage.DataDirHostPath != nil {
-		customValues["dataDirHostPath"] = distributedStorageCfg.Storage.DataDirHostPath
-	}
-	if distributedStorageCfg.Storage.Storage != nil {
-		customValues["storage"] = distributedStorageCfg.Storage.Storage
-	}
-	if distributedStorageCfg.Storage.Monitor != nil {
-		monitorCfg := distributedStorageCfg.Storage.Monitor
-		if monitorCfg.Count != nil {
-			monitorMap := make(map[string]interface{})
-			monitorMap["count"] = monitorCfg.Count
-			customValues["mon"] = monitorMap
-		}
-		if monitorCfg.Labels != nil {
-			_, ok := customValues["labels"]
-			if !ok {
-				monitorMap := make(map[string]interface{})
-				monitorMap["mon"] = monitorCfg.Labels
-				customValues["labels"] = monitorMap
-			} else {
-				monitorMap := customValues["labels"].(map[string]interface{})
-				monitorMap["mon"] = monitorCfg.Labels
-				customValues["labels"] = monitorMap
-			}
-		}
-		if monitorCfg.Annotations != nil {
-			_, ok := customValues["annotations"]
-			if !ok {
-				monitorMap := make(map[string]interface{})
-				monitorMap["mon"] = monitorCfg.Annotations
-				customValues["annotations"] = monitorMap
-			} else {
-				monitorMap := customValues["annotations"].(map[string]interface{})
-				monitorMap["mon"] = monitorCfg.Annotations
-				customValues["annptations"] = monitorMap
-			}
-		}
-		if monitorCfg.Placement != nil {
-			_, ok := customValues["placement"]
-			if !ok {
-				monitorMap := make(map[string]interface{})
-				monitorMap["mon"] = monitorCfg.Placement
-				customValues["placement"] = monitorMap
-			} else {
-				monitorMap := customValues["placement"].(map[string]interface{})
-				monitorMap["mon"] = monitorCfg.Placement
-				customValues["placement"] = monitorMap
-			}
-		}
-	}
-	if distributedStorageCfg.Storage.Manager != nil {
-		managerCfg := distributedStorageCfg.Storage.Manager
-		if managerCfg.Count != nil {
-			managerMap := make(map[string]interface{})
-			managerMap["count"] = managerCfg.Count
-			customValues["mgr"] = managerMap
-		}
-		if managerCfg.Labels != nil {
-			_, ok := customValues["labels"]
-			if !ok {
-				managerMap := make(map[string]interface{})
-				managerMap["mgr"] = managerCfg.Labels
-				customValues["labels"] = managerMap
-			} else {
-				managerMap := customValues["labels"].(map[string]interface{})
-				managerMap["mgr"] = managerCfg.Labels
-				customValues["labels"] = managerMap
-			}
-		}
-		if managerCfg.Annotations != nil {
-			_, ok := customValues["annotations"]
-			if !ok {
-				managerMap := make(map[string]interface{})
-				managerMap["mgr"] = managerCfg.Annotations
-				customValues["annotations"] = managerMap
-			} else {
-				managerMap := customValues["annotations"].(map[string]interface{})
-				managerMap["mgr"] = managerCfg.Annotations
-				customValues["annotations"] = managerMap
-			}
-		}
-		if managerCfg.Placement != nil {
-			_, ok := customValues["placement"]
-			if !ok {
-				managerMap := make(map[string]interface{})
-				managerMap["mgr"] = managerCfg.Placement
-				customValues["placement"] = managerMap
-			} else {
-				managerMap := customValues["placement"].(map[string]interface{})
-				managerMap["mgr"] = managerCfg.Placement
-				customValues["placement"] = managerMap
-			}
-		}
-	}
 
+	customValues := buildStorageClusterValue(*distributedStorageCfg)
 	cephClusterValue := make(map[string]interface{})
 	cephClusterValue["cephClusterSpec"] = customValues
-	fmt.Println(9, customValues)
 	extraValues, err := toMap(distributedStorageCfg.ExtraArgs)
 	if err != nil {
 		return nil, err
@@ -466,6 +371,106 @@ func RenderClusterStorage(
 		Chart:          *c,
 		Values:         values,
 	})
+}
+
+// According to distributedStorageCfg, generate the configuration for rook-ceph
+func buildStorageClusterValue(distributedStorageCfg fleetv1a1.DistributedStorageConfig) map[string]interface{} {
+	customValues := make(map[string]interface{})
+	if distributedStorageCfg.Storage.DataDirHostPath != nil {
+		customValues["dataDirHostPath"] = distributedStorageCfg.Storage.DataDirHostPath
+	}
+	if distributedStorageCfg.Storage.Storage != nil {
+		customValues["storage"] = distributedStorageCfg.Storage.Storage
+	}
+	if distributedStorageCfg.Storage.Monitor != nil {
+		monitorCfg := distributedStorageCfg.Storage.Monitor
+		if monitorCfg.Count != nil {
+			monitorMap := make(map[string]interface{})
+			monitorMap["count"] = monitorCfg.Count
+			customValues["mon"] = monitorMap
+		}
+		if monitorCfg.Labels != nil {
+			_, ok := customValues["labels"]
+			if !ok {
+				labelsMap := make(map[string]interface{})
+				labelsMap["mon"] = monitorCfg.Labels
+				customValues["labels"] = labelsMap
+			} else {
+				labelsMap := customValues["labels"].(map[string]interface{})
+				labelsMap["mon"] = monitorCfg.Labels
+				customValues["labels"] = labelsMap
+			}
+		}
+		if monitorCfg.Annotations != nil {
+			_, ok := customValues["annotations"]
+			if !ok {
+				annotationsMap := make(map[string]interface{})
+				annotationsMap["mon"] = monitorCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			} else {
+				annotationsMap := customValues["annotations"].(map[string]interface{})
+				annotationsMap["mon"] = monitorCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			}
+		}
+		if monitorCfg.Placement != nil {
+			_, ok := customValues["placement"]
+			if !ok {
+				placementMap := make(map[string]interface{})
+				placementMap["mon"] = monitorCfg.Placement
+				customValues["placement"] = placementMap
+			} else {
+				placementMap := customValues["placement"].(map[string]interface{})
+				placementMap["mon"] = monitorCfg.Placement
+				customValues["placement"] = placementMap
+			}
+		}
+	}
+	if distributedStorageCfg.Storage.Manager != nil {
+		managerCfg := distributedStorageCfg.Storage.Manager
+		if managerCfg.Count != nil {
+			managerMap := make(map[string]interface{})
+			managerMap["count"] = managerCfg.Count
+			customValues["mgr"] = managerMap
+		}
+		if managerCfg.Labels != nil {
+			_, ok := customValues["labels"]
+			if !ok {
+				labelsMap := make(map[string]interface{})
+				labelsMap["mgr"] = managerCfg.Labels
+				customValues["labels"] = labelsMap
+			} else {
+				labelsMap := customValues["labels"].(map[string]interface{})
+				labelsMap["mgr"] = managerCfg.Labels
+				customValues["labels"] = labelsMap
+			}
+		}
+		if managerCfg.Annotations != nil {
+			_, ok := customValues["annotations"]
+			if !ok {
+				annotationsMap := make(map[string]interface{})
+				annotationsMap["mgr"] = managerCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			} else {
+				annotationsMap := customValues["annotations"].(map[string]interface{})
+				annotationsMap["mgr"] = managerCfg.Annotations
+				customValues["annotations"] = annotationsMap
+			}
+		}
+		if managerCfg.Placement != nil {
+			_, ok := customValues["placement"]
+			if !ok {
+				placementMap := make(map[string]interface{})
+				placementMap["mgr"] = managerCfg.Placement
+				customValues["placement"] = placementMap
+			} else {
+				placementMap := customValues["placement"].(map[string]interface{})
+				placementMap["mgr"] = managerCfg.Placement
+				customValues["placement"] = placementMap
+			}
+		}
+	}
+	return customValues
 }
 
 func mergeChartConfig(origin *ChartConfig, target *fleetv1a1.ChartConfig) {
