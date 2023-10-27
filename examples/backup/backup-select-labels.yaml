@@ -1,13 +1,14 @@
 apiVersion: backup.kurator.dev/v1alpha1
 kind: Backup
 metadata:
-  name: specific-ns
+  name: select-labels
   namespace: default
 spec:
   destination:
     fleet: quickstart
   policy:
     resourceFilter:
-      includedNamespaces:
-        - kurator-backup
+      labelSelector:
+        matchLabels:
+          app: busybox
     ttl: 720h  # 30 * 24 hours
