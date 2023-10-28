@@ -1,19 +1,19 @@
 ---
 title: "Enable Policy Management with fleet"
-linkTitle: "Policy Management"
-weight: 30
+linkTitle: "Unified Distributed Storage"
+weight: 50
 description: >
-  The easiest way to enable policy management with fleet.
+  Guidance on using unified distributed storage with fleet.
 ---
 
 In this tutorial, we will cover how to implement unified distributed storage on a set of clusters, using [Fleet](https://kurator.dev/docs/references/fleet-api/#fleet)
 
 ## Architecture
 
-Fleet's unified distributed storage is built on top of [Rook](https://rook.io/), and the overall architecture is shown below:
+Fleet's unified distributed storage is built on top of [Rook](https://rook.io/), and the overall architecture is shown as below:
 
 {{< image width="100%"
-    link="./image/fleet-policy.drawio.svg"
+    link="./image/distributedstorage.svg"
     >}}
 
 ## Prerequisites
@@ -23,6 +23,8 @@ Fleet's unified distributed storage is built on top of [Rook](https://rook.io/),
 Set up the Fleet manager by following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
 
 ### 2. Rook prerequisites
+
+To support Kurator's Unified Distributed Storage, you must first configure the Distributed Storage plug-in for [Fleet](https://kurator.dev/docs/references/fleet-api/#fleet). Kurator uses [Rook](https://rook.io) as the Distributed Storage plugin. These are some of the prerequisites needed to use rook.
 
 1. Kubernetes v1.22 or higher is supported
 1. To configure the Ceph storage cluster, at least one of these local storage types is required:
@@ -36,39 +38,14 @@ The easiest way to do this is to mount an Raw disk on the nodes.
 
 ### 3. Secrets and Setup for Attached Clusters
 
-1. Running the following command to create two secrets to access attached clusters.
-
-```console
-kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
-kubectl create secret generic kurator-member2 --from-file=kurator-member2.config=/root/.kube/kurator-member2.config
-kubectl apply -f - <<EOF
-apiVersion: cluster.kurator.dev/v1alpha1
-kind: AttachedCluster
-metadata:
-  name: kurator-member1
-  namespace: default
-spec:
-  kubeconfig:
-    name: kurator-member1
-    key: kurator-member1.config
----
-apiVersion: cluster.kurator.dev/v1alpha1
-kind: AttachedCluster
-metadata:
-  name: kurator-member2
-  namespace: default
-spec:
-  kubeconfig:
-    name: kurator-member2
-    key: kurator-member2.config
-EOF
-```
+In Kurator, clusters not created by Kurator are called AttachedClusters. Kurator provides the ability to incorporate these AttachedClusters into the kurator fleet management and implement unified distributed storage on these attachedclusters with fleet. Therefore we need a fleet that already manages several AttachedClusters. Specific operations can be referred to [Manage AttachedCluster](https://kurator.dev/docs/fleet-manager/manage-attachedcluster/).
 
 ## Create a Fleet with the DistributedStorage Plugin Enabled
 
 Run following command to create rook operator and rook ceph cluster in the Fleet:
 
 ```console
+kubectl apply -f -<<EOF
 apiVersion: fleet.kurator.dev/v1alpha1
 kind: Fleet
 metadata:
@@ -79,6 +56,7 @@ spec:
     - name: kurator-member1
       kind: AttachedCluster
     - name: kurator-member2
+      kind: AttachedCluster
   plugin:
     distributedStorage:
       storage:
@@ -89,9 +67,9 @@ spec:
             role: MonitorNodeLabel
         manager:
           count: 2
-          annotations:
-            role: ManagerNodeAnnotation
-
+          labels:
+            role: ManagerNodeLabel
+EOF
 ```
 
 ### Fleet DistributedStorage Plugin Configuration Explained
@@ -99,7 +77,8 @@ spec:
 Let's delve into the `spec` section of the above Fleet:
 
 - `clusters`: Contains the two `AttachedCluster` objects created earlier, indicating that the distributedstorage plugin will be installed on these two clusters.
-- `plugin`: The `distributedStorage` indicates the description of a distributedstorage plugin. For more configuration options, please refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/).
+- `plugin`: The `distributedStorage` indicates the configuration of a distributedstorage plugin. `dataDirHostPath` defines the directory in which the rook-ceph cluster will save the cluster configuration. `monitor` and `manager` provide configuration for the mon and mgr components of ceph. For more configuration options, please refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/).
+- In addition to the configuration fields mentioned above, kurator also provides `storage.devices` field that allows you to specify the use of device mounted in a specific directory (such as /dev/sda) on all nodes in the cluster. And `storage.nodes` field that allows you to specify the use of storage resources on specific nodes. It is also possible to specify the devices to be used. For more configuration options, please refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/).
 
 ## Verify the Installation
 
@@ -144,7 +123,7 @@ rook-ceph-osd-prepare-testpool-dev-linux-0004-kw94n                 0/1     Comp
 rook-ceph-rgw-ceph-objectstore-a-5c4df48bbb-bf6jn                   2/2     Running            0          32h
 ```
 
-## Storage Configuration
+## Persistent Volume Use Guide
 
 After rook opeartor and rook ceph cluster are installed, this chapter provides examples of using Block Storage, Filesystem Storage and Object Storage.
 
@@ -182,17 +161,6 @@ provisioner: rook-ceph.rbd.csi.ceph.com
 parameters:
     clusterID: rook-ceph
     pool: replicapool
-    imageFormat: "2"
-    imageFeatures: layering
-
-    csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
-    csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
-    csi.storage.k8s.io/controller-expand-secret-name: rook-csi-rbd-provisioner
-    csi.storage.k8s.io/controller-expand-secret-namespace: rook-ceph
-    csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
-    csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
-    csi.storage.k8s.io/fstype: ext4
-
 reclaimPolicy: Delete
 allowVolumeExpansion: true
 ```
@@ -230,7 +198,7 @@ spec:
     activeStandby: true
 ```
 
-The Rook operator will create all the pools and other resources necessary to start the service. To confirm the filesystem is configured, wait for the mds pods to start:
+The Rook operator will create all the pools and other resources necessary to start the service.  `Mds` stands for metadata service and is the metadata service that the ceph filesystem service relies on. The metadata and configuration information of the filesystem store is managed by mds. To confirm the filesystem is configured, wait for the mds pods to start.
 
 ```console
 kubectl get po -n rook-ceph -l app=rook-ceph-mds
@@ -252,12 +220,6 @@ parameters:
   clusterID: rook-ceph
   fsName: ceph-filesystem
   pool: data0
-  csi.storage.k8s.io/provisioner-secret-name: rook-csi-cephfs-provisioner
-  csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
-  csi.storage.k8s.io/controller-expand-secret-name: rook-csi-cephfs-provisioner
-  csi.storage.k8s.io/controller-expand-secret-namespace: rook-ceph
-  csi.storage.k8s.io/node-stage-secret-name: rook-csi-cephfs-node
-  csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
 reclaimPolicy: Delete
 EOF
 ```
@@ -325,55 +287,42 @@ There are a few things to note in the above filesystem storage class configurati
 - provisioner is configured in the format (operator-namespace).ceph.rook.io/bucket. Change "rook-ceph" provisioner prefix to match the operator namespace if needed.
 - `parameters.objectStorageName` needs to correspond to the name created in `CephObjectStorage`
 
-### Use Block Storage/Filesystem Storage/Object Storage 
+### Use Block Storage/Filesystem Storage/Object Storage
 
-After creating the storagec class for block, file and object storage, it's time to actually use this storage class. We need to declare Persistent Volume Claims that use these storage classes to complete the storage. Here is an example:
+After creating the storagec class for block, file and object storage, it's time to actually use this storage class. We can ues Kurator application to create Persistent Volume Claim and Pod that consume it.
 
 ```console
 kubectl apply -f - <<EOF
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata: 
-  name: block-pvc
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: distributed-storage-demo
+  namespace: default
 spec:
-  storageClassName: rook-ceph-block
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: main
+      timeout: 1m0s
+      url: https://github.com/kurator-dev/kurator
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 5m0s
+        path: ./examples/fleet/distributedstorage
+        prune: true
+        timeout: 2m0s
 EOF
 ```
 
-You can use different types of storage by changing the name of the storage class corresponding to the `spec.storageclassname`.
-
-Reference the created Persistent Volume Claims to the Pod for use. Here is an example of how to use it:
+The above command creates a nginx-blockstorage pod and mounts Persistent Volume in its own Pod. You can run the following command to see the kubernetes volume claims:
 
 ```console
-kubectl apply -f -<<EOF
-apiVersion: v1
-kind: Pod 
-metadata:
-  name: nginx-blockstorage-test
-spec:
-  containers:
-    - name: app-container
-      image: nginx
-      volumeMounts:
-      - name: block-volume 
-        mountPath: "/etc/nginx"
-  volumes:
-    - name: block-volume
-      persistentVolumeClaim:
-        claimName: block-pvc
-```
-
-The above command creates a nginx-blockstorage-test pod and mounts Persistent Volume in its own Pod. You can run the following command to see the kubernetes volume claims:
-
-```console
-kubectl get pvc -A
+kubectl get pvc -A --kubeconfig=/root/.kube/kurator-member1.config
 NAME          STATUS     VOLUME                                       CAPACITY      ACCESSMODES     AGE
-block-pvc     Bound      pvc-84dc454c-efc1-11e6-bc9a-0cc47a3459ee     1Gi           RWO             16h
+block-pvc     Bound      pvc-n6w5hd42-sx7w-f996-7bdc-l7d4c78b74b8    1Gi           RWO             3m
 ```
 
 ## Cleanup
@@ -398,7 +347,8 @@ kubectl get po -A --kubeconfig=/root/.kube/kurator-member2.config
 Perhaps there are still some rook components left over, which can be executed by running the following command:
 
 ```console
-kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph
+kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph --kubeconfig=/root/.kube/kurator-member1.config
+kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph --kubeconfig=/root/.kube/kurator-member2.config
 ```
 
 After getting undeleted rook components, you can delete it by editing its configuration file via `kubectl edit` and removing its finalizer.
