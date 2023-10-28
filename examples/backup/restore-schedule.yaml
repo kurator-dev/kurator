@@ -1,0 +1,17 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Restore
+metadata:
+  name: schedule
+  namespace: default
+spec:
+  backupName: schedule
+  destination:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member2
+  policy:
+    resourceFilter:
+      labelSelector:
+        matchLabels:
+          app: busybox
