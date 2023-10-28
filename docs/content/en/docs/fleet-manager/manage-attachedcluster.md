@@ -21,6 +21,8 @@ As the AttachedCluster object is controlled by the cluster-operator, you need to
 
 From these clusters created by `hack/local-dev-setup.sh`, we'll select kurator-member1 and kurator-member2 to be attached to the Kurator Fleet.
 
+If you didn't create the corresponding cluster using our script, you need to change the kubeconfig file in which you created the cluster yourself. You can find your kubeconfig in `/root/.kube/config`, then Change the server field to the IP address of your cluster control plane node(you can get it from `kubectl get nodes -owide`) and the port number to 6443.
+
 Next, we'll create secrets containing the kubeconfig information of these clusters. Make sure to replace the paths like `/root/.kube/kurator-member1.config` with the actual kubeconfig file paths on your system.
 
 ```console
