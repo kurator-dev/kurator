@@ -1,0 +1,12 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: schedule
+  namespace: default
+spec:
+  schedule: "*/5 * * * *" # Runs at every 5 minutes，for testing purposes only.
+  destination:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member2

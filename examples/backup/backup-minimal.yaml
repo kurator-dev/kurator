@@ -1,0 +1,8 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Backup
+metadata:
+  name: minimal
+  namespace: default
+spec:
+  destination:
+    fleet: "quickstart"

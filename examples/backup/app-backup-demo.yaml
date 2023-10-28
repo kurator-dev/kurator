@@ -1,0 +1,21 @@
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: unified-backup-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: main
+      timeout: 1m0s
+      url: https://github.com/kurator-dev/kurator
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 5m0s
+        path: ./examples/fleet/backup/busybox-demo
+        prune: true
+        timeout: 2m0s
