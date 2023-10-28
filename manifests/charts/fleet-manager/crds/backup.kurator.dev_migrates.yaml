@@ -523,10 +523,10 @@ spec:
               phase:
                 description: Phase represents the current phase of the migration operation.
                 enum:
-                - New
+                - Pending
                 - FailedValidation
-                - WaitingForSource
-                - InProgress
+                - BackupInProgress
+                - RestoreInProgress
                 - Completed
                 - Failed
                 type: string
