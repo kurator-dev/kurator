@@ -13,7 +13,7 @@ In this tutorial we’ll cover the basics of how to use [Fleet](https://kurator.
 Fleet's multi cluster monitoring is built on top [Prometheus](https://prometheus.io/) and [Thanos](https://thanos.io/), the overall architecture is shown as below: 
 
 {{< image width="100%"
-    link="./image/fleet-metric.png"
+    link="./image/fleet-metric.svg"
     >}}
 
 ## Prerequisites
