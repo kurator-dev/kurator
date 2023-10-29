@@ -16,6 +16,6 @@ spec:
         fleet: quickstart
       kustomization:
         interval: 5m0s
-        path: ./examples/fleet/backup/busybox-demo
+        path: ./examples/backup/busybox-demo
         prune: true
         timeout: 2m0s

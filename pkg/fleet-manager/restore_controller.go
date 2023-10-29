@@ -92,8 +92,23 @@ func (r *RestoreManager) reconcileRestore(ctx context.Context, restore *backupap
 		return ctrl.Result{}, err
 	}
 
+	// Fetch the backup object referred to by the restore. if not found, return directly.
+	key := client.ObjectKey{
+		Name:      restore.Spec.BackupName,
+		Namespace: restore.Namespace,
+	}
+	referredBackup := &backupapi.Backup{}
+	if err := r.Client.Get(ctx, key, referredBackup); err != nil {
+		log.Error(err, "Failed to get backup object", "backupName", restore.Spec.BackupName)
+		return ctrl.Result{}, nil
+	}
+
 	// Apply restore resource in target clusters
-	result, err := r.reconcileRestoreResources(ctx, restore, destinationClusters, fleetName)
+	result, err := r.reconcileRestoreResources(ctx, restore, referredBackup, destinationClusters, fleetName)
+	if err == ErrNoCompletedBackups {
+		log.Error(err, "no completed Velero backups available for restore. stop reconcile", "referred backup", restore.Spec.BackupName)
+		return result, nil
+	}
 	if err != nil {
 		return result, err
 	}
@@ -112,15 +127,22 @@ func (r *RestoreManager) reconcileRestore(ctx context.Context, restore *backupap
 	}
 }
 
+var ErrNoCompletedBackups = errors.New("No completed Velero backups available for restore.")
+
 // reconcileRestoreResources converts the restore resources into velero restore resources on the target clusters, and applies those velero restore resources.
-func (r *RestoreManager) reconcileRestoreResources(ctx context.Context, restore *backupapi.Restore, destinationClusters map[ClusterKey]*fleetCluster, fleetName string) (ctrl.Result, error) {
+func (r *RestoreManager) reconcileRestoreResources(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, destinationClusters map[ClusterKey]*fleetCluster, fleetName string) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	restoreLabels := generateVeleroInstanceLabel(RestoreNameLabel, restore.Name, fleetName)
 
 	var tasks []func() error
 	for clusterKey, clusterAccess := range destinationClusters {
-		veleroBackupName := generateVeleroResourceName(clusterKey.Name, BackupKind, restore.Namespace, restore.Spec.BackupName)
+		// veleroBackupName is depends on the referred backup type, immediate or schedule.
+		veleroBackupName, err := r.getBackupForRestore(ctx, restore, referredBackup, clusterAccess, clusterKey.Name, BackupKind, restore.Namespace, restore.Spec.BackupName)
+		if err != nil {
+			return ctrl.Result{}, ErrNoCompletedBackups
+		}
+
 		veleroRestoreName := generateVeleroResourceName(clusterKey.Name, RestoreKind, restore.Namespace, restore.Name)
 		veleroRestore := buildVeleroRestoreInstance(&restore.Spec, restoreLabels, veleroBackupName, veleroRestoreName)
 
@@ -170,4 +192,36 @@ func (r *RestoreManager) reconcileDeleteRestore(ctx context.Context, restore *ba
 	shouldRemoveFinalizer = true
 
 	return ctrl.Result{}, nil
+}
+
+// getBackupForRestore retrieves the name of the Velero backup associated with the provided restore.
+// If the referred backup is an immediate backup, it returns the generated Velero backup name.
+// If the referred backup is a scheduled backup, it fetches the name of the most recent completed backup.
+func (r *RestoreManager) getBackupForRestore(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, clusterAccess *fleetCluster, clusterName, creatorKind, creatorNamespace, creatorName string) (string, error) {
+	log := ctrl.LoggerFrom(ctx)
+
+	veleroScheduleName := generateVeleroResourceName(clusterName, BackupKind, referredBackup.Namespace, referredBackup.Name)
+
+	// Return the generated name directly if it's an immediate backup.
+	if !isScheduleBackup(referredBackup) {
+		return veleroScheduleName, nil
+	}
+
+	// Fetch the most recent completed backup name if it's a scheduled backup.
+	backupList := &velerov1.BackupList{}
+	err := listResourcesFromClusterClient(ctx, VeleroNamespace, velerov1.ScheduleNameLabel, veleroScheduleName, *clusterAccess, backupList)
+	if err != nil {
+		log.Error(err, "Unable to list velero backups for schedule", "scheduleName", veleroScheduleName)
+		return "", err
+	}
+
+	// Return an error if no completed backups are found for the referred schedule.
+	veleroBackup := MostRecentCompletedBackup(backupList.Items)
+	if veleroBackup.Name == "" {
+		errMsg := fmt.Sprintf("No completed backups found for referred schedule backup: %s", restore.Spec.BackupName)
+		log.Error(errors.New(errMsg), "")
+		return "", errors.New(errMsg)
+	}
+
+	return veleroBackup.Name, nil
 }
