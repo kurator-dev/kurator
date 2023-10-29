@@ -76,7 +76,7 @@ EOF
 
 Let's delve into the `spec` section of the above Fleet:
 
-- `clusters`: Contains the two `AttachedCluster` objects created earlier, indicating that the distributedstorage plugin will be installed on these two clusters.
+- `clusters`: Contains the two `AttachedCluster` objects created earlier, indicating that the distributedstorage plugin will be installed in these two clusters.
 - `plugin`: The `distributedStorage` indicates the configuration of a distributedstorage plugin. `dataDirHostPath` defines the directory in which the rook-ceph cluster will save the cluster configuration. `monitor` and `manager` provide configuration for the mon and mgr components of ceph. For more configuration options, please refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/).
 - In addition to the configuration fields mentioned above, kurator also provides `storage.devices` field that allows you to specify the use of device mounted in a specific directory (such as /dev/sda) on all nodes in the cluster. And `storage.nodes` field that allows you to specify the use of storage resources on specific nodes. It is also possible to specify the devices to be used. For more configuration options, please refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/).
 
@@ -287,7 +287,7 @@ There are a few things to note in the above filesystem storage class configurati
 - provisioner is configured in the format (operator-namespace).ceph.rook.io/bucket. Change "rook-ceph" provisioner prefix to match the operator namespace if needed.
 - `parameters.objectStorageName` needs to correspond to the name created in `CephObjectStorage`
 
-### Use Block Storage/Filesystem Storage/Object Storage
+### Use Block Storage
 
 After creating the storagec class for block, file and object storage, it's time to actually use this storage class. We can ues Kurator application to create Persistent Volume Claim and Pod that consume it.
 
@@ -296,7 +296,7 @@ kubectl apply -f - <<EOF
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: distributed-storage-demo
+  name: blockstorage-demo
   namespace: default
 spec:
   source:
@@ -311,7 +311,7 @@ spec:
         fleet: quickstart
       kustomization:
         interval: 5m0s
-        path: ./examples/fleet/distributedstorage
+        path: ./examples/fleet/distributedstorage/blockstore
         prune: true
         timeout: 2m0s
 EOF
@@ -323,6 +323,84 @@ The above command creates a nginx-blockstorage pod and mounts Persistent Volume 
 kubectl get pvc -A --kubeconfig=/root/.kube/kurator-member1.config
 NAME          STATUS     VOLUME                                       CAPACITY      ACCESSMODES     AGE
 block-pvc     Bound      pvc-n6w5hd42-sx7w-f996-7bdc-l7d4c78b74b8    1Gi           RWO             3m
+```
+
+### Use Filesystem Storage
+
+Filesystem storage is similar to block storage, we also can ues Kurator application to create Persistent Volume Claim and Pod that consume it.
+
+```console
+kubectl apply -f - <<EOF
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: filesystemstorage-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: main
+      timeout: 1m0s
+      url: https://github.com/kurator-dev/kurator
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 5m0s
+        path: ./examples/fleet/distributedstorage/filesystemstore
+        prune: true
+        timeout: 2m0s
+EOF
+```
+
+The above command creates a nginx-filesystemstorage pod and mounts Persistent Volume in its own Pod. You can run the following command to see the kubernetes volume claims:
+
+```console
+kubectl get pvc -A --kubeconfig=/root/.kube/kurator-member1.config
+NAME          STATUS     VOLUME               CAPACITY      ACCESSMODES     AGE
+cephfs-pvc    Bound      filesystem-volume    1Gi           RWO             1h
+```
+
+### Use Object Storage
+
+In a rook-ceph cluster, the use of object storage is different from the use of block storage and filesystem storage. `ObjectBucketClaim` is used instead of PersistentVolumeClaim. And the application needs secret and configmap to access the objectbucket. When Pod use object storage, they don't mount PVC like block storage and filesystem storage, but instead uniquely specify the ObjectBucketClaim with secret and configmap.
+
+We stil can can ues Kurator application to create ObjectBucketClaim and Pod that consume it, but there will be some changes to the configuration.
+
+```console
+kubectl apply -f - <<EOF
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: objectstorage-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: main
+      timeout: 1m0s
+      url: https://github.com/kurator-dev/kurator
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 5m0s
+        path: ./examples/fleet/distributedstorage/objectstore
+        prune: true
+        timeout: 2m0s
+EOF
+```
+
+The above command creates a redis-objectstorage pod and use a object bucket in its own Pod. You can run the following command to see the Pod:
+
+```console
+kubectl get po --kubeconfig=/root/.kube/kurator-member1.config
+NAME                     READY   STATUS    RESTARTS   AGE
+redis-objectstorage      1/1     Running   0          3m37s
 ```
 
 ## Cleanup
