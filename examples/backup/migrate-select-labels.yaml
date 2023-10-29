@@ -1,0 +1,21 @@
+apiVersion: backup.kurator.dev/v1alpha1
+kind: Migrate
+metadata:
+  name: select-labels
+  namespace: default
+spec:
+  sourceCluster:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member1
+  targetCluster:
+    fleet: quickstart
+    clusters:
+      - kind: AttachedCluster
+        name: kurator-member2
+  policy:
+    resourceFilter:
+      labelSelector:
+        matchLabels:
+          app: busybox

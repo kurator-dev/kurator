@@ -90,7 +90,7 @@ type MigratePolicy struct {
 }
 
 // MigratePhase is a string representation of the lifecycle phase of a Migrate instance
-// +kubebuilder:validation:Enum=New;FailedValidation;WaitingForSource;InProgress;Completed;Failed
+// +kubebuilder:validation:Enum=Pending;FailedValidation;BackupInProgress;RestoreInProgress;Completed;Failed
 type MigratePhase string
 
 const (
