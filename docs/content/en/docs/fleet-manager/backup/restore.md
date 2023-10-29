@@ -13,24 +13,24 @@ This feature aids in recovery, aiming for reduced downtime and operational effec
 
 ## Restore Overview
 
-Kurator's Unified Restore feature is designed around the Unified Backup object. 
-Based on the type of backup chosen, either Immediate or Scheduled, the restoration method is determined accordingly.
+Kurator's Unified Restore feature is built upon the Unified Backup object. 
+Depending on the type of backup chosen—Immediate or Scheduled—the restoration method differs.
 
 ### Restore from an **Immediate Backup**
 
-- **Use Case**: Responding to sudden data losses or application issues.
-- **Referred Backup**: The specific **Immediate Backup** designated by the user.
-- **Restore Result**: Restoration from the selected backup into designated clusters.
+- **Use Case**: For quick rollbacks after mistakes like a wrong data update or before making big changes to the system.
+ 
+- **Unified Restore**: Choose a specific unified Immediate Backup from before the problem to restore the application across multiple clusters.
 
 ### Restore from a **Scheduled Backup**
 
-- **Use Case**: Restoring to a recent state in scenarios such as post-accidental data modifications, compliance verifications, or disaster recovery after unforeseen system failures.
-- **Referred Backup**: When a **Scheduled Backup** is selected, Kurator will automatically target the latest successful backup within that series.
-- **Restore Result**: Restoration using the latest successful backup to maintain data relevance and integrity.
+- **Use Case**: Restoring to a recent state, such as after unintended data changes, compliance checks, or recovering from unexpected system breakdowns.
+
+- **Unified Restore**: Select a particular unified Scheduled Backup. Kurator will then retrieve the latest successful backup to restore across each cluster.
 
 ### Advanced Backup Options
 
-#### Specific Cluster Restore within Fleet:
+#### Configure Cluster Restore within a Fleet
 
 Users can specify clusters as the restore destination.
 However, these selected clusters must be a subset of those included in the backup.
@@ -38,7 +38,8 @@ This is because the restore process relies on the data from the backup.
 
 **Note**: To restore resources from one cluster to another not in the original backup, utilize the Unified Migration feature, detailed in a later section.
 
-#### Resource Filtering:
+#### Resource Filtering
+
 Users can apply a secondary filter to the data from the backup, enabling selective restoration.
 Define the scope using attributes like backup name, namespace, or label to ensure only desired data is restored. For details, refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/#fleet)
 
@@ -51,11 +52,11 @@ Before diving into the restore steps, ensure that:
 - You have successfully installed the backup plugin as described in the [backup plugin installation guide](/docs/fleet-manager/backup/backup-plugin).
 - You have correctly configured `fleet` and `attachedcluster` based on the instructions from the previous guide.
 
-**Note:** The examples provided in this section correspond directly with those outlined in the [unified backup](/docs/fleet-manager/backup/restore) documentation.
+**Note:** The examples provided in this section correspond directly with those outlined in the [unified backup](/docs/fleet-manager/backup/backup) documentation.
 
 ### Steps to Follow
 
-1. **Backup Creation**: This step involves setting up a backup using the existed config. More details can be found in [unified backup](/docs/fleet-manager/backup/restore)
+1. **Backup Creation**: This step involves setting up a backup using the existed config. More details can be found in [unified backup](/docs/fleet-manager/backup/backup)
 
 2. **Disaster Simulation**: This involves activities that represent scenarios of data losses or application disruptions.
 
@@ -73,7 +74,7 @@ kubectl get po -n kurator-backup --kubeconfig=/root/.kube/kurator-member2.config
 
 ### 1. Restore from an Immediate Backup
 
-**Immediate Backup Creation**
+#### Immediate Backup & Recovery Process
 
 Deploy a test application using the following command:
 
@@ -87,15 +88,11 @@ Trigger an immediate backup using the command:
 kubectl apply -f examples/backup/backup-select-labels.yaml
 ```
 
-**Disaster Simulation**
-
 Simulate a disaster event that deletes all previously installed resources using the command:
 
 ```console
 kubectl delete applications.apps.kurator.dev unified-backup-demo 
 ```
-
-**Restore Execution**
 
 Apply a restore action that refers to the backup created earlier:
 
@@ -105,8 +102,7 @@ k apply -f examples/backup/restore-minimal.yaml
 
 After executing, you'll observe that the `busybox` pod is restored in two clusters.
 
-
-**Examine the Restore Object**
+#### Check the Restore Object Based on an Immediate Backup
 
 Use the following command:
 
@@ -158,9 +154,9 @@ status:
       startTimestamp: "2023-10-28T09:24:05Z"
 ```
 
-**Interpreting the Output:**
+Given the output provided, let's dive deeper to understand the various elements and their implications:
 
-- **The spec `destination` field:** The absence of a `destination` field indicates that the restore process will occur on all clusters where the backup was executed. Consequently, the `busybox` pod is successfully restored on both clusters.
+- **The spec `destination` field:** The absence of a `destination` field indicates that the restore process will occur on all clusters where the backup was executed. Consequently, the `busybox` pod is successfully restored in both clusters.
 
 - **The spec `policy` field:** The absence of a `policy` field means that the restore strategy is entirely based on the initial backup without any secondary filtering.
 
@@ -168,7 +164,7 @@ status:
 
 ### 2. Restore from a Scheduled Backup
 
-**Scheduled Backup Creation**
+#### Scheduled Backup & Recovery Process
 
 Deploy a test application using the following command:
 
@@ -194,8 +190,6 @@ Simulate a disaster event that deletes all previously installed resources using 
 kubectl delete applications.apps.kurator.dev unified-backup-demo 
 ```
 
-**Restore Execution**
-
 Apply a restore action that refers to the backup created earlier:
 
 ```console
@@ -204,7 +198,7 @@ kubectl apply -f examples/backup/restore-schedule.yaml
 
 After executing, you'll observe that the `busybox` pod is only restored in the second cluster.
 
-**Examine the Restore Object**
+#### Check the Restore Object Based on an Scheduled Backup
 
 Use the following command:
 
@@ -253,8 +247,6 @@ status:
       progress: {}
       startTimestamp: "2023-10-28T13:27:03Z"
 ```
-
-**Interpreting the Output:**
 
 Notice that the backup referenced here is "schedule", which backed up all cluster resources. However, the restore here did not use the "minimal" method to execute the default full restore strategy. 
 Instead, a second filter was applied during the restore phase.

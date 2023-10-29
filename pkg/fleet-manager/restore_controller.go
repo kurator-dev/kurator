@@ -138,7 +138,7 @@ func (r *RestoreManager) reconcileRestoreResources(ctx context.Context, restore 
 	var tasks []func() error
 	for clusterKey, clusterAccess := range destinationClusters {
 		// veleroBackupName is depends on the referred backup type, immediate or schedule.
-		veleroBackupName, err := r.fetchRestoreVeleroBackupName(ctx, restore, referredBackup, clusterAccess, clusterKey.Name, BackupKind, restore.Namespace, restore.Spec.BackupName)
+		veleroBackupName, err := r.getBackupForRestore(ctx, restore, referredBackup, clusterAccess, clusterKey.Name, BackupKind, restore.Namespace, restore.Spec.BackupName)
 		if err != nil {
 			return ctrl.Result{}, ErrNoCompletedBackups
 		}
@@ -194,19 +194,20 @@ func (r *RestoreManager) reconcileDeleteRestore(ctx context.Context, restore *ba
 	return ctrl.Result{}, nil
 }
 
-// fetchRestoreVeleroBackupName retrieves the name of the Velero backup associated with the provided restore.
+// getBackupForRestore retrieves the name of the Velero backup associated with the provided restore.
 // If the referred backup is an immediate backup, it returns the generated Velero backup name.
 // If the referred backup is a scheduled backup, it fetches the name of the most recent completed backup.
-func (r *RestoreManager) fetchRestoreVeleroBackupName(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, clusterAccess *fleetCluster, clusterName, creatorKind, creatorNamespace, creatorName string) (string, error) {
+func (r *RestoreManager) getBackupForRestore(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, clusterAccess *fleetCluster, clusterName, creatorKind, creatorNamespace, creatorName string) (string, error) {
 	log := ctrl.LoggerFrom(ctx)
+
+	veleroScheduleName := generateVeleroResourceName(clusterName, BackupKind, referredBackup.Namespace, referredBackup.Name)
 
 	// Return the generated name directly if it's an immediate backup.
 	if !isScheduleBackup(referredBackup) {
-		return generateVeleroResourceName(clusterName, BackupKind, referredBackup.Namespace, referredBackup.Name), nil
+		return veleroScheduleName, nil
 	}
 
 	// Fetch the most recent completed backup name if it's a scheduled backup.
-	veleroScheduleName := generateVeleroResourceName(clusterName, BackupKind, referredBackup.Namespace, referredBackup.Name)
 	backupList := &velerov1.BackupList{}
 	err := listResourcesFromClusterClient(ctx, VeleroNamespace, velerov1.ScheduleNameLabel, veleroScheduleName, *clusterAccess, backupList)
 	if err != nil {
