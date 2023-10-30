@@ -71,7 +71,7 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 	// newSecret is a variable used to store the newly created secret object which contains the necessary credentials for the object storage provider. The specific structure and content of the secret vary depending on the provider.
 	newSecret, err := f.buildNewSecret(ctx, veleroCfg.Storage.SecretName, objStoreProvider, fleetNN)
 	if err != nil {
-		log.Error(err, "failed to builder new object store secret")
+		err = fmt.Errorf("error building new secret for objStoreProvider %s: %w", objStoreProvider, err)
 		return nil, ctrl.Result{}, err
 	}
 
@@ -87,11 +87,13 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 			SecretKey:  cluster.SecretKey,
 		}, veleroCfg, newSecret.Name)
 		if err != nil {
+			err = fmt.Errorf("error rendering Velero for fleet cluster %s: %w", key.Name, err)
 			return nil, ctrl.Result{}, err
 		}
 
 		// create a new secret in the current fleet cluster before initializing the backup plugin.
 		if err := createNewSecretInFleetCluster(cluster, newSecret); err != nil {
+			err = fmt.Errorf("error creating new secret in fleet cluster %s: %w", key.Name, err)
 			return nil, ctrl.Result{}, err
 		}
 
@@ -117,7 +119,7 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 	// preventing orphaned resources and maintaining the cleanliness of the cluster.
 	for key, cluster := range fleetClusters {
 		if err := f.updateNewSecretOwnerReference(ctx, key.Name, cluster, newSecret); err != nil {
-			log.Error(err, "failed to update object store owner reference", "cluster", key.Name)
+			err = fmt.Errorf("error updating owner reference for secret in cluster %s: %w", key.Name, err)
 			return nil, ctrl.Result{}, err
 		}
 	}
@@ -210,9 +212,28 @@ func createNewSecretInFleetCluster(cluster *fleetCluster, newSecret *corev1.Secr
 	// Get the namespace of the secret
 	namespace := newSecret.Namespace
 
+	// Check if namespace exists
+	_, err := kubeClient.CoreV1().Namespaces().Get(context.TODO(), namespace, metav1.GetOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// Namespace does not exist, create it
+			ns := &corev1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: namespace,
+				},
+			}
+			_, err := kubeClient.CoreV1().Namespaces().Create(context.TODO(), ns, metav1.CreateOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to create namespace %s: %w", namespace, err)
+			}
+		} else {
+			return fmt.Errorf("failed to check for namespace %s: %w", namespace, err)
+		}
+	}
+
 	// Create the new secret
 	if _, err := kubeClient.CoreV1().Secrets(namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
+		return fmt.Errorf("failed to create secret in namespace %s: %w", namespace, err)
 	}
 
 	return nil
