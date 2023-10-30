@@ -3,7 +3,7 @@ name: Build and Push Images
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   build-push:
