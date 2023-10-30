@@ -1,0 +1,34 @@
+name: Build and Push Images
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.20.x
+
+      - name: Compile
+        run: make build
+
+      - name: Build Docker Image
+        # Use version tag
+        run: VERSION=${{ github.ref_name }} make docker
+
+      - name: Login to ghcr.io
+        # This is where you will update the PAT to GITHUB_TOKEN
+        run: echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Push Docker Image
+        run: VERSION=${{ github.ref_name }} make docker-push
+
