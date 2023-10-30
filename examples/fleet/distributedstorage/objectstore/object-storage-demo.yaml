@@ -1,0 +1,28 @@
+apiVersion: objectbucket.io/v1alpha1
+kind: ObjectBucketClaim
+metadata:
+  name: ceph-bucket
+  namespace: rook-ceph
+spec:
+  # must be unique
+  bucketName: object-test
+  storageClassName: rook-ceph-bucket
+  additionalConfig:
+    maxObjects: "1000"
+    maxSize: "1G"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-objectstorage
+spec:
+  containers:
+  - name: mycontainer
+    image: redis
+    envFrom:
+    - configMapRef:
+        # env variables: BUCKET_HOST, BUCKET_PORT, BUCKET_NAME
+        name: ceph-bucket
+    - secretRef:
+        # env variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+        name: ceph-bucket
