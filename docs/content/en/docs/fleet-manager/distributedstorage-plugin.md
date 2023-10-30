@@ -85,8 +85,8 @@ Let's delve into the `spec` section of the above Fleet:
 To ensure that the distributedstorage plugin is successfully installed and running, run the following commands:
 
 ```console
-kubectl get po -A -n rook-ceph --kubeconfig=/root/.kube/kurator-member1.config
-kubectl get po -A -n rook-ceph --kubeconfig=/root/.kube/kurator-member2.config
+kubectl get pod -n rook-ceph --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get pod -n rook-ceph --kubeconfig=/root/.kube/kurator-member2.config
 ```
 
 After waiting for some time check the status of all pods under the rook-ceph namespace. The result is shown below:

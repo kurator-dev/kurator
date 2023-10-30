@@ -145,8 +145,8 @@ To ensure that the backup plugin is successfully installed and running, follow t
 Run the following commands:
 
 ```console
-kubectl get po -A -n velero --kubeconfig=/root/.kube/kurator-member1.config
-kubectl get po -A -n velero --kubeconfig=/root/.kube/kurator-member2.config
+kubectl get pod -n velero --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get pod -n velero --kubeconfig=/root/.kube/kurator-member2.config
 ```
 
 Initially, you should observe:
