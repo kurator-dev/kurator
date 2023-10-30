@@ -1,4 +1,4 @@
-VERSION ?= 0.4-dev
+VERSION ?= 1.0-dev
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 SOURCES := $(shell find . -type f  -name '*.go')
