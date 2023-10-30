@@ -21,11 +21,11 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
@@ -71,7 +71,7 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 	// newSecret is a variable used to store the newly created secret object which contains the necessary credentials for the object storage provider. The specific structure and content of the secret vary depending on the provider.
 	newSecret, err := f.buildNewSecret(ctx, veleroCfg.Storage.SecretName, objStoreProvider, fleetNN)
 	if err != nil {
-		log.Error(err, "failed to builder new object store secret")
+		err = fmt.Errorf("error building new secret for objStoreProvider %s: %w", objStoreProvider, err)
 		return nil, ctrl.Result{}, err
 	}
 
@@ -87,11 +87,13 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 			SecretKey:  cluster.SecretKey,
 		}, veleroCfg, newSecret.Name)
 		if err != nil {
+			err = fmt.Errorf("error rendering Velero for fleet cluster %s: %w", key.Name, err)
 			return nil, ctrl.Result{}, err
 		}
 
 		// create a new secret in the current fleet cluster before initializing the backup plugin.
-		if err := createNewSecretInFleetCluster(cluster, newSecret); err != nil {
+		if err := createNewSecretInFleetCluster(ctx, cluster, newSecret); err != nil {
+			err = fmt.Errorf("error creating new secret in fleet cluster %s: %w", key.Name, err)
 			return nil, ctrl.Result{}, err
 		}
 
@@ -117,7 +119,7 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 	// preventing orphaned resources and maintaining the cleanliness of the cluster.
 	for key, cluster := range fleetClusters {
 		if err := f.updateNewSecretOwnerReference(ctx, key.Name, cluster, newSecret); err != nil {
-			log.Error(err, "failed to update object store owner reference", "cluster", key.Name)
+			err = fmt.Errorf("error updating owner reference for secret in cluster %s: %w", key.Name, err)
 			return nil, ctrl.Result{}, err
 		}
 	}
@@ -203,16 +205,30 @@ func getObjStoreCredentials(ctx context.Context, client client.Client, namespace
 // createNewSecretInFleetCluster creates a new secret in the specified fleet cluster.
 // It takes a fleetCluster instance and a pre-built corev1.Secret instance as parameters.
 // It uses the kube client from the fleetCluster instance to create the new secret in the respective cluster.
-func createNewSecretInFleetCluster(cluster *fleetCluster, newSecret *corev1.Secret) error {
+func createNewSecretInFleetCluster(ctx context.Context, cluster *fleetCluster, newSecret *corev1.Secret) error {
 	// Get the kubeclient.Interface instance
-	kubeClient := cluster.client.KubeClient()
+	kubeClient := cluster.client.CtrlRuntimeClient()
 
 	// Get the namespace of the secret
 	namespace := newSecret.Namespace
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}
 
-	// Create the new secret
-	if _, err := kubeClient.CoreV1().Secrets(namespace).Create(context.TODO(), newSecret, metav1.CreateOptions{}); err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
+	// Create or update namespace
+	if _, syncErr := controllerutil.CreateOrUpdate(ctx, kubeClient, ns, func() error {
+		return nil
+	}); syncErr != nil {
+		return fmt.Errorf("failed to sync namespace %s: %w", namespace, syncErr)
+	}
+
+	// Create or update new secret
+	if _, syncErr := controllerutil.CreateOrUpdate(ctx, kubeClient, newSecret, func() error {
+		return nil
+	}); syncErr != nil {
+		return fmt.Errorf("failed to sync new secret in namespace %s: %w", namespace, syncErr)
 	}
 
 	return nil
