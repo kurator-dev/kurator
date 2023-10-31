@@ -3,11 +3,14 @@ name: Build and Push Images
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   build-push:
     runs-on: ubuntu-latest
+    env:
+      # Gets the tag name and removes the 'v' prefix
+      VERSION: ${{ github.ref_name#v }}
 
     steps:
       - name: Checkout code
@@ -22,13 +25,11 @@ jobs:
         run: make build
 
       - name: Build Docker Image
-        # Use version tag
-        run: VERSION=${{ github.ref_name }} make docker
+        run: VERSION=$VERSION make docker
 
       - name: Login to ghcr.io
         # This is where you will update the PAT to GITHUB_TOKEN
         run: echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u $ --password-stdin
 
       - name: Push Docker Image
-        run: VERSION=${{ github.ref_name }} make docker-push
-
+        run: VERSION=$VERSION make docker-push
