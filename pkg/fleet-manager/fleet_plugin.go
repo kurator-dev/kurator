@@ -18,11 +18,11 @@ package fleet
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	hrapiv2b1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
+	"github.com/hashicorp/go-multierror"
 	"helm.sh/helm/v3/pkg/kube"
 	"istio.io/istio/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/types"
@@ -39,6 +39,8 @@ const (
 	NoneClusterIP = "None"
 )
 
+type reconcileFunc func(context.Context, *fleetapi.Fleet, map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error)
+
 func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
 	var resources kube.ResourceList
 
@@ -48,8 +50,6 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			ctrlResult ctrl.Result
 			err        error
 		}
-
-		type reconcileFunc func(context.Context, *fleetapi.Fleet, map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error)
 
 		funcs := []reconcileFunc{
 			f.reconcileMetricPlugin,
@@ -61,27 +61,25 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 
 		resultsChannel := make(chan reconcileResult, len(funcs))
 		var wg sync.WaitGroup
-
+		wg.Add(len(funcs))
 		for _, fn := range funcs {
-			wg.Add(1)
 			go func(fn reconcileFunc) {
 				defer wg.Done()
 				result, ctrlResult, err := fn(ctx, fleet, fleetClusters)
 				resultsChannel <- reconcileResult{result, ctrlResult, err}
 			}(fn)
 		}
-
 		go func() {
 			wg.Wait()
 			close(resultsChannel)
 		}()
 
-		var errs []error
+		var errs error
 		var ctrlResults []ctrl.Result
 
 		for res := range resultsChannel {
 			if res.err != nil {
-				errs = append(errs, res.err)
+				errs = multierror.Append(errs, res.err)
 			}
 			if res.ctrlResult.Requeue || res.ctrlResult.RequeueAfter > 0 {
 				ctrlResults = append(ctrlResults, res.ctrlResult)
@@ -89,9 +87,9 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			resources = append(resources, res.result...)
 		}
 
-		if len(errs) > 0 {
+		if errs != nil {
 			// Combine all errors into one error message
-			return ctrl.Result{}, fmt.Errorf("encountered multiple errors: %v", errs)
+			return ctrl.Result{}, errs
 		}
 
 		if len(ctrlResults) > 0 {
