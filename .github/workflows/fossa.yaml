@@ -1,6 +1,6 @@
 name: FOSSA
 on:
-  push:
+  pull_request:
 jobs:
   fossa:
     name: FOSSA
