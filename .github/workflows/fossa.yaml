@@ -1,6 +1,7 @@
 name: FOSSA
 on:
   pull_request:
+  push:
 jobs:
   fossa:
     name: FOSSA
@@ -15,4 +16,4 @@ jobs:
       - name: Run FOSSA scan and upload build data
         uses: fossas/fossa-action@v1
         with:
-          api-key: ${{secrets.FOSSA_API_KEY}}
+          api-key: 52392c2ed6e57abf81790fb2d4ca15c1 # it's impossible to do with secrets when the workflow runs on the pull request event due to GitHub's constraints.
