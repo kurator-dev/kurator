@@ -13,7 +13,10 @@ Deploy a kubernetes cluster using kurator's scripts.
 $ hack/local-dev-setup.sh
 reparing kind config in path: /tmp/tmp.xxxxx
 ...
-Local clusters is running.
+Local clusters is running. Note that the kind version and node image version need to be matched. 
+Now that kurator's local_dev_setup.sh is using the 1.25.3 node image. 
+You can refer to kind's release info(https://github.com/kubernetes-sigs/kind/releases).
+
 
 To start using your host cluster, run:
   export KUBECONFIG=/root/.kube/kurator-host.config
