@@ -86,6 +86,8 @@ type PluginConfig struct {
 	Backup *BackupConfig `json:"backup,omitempty"`
 	// DistributedStorage define the configuration for the distributed storage(Implemented with Rook)
 	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
+	// Flagger defines the configuretion for the kurator CD engine.
+	Flagger *FlaggerConfig `json:"flagger,omitempty"`
 }
 
 type MetricConfig struct {
@@ -475,6 +477,28 @@ type StorageDeviceSelection struct {
 	// +nullable
 	// +optional
 	Devices []rookv1.Device `json:"devices,omitempty"`
+}
+
+type FlaggerConfig struct {
+	// Chart defines the helm chart config of the grafana.
+	// default values is
+	//
+	// chart:
+	//   repository: oci://registry-1.docker.io/bitnamicharts
+	//   name: grafana
+	//   version: 8.2.33
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+	// ExtraArgs is the set of extra arguments for Grafana chart.
+	//
+	// For Example, using following configuration to change replica count.
+	// extraArgs:
+	//   grafana:
+	//     replicaCount: 2
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet
