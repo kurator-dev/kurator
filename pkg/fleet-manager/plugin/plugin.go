@@ -38,6 +38,7 @@ const (
 	BackupPluginName          = "backup"
 	StorageOperatorPluginName = "storage-operator"
 	ClusterStoragePluginName  = "cluster-storage"
+	FlaggerPluginName         = "flagger"
 
 	ThanosComponentName        = "thanos"
 	PrometheusComponentName    = "prometheus"
@@ -47,6 +48,7 @@ const (
 	VeleroComponentName        = "velero"
 	RookOperatorComponentName  = "rook"
 	RookClusterComponentName   = "rook-ceph"
+	FlaggerComponentName       = "flagger"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -471,6 +473,36 @@ func buildStorageClusterValue(distributedStorageCfg fleetv1a1.DistributedStorage
 		}
 	}
 	return customValues
+}
+
+func RendeFlagger(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster FleetCluster,
+	flaggerConfig *fleetv1a1.FlaggerConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, FlaggerComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, flaggerConfig.Chart)
+
+	values, err := toMap(flaggerConfig.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           FlaggerPluginName,
+		Component:      FlaggerComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
 }
 
 func mergeChartConfig(origin *ChartConfig, target *fleetv1a1.ChartConfig) {

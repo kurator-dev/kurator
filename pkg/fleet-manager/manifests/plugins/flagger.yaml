@@ -1,0 +1,8 @@
+type: oci
+repo: oci://ghcr.io/fluxcd/charts
+name: flagger
+version: 1.x # update Flagger to the latest minor version
+targetNamespace: flagger-system
+values:
+  nodeSelector:
+      kubernetes.io/os: linux

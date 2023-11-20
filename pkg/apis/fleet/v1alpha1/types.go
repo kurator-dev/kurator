@@ -480,21 +480,21 @@ type StorageDeviceSelection struct {
 }
 
 type FlaggerConfig struct {
-	// Chart defines the helm chart config of the grafana.
+	// Chart defines the helm chart config of the flagger.
 	// default values is
 	//
 	// chart:
-	//   repository: oci://registry-1.docker.io/bitnamicharts
-	//   name: grafana
-	//   version: 8.2.33
+	//   repository: oci://ghcr.io/fluxcd/charts
+	//   name: flagger
+	//   version: 1.x
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
-	// ExtraArgs is the set of extra arguments for Grafana chart.
+	// ExtraArgs is the set of extra arguments for flagger chart.
 	//
 	// For Example, using following configuration to change replica count.
 	// extraArgs:
-	//   grafana:
+	//   flagger:
 	//     replicaCount: 2
 	//
 	// +optional
