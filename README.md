@@ -56,4 +56,4 @@ Kurator is under the Apache 2.0 license. See the [LICENSE](LICENSE) file for det
 
 ## report a vulnerability
 
-If you find a vulnerability in Kurator, you can report it to our security-team in the [following way](https://github.com/kurator-dev/kurator/security-team/report-a-vulnerability.md). We will deal with it as soon as possible.
+If you find a vulnerability in Kurator, you can report it to our security-team in the [following way](https://github.com/kurator-dev/kurator/blob/main/community/security/report-a-vulnerability.md). We will deal with it as soon as possible.
