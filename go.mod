@@ -46,7 +46,6 @@ require (
 	github.com/agiledragon/gomonkey/v2 v2.10.1
 	github.com/aws/aws-sdk-go v1.44.191
 	github.com/awslabs/goformation/v4 v4.19.5
-	github.com/bramvdbogaerde/go-scp v1.2.0
 	github.com/cert-manager/cert-manager v1.10.0
 	github.com/coreos/go-semver v0.3.0
 	github.com/fluxcd/helm-controller/api v0.32.2
