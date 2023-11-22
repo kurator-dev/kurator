@@ -11,7 +11,7 @@ Kurator has always attached great importance to vulnerability management in deve
       - [Stepping Down](#stepping-down)
       - [Responsibilities](#responsibilities)
         - [Associate](#associate)
-  - [Process a undisclosed vulnerability](#process-a-undisclosed-vulnerability)
+  - [Process an undisclosed vulnerability](#process-an-undisclosed-vulnerability)
   - [Process a publicly disclosed vulnerability](#process-a-publicly-disclosed-vulnerability)
   - [Vulnerability handling process](#vulnerability-handling-process)
   - [Patch, Release, and Public Communication](#patch-release-and-public-communication)
@@ -50,7 +50,7 @@ Their rotation will involve the following:
 - lead disclosures that are publicly disclosed or explicitly designated as low sensitivity (often done because of reporter request, a low CVSS score, or design issue that requires long-term refactoring).
 - assisting in process improvements, bug bounty administration, audits, or other non-disclosure activities
 
-## Process a undisclosed vulnerability
+## Process an undisclosed vulnerability
 
 The Kurator Community asks that all suspected vulnerabilities be privately and responsibly disclosed via a recommended way available at [here](report-a-vulnerability.md).
 
