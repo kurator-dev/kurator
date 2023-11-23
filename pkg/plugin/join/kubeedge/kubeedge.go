@@ -19,12 +19,13 @@ package kubeedge
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/bramvdbogaerde/go-scp"
+	"github.com/pkg/sftp"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	corev1 "k8s.io/api/core/v1"
@@ -189,12 +190,9 @@ func (p *JoinPlugin) scpKeadm(sshClient *ssh.Client) error {
 		return nil
 	}
 
-	client, err := scp.NewClientBySSH(sshClient)
+	client, err := sftp.NewClient(sshClient)
 	if err != nil {
-		return fmt.Errorf("creating new SSH session from existing connection fail, %w", err)
-	}
-	if err := client.Connect(); err != nil {
-		return fmt.Errorf("establish a connection to the remote server fail, %w", err)
+		return fmt.Errorf("creating new SFTP session from existing connection failed: %w", err)
 	}
 	defer client.Close()
 
@@ -204,9 +202,20 @@ func (p *JoinPlugin) scpKeadm(sshClient *ssh.Client) error {
 	}
 	defer f.Close()
 
-	if err := client.CopyFromFile(context.Background(), *f, destPath, "0755"); err != nil {
-		return fmt.Errorf("scp file fail, %w", err)
+	dstFile, err := client.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to create remote file: %w", err)
 	}
+	defer dstFile.Close()
+
+	if _, err := io.Copy(dstFile, f); err != nil {
+		return fmt.Errorf("failed to copy file to remote server: %w", err)
+	}
+
+	if err := dstFile.Chmod(0755); err != nil {
+		return fmt.Errorf("failed to change file permissions on remote server: %w", err)
+	}
+
 	return nil
 }
 
