@@ -17,13 +17,11 @@ limitations under the License.
 package generic
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path"
 	"time"
 
-	"github.com/mitchellh/cli"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -37,7 +35,6 @@ type Options struct {
 
 	config *genericclioptions.ConfigFlags
 
-	Ui cli.Ui
 	// HomeDir is an absolute path which most importantly contains "versions" installed from binary. Defaults to DefaultHomeDir
 	HomeDir string
 
@@ -52,13 +49,7 @@ type Options struct {
 }
 
 func New() *Options {
-	g := &Options{
-		Ui: &cli.BasicUi{
-			Writer:      os.Stdout,
-			ErrorWriter: os.Stdout,
-			Reader:      os.Stdin,
-		},
-	}
+	g := &Options{}
 	g.Components = loadComponents(g.HomeDir)
 	// bind to kubernetes config flags
 	g.config = &genericclioptions.ConfigFlags{
@@ -148,11 +139,4 @@ func loadComponentsYaml(homeDir string) []byte {
 
 func (g *Options) ReloadComponents() {
 	g.Components = loadComponents(g.HomeDir)
-}
-
-func (g *Options) Errorf(format string, a ...interface{}) {
-	if g.Ui == nil {
-		return
-	}
-	g.Ui.Error(fmt.Sprintf(format, a...))
 }
