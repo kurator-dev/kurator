@@ -58,6 +58,15 @@ spec:
         count: 2
       mon:
         count: 3
+      placement:
+        mgr:
+          tolerations:
+          - key: storage-node
+            operator: Exists
+        mon:
+          tolerations:
+          - key: storage-node
+            operator: Exists
   interval: 1m0s
   install:
     createNamespace: true

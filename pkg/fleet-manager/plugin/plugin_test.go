@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -510,6 +511,14 @@ func TestRenderClusterStorage(t *testing.T) {
 						Labels: map[string]string{
 							"role": "MonitorNodeLabel",
 						},
+						Placement: &v1alpha1.Placement{
+							Tolerations: []corev1.Toleration{
+								{
+									Key:      "storage-node",
+									Operator: corev1.TolerationOpExists,
+								},
+							},
+						},
 					},
 					Manager: &v1alpha1.MgrSpec{
 						Count: &managerCount,
@@ -518,6 +527,14 @@ func TestRenderClusterStorage(t *testing.T) {
 						},
 						Labels: map[string]string{
 							"role": "ManagerNodeLabel",
+						},
+						Placement: &v1alpha1.Placement{
+							Tolerations: []corev1.Toleration{
+								{
+									Key:      "storage-node",
+									Operator: corev1.TolerationOpExists,
+								},
+							},
 						},
 					},
 				},

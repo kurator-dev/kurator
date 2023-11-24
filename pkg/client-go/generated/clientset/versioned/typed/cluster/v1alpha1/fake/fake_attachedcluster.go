@@ -23,7 +23,6 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -36,9 +35,9 @@ type FakeAttachedClusters struct {
 	ns   string
 }
 
-var attachedclustersResource = schema.GroupVersionResource{Group: "cluster.kurator.dev", Version: "v1alpha1", Resource: "attachedclusters"}
+var attachedclustersResource = v1alpha1.SchemeGroupVersion.WithResource("attachedclusters")
 
-var attachedclustersKind = schema.GroupVersionKind{Group: "cluster.kurator.dev", Version: "v1alpha1", Kind: "AttachedCluster"}
+var attachedclustersKind = v1alpha1.SchemeGroupVersion.WithKind("AttachedCluster")
 
 // Get takes name of the attachedCluster, and returns the corresponding attachedCluster object, and an error if there is any.
 func (c *FakeAttachedClusters) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AttachedCluster, err error) {
