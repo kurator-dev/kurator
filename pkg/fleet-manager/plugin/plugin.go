@@ -59,7 +59,7 @@ type GrafanaDataSource struct {
 	IsDefault  bool   `json:"isDefault"`
 }
 
-func RenderKyvernoPolicy(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
+func RenderKyvernoPolicy(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster RenderableFleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
 	c, err := getFleetPluginChart(fsys, KyvernoPolicyComponentName)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func RenderKyvernoPolicy(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *met
 	})
 }
 
-func RenderKyverno(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
+func RenderKyverno(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.OwnerReference, cluster RenderableFleetCluster, kyvernoCfg *fleetv1a1.KyvernoConfig) ([]byte, error) {
 	c, err := getFleetPluginChart(fsys, KyvernoComponentName)
 	if err != nil {
 		return nil, err
@@ -181,7 +181,7 @@ func RenderThanos(fsys fs.FS, fleetNN types.NamespacedName, fleetRef *metav1.Own
 	return renderFleetPlugin(fsys, thanosCfg)
 }
 
-func RenderPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster FleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
+func RenderPrometheus(fsys fs.FS, fleetName types.NamespacedName, fleetRef *metav1.OwnerReference, cluster RenderableFleetCluster, metricCfg *fleetv1a1.MetricConfig) ([]byte, error) {
 	promChart, err := getFleetPluginChart(fsys, PrometheusComponentName)
 	if err != nil {
 		return nil, err
@@ -230,7 +230,7 @@ func RenderVelero(
 	fsys fs.FS,
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
-	cluster FleetCluster,
+	cluster RenderableFleetCluster,
 	backupCfg *fleetv1a1.BackupConfig,
 	veleroSecretName string,
 ) ([]byte, error) {
@@ -305,7 +305,7 @@ func RendeStorageOperator(
 	fsys fs.FS,
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
-	cluster FleetCluster,
+	cluster RenderableFleetCluster,
 	distributedStorageCfg *fleetv1a1.DistributedStorageConfig,
 ) ([]byte, error) {
 	// get and merge the chart config
@@ -336,7 +336,7 @@ func RenderClusterStorage(
 	fsys fs.FS,
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
-	cluster FleetCluster,
+	cluster RenderableFleetCluster,
 	distributedStorageCfg *fleetv1a1.DistributedStorageConfig,
 ) ([]byte, error) {
 	c, err := getFleetPluginChart(fsys, RookClusterComponentName)

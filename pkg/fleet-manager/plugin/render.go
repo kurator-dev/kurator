@@ -32,7 +32,7 @@ type FleetPluginConfig struct {
 	Component      string
 	Fleet          types.NamespacedName
 	OwnerReference *metav1.OwnerReference
-	Cluster        *FleetCluster
+	Cluster        *RenderableFleetCluster
 	Chart          ChartConfig
 	Values         map[string]interface{}
 }
@@ -55,7 +55,7 @@ func (plugin FleetPluginConfig) StorageNamespace() string {
 	return plugin.Fleet.Namespace
 }
 
-type FleetCluster struct {
+type RenderableFleetCluster struct {
 	Name       string
 	SecretName string
 	SecretKey  string

@@ -81,7 +81,7 @@ func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha
 	// Iterating through each fleet cluster to generate and apply Velero helm configurations.
 	for key, cluster := range fleetClusters {
 		// generate Velero helm config for each fleet cluster
-		b, err := plugin.RenderVelero(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+		b, err := plugin.RenderVelero(f.Manifests, fleetNN, fleetOwnerRef, plugin.RenderableFleetCluster{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
