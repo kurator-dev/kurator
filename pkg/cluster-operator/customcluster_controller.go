@@ -47,8 +47,10 @@ type CustomClusterController struct {
 	Scheme    *runtime.Scheme
 }
 
-type customClusterManageCMD string
-type customClusterManageAction string
+type (
+	customClusterManageCMD    string
+	customClusterManageAction string
+)
 
 // NodeInfo represents the information of the node on VMs.
 type NodeInfo struct {
@@ -109,28 +111,28 @@ func (r *CustomClusterController) SetupWithManager(ctx context.Context, mgr ctrl
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &corev1.Pod{}},
+		source.Kind(mgr.GetCache(), &corev1.Pod{}),
 		handler.EnqueueRequestsFromMapFunc(r.WorkerToCustomClusterMapFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for worker to controller manager: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &v1alpha1.CustomMachine{}},
+		source.Kind(mgr.GetCache(), &v1alpha1.CustomMachine{}),
 		handler.EnqueueRequestsFromMapFunc(r.CustomMachineToCustomClusterMapFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for CustomMachine to controller manager: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &clusterv1.Cluster{}},
+		source.Kind(mgr.GetCache(), &clusterv1.Cluster{}),
 		handler.EnqueueRequestsFromMapFunc(r.ClusterToCustomClusterMapFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for Clusters to controller manager: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &controlplanev1.KubeadmControlPlane{}},
+		source.Kind(mgr.GetCache(), &controlplanev1.KubeadmControlPlane{}),
 		handler.EnqueueRequestsFromMapFunc(r.KcpToCustomClusterMapFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for KubeadmControlPlan to controller manager: %v", err)
@@ -509,7 +511,7 @@ func (r *CustomClusterController) ensureFinalizerAndOwnerRef(ctx context.Context
 	return nil
 }
 
-func (r *CustomClusterController) WorkerToCustomClusterMapFunc(o client.Object) []ctrl.Request {
+func (r *CustomClusterController) WorkerToCustomClusterMapFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	c, ok := o.(*corev1.Pod)
 	if !ok {
 		panic(fmt.Sprintf("Expected a pod but got a %T", o))
@@ -522,7 +524,7 @@ func (r *CustomClusterController) WorkerToCustomClusterMapFunc(o client.Object) 
 	return nil
 }
 
-func (r *CustomClusterController) CustomMachineToCustomClusterMapFunc(o client.Object) []ctrl.Request {
+func (r *CustomClusterController) CustomMachineToCustomClusterMapFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	c, ok := o.(*v1alpha1.CustomMachine)
 	if !ok {
 		panic(fmt.Sprintf("Expected a CustomMachine but got a %T", o))
@@ -539,7 +541,7 @@ func (r *CustomClusterController) CustomMachineToCustomClusterMapFunc(o client.O
 	return result
 }
 
-func (r *CustomClusterController) ClusterToCustomClusterMapFunc(o client.Object) []ctrl.Request {
+func (r *CustomClusterController) ClusterToCustomClusterMapFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	c, ok := o.(*clusterv1.Cluster)
 	if !ok {
 		panic(fmt.Sprintf("Expected a Cluster but got a %T", o))
@@ -551,7 +553,7 @@ func (r *CustomClusterController) ClusterToCustomClusterMapFunc(o client.Object)
 	return nil
 }
 
-func (r *CustomClusterController) KcpToCustomClusterMapFunc(o client.Object) []ctrl.Request {
+func (r *CustomClusterController) KcpToCustomClusterMapFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	c, ok := o.(*controlplanev1.KubeadmControlPlane)
 	if !ok {
 		panic(fmt.Sprintf("Expected a KubeadmControlPlane but got a %T", o))

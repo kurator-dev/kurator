@@ -19,6 +19,7 @@ package application
 import (
 	"context"
 
+	"istio.io/istio/pkg/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
@@ -33,7 +34,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 	if err := (&fleet.ApplicationManager{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "Application")
 		return err
 	}

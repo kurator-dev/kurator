@@ -69,35 +69,35 @@ func (a *ApplicationManager) SetupWithManager(ctx context.Context, mgr ctrl.Mana
 
 	// Set up watches for the updates to application's status.
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1beta2.GitRepository{}},
+		source.Kind(mgr.GetCache(), &sourcev1beta2.GitRepository{}),
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for GitRepository: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1beta2.HelmRepository{}},
+		source.Kind(mgr.GetCache(), &sourcev1beta2.HelmRepository{}),
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for HelmRepository: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &sourcev1beta2.OCIRepository{}},
+		source.Kind(mgr.GetCache(), &sourcev1beta2.OCIRepository{}),
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for OCIRepository: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &kustomizev1beta2.Kustomization{}},
+		source.Kind(mgr.GetCache(), &kustomizev1beta2.Kustomization{}),
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for Kustomization: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &helmv2b1.HelmRelease{}},
+		source.Kind(mgr.GetCache(), &helmv2b1.HelmRelease{}),
 		handler.EnqueueRequestsFromMapFunc(a.objectToApplicationFunc),
 	); err != nil {
 		return fmt.Errorf("failed to add a Watch for HelmRelease: %v", err)
@@ -300,7 +300,7 @@ func (a *ApplicationManager) reconcileDelete(app *applicationapi.Application) (c
 	return ctrl.Result{}, nil
 }
 
-func (a *ApplicationManager) objectToApplicationFunc(o client.Object) []ctrl.Request {
+func (a *ApplicationManager) objectToApplicationFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	labels := o.GetLabels()
 	if labels[ApplicationLabel] != "" {
 		return []ctrl.Request{

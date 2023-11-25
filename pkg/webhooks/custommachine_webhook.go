@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
@@ -43,13 +44,13 @@ func (wh *CustomMachineWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error 
 		Complete()
 }
 
-func (wh *CustomMachineWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
+func (wh *CustomMachineWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	in, ok := obj.(*v1alpha1.CustomMachine)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a CustomMachine but got a %T", obj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a CustomMachine but got a %T", obj))
 	}
 
-	return wh.validate(in)
+	return nil, wh.validate(in)
 }
 
 func (wh *CustomMachineWebhook) validate(in *v1alpha1.CustomMachine) error {
@@ -99,20 +100,20 @@ func validateMachine(machineArr []v1alpha1.Machine, fldPath *field.Path) field.E
 	return allErrs
 }
 
-func (wh *CustomMachineWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) error {
+func (wh *CustomMachineWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	_, ok := oldObj.(*v1alpha1.CustomMachine)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a CustomMachine but got a %T", oldObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a CustomMachine but got a %T", oldObj))
 	}
 
 	newCustomMachine, ok := newObj.(*v1alpha1.CustomMachine)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a CustomMachine but got a %T", newObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a CustomMachine but got a %T", newObj))
 	}
 
-	return wh.validate(newCustomMachine)
+	return nil, wh.validate(newCustomMachine)
 }
 
-func (wh *CustomMachineWebhook) ValidateDelete(_ context.Context, obj runtime.Object) error {
-	return nil
+func (wh *CustomMachineWebhook) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }

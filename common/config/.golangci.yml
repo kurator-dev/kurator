@@ -62,3 +62,8 @@ linters-settings:
 issues:
   # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
   max-same-issues: 0
+  exclude-rules:
+    - path: cmd/cluster-operator/scheme
+      linters:
+        - staticcheck
+      text: SA1019

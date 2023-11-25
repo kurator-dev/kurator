@@ -87,7 +87,7 @@ func (r *CustomMachineController) reconcile(ctx context.Context, customMachine *
 		return ctrl.Result{}, err
 	}
 	// Ensure we add a watcher to the external ssh key object.
-	if err := r.externalTracker.Watch(log, obj, &handler.EnqueueRequestForOwner{OwnerType: &v1alpha1.CustomMachine{}}); err != nil {
+	if err := r.externalTracker.Watch(log, obj, handler.EnqueueRequestForOwner(r.Client.Scheme(), r.Client.RESTMapper(), &v1alpha1.CustomMachine{})); err != nil {
 		return ctrl.Result{}, err
 	}
 	machineReady := true

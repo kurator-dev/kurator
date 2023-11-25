@@ -96,7 +96,7 @@ func TestUpdateClusterInfraType(t *testing.T) {
 	newCluster := oldCluster.DeepCopy()
 	newCluster.Spec.InfraType = "aws1"
 
-	err = wh.ValidateUpdate(context.TODO(), oldCluster, newCluster)
+	_, err = wh.ValidateUpdate(context.TODO(), oldCluster, newCluster)
 	if !apierrors.IsInvalid(err) {
 		t.Errorf("Expect an invalid error, got %v", err)
 	}

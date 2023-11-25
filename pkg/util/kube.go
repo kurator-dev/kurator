@@ -72,7 +72,7 @@ func WaitMemberClusterPodReady(client *client.Client, cluster, namespace, select
 }
 
 func WaitPodReady(client kubeclient.Interface, namespace, selector string, interval, timeout time.Duration) error {
-	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), interval, timeout, true, func(context.Context) (done bool, err error) {
 		pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: selector,
 		})
@@ -98,7 +98,7 @@ func WaitPodReady(client kubeclient.Interface, namespace, selector string, inter
 }
 
 func WaitCRDReady(crdClient crdclientset.Interface, crdName string, interval, timeout time.Duration) error {
-	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), interval, timeout, true, func(context.Context) (done bool, err error) {
 		crd, err := crdClient.ApiextensionsV1().CustomResourceDefinitions().Get(context.TODO(), crdName, metav1.GetOptions{})
 		if err != nil {
 			return false, nil
@@ -115,7 +115,7 @@ func WaitCRDReady(crdClient crdclientset.Interface, crdName string, interval, ti
 }
 
 func WaitAPIEnableInClusters(karmadaClient karmadaclientset.Interface, gvk schema.GroupVersionKind, clusters []string, interval, timeout time.Duration) error {
-	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), interval, timeout, true, func(context.Context) (done bool, err error) {
 		clusterList, err := karmadaClient.ClusterV1alpha1().Clusters().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return false, nil
@@ -145,7 +145,7 @@ func WaitAPIEnableInClusters(karmadaClient karmadaclientset.Interface, gvk schem
 func WaitServiceReady(client kubeclient.Interface, namespace, name string, interval, timeout time.Duration) (*v1.Service, error) {
 	var svc *v1.Service
 	var lastErr error
-	err := wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), interval, timeout, true, func(context.Context) (done bool, err error) {
 		svc, lastErr = client.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if lastErr != nil {
 			return false, nil
@@ -166,7 +166,7 @@ func WaitServiceReady(client kubeclient.Interface, namespace, name string, inter
 
 // WaitNamespaceDelete will wait until namespace is completely deleted
 func WaitNamespaceDelete(client kubeclient.Interface, namespace string, interval, timeout time.Duration) error {
-	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), interval, timeout, true, func(context.Context) (done bool, err error) {
 		isExist, err := karmadautil.IsNamespaceExist(client, namespace)
 		if err != nil {
 			return true, err

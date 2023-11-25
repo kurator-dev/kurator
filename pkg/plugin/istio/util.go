@@ -53,7 +53,7 @@ func waitSecertReady(client *client.Client, opts *generic.Options, cluster strin
 		return err
 	}
 
-	return wait.PollImmediate(opts.WaitInterval, opts.WaitTimeout, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), opts.WaitInterval, opts.WaitTimeout, true, func(context.Context) (done bool, err error) {
 		secret, err := kubeClient.CoreV1().Secrets(nn.Namespace).Get(context.TODO(), nn.Name, metav1.GetOptions{})
 		if err != nil {
 			return false, nil

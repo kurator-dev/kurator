@@ -27,6 +27,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"kurator.dev/kurator/pkg/apis/infra/v1alpha1"
 )
@@ -44,13 +45,13 @@ func (wh *CustomClusterWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error 
 		Complete()
 }
 
-func (wh *CustomClusterWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
+func (wh *CustomClusterWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	in, ok := obj.(*v1alpha1.CustomCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a CustomCluster but got a %T", obj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a CustomCluster but got a %T", obj))
 	}
 
-	return wh.validate(in)
+	return nil, wh.validate(in)
 }
 
 func (wh *CustomClusterWebhook) validate(in *v1alpha1.CustomCluster) error {
@@ -128,20 +129,20 @@ func validateControlPlaneConfig(in *v1alpha1.ControlPlaneConfig) field.ErrorList
 // ValidateUpdate is not checking for changes in parameters such as cni.type, api address, certSANs, and so on.
 // These parameters are set during cluster initialization and are not expected to change during the lifecycle of the cluster.
 // Altering these values does not impact the system because these parameters are not re-checked after cluster creation.
-func (wh *CustomClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) error {
+func (wh *CustomClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	_, ok := oldObj.(*v1alpha1.CustomCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a CustomCluster but got a %T", oldObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a CustomCluster but got a %T", oldObj))
 	}
 
 	newCustomCluster, ok := newObj.(*v1alpha1.CustomCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a CustomCluster but got a %T", newObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a CustomCluster but got a %T", newObj))
 	}
 
-	return wh.validate(newCustomCluster)
+	return nil, wh.validate(newCustomCluster)
 }
 
-func (wh *CustomClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) error {
-	return nil
+func (wh *CustomClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }

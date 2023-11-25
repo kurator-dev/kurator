@@ -64,21 +64,21 @@ func (f *FleetManager) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &corev1.Pod{}},
+		source.Kind(mgr.GetCache(), &corev1.Pod{}),
 		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for Secret to controller manager: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &clusterv1alpha1.Cluster{}},
+		source.Kind(mgr.GetCache(), &clusterv1alpha1.Cluster{}),
 		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for Cluster: %v", err)
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &clusterv1alpha1.AttachedCluster{}},
+		source.Kind(mgr.GetCache(), &clusterv1alpha1.AttachedCluster{}),
 		handler.EnqueueRequestsFromMapFunc(f.objectToFleetFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for AttachedCluster: %v", err)
@@ -87,7 +87,7 @@ func (f *FleetManager) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-func (f *FleetManager) objectToFleetFunc(o client.Object) []ctrl.Request {
+func (f *FleetManager) objectToFleetFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	labels := o.GetLabels()
 	if labels[FleetLabel] != "" {
 		return []ctrl.Request{

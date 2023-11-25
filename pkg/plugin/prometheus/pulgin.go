@@ -255,7 +255,7 @@ func (p *Plugin) exposePrometheus() error {
 
 func (p *Plugin) getFederalEndpoints() ([]endpoint, error) {
 	endpoints := make([]endpoint, 0)
-	err := wait.PollImmediate(p.options.WaitInterval, p.options.WaitTimeout, func() (done bool, err error) {
+	err := wait.PollUntilContextTimeout(context.Background(), p.options.WaitInterval, p.options.WaitTimeout, true, func(context.Context) (done bool, err error) {
 		svc, err := p.KubeClient().CoreV1().Services(monitoringNamespace).Get(context.TODO(), promELBSvc, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -392,7 +392,8 @@ func (p *Plugin) createAdditionalScrapeConfigs() error {
 
 func (p *Plugin) generatePolicy(resourceList kube.ResourceList) (
 	*policyv1alpha1.ClusterPropagationPolicy,
-	*policyv1alpha1.PropagationPolicy) {
+	*policyv1alpha1.PropagationPolicy,
+) {
 	cpp := &policyv1alpha1.ClusterPropagationPolicy{
 		TypeMeta: typemeta.ClusterPropagationPolicy,
 		ObjectMeta: metav1.ObjectMeta{

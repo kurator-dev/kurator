@@ -141,7 +141,8 @@ func (r *ClusterController) Reconcile(ctx context.Context, req ctrl.Request) (_ 
 }
 
 func (r *ClusterController) reconcileDelete(ctx context.Context, cluster *clusterv1alpha1.Cluster,
-	scope *scope.Cluster, provider infraprovider.Provider) (ctrl.Result, error) {
+	scope *scope.Cluster, provider infraprovider.Provider,
+) (ctrl.Result, error) {
 	if err := r.deleteCAPIClusterIfNeeded(ctx, cluster); err != nil {
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete CAPI Cluster %s/%s", cluster.Namespace, cluster.Name)
 	}
@@ -258,7 +259,8 @@ func (r *ClusterController) deleteCAPIClusterIfNeeded(ctx context.Context, infra
 }
 
 func (r *ClusterController) reconcile(ctx context.Context, cluster *clusterv1alpha1.Cluster,
-	scope *scope.Cluster, provider infraprovider.Provider) (ctrl.Result, error) {
+	scope *scope.Cluster, provider infraprovider.Provider,
+) (ctrl.Result, error) {
 	if err := provider.Reconcile(ctx); err != nil {
 		conditions.MarkFalse(cluster, clusterv1alpha1.InfrastructureReadyCondition, clusterv1alpha1.InfrastructureProvisionFailedReason,
 			capiv1.ConditionSeverityError, err.Error())
@@ -438,7 +440,7 @@ func (r *ClusterController) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	if err := c.Watch(
-		&source.Kind{Type: &corev1.Secret{}},
+		source.Kind(mgr.GetCache(), &corev1.Secret{}),
 		handler.EnqueueRequestsFromMapFunc(r.SecretToClusterFunc),
 	); err != nil {
 		return fmt.Errorf("failed adding Watch for Secret to controller manager: %v", err)
@@ -447,7 +449,7 @@ func (r *ClusterController) SetupWithManager(mgr ctrl.Manager) error {
 	return nil
 }
 
-func (r *ClusterController) SecretToClusterFunc(o client.Object) []ctrl.Request {
+func (r *ClusterController) SecretToClusterFunc(ctx context.Context, o client.Object) []ctrl.Request {
 	log := ctrl.Log.WithName("cluster-controller")
 
 	obj, ok := o.(*corev1.Secret)
