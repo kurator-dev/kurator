@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 )
@@ -43,13 +44,13 @@ func (wh *ApplicationWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-func (wh *ApplicationWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
+func (wh *ApplicationWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	in, ok := obj.(*v1alpha1.Application)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", obj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", obj))
 	}
 
-	return wh.validate(in)
+	return nil, wh.validate(in)
 }
 
 func (wh *ApplicationWebhook) validate(in *v1alpha1.Application) error {
@@ -109,20 +110,20 @@ func validateFleet(in *v1alpha1.Application) field.ErrorList {
 	return allErrs
 }
 
-func (wh *ApplicationWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) error {
+func (wh *ApplicationWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	_, ok := oldObj.(*v1alpha1.Application)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", oldObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", oldObj))
 	}
 
 	newApplication, ok := newObj.(*v1alpha1.Application)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", newObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", newObj))
 	}
 
-	return wh.validate(newApplication)
+	return nil, wh.validate(newApplication)
 }
 
-func (wh *ApplicationWebhook) ValidateDelete(_ context.Context, obj runtime.Object) error {
-	return nil
+func (wh *ApplicationWebhook) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }

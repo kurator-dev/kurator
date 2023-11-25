@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	k8ssecret "istio.io/istio/security/pkg/k8s/secret"
 	"istio.io/istio/security/pkg/pki/ca"
 	"istio.io/istio/security/pkg/pki/util"
 	v1 "k8s.io/api/core/v1"
@@ -76,7 +75,7 @@ func (cert *SelfSignedCert) Secret(namespace string) (*v1.Secret, error) {
 
 	certBytes, privKeyBytes, _, _ := keyCertBundle.GetAllPem()
 
-	secret := k8ssecret.BuildSecret(ca.CASecret, namespace, nil, nil, nil, certBytes, privKeyBytes, istioCASecretType)
+	secret := ca.BuildSecret(ca.CASecret, namespace, nil, nil, nil, certBytes, privKeyBytes, istioCASecretType)
 	// we need TypeMeta to create PropagationPolicy
 	secret.TypeMeta = typemeta.Secret
 

@@ -30,6 +30,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	v1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
@@ -47,13 +48,13 @@ func (wh *ClusterWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-func (wh *ClusterWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
+func (wh *ClusterWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	in, ok := obj.(*v1.Cluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", obj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", obj))
 	}
 
-	return wh.validate(in)
+	return nil, wh.validate(in)
 }
 
 func validateInfra(in *v1.Cluster) field.ErrorList {
@@ -197,26 +198,26 @@ func (wh *ClusterWebhook) validate(in *v1.Cluster) error {
 	return nil
 }
 
-func (wh *ClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) error {
+func (wh *ClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	oldCluster, ok := oldObj.(*v1.Cluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", oldObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", oldObj))
 	}
 
 	newCluster, ok := newObj.(*v1.Cluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", newObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Cluster but got a %T", newObj))
 	}
 
 	if oldCluster.Spec.InfraType != newCluster.Spec.InfraType {
-		return apierrors.NewInvalid(v1.SchemeGroupVersion.WithKind("Cluster").GroupKind(), newCluster.Name, field.ErrorList{
+		return nil, apierrors.NewInvalid(v1.SchemeGroupVersion.WithKind("Cluster").GroupKind(), newCluster.Name, field.ErrorList{
 			field.Forbidden(field.NewPath("spec", "infraType"), "field is immutable"),
 		})
 	}
 
-	return wh.validate(newCluster)
+	return nil, wh.validate(newCluster)
 }
 
-func (wh *ClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) error {
-	return nil
+func (wh *ClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }

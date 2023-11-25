@@ -26,6 +26,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 )
@@ -43,13 +44,13 @@ func (wh *AttachedClusterWebhook) SetupWebhookWithManager(mgr ctrl.Manager) erro
 		Complete()
 }
 
-func (wh *AttachedClusterWebhook) ValidateCreate(_ context.Context, obj runtime.Object) error {
+func (wh *AttachedClusterWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	in, ok := obj.(*v1alpha1.AttachedCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a AttachedCluster but got a %T", obj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a AttachedCluster but got a %T", obj))
 	}
 
-	return wh.validate(in)
+	return nil, wh.validate(in)
 }
 
 func (wh *AttachedClusterWebhook) validate(in *v1alpha1.AttachedCluster) error {
@@ -82,20 +83,20 @@ func validateSecretKeyRef(kubeconfig v1alpha1.SecretKeyRef) field.ErrorList {
 	return allErrs
 }
 
-func (wh *AttachedClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) error {
+func (wh *AttachedClusterWebhook) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	_, ok := oldObj.(*v1alpha1.AttachedCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a AttachedCluster but got a %T", oldObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a AttachedCluster but got a %T", oldObj))
 	}
 
 	newAttachedCluster, ok := newObj.(*v1alpha1.AttachedCluster)
 	if !ok {
-		return apierrors.NewBadRequest(fmt.Sprintf("expected a AttachedCluster but got a %T", newObj))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a AttachedCluster but got a %T", newObj))
 	}
 
-	return wh.validate(newAttachedCluster)
+	return nil, wh.validate(newAttachedCluster)
 }
 
-func (wh *AttachedClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) error {
-	return nil
+func (wh *AttachedClusterWebhook) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+	return nil, nil
 }

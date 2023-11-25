@@ -232,7 +232,7 @@ func (p *AWSProvider) IsReady(ctx context.Context) error {
 	// check if all nodes are ready
 	msList := &capiv1.MachineSetList{}
 	if err := p.Kube.List(ctx, msList, client.InNamespace(p.scope.Namespace), client.MatchingLabels{
-		capiv1.ClusterLabelName: p.scope.Name,
+		capiv1.ClusterNameLabel: p.scope.Name,
 	}); err != nil {
 		return fmt.Errorf("failed to list MachineSets: %v", err)
 	}

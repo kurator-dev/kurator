@@ -160,24 +160,27 @@ func TestCustomClusterController_deleteWorkerPods(t *testing.T) {
 	workerPod1 := generateClusterManageWorker(testCustomCluster, CustomClusterInitAction, KubesprayInitCMD,
 		generateClusterHostsName(testCustomCluster), generateClusterHostsName(testCustomCluster), testKcp.Spec.Version)
 	workerPod1.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-		{Name: "customcluster",
-			UID: types.UID("customcluster"),
+		{
+			Name: "customcluster",
+			UID:  types.UID("customcluster"),
 		},
 	})
 	// scale down
 	workerPod2 := generateClusterManageWorker(testCustomCluster, CustomClusterScaleDownAction, KubesprayScaleDownCMDPrefix,
 		generateClusterHostsName(testCustomCluster), generateClusterHostsName(testCustomCluster), testKcp.Spec.Version)
 	workerPod2.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-		{Name: "customcluster",
-			UID: types.UID("customcluster"),
+		{
+			Name: "customcluster",
+			UID:  types.UID("customcluster"),
 		},
 	})
 	// scale up
 	workerPod3 := generateClusterManageWorker(testCustomCluster, CustomClusterScaleUpAction, KubesprayScaleUpCMD,
 		generateClusterHostsName(testCustomCluster), generateClusterHostsName(testCustomCluster), testKcp.Spec.Version)
 	workerPod3.ObjectMeta.SetOwnerReferences([]metav1.OwnerReference{
-		{Name: "customcluster",
-			UID: types.UID("customcluster"),
+		{
+			Name: "customcluster",
+			UID:  types.UID("customcluster"),
 		},
 	})
 
@@ -312,7 +315,7 @@ func TestCustomClusterController_CustomMachineToCustomClusterMapFunc(t *testing.
 					t.Errorf("this code did not panic %v", err)
 				}
 			}()
-			actual := r.CustomMachineToCustomClusterMapFunc(tt.args.o)
+			actual := r.CustomMachineToCustomClusterMapFunc(context.TODO(), tt.args.o)
 			expect := []ctrl.Request{{NamespacedName: client.ObjectKey{Namespace: "test", Name: "testCustomCluster"}}}
 			assert.Equal(t, expect, actual)
 		})
@@ -374,7 +377,7 @@ func TestCustomClusterController_WorkerToCustomClusterMapFunc(t *testing.T) {
 					t.Errorf("this code did not panic %v", err)
 				}
 			}()
-			actual := r.WorkerToCustomClusterMapFunc(tt.args.o)
+			actual := r.WorkerToCustomClusterMapFunc(context.TODO(), tt.args.o)
 			expect := []ctrl.Request{{NamespacedName: client.ObjectKey{Namespace: "default", Name: "testCluster"}}}
 			assert.Equal(t, expect, actual)
 		})
@@ -436,7 +439,7 @@ func TestCustomClusterController_ClusterToCustomClusterMapFunc(t *testing.T) {
 					t.Errorf("this code did not panic %v", err)
 				}
 			}()
-			actual := r.ClusterToCustomClusterMapFunc(tt.args.o)
+			actual := r.ClusterToCustomClusterMapFunc(context.TODO(), tt.args.o)
 			expect := []ctrl.Request{{NamespacedName: client.ObjectKey{Namespace: "test", Name: "testCluster"}}}
 			assert.Equal(t, expect, actual)
 		})
@@ -560,7 +563,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						return workerPod, errors.New("failed to create terminate worker pods")
 					})
@@ -575,7 +579,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						workerPod.Status.Phase = corev1.PodSucceeded
 						return workerPod, nil
@@ -596,7 +601,8 @@ func TestCustomClusterController_reconcileDelete(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						workerPod.Status.Phase = corev1.PodFailed
 						return workerPod, nil
@@ -679,7 +685,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						return workerPod, errors.New("init worker is failed to create")
 					})
@@ -707,7 +714,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						workerPod.Status.Phase = corev1.PodFailed
 						return workerPod, nil
@@ -723,7 +731,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						workerPod.Status.Phase = corev1.PodSucceeded
 						return workerPod, nil
@@ -745,7 +754,8 @@ func TestCustomClusterController_reconcileProvision(t *testing.T) {
 			beforeFunc: func() {
 				patches1.ApplyPrivateMethod(reflect.TypeOf(r), "ensureWorkerPodCreated",
 					func(_ *CustomClusterController, ctx context.Context, customCluster *v1alpha1.CustomCluster, manageAction customClusterManageAction,
-						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string) (*corev1.Pod, error) {
+						manageCMD customClusterManageCMD, hostName, configName, kubeVersion string,
+					) (*corev1.Pod, error) {
 						workerPod := generatePodOwnerRefCluster("pod")
 						workerPod.Status.Phase = corev1.PodSucceeded
 						return workerPod, nil

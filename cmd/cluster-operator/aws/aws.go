@@ -21,6 +21,7 @@ import (
 	"context"
 	"errors"
 
+	"istio.io/istio/pkg/ptr"
 	infrav1 "sigs.k8s.io/cluster-api-provider-aws/v2/api/v1beta2"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/controllers"
 	"sigs.k8s.io/cluster-api-provider-aws/v2/exp/controlleridentitycreator"
@@ -32,9 +33,7 @@ import (
 	"kurator.dev/kurator/cmd/cluster-operator/options"
 )
 
-var (
-	log = ctrl.Log.WithName("aws")
-)
+var log = ctrl.Log.WithName("aws")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
 	externalResourceGC := false
@@ -56,7 +55,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		Recorder:         mgr.GetEventRecorderFor("awsmachine-controller"),
 		Endpoints:        awsServiceEndpoints,
 		WatchFilterValue: opts.WatchFilterValue,
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "AWSMachine")
 		return err
 	}
@@ -66,7 +65,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		Endpoints:          awsServiceEndpoints,
 		WatchFilterValue:   opts.WatchFilterValue,
 		ExternalResourceGC: externalResourceGC,
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "AWSCluster")
 		return err
 	}
@@ -78,7 +77,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 			Log:              ctrl.Log.WithName("controllers").WithName("AWSControllerIdentity"),
 			Endpoints:        awsServiceEndpoints,
 			WatchFilterValue: opts.WatchFilterValue,
-		}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+		}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
 			log.Error(err, "unable to create controller", "controller", "AWSControllerIdentity")
 			return errors.New("unable to create AWSControllerIdentity controlle")
 		}

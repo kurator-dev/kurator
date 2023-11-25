@@ -19,6 +19,7 @@ package customcluster
 import (
 	"context"
 
+	"istio.io/istio/pkg/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
@@ -34,7 +35,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "CustomCluster")
 		return err
 	}
@@ -43,7 +44,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		Client:    mgr.GetClient(),
 		Scheme:    mgr.GetScheme(),
 		APIReader: mgr.GetAPIReader(),
-	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: true}); err != nil {
+	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
 		log.Error(err, "unable to create controller", "controller", "CustomMachine")
 		return err
 	}

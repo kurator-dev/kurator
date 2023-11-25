@@ -33,14 +33,13 @@ import (
 	adddoncontrollers "sigs.k8s.io/cluster-api/exp/addons/controllers"
 	"sigs.k8s.io/cluster-api/webhooks"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/cluster-operator/options"
 )
 
-var (
-	log = ctrl.Log.WithName("capi")
-)
+var log = ctrl.Log.WithName("capi")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
 	if err := setupReconcilers(ctx, opts, mgr); err != nil {
@@ -75,7 +74,6 @@ func setupReconcilers(ctx context.Context, opts *options.Options, mgr ctrl.Manag
 	// the cluster for the remote cache is being deleted.
 	if err := (&remote.ClusterCacheReconciler{
 		Client:           mgr.GetClient(),
-		Log:              ctrl.Log.WithName("remote").WithName("ClusterCacheReconciler"),
 		Tracker:          tracker,
 		WatchFilterValue: opts.WatchFilterValue,
 	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
@@ -121,11 +119,21 @@ func setupReconcilers(ctx context.Context, opts *options.Options, mgr ctrl.Manag
 		return fmt.Errorf("unable to create MachineHealthCheck controller, %w", err)
 	}
 
+	secretCachingClient, err := client.New(mgr.GetConfig(), client.Options{
+		HTTPClient: mgr.GetHTTPClient(),
+		Cache: &client.CacheOptions{
+			Reader: mgr.GetCache(),
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("unable to create secret caching client")
+	}
+
 	if err := (&kubeadmcontrolplanecontrollers.KubeadmControlPlaneReconciler{
-		Client:           mgr.GetClient(),
-		APIReader:        mgr.GetAPIReader(),
-		Tracker:          tracker,
-		WatchFilterValue: opts.WatchFilterValue,
+		Client:              mgr.GetClient(),
+		SecretCachingClient: secretCachingClient,
+		Tracker:             tracker,
+		WatchFilterValue:    opts.WatchFilterValue,
 	}).SetupWithManager(ctx, mgr, concurrency(opts.Concurrency)); err != nil {
 		return fmt.Errorf("unable to create KubeadmControlPlane controller, %w", err)
 	}
