@@ -395,6 +395,49 @@ Default value depends on the kind of the component.</p>
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.Device">Device
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.StorageDeviceSelection">StorageDeviceSelection</a>)
+</p>
+<p>Device represents a disk to use in the cluster</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>config</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="fleet.kurator.dev/v1alpha1.DistributedStorage">DistributedStorage
 </h3>
 <p>
@@ -934,7 +977,9 @@ map[string]string
 <td>
 <code>placement</code><br>
 <em>
-github.com/rook/rook/pkg/apis/ceph.rook.io/v1.PlacementSpec
+<a href="#fleet.kurator.dev/v1alpha1.Placement">
+Placement
+</a>
 </em>
 </td>
 <td>
@@ -1004,7 +1049,9 @@ The label-related configuration to add/set on each Pod related object. Including
 <td>
 <code>placement</code><br>
 <em>
-github.com/rook/rook/pkg/apis/ceph.rook.io/v1.PlacementSpec
+<a href="#fleet.kurator.dev/v1alpha1.Placement">
+Placement
+</a>
 </em>
 </td>
 <td>
@@ -1093,6 +1140,99 @@ string
 <td>
 <p>SecretName is the name of the secret that holds the object store configuration.
 The path of object store configuration must be <code>objstore.yml</code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.Placement">Placement
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.MgrSpec">MgrSpec</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.MonSpec">MonSpec</a>)
+</p>
+<p>Placement is the placement for an object</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>nodeAffinity</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#nodeaffinity-v1-core">
+Kubernetes core/v1.NodeAffinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>NodeAffinity is a group of node affinity scheduling rules</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podAffinity</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#podaffinity-v1-core">
+Kubernetes core/v1.PodAffinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodAffinity is a group of inter pod affinity scheduling rules</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>podAntiAffinity</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#podantiaffinity-v1-core">
+Kubernetes core/v1.PodAntiAffinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PodAntiAffinity is a group of inter pod anti affinity scheduling rules</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tolerations</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#toleration-v1-core">
+[]Kubernetes core/v1.Toleration
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>The pod this Toleration is attached to tolerates any taint that matches
+the triple <key,value,effect> using the matching operator <operator></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>topologySpreadConstraints</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#topologyspreadconstraint-v1-core">
+[]Kubernetes core/v1.TopologySpreadConstraint
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TopologySpreadConstraint specifies how to spread matching pods among the given topology</p>
 </td>
 </tr>
 </tbody>
@@ -1416,7 +1556,9 @@ bool
 <td>
 <code>devices</code><br>
 <em>
-[]github.com/rook/rook/pkg/apis/ceph.rook.io/v1.Device
+<a href="#fleet.kurator.dev/v1alpha1.Device">
+[]Device
+</a>
 </em>
 </td>
 <td>

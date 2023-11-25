@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	rookv1 "github.com/rook/rook/pkg/apis/ceph.rook.io/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -410,7 +409,7 @@ type MonSpec struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +nullable
 	// +optional
-	Placement rookv1.PlacementSpec `json:"placement,omitempty"`
+	Placement *Placement `json:"placement,omitempty"`
 }
 
 type MgrSpec struct {
@@ -436,7 +435,7 @@ type MgrSpec struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +nullable
 	// +optional
-	Placement rookv1.PlacementSpec `json:"placement,omitempty"`
+	Placement *Placement `json:"placement,omitempty"`
 }
 
 type StorageScopeSpec struct {
@@ -474,7 +473,38 @@ type StorageDeviceSelection struct {
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +nullable
 	// +optional
-	Devices []rookv1.Device `json:"devices,omitempty"`
+	Devices []Device `json:"devices,omitempty"`
+}
+
+// Placement is the placement for an object
+type Placement struct {
+	// NodeAffinity is a group of node affinity scheduling rules
+	// +optional
+	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	// PodAffinity is a group of inter pod affinity scheduling rules
+	// +optional
+	PodAffinity *corev1.PodAffinity `json:"podAffinity,omitempty"`
+	// PodAntiAffinity is a group of inter pod anti affinity scheduling rules
+	// +optional
+	PodAntiAffinity *corev1.PodAntiAffinity `json:"podAntiAffinity,omitempty"`
+	// The pod this Toleration is attached to tolerates any taint that matches
+	// the triple <key,value,effect> using the matching operator <operator>
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+	// TopologySpreadConstraint specifies how to spread matching pods among the given topology
+	// +optional
+	TopologySpreadConstraints []corev1.TopologySpreadConstraint `json:"topologySpreadConstraints,omitempty"`
+}
+
+// Device represents a disk to use in the cluster
+type Device struct {
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +nullable
+	// +optional
+	Config map[string]string `json:"config,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet
