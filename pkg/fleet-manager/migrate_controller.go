@@ -116,7 +116,7 @@ func (m *MigrateManager) reconcileMigrateBackup(ctx context.Context, migrate *ba
 		return ctrl.Result{}, fmt.Errorf("fetching source cluster: %w", err)
 	}
 	var sourceClusterKey ClusterKey
-	var sourceClusterAccess *fleetCluster
+	var sourceClusterAccess *FleetCluster
 	// "migrate.Spec.SourceCluster" must contain one clusters, it is ensured by admission webhook
 	for key, value := range fleetClusters {
 		sourceClusterKey = key

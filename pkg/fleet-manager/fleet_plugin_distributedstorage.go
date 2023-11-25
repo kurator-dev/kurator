@@ -26,7 +26,7 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
-func (f *FleetManager) reconcileDistributedStoragePlugin(ctx context.Context, fleet *v1alpha1.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
+func (f *FleetManager) reconcileDistributedStoragePlugin(ctx context.Context, fleet *v1alpha1.Fleet, fleetClusters map[ClusterKey]*FleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	distributedStorageCfg := fleet.Spec.Plugin.DistributedStorage

@@ -31,7 +31,7 @@ import (
 	kclient "kurator.dev/kurator/pkg/client"
 )
 
-type fleetCluster struct {
+type FleetCluster struct {
 	Secret    string
 	SecretKey string
 	client    *kclient.Client
@@ -42,10 +42,10 @@ type ClusterKey struct {
 	Name string
 }
 
-func buildFleetClusters(ctx context.Context, client client.Client, fleet *fleetapi.Fleet) (map[ClusterKey]*fleetCluster, error) {
+func buildFleetClusters(ctx context.Context, client client.Client, fleet *fleetapi.Fleet) (map[ClusterKey]*FleetCluster, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	res := make(map[ClusterKey]*fleetCluster, len(fleet.Spec.Clusters))
+	res := make(map[ClusterKey]*FleetCluster, len(fleet.Spec.Clusters))
 	for _, cluster := range fleet.Spec.Clusters {
 		clusterKey := types.NamespacedName{Namespace: fleet.Namespace, Name: cluster.Name}
 		clusterInterface, err := getFleetClusterInterface(ctx, client, cluster.Kind, clusterKey)
@@ -63,7 +63,7 @@ func buildFleetClusters(ctx context.Context, client client.Client, fleet *fleeta
 		if err != nil {
 			return nil, err
 		}
-		res[ClusterKey{Kind: cluster.Kind, Name: cluster.Name}] = &fleetCluster{
+		res[ClusterKey{Kind: cluster.Kind, Name: cluster.Name}] = &FleetCluster{
 			Secret:    clusterInterface.GetSecretName(),
 			SecretKey: clusterInterface.GetSecretKey(),
 			client:    kclient,

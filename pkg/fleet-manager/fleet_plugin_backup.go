@@ -51,7 +51,7 @@ const (
 
 // reconcileBackupPlugin reconciles the backup plugin configuration and installation across multiple clusters.
 // It generates and applies Velero Helm configurations based on the specified backup plugin settings in the fleet specification.
-func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha1.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
+func (f *FleetManager) reconcileBackupPlugin(ctx context.Context, fleet *v1alpha1.Fleet, fleetClusters map[ClusterKey]*FleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	veleroCfg := fleet.Spec.Plugin.Backup
@@ -203,9 +203,9 @@ func getObjStoreCredentials(ctx context.Context, client client.Client, namespace
 }
 
 // createNewSecretInFleetCluster creates a new secret in the specified fleet cluster.
-// It takes a fleetCluster instance and a pre-built corev1.Secret instance as parameters.
-// It uses the kube client from the fleetCluster instance to create the new secret in the respective cluster.
-func createNewSecretInFleetCluster(ctx context.Context, cluster *fleetCluster, newSecret *corev1.Secret) error {
+// It takes a FleetCluster instance and a pre-built corev1.Secret instance as parameters.
+// It uses the kube client from the FleetCluster instance to create the new secret in the respective cluster.
+func createNewSecretInFleetCluster(ctx context.Context, cluster *FleetCluster, newSecret *corev1.Secret) error {
 	// Get the kubeclient.Interface instance
 	kubeClient := cluster.client.CtrlRuntimeClient()
 
@@ -235,7 +235,7 @@ func createNewSecretInFleetCluster(ctx context.Context, cluster *fleetCluster, n
 }
 
 // updateNewSecretOwnerReference updates the OwnerReferences of the given secret in the specified fleet cluster.
-func (f *FleetManager) updateNewSecretOwnerReference(ctx context.Context, clusterName string, cluster *fleetCluster, newSecret *corev1.Secret) error {
+func (f *FleetManager) updateNewSecretOwnerReference(ctx context.Context, clusterName string, cluster *FleetCluster, newSecret *corev1.Secret) error {
 	// Get the kubeclient.Interface instance
 	kubeClient := cluster.client.KubeClient()
 

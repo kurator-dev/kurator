@@ -130,7 +130,7 @@ func (r *RestoreManager) reconcileRestore(ctx context.Context, restore *backupap
 var ErrNoCompletedBackups = errors.New("No completed Velero backups available for restore.")
 
 // reconcileRestoreResources converts the restore resources into velero restore resources on the target clusters, and applies those velero restore resources.
-func (r *RestoreManager) reconcileRestoreResources(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, destinationClusters map[ClusterKey]*fleetCluster, fleetName string) (ctrl.Result, error) {
+func (r *RestoreManager) reconcileRestoreResources(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, destinationClusters map[ClusterKey]*FleetCluster, fleetName string) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	restoreLabels := generateVeleroInstanceLabel(RestoreNameLabel, restore.Name, fleetName)
@@ -197,7 +197,7 @@ func (r *RestoreManager) reconcileDeleteRestore(ctx context.Context, restore *ba
 // getBackupForRestore retrieves the name of the Velero backup associated with the provided restore.
 // If the referred backup is an immediate backup, it returns the generated Velero backup name.
 // If the referred backup is a scheduled backup, it fetches the name of the most recent completed backup.
-func (r *RestoreManager) getBackupForRestore(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, clusterAccess *fleetCluster, clusterName, creatorKind, creatorNamespace, creatorName string) (string, error) {
+func (r *RestoreManager) getBackupForRestore(ctx context.Context, restore *backupapi.Restore, referredBackup *backupapi.Backup, clusterAccess *FleetCluster, clusterName, creatorKind, creatorNamespace, creatorName string) (string, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	veleroScheduleName := generateVeleroResourceName(clusterName, BackupKind, referredBackup.Namespace, referredBackup.Name)
