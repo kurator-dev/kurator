@@ -39,7 +39,7 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
-func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) error {
+func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*FleetCluster) error {
 	for _, cluster := range fleet.Spec.Clusters {
 		fleetCluster, ok := fleetClusters[ClusterKey{cluster.Kind, cluster.Name}]
 		if !ok {
@@ -77,7 +77,7 @@ func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context
 
 // reconcileSidecarRemoteService reconciles a headless service named thanos-sidecar-remote, and ensure owner reference is set for all resources
 // TODO: find a better way to collect service endpoints of thanos-sidecar-remote service after all helm releases are reconciled
-func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) error {
+func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*FleetCluster) error {
 	log := ctrl.LoggerFrom(ctx)
 	log = log.WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
 
@@ -198,7 +198,7 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 }
 
 // syncObjStoreSecret syncs the secret to the cluster
-func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *fleetCluster, secret *corev1.Secret) error {
+func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *FleetCluster, secret *corev1.Secret) error {
 	_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Get(ctx, secret.Namespace, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
@@ -232,7 +232,7 @@ func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *fle
 	return nil
 }
 
-func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
+func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*FleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	if fleet.Spec.Plugin.Metric == nil {

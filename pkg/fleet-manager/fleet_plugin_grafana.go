@@ -32,7 +32,7 @@ import (
 
 // reconcileGrafanaPlugin reconciles the Grafana plugin.
 // The fleetClusters parameter is currently unused, but is included to match the function signature of other functions in reconcilePlugins.
-func (f *FleetManager) reconcileGrafanaPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*fleetCluster) (kube.ResourceList, ctrl.Result, error) {
+func (f *FleetManager) reconcileGrafanaPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*FleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	if fleet.Spec.Plugin.Grafana == nil {

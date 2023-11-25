@@ -107,7 +107,7 @@ func (b *BackupManager) reconcileBackup(ctx context.Context, backup *backupapi.B
 }
 
 // reconcileBackupResources converts the backup resources into velero backup resources that can be used by Velero on the target clusters, and applies each of these backup resources to the respective target clusters.
-func (b *BackupManager) reconcileBackupResources(ctx context.Context, backup *backupapi.Backup, destinationClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
+func (b *BackupManager) reconcileBackupResources(ctx context.Context, backup *backupapi.Backup, destinationClusters map[ClusterKey]*FleetCluster) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	backupLabel := generateVeleroInstanceLabel(BackupNameLabel, backup.Name, backup.Spec.Destination.Fleet)
@@ -148,7 +148,7 @@ func (b *BackupManager) reconcileBackupResources(ctx context.Context, backup *ba
 }
 
 // reconcileBackupStatus updates the synchronization status of each backup resource.
-func (b *BackupManager) reconcileBackupStatus(ctx context.Context, backup *backupapi.Backup, destinationClusters map[ClusterKey]*fleetCluster) (ctrl.Result, error) {
+func (b *BackupManager) reconcileBackupStatus(ctx context.Context, backup *backupapi.Backup, destinationClusters map[ClusterKey]*FleetCluster) (ctrl.Result, error) {
 	// Initialize a map to store the status of each cluster currently recorded. The combination of detail.ClusterName, detail.ClusterKind, and detail.BackupNameInCluster uniquely identifies a Velero backup object.
 	statusMap := make(map[string]*backupapi.BackupDetails)
 	for _, detail := range backup.Status.Details {
@@ -164,7 +164,7 @@ func (b *BackupManager) reconcileBackupStatus(ctx context.Context, backup *backu
 
 // reconcileOneTimeBackupStatus updates the status of a one-time Backup object by checking the status of corresponding Velero backup resources in each target cluster.
 // It determines whether to requeue the reconciliation based on the completion status of all Velero backup resources.
-func (b *BackupManager) reconcileOneTimeBackupStatus(ctx context.Context, backup *backupapi.Backup, destinationClusters map[ClusterKey]*fleetCluster, statusMap map[string]*backupapi.BackupDetails) (ctrl.Result, error) {
+func (b *BackupManager) reconcileOneTimeBackupStatus(ctx context.Context, backup *backupapi.Backup, destinationClusters map[ClusterKey]*FleetCluster, statusMap map[string]*backupapi.BackupDetails) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Loop through each target cluster to retrieve the status of Velero backup resources using the client associated with the respective target cluster.
@@ -207,7 +207,7 @@ func (b *BackupManager) reconcileOneTimeBackupStatus(ctx context.Context, backup
 
 // reconcileScheduleBackupStatus manages the status synchronization for scheduled Backup objects.
 // If the backup type is "schedule", new backups will be continuously generated, hence the status synchronization will be executed continuously.
-func (b *BackupManager) reconcileScheduleBackupStatus(ctx context.Context, schedule *backupapi.Backup, destinationClusters map[ClusterKey]*fleetCluster, statusMap map[string]*backupapi.BackupDetails) (ctrl.Result, error) {
+func (b *BackupManager) reconcileScheduleBackupStatus(ctx context.Context, schedule *backupapi.Backup, destinationClusters map[ClusterKey]*FleetCluster, statusMap map[string]*backupapi.BackupDetails) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// Loop through each target cluster to retrieve the status of Velero backup created by schedule resources using the client associated with the respective target cluster.
