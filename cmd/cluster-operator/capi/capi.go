@@ -64,7 +64,7 @@ func setupReconcilers(ctx context.Context, opts *options.Options, mgr ctrl.Manag
 		mgr,
 		remote.ClusterCacheTrackerOptions{
 			Log:     &log,
-			Indexes: remote.DefaultIndexes,
+			Indexes: []remote.Index{remote.NodeProviderIDIndex},
 		},
 	)
 	if err != nil {
