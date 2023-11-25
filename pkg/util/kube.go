@@ -72,7 +72,7 @@ func WaitMemberClusterPodReady(client *client.Client, cluster, namespace, select
 }
 
 func WaitPodReady(client kubeclient.Interface, namespace, selector string, interval, timeout time.Duration) error {
-	return wait.PollImmediate(interval, timeout, func() (done bool, err error) {
+	return wait.PollUntilContextTimeout(context.Background(), interval, timeout, true, func(context.Context) (done bool, err error) {
 		pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: selector,
 		})
