@@ -20,7 +20,7 @@ spec:
       spec:
         serviceAccountName: kurator-pipeline-robot
         pipelineRef:
-          name: Kurator-pipeline
+          name: git-clone-and-cat-readme
         params:
           - name: revision
             value: $(tt.params.gitrevision)
