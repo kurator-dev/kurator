@@ -24,7 +24,7 @@ spec:
         params:
           - name: revision
             value: $(tt.params.gitrevision)
-          - name: git-url
+          - name: repo-url
             value: $(tt.params.gitrepositoryurl)
         workspaces:
           - name: kurator-pipeline-shared-data # there only one pvc workspace in each pipeline, and the name is shared-data
