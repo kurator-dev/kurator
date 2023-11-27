@@ -22,6 +22,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: kurator-pipeline-robot
+    namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
