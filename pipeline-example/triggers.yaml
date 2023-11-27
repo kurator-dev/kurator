@@ -18,7 +18,7 @@ spec:
         generateName: kurator-pipeline-run-
         namespace: $(tt.params.namespace)
       spec:
-        serviceAccountName: kurator-pipeline
+        serviceAccountName: kurator-pipeline-robot
         pipelineRef:
           name: Kurator-pipeline
         params:
@@ -56,7 +56,7 @@ metadata:
   name: kurator-pipeline-listener
   namespace: kurator-pipeline
 spec:
-  serviceAccountName: kurator-pipeline
+  serviceAccountName: kurator-pipeline-robot
   triggers:
     - bindings:
         - ref: kurator-pipeline-pipelinebinding
