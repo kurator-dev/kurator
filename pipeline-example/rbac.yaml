@@ -6,7 +6,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: triggers-example-eventlistener-binding
+  name: kurator-pipeline-robot-eventlistener-binding
 subjects:
   - kind: ServiceAccount
     name: kurator-pipeline-robot
@@ -18,7 +18,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: triggers-example-eventlistener-clusterbinding
+  name: kurator-pipeline-robot-eventlistener-clusterbinding
 subjects:
   - kind: ServiceAccount
     name: kurator-pipeline-robot
