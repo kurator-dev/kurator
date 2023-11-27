@@ -2,7 +2,6 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: kurator-pipeline-triggertemplate
-  namespace: kurator-pipeline
 spec:
   params:
     - name: gitrevision
@@ -40,7 +39,6 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: kurator-pipeline-pipelinebinding
-  namespace: kurator-pipeline
 spec:
   params:
     - name: gitrevision
@@ -54,7 +52,6 @@ apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: kurator-pipeline-listener
-  namespace: kurator-pipeline
 spec:
   serviceAccountName: kurator-pipeline-robot
   triggers:
