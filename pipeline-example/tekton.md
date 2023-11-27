@@ -1,5 +1,6 @@
-如何在当前集群安装所需的 tekton controller
 
+
+# 安装 Tekton 组件
 安装 pipeline
 kubectl apply --filename \
 https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
@@ -15,7 +16,20 @@ https://storage.googleapis.com/tekton-releases/triggers/latest/interceptors.yaml
 kubectl apply --filename \
 https://storage.googleapis.com/tekton-releases/chains/latest/release.yaml
 
+# 暴露服务
 
-clean up
+```
+kubectl port-forward --address 0.0.0.0 service/el-kurator-pipeline-listener 30000:8080 -n kurator-pipeline
+```
+
+
+
+
+
+
+
+
+
+# clean up
 
 k delete ns kurator-pipeline
