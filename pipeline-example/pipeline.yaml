@@ -33,7 +33,7 @@ spec:
         name: git-clone
       workspaces:
         - name: output
-          workspace: shared-data
+          workspace: kurator-pipeline-shared-data
       params:
         - name: url
           value: $(params.repo-url)
@@ -43,7 +43,7 @@ spec:
       runAfter: ["fetch-repo"]  # Wait until the clone is done before reading the readme.
       workspaces:
         - name: source
-          workspace: shared-data
+          workspace: kurator-pipeline-shared-data
       taskSpec:
         workspaces:
           - name: source
