@@ -23,7 +23,7 @@ spec:
       type: string
       description: The git branch to clone.
   workspaces:
-    - name: shared-data
+    - name: kurator-pipeline-shared-data
       description: |
         This workspace will receive the cloned git repo and be passed
         to the next Task for the repo's README.md file to be read.
