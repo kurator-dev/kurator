@@ -144,13 +144,34 @@ In this section, we delve into the detailed API designs for Pipeline
 Here's the preliminary design for the Unified Backup API:
 
 ```console
+/*
+Copyright Kurator Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package v1alpha1
 
 import (
-	tektonv1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
+// +kubebuilder:subresource:status
 
 // Pipeline is the top-level type for Kurator CI Pipeline.
 type Pipeline struct {
@@ -167,18 +188,14 @@ type PipelineSpec struct {
 	// +optional
 	Description *string `json:"description,omitempty"`
 
-	// Tasks is a list of tasks in the pipeline, containing detailed information about each task.
+	// Tasks is an ordered list of tasks in the pipeline, containing detailed information about each task. 
+	// The tasks will be executed in the order they are listed.
 	Tasks []PipelineTask `json:"tasks"`
 
 	// SharedWorkspace is the name of the PVC. If not specified, a PVC with the Pipeline's name as prefix will be created by default.
-	// if not set, Kurator will create a pvc named Pipeline.name using default config
+	// If not set, Kurator will create a PVC named Pipeline.name using default config
 	// +optional
 	SharedWorkspace *string `json:"sharedWorkspace,omitempty"`
-
-	// Results are the list of results written out by the pipeline task's containers
-	// +optional
-	// +listType=atomic
-	Results []tektonv1.PipelineRunResult `json:"results,omitempty"`
 }
 
 type PipelineTask struct {
@@ -233,12 +250,14 @@ type CustomTask struct {
 	// +optional
 	// +listType=atomic
 	Args []string `json:"args,omitempty" protobuf:"bytes,4,rep,name=args"`
+	
 	// Step's working directory.
 	// If not specified, the container runtime's default will be used, which
 	// might be configured in the container image.
 	// Cannot be updated.
 	// +optional
 	WorkingDir string `json:"workingDir,omitempty" protobuf:"bytes,5,opt,name=workingDir"`
+	
 	// List of environment variables to set in the Step.
 	// Cannot be updated.
 	// +optional
@@ -246,14 +265,15 @@ type CustomTask struct {
 	// +patchStrategy=merge
 	// +listType=atomic
 	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,7,rep,name=env"`
+	
 	// ResourceRequirements required by this Step.
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	// +optional
 	ResourceRequirements corev1.ResourceRequirements `json:"computeResources,omitempty" protobuf:"bytes,8,opt,name=computeResources"`
+	
 	// Script is the contents of an executable file to execute.
-	//
-	// If Script is not empty, the Step cannot have a Command and the Args will be passed to the Script.
+	// If Script is not empty, the CustomTask cannot have a Command and the Args will be passed to the Script.
 	// +optional
 	Script string `json:"script,omitempty"`
 }
@@ -262,12 +282,21 @@ type PipelineStatus struct {
 	// Phase describes the overall state of the Pipeline.
 	// +optional
 	Phase *string `json:"phase,omitempty"`
-	
-	// EventListenerServiceURL provides a direct URL or address of the service
-	// +optional
-	EventListenerServiceURL string `json:"serviceURL,omitempty"`
+
+    // EventListenerServiceName specifies the name of the service created by Kurator for event listeners. 
+    // This name is useful for users when setting up a gateway service and routing to this service.
+    // +optional
+    EventListenerServiceName *string `json:"eventListenerServiceName,omitempty"`
 }
 
+// PipelineList contains a list of Pipeline.
+// +kubebuilder:object:root=true
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type PipelineList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Pipeline `json:"items"`
+}
 ```
 
 #### How to use pipeline
@@ -354,13 +383,13 @@ that would count as tricky in the implementation, and anything particularly
 challenging to test, should be called out.
 -->
 
-End-to-End Tests: Comprehensive E2E tests should be conducted to ensure the backup, restore, and migration processes work seamlessly across different clusters.
+End-to-End Tests: Comprehensive E2E tests should be conducted to ensure the pipeline processes work seamlessly across different clusters.
 
-Integration Tests: Integration tests should be designed to ensure Kurator's integration with Velero functions as expected.
+Integration Tests: Integration tests should be designed to ensure Kurator's functions as expected.
 
 Unit Tests: Unit tests should cover the core functionalities and edge cases.
 
-Isolation Testing: The backup, restore, and migration functionalities should be tested in isolation and in conjunction with other components to ensure compatibility and performance.
+Isolation Testing: The pipeline functionalities should be tested in isolation and in conjunction with other components to ensure compatibility and performance.
 
 
 ### Alternatives
