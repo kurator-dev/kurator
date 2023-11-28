@@ -6,9 +6,7 @@
 
 kubectl create secret generic git-credentials -n kurator-pipeline \
 --from-literal=.gitconfig='[credential "https://github.com"]\n\thelper = store' \
---from-literal=.git-credentials="https://Xieql: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@github.com"
-
-
+--from-literal=.git-credentials="https://<username>:<token>@github.com"
 
 cosign secret
 
