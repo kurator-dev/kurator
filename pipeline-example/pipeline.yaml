@@ -27,6 +27,11 @@ spec:
       description: |
         This workspace will receive the cloned git repo and be passed
         to the next Task for the repo's README.md file to be read.
+    - name: git-credentials
+      description: |
+        A Workspace containing a .gitconfig and .git-credentials file. These
+        will be copied to the user's home before any git commands are run. Any
+        other files in this Workspace are ignored.
   tasks:
     - name: fetch-repo
       taskRef:
@@ -34,6 +39,8 @@ spec:
       workspaces:
         - name: output
           workspace: kurator-pipeline-shared-data
+        - name: basic-auth
+          workspace: git-credentials
       params:
         - name: url
           value: $(params.repo-url)

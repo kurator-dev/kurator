@@ -35,6 +35,9 @@ spec:
                 resources:
                   requests:
                     storage: 1Gi
+          - name: git-credentials
+            secret:
+              secretName: git-credentials
 ---
 apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
