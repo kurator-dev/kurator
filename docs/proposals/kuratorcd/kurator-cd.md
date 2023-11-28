@@ -26,13 +26,11 @@ documentation such as release notes or a development roadmap.
 A good summary is probably at least a paragraph in length.
 -->
 
-Kurator, as an open-source distributed cloud-native platform, has been pivotal in aiding users to construct their distributed cloud-native infrastructure, thereby facilitating enterprise digital transformation.
+To further enhance Kurator's functionality, this proposal designs Kurator's Continuous Delivery feature to meet user's need for automatically validate released code.
 
-To further enhance its functionality, this proposal designs Kurator's Continuous Delivery feature to meet users' needs for automated distribution of verified code.
+By integrating Flagger, we aim to provide our users with reliable, fast and unified release validation capabilities. Enabling them to easily validate distribution code across multiple clusters.
 
-By integrating Flagger, we aim to provide users with reliable, fast and unified Continuous Delivery, enabling them to easily distribute code across multiple clusters.
-
-Base on Flagger, Kurator also offers A/B, Blue/Green and Canary distribution options. Meet the needs of the test verification release.
+Base on Flagger, Kurator also offers A/B Testing, Blue/Green and Canary distribution options. Meet the needs of the Continuous Delivery.
 
 ### Motivation
 
@@ -58,13 +56,11 @@ know that this has succeeded?
 
 Unified configuration distribution only requires the user to declare the desired API state in one place, and Kurator will automatically handle all subsequent operations.
 
-Kurator deploys different daemons on different nodes in the cluster with different rules for configuration distribution based on the declarations in the Spec.
-
 In Kurator, you can choose to distribute the application with the same configuration to a specific single or multiple clusters for verification.
 
 - **unified Continuous Delivery**
     - Supports unified configuration of releases for multiple clusters. Achieve the deployment configuration of the application to be distributed to the specified single or multiple clusters.
-    - Support A/B, Blue/Green, Canary three release validation rules configuration.
+    - Supports A/B, Blue/Green, and Canary releases and performs health checks based on set metrics.
     - Supports automatic rollback when release validation fails.
 
 #### Non-Goals
@@ -74,7 +70,7 @@ What is out of scope for this KEP? Listing non-goals helps to focus discussion
 and make progress.
 -->
 
-- **Traffic distribution tools that Flagger can use other than istio are not supported** While Flagger is able to support a wide range of traffic distribution tools including istio, nginx for grey scale releases. However, Kuraotr currently only supports unified installation of istio in multiple clusters, and Kurator may implement unified installation of other traffic distribution tools in the future.
+- **Traffic distribution tools other than istio are not supported** While Flagger is able to support a wide range of traffic distribution tools including istio, nginx for grey scale releases. However, Kurator currently only supports unified management of istio across clusters. Kurator may implement other traffic distribution tools in the future.
 
 ### Proposal
 
@@ -86,11 +82,11 @@ implementation. What is the desired outcome and how do we measure success?.
 The "Design Details" section below is for the real
 nitty-gritty.
 -->
-The purpose of this proposal is to introduce a unified Continuous Delivery for Kurator that supports A/B, Blue/Green, and Canary.The main objectives of this proposal are as follows:
+The purpose of this proposal is to introduce a unified Continuous Delivery for Kurator that supports A/B, Blue Green, and Canary.The main objectives of this proposal are as follows:
 
-Custom Resource Definitions (CRDs): Design CRDs to enable Uniform Continuous Delivery These CRDs will provide a structured approach to defining clusters and different configuration distribution rules to enable uniform configuration distribution.
+Application Programming Interface (API): Design API to enable Uniform Continuous Delivery. Provide an API interface for defining configuration distribution rules for unified configuration distribution by extending the fields of application.
 
-Fleet-Manager Implementation: The Cluster Manager component will be responsible for monitoring the CRDs and performing the defined functions. It will install Flagger on the clusters and handle potential errors or anomalies to ensure smooth operation.
+Delivery Manager: The Delivery Manager is responsible for monitoring what is going on in the Application CRDs in the cluster and performing defined functions.
 
 By integrating these enhancements, Kurator will provide users with a powerful and streamlined solution for managing the task of implementing Unified Configuration Distribution and simplifying the overall operational process.
 
@@ -163,9 +159,9 @@ Unlike Flagger, we may need to adjust Unified Continuous Delivery to reflect our
 
 Kurator is designed to unify the installation of Flagger as a fleet plugin in a given single or multiple clusters.
 
-Then use the kurator application to distribute the Flagger configuration. Kurator's unified configuration distribution.
+Then use the Kurator application to distribute the Flagger configuration. Kurator's unified configuration distribution.
 
-Kurator puts the Continuous Delivery's api under the app's api, so that when Kurator deploys the app in the target cluster, it also deploys the corresponding Continuous Delivery policy.
+Kurator puts the Continuous Delivery's api under the [Application](https://github.com/kurator-dev/kurator/blob/main/pkg/apis/apps/v1alpha1/types.go) CRD, so that when Kurator deploys the workload in the target cluster, it also deploys the corresponding Continuous Delivery policy.
 
 Here's the preliminary design for the Unified Continuous Delivery:
 
@@ -193,61 +189,59 @@ type ApplicationSyncPolicy struct {
     // +optional
     Destination *ApplicationDestination `json:"destination"`
 
-    // Delivery defines the Continuous Delivery Configurations to be used.
+    // Rollout defines the rollout Configurations to be used.
     // If specified, a uniform Continuous Delivery policy is configured for this installed object.
     // +optional
-    Delivery *DeliveryConfig `json:"deliveryPolicy"`
+    Rollout *RolloutConfig `json:"rolloutPolicy,omitempty"`
 }
 
-type DeliveryConfig struct {
-    // Autoscale defines minreplicas and maxreplicas of horizontal Pod Autoscaler.
+type RolloutConfig struct {
+    // Testload defines Whether to install testload for users. Default is true.
+    // testload generates traffic during canary analysis.
+    // If set it to false, user need to install the testload himself.
+    // If set it to true or leave it blank, Kurator will install the flagger's testload.
     // +optional
-    Autoscale *AutoscaleRef `json:"autoScale,omitempty"`
+    TestLoad bool `json:"testLoad,omitempty"`
 
-    // Whether or not the testload is installed by the user. The default is false.
-    // If set it to ture, user need to install the testload himself.
-    // If set it to false or leave it blank, Kurator will install the flagger's testload.
-    // +optional
-    TestLoad bool `json:"testLoad"`
-
-    // DeliveryPolicy defines the Release Strategy of Object
-    DeliveryPolicy *DeliveryPolicy `json:"deliveryPolicy"`
-}
-```
-
-Kurator generates horizontalpodautoscaler.autoscaling resources based on `autoscale` configurations as stable and to-be-verified versions. For instance tuning during testing
-
-```concle
-type AutoscaleRef struct {
-    // +optional
-    MinReplicas *int32 `json:"minReplicas,omitempty"`
-
-    // +optional
-    MaxReplicas *int32 `json:"maxReplicas,omitempty"`
-}
-```
-
-`Testload` indicates whether the user wants to install the test traffic load themselves. If you don't want to install the testload yourself, Kurator will install flagger's testload by default.
-
-`DeliveryPolicy` defines the Continuous Delivery configuration for this installation object. Although in Kurator is not detailed into the canary release, A/B test and blue-green test. However, users can freely configure their own traffic validation policies through the DeliveryPolicy. Complete the release test.
-
-```console
-// Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
-type DeliveryPolicy struct {
     // Kurator only supports istio for now.
     // New Provider will be added later.
     // +optional
     TrafficRoutingProvider string `json:"trafficRoutingProvider,omitempty"`
 
-    // TargetObject specifies what object to deploy the test to. 
-    // Objects of type deployment or daemonSet.
-    TargetObject *TargetObjectReference `json:"targetObject"`
+    // Workload specifies what workload to deploy the test to. 
+    // Workload of type deployment or daemonSet.
+    Workload *WorkloadReference `json:"workload"`
 
-    // ServiceCfg is the configuration of the service pointing to the TargetObject.
-    ServiceCfg *ServiceConfig `json:"serviceCfg"`
+    // Port of the Workload which want to test.
+    Port int32 `json:"port"`
 
-    // The virtualserviceCfg defines the configuration of the gateway, traffic distribution rules, and so on.
-    VirtualServiceCfg *VirtualServiceConfig `json:"virtualServiceCfg"`
+    // ServiceName holds the name of a service which selects pods with Workload.
+    ServiceName string `json:"serviceName,omitempty"`
+
+    // Primary is the labels and annotations to add to the primary service.
+    // Primary service is stable service.
+    // +optional
+    Primary *CustomMetadata `json:"primary,omitempty"`
+
+    // Canary is the labels and annotations to add to the canary service.
+    // Canary service is preview service.
+    // +optional
+    Preview *CustomMetadata `json:"preview,omitempty"`
+
+    // RolloutPolicy defines the Release Strategy of workload.
+    RolloutPolicy *RolloutPolicy `json:"rolloutPolicy"`
+}
+```
+
+`Testload` indicates whether the user wants to install the test traffic load themselves. If you don't want to install the Testload yourself, Kurator will install flagger's Testload by default.
+
+`RolloutPolicy` defines the Continuous Delivery configuration for this installation workload. Although there is no detailed distinction in Kurator between canary, A/B testing and blue-green, giving users the freedom to configure traffic rules. Complete the release test. However, it is not allowed to configure canary and A/B or blue-green for the same workload.
+
+```console
+// Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
+type RolloutPolicy struct {
+    // The TrafficRouting defines the configuration of the gateway, traffic distribution rules, and so on.
+    TrafficRouting *TrafficRoutingConfig `json:"trafficRouting"`
 
     // TrafficAnalysis defines the validation process of a release
     TrafficAnalysis *TrafficAnalysis `json:"trafficAnalysis,omitempty"`
@@ -258,7 +252,7 @@ type DeliveryPolicy struct {
     // +optional
     ProgressDeadlineSeconds *int32 `json:"progressDeadlineSeconds,omitempty"`
 
-    // SkipAnalysis promotes the canary without analysing it
+    // SkipAnalysis promotes the canary without analyzing it
     // +optional
     SkipTrafficAnalysis bool `json:"skipTrafficAnalysis,omitempty"`
 
@@ -270,7 +264,7 @@ type DeliveryPolicy struct {
 
     // Suspend, if set to true will suspend the Canary, disabling any canary runs
     // regardless of any changes to its target, services, etc. Note that if the
-    // Canary is suspended during an analysis, its paused until the Canary is unsuspended.
+    // Canary is suspended during an analysis, its paused until the Canary is uninterrupted.
     // +optional
     Suspend bool `json:"suspend,omitempty"`
 }
@@ -278,9 +272,8 @@ type DeliveryPolicy struct {
 
 TargetObjectReference contains enough information to let you locate the typed referenced object in the same namespace. The two types of Kind now supported are `Deployment` and `DaemonSet`.
 
-```concole
-// Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
-type TargetObjectReference struct {
+```console
+type TargetWorkloadReference struct {
     // API version of the referent
     // +optional
     APIVersion string `json:"apiVersion,omitempty"`
@@ -294,46 +287,13 @@ type TargetObjectReference struct {
 }
 ```
 
-The ServiceConfig is the configuration of the service that is generated according to the object specified in the TargetObject. The main thing is to specify the `Port` and `targetPort`.
-
-```console
-// Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
-type ServiceConfig struct {
-    // Name of the virtual Kubernetes generated by Flagger.
-    // Defaults to DeliveryPolicy.TargetObject.Name
-    // +optional
-    Name string `json:"name,omitempty"`
-
-    // Port of the generated Kubernetes service.
-    Port int32 `json:"port"`
-
-    // Port name of the generated Kubernetes service.
-    // Defaults to http
-    // +optional
-    PortName string `json:"portName,omitempty"`
-
-    // Target port number or name of the generated Kubernetes service.
-    // Defaults to CanaryService.Port
-    // +optional
-    TargetPort intstr.IntOrString `json:"targetPort,omitempty"`
-
-    // AppProtocol of the service.
-    // https://kubernetes.io/docs/concepts/services-networking/service/#application-protocol
-    // +optional
-    AppProtocol string `json:"appProtocol,omitempty"`
-
-    // PortDiscovery adds all container ports to the generated Kubernetes service.
-    // Defaults to true
-    PortDiscovery bool `json:"portDiscovery"`
-}
-```
-
 Kurator will create a VirtualService resource based on the configuration in `VirtualServiceConfig` to distribute traffic.
 
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
-type VirtualServiceConfig struct {
+type TrafficRoutingConfig struct {
     // Timeout of the HTTP or gRPC request.
+    // Timeout in upstream response time.
     // +optional
     Timeout string `json:"timeout,omitempty"`
 
@@ -342,32 +302,25 @@ type VirtualServiceConfig struct {
     // +optional
     Gateways []string `json:"gateways,omitempty"`
 
-    // Hosts attached to the generated Istio virtual service.
-    // Defaults to the service name
+    // Iterations defines the number of checks to run for A/B Testing and Blue/Green
+    // Note: Flagger determines whether blue-green or A/B related processing is required based on 
+    // the presence or absence of content in the Iterations field. 
+    // So can't configure Iterations and CanaryStrategy at the same time.
     // +optional
-    Hosts []string `json:"hosts,omitempty"`
+    Iterations int `json:"iterations,omitempty"`
 
-    // If enabled, Flagger would generate Istio VirtualServices without hosts and gateway,
-    // making the service compatible with Istio delegation.
-    // If delegation is enabled, Flagger makes the service compatible with Istio delegation,
-    // enabling configuration of traffic within the cluster
-    // Note that pilot env `PILOT_ENABLE_VIRTUAL_SERVICE_DELEGATE` must also be set.
-    // +optional
-    Delegation bool `json:"delegation,omitempty"`
+    // Threshold defines the Max number of failed checks before the rollout is terminated.
+    Threshold int `json:"threshold"`
 
-    // TrafficPolicy attached to the generated Istio destination rules.
-    // +optional
-    TrafficPolicy *istiov1alpha3.TrafficPolicy `json:"trafficPolicy,omitempty"`
-
-    // URI match conditions for the generated service.
+    // Match conditions of HTTP header.
     // +optional
     Match []istiov1alpha3.HTTPMatchRequest `json:"match,omitempty"`
 
-    // Retries policy for the generated virtual service.
+    // Retries policy for Http links.
     // +optional
     Retries *istiov1alpha3.HTTPRetry `json:"retries,omitempty"`
 
-    // Headers operations for the generated Istio virtual service.
+    // Headers operations for the Request.
     // e.g.
     // headers:
     //   request:
@@ -376,8 +329,7 @@ type VirtualServiceConfig struct {
     // +optional
     Headers *istiov1alpha3.Headers `json:"headers,omitempty"`
 
-    // Cross-Origin Resource Sharing policy for the generated Istio virtual service.
-    // e.g.
+    // Cross-Origin Resource Sharing policy for the Request.
     // corsPolicy:
     //   allowHeaders:
     //   - x-some-header
@@ -389,62 +341,50 @@ type VirtualServiceConfig struct {
     // +optional
     CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
 
-    // Primary is the metadata to add to the primary service.
-    // +optional
-    Primary *CustomMetadata `json:"primary,omitempty"`
+    // CanaryStrategy defines parameters for canary test.
+    CanaryStrategy CanaryConfig `json:"canaryStrategy,omitempty"
+}
 
-    // Canary is the metadata to add to the canary service.
+type CanaryConfig struct {
+    // Max traffic weight routed to canary test
     // +optional
-    Canary *CustomMetadata `json:"canary,omitempty"`
+    MaxWeight int `json:"maxWeight,omitempty"`
+
+    // StepWeight defines the incremental traffic weight step for analysis phase
+    // If set stepWeight: 10 and set maxWeight: 50
+    // The flow ratio between PREVIEW and PRIMARY at each step is
+    // (10:90) (20:80) (30:70) (40:60) (50:50)
+    // +optional
+    StepWeight int `json:"stepWeight,omitempty"`
+
+    // StepWeights defines the incremental traffic weight steps for analysis phase
+    // Note: Cannot configure StepWeights and StepWeight at the same time.
+    // If both StepWeights and MaxWeight are configured, the traffic 
+    // will be scaled according to the settings in StepWeights only.
+    // If set stepWeights: [1, 10, 20, 80]
+    // The flow ratio between PREVIEW and PRIMARY at each step is
+    // (1:99) (10:90) (20:80) (80:20)
+    // +optional
+    StepWeights []int `json:"stepWeights,omitempty"`
+
+    // StepWeightPromotion defines the incremental traffic weight step for promotion phase
+    // If maxWeight: 50 and set StepWeightPromotion: 20
+    // After a successful test, traffic to the PRIMARY version changes as follows: 50 70 90 100.
+    // +optional
+    StepWeightPromotion int `json:"stepWeightPromotion,omitempty"`
 }
 ```
 
 As part of the TrafficAnalysis process, Kurator can validate service level objectives (SLOs) like availability, error rate percentage, average response time and any other objective based on app specific metrics. If a drop in performance is noticed during the SLOs analysis, the release will be automatically rolled back with minimum impact to end-users.
 
-```concole
+```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type TrafficAnalysis struct {
     // Schedule interval for this traffic analysis
     Interval string `json:"interval"`
 
-    // Number of checks to run for A/B Testing and Blue/Green
-    // +optional
-    Iterations int `json:"iterations,omitempty"`
-
-    // Enable traffic mirroring for Blue/Green
-    // +optional
-    Mirror bool `json:"mirror,omitempty"`
-
-    // Weight of the traffic to be mirrored in the range of [0, 100].
-    // +optional
-    MirrorWeight int `json:"mirrorWeight,omitempty"`
-
-    // Max traffic weight routed to canary test
-    // +optional
-    MaxWeight int `json:"maxWeight,omitempty"`
-
-    // Incremental traffic weight step for analysis phase
-    // +optional
-    StepWeight int `json:"stepWeight,omitempty"`
-
-    // Incremental traffic weight steps for analysis phase
-    // +optional
-    StepWeights []int `json:"stepWeights,omitempty"`
-
-    // Incremental traffic weight step for promotion phase
-    // +optional
-    StepWeightPromotion int `json:"stepWeightPromotion,omitempty"`
-
     // Max number of failed checks before the traffic analysis is terminated
     Threshold int `json:"threshold"`
-
-    // Percentage of pods that need to be available to consider primary as ready
-    // Defaults to 100
-    PrimaryReadyThreshold *int `json:"primaryReadyThreshold,omitempty"`
-
-    // Percentage of pods that need to be available to consider canary as ready
-    // Defaults to 100
-    CanaryReadyThreshold *int `json:"canaryReadyThreshold,omitempty"`
 
     // Metric check list for this traffic analysis
     // Flagger comes with two builtin metric checks: HTTP request success rate and duration.
@@ -457,19 +397,14 @@ type TrafficAnalysis struct {
     // +optional
     Webhooks []Webhook `json:"webhooks,omitempty"`
 
-    // A/B testing HTTP header match conditions
-    // +optional
-    Match []istiov1alpha3.HTTPMatchRequest `json:"match,omitempty"`
-
     // SessionAffinity represents the session affinity settings for a analysis run.
     // +optional
     SessionAffinity *SessionAffinity `json:"sessionAffinity,omitempty"`
 }
 
 type Metric struct {
-    // Name of the metric
-    // The name of the two builtin metric checks is "request-success-rate" and "request-duration".
-    // User also can use Name point to custom metric checks
+    // Name of the metric.
+    // User also can use Name point to custom metric checks.
     Name string `json:"name"`
 
     // Metrics query interval
@@ -575,6 +510,12 @@ type SessionAffinity struct {
     // The default value is 86,400 seconds, i.e. a day.
     // +optional
     MaxAge int `json:"maxAge,omitempty"`
+}
+
+// CustomMetadata holds labels and annotations to set on generated objects.
+type CustomMetadata struct {
+    Labels      map[string]string `json:"labels,omitempty"`
+    Annotations map[string]string `json:"annotations,omitempty"`
 }
 ```
 
