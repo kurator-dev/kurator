@@ -4,9 +4,11 @@
 根据官方文档获取 个人的 token
 
 
-kubectl create secret generic git-credentials -n kurator-pipeline \
---from-literal=.gitconfig='[credential "https://github.com"]\n\thelper = store' \
---from-literal=.git-credentials="https://<username>:<token>@github.com"
+kubectl create secret generic git-credentials \
+--namespace=kurator-pipeline \
+--from-literal=.gitconfig=$'[credential "https://github.com"]\n\thelper = store' \
+--from-literal=.git-credentials='https://Xieql:xxx@github.com'
+
 
 cosign secret
 
