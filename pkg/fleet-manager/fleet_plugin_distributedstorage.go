@@ -46,7 +46,7 @@ func (f *FleetManager) reconcileDistributedStoragePlugin(ctx context.Context, fl
 
 	// First install rook-operator for the specified multicluster.
 	for key, cluster := range fleetClusters {
-		b, err := plugin.RendeStorageOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.RenderableFleetCluster{
+		b, err := plugin.RendeStorageOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
@@ -75,7 +75,7 @@ func (f *FleetManager) reconcileDistributedStoragePlugin(ctx context.Context, fl
 	// After Rook operator are created, starts to install rook-ceph
 	if distributedStorageCfg.Storage != nil {
 		for key, cluster := range fleetClusters {
-			b, err := plugin.RenderClusterStorage(f.Manifests, fleetNN, fleetOwnerRef, plugin.RenderableFleetCluster{
+			b, err := plugin.RenderClusterStorage(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 				Name:       key.Name,
 				SecretName: cluster.Secret,
 				SecretKey:  cluster.SecretKey,

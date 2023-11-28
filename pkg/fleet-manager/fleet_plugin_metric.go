@@ -286,7 +286,7 @@ func (f *FleetManager) reconcileMetricPlugin(ctx context.Context, fleet *fleetap
 			return nil, ctrl.Result{}, fmt.Errorf("failed to reconcile objstore secret for cluster %s: %w", c.Name, err)
 		}
 
-		b, err := plugin.RenderPrometheus(f.Manifests, fleetNN, fleetOwnerRef, plugin.RenderableFleetCluster{
+		b, err := plugin.RenderPrometheus(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       c.Name,
 			SecretName: fleetCluster.Secret,
 			SecretKey:  fleetCluster.SecretKey,
