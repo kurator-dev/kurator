@@ -59,7 +59,7 @@ func TestRenderKyvernoPolicy(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RenderKyvernoPolicy(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RenderKyvernoPolicy(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -99,7 +99,7 @@ func TestRenderKyverno(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RenderKyverno(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RenderKyverno(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -271,7 +271,7 @@ func TestRenderPrometheus(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RenderPrometheus(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RenderPrometheus(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -383,7 +383,7 @@ func TestRenderVelero(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RenderVelero(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RenderVelero(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -438,7 +438,7 @@ func TestRenderStorageOperator(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RendeStorageOperator(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RendeStorageOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -544,7 +544,7 @@ func TestRenderClusterStorage(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RenderClusterStorage(manifestFS, tc.fleet, tc.ref, FleetCluster{
+			got, err := RenderClusterStorage(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",

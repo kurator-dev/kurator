@@ -48,7 +48,7 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 	fleetOwnerRef := ownerReference(fleet)
 	var resources kube.ResourceList
 	for key, cluster := range fleetClusters {
-		b, err := plugin.RenderKyverno(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+		b, err := plugin.RenderKyverno(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
@@ -78,7 +78,7 @@ func (f *FleetManager) reconcileKyvernoPlugin(ctx context.Context, fleet *fleetv
 	if kyvernoCfg.PodSecurity != nil {
 		for key, cluster := range fleetClusters {
 			// generate policies for pod security admission
-			b, err := plugin.RenderKyvernoPolicy(f.Manifests, fleetNN, fleetOwnerRef, plugin.FleetCluster{
+			b, err := plugin.RenderKyvernoPolicy(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 				Name:       key.Name,
 				SecretName: cluster.Secret,
 				SecretKey:  cluster.SecretKey,
