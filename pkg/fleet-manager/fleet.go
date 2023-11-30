@@ -166,7 +166,7 @@ func (f *FleetManager) reconcile(ctx context.Context, fleet *fleetapi.Fleet) (ct
 		return res, err
 	}
 
-	fleetClusters, err := buildFleetClusters(ctx, f.Client, fleet)
+	fleetClusters, err := BuildFleetClusters(ctx, f.Client, fleet)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to build cluster clients: %w", err)
 	}
