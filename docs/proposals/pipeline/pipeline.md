@@ -186,7 +186,7 @@ type Pipeline struct {
 type PipelineSpec struct {
 	// Description allows an administrator to provide a description of the pipeline.
 	// +optional
-	Description *string `json:"description,omitempty"`
+	Description string `json:"description,omitempty"`
 
 	// Tasks is an ordered list of tasks in the pipeline, containing detailed information about each task. 
 	// The tasks will be executed in the order they are listed.
@@ -336,6 +336,8 @@ type PipelineList struct {
 ##### User Verification
 
 Users can verify the authenticity of the provenance and its signature before using an artifact, ensuring it was created through a verified build process, thus enhancing security.
+
+For more details, see [Tekton signed-provenance-tutorial](https://tekton.dev/docs/chains/signed-provenance-tutorial/)
 
 #### Kurator Pipeline cli
 
