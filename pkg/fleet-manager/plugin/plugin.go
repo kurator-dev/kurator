@@ -300,8 +300,8 @@ func RenderVelero(
 	})
 }
 
-// Build configuration of the rendering rook-operator.
-func RendeStorageOperator(
+// RenderStorageOperator builds configuration of the rendering rook-operator.
+func RenderStorageOperator(
 	fsys fs.FS,
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,

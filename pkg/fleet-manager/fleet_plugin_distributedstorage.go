@@ -46,7 +46,7 @@ func (f *FleetManager) reconcileDistributedStoragePlugin(ctx context.Context, fl
 
 	// First install rook-operator for the specified multicluster.
 	for key, cluster := range fleetClusters {
-		b, err := plugin.RendeStorageOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
+		b, err := plugin.RenderStorageOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,

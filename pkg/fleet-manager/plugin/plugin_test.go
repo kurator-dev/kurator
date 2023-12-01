@@ -438,7 +438,7 @@ func TestRenderStorageOperator(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RendeStorageOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+			got, err := RenderStorageOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
