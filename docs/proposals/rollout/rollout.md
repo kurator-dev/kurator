@@ -1,7 +1,7 @@
 ---
-title: Kurator's Continuous Delivery design 
+title: Kurator's Rollout design 
 authors:
-- "@LiZhenCheng9527" # Authors' GitHub accounts here.
+- @LiZhenCheng9527 # Authors' GitHub accounts here.
 reviewers:
 approvers:
 
@@ -9,7 +9,7 @@ creation-date: 2023-11-20
 
 ---
 
-## Kurator's Continuous Delivery design
+## Kurator's Rollout design
 
 <!--
 This is the title of your KEP. Keep it short, simple, and descriptive. A good
@@ -26,11 +26,11 @@ documentation such as release notes or a development roadmap.
 A good summary is probably at least a paragraph in length.
 -->
 
-To further enhance Kurator's functionality, this proposal designs Kurator's Continuous Delivery feature to meet user's need for automatically validate released code.
+To further enhance Kurator's functionality, this proposal designs Kurator's Rollout feature to meet user's need for automatically validate released code.
 
 By integrating Flagger, we aim to provide our users with reliable, fast and unified release validation capabilities. Enabling them to easily validate distribution code across multiple clusters.
 
-Base on Flagger, Kurator also offers A/B Testing, Blue/Green and Canary distribution options. Meet the needs of the Continuous Delivery.
+Base on Flagger, Kurator also offers A/B Testing, Blue/Green and Canary distribution options. Meet the diverse needs of the Unified Rollout.
 
 ### Motivation
 
@@ -54,11 +54,11 @@ List the specific goals of the KEP. What is it trying to achieve? How will we
 know that this has succeeded?
 -->
 
-Unified configuration distribution only requires the user to declare the desired API state in one place, and Kurator will automatically handle all subsequent operations.
+Unified rollout only requires the user to declare the required API configuration in one place, and Kurator implements subsequent validation releases based on that configuration.
 
-In Kurator, you can choose to distribute the application with the same configuration to a specific single or multiple clusters for verification.
+In Kurator, you can choose to distribute applications with the same configuration to multiple clusters for authentication. Test new features in different cluster environments with default or custom metrics. Reduce manual effort by automatically publishing when tests succeed and rolling back when tests fail.
 
-- **unified Continuous Delivery**
+- **Unified Rollout**
     - Supports unified configuration of releases for multiple clusters. Achieve the deployment configuration of the application to be distributed to the specified single or multiple clusters.
     - Supports A/B, Blue/Green, and Canary releases and performs health checks based on set metrics.
     - Supports automatic rollback when release validation fails.
@@ -82,15 +82,15 @@ implementation. What is the desired outcome and how do we measure success?.
 The "Design Details" section below is for the real
 nitty-gritty.
 -->
-The purpose of this proposal is to introduce a unified Continuous Delivery for Kurator that supports A/B, Blue Green, and Canary.The main objectives of this proposal are as follows:
+The purpose of this proposal is to introduce a unified Rollout for Kurator that supports A/B, Blue Green, and Canary.The main objectives of this proposal are as follows:
 
-Application Programming Interface (API): Design API to enable Uniform Continuous Delivery. Provide an API interface for defining configuration distribution rules for unified configuration distribution by extending the fields of application.
+Application Programming Interface (API): Design API to enable Uniform Rollout. Provide an API interface for defining configuration distribution rules for unified configuration distribution by extending the fields of application.
 
-Delivery Manager: The Delivery Manager is responsible for monitoring what is going on in the Application CRDs in the cluster and performing defined functions.
+Rollout Manager: The Rollout Manager is responsible for monitoring what is going on in the Application CRDs in the cluster and performing defined functions.
 
 By integrating these enhancements, Kurator will provide users with a powerful and streamlined solution for managing the task of implementing Unified Configuration Distribution and simplifying the overall operational process.
 
-#### User Stories (Optional)
+#### User Stories
 
 <!--
 Detail the things that people will be able to do if this KEP is implemented.
@@ -105,40 +105,19 @@ bogged down.
 
 **Feature**: With the enhanced Kurator, developers can easily deploy their new releases to multiple clusters for validation testing.
 
-**Value**: Provides a simplified, automated way to unify the management of configuration distribution across multiple clusters. Reduces human error and ensures data continuity and compliance.
+**Value**: Provides a simplified automated way to uniformly manage configuration distribution and grey scale releases across multiple clusters. Validate new features of the product across multiple clusters in different environments. Avoid duplicate configurations and reduce workload.
 
 **Outcome**: With this feature, developers can easily assign uniform configurations to multiple clusters to improve reliability, availability, and storage efficiency for business publishing and easily achieve scalability.
 
 ##### Story 2
 
-**User Role**: Enterprise Product Development Project Team.
+**User Role**: Application Operator.
 
 **Feature**: With the enhanced Kurator, developers can quickly release and A/B, Blue/Green or Canary test new requirements in their environment after they are completed.
 
 **Value**: Provides a simplified, automated way for developers to distribute configurations in a uniform manner. Enables validation testing in multiple usage environments. Provides A/B, Blue/Green or Canary tests to meet different testing needs.
 
 **Outcome**: With this feature, developers can easily assign uniform configurations to multiple clusters, test new releases, and ensure the quality of new releases. In addition, it also provides automatic rollback function when the test fails, reducing the developer's operational burden and bug impact time.
-
-#### Notes/Constraints/Caveats (Optional)
-
-<!--
-What are the caveats to the proposal?
-What are some important details that didn't come across above?
-Go in to as much detail as necessary here.
-This might be a good place to talk about core concepts and how they relate.
--->
-
-#### Risks and Mitigations
-
-<!--
-What are the risks of this proposal, and how do we mitigate? 
-
-How will security be reviewed, and by whom?
-
-How will UX be reviewed, and by whom?
-
-Consider including folks who also work outside the SIG or subproject.
--->
 
 ### Design Details
 
@@ -149,59 +128,41 @@ required) or even code snippets. If there's any ambiguity about HOW your
 proposal will be implemented, this is the place to discuss them.
 -->
 
-In this section, we'll dive into the detailed API design for the Unified Continuous Delivery Feature.
+In this section, we'll dive into the detailed API design for the Unified Rollout Feature.
 
 These APIs are designed to facilitate Kurator's integration with Flagger to enable the required functionality.
 
-Unlike Flagger, we may need to adjust Unified Continuous Delivery to reflect our new strategy and decisions.
+Unlike Flagger, we may need to adjust Unified Rollout to reflect our new strategy and decisions.
 
-#### Unified Continuous Delivery API
+#### Unified Rollout API
 
 Kurator is designed to unify the installation of Flagger as a fleet plugin in a given single or multiple clusters.
 
 Then use the Kurator application to distribute the Flagger configuration. Kurator's unified configuration distribution.
 
-Kurator puts the Continuous Delivery's api under the [Application](https://github.com/kurator-dev/kurator/blob/main/pkg/apis/apps/v1alpha1/types.go) CRD, so that when Kurator deploys the workload in the target cluster, it also deploys the corresponding Continuous Delivery policy.
+Kurator puts the Rollout's api under the [Application](https://github.com/kurator-dev/kurator/blob/main/pkg/apis/apps/v1alpha1/types.go) CRD, so that when Kurator deploys the workload in the target cluster, it also deploys the corresponding Rollout policy.
 
-Here's the preliminary design for the Unified Continuous Delivery:
+Here's the preliminary design for the Unified Rollout:
 
 ```console
 // ApplicationSyncPolicy defines the configuration to sync an artifact.
 // Only oneof `kustomization` or `helm` can be specified to manage application sync.
-// ApplicationSyncPolicy distributes the Continuous Delivery configuration 
+// ApplicationSyncPolicy distributes the Rollout configuration 
 // at the same time as the application deployment, if needed. 
 type ApplicationSyncPolicy struct {
-    // Name defines the name of the sync policy.
-    // If unspecified, a name of format `<application name>-<index>` will be generated.
-    // +optional
-    Name string `json:"name,omitempty"`
-
-    // Kustomization defines the configuration to calculate the desired state
-    // from a source using kustomize.
-    // +optional
-    Kustomization *Kustomization `json:"kustomization,omitempty"`
-    // HelmRelease defines the desired state of a Helm release.
-    // +optional
-    Helm *HelmRelease `json:"helm,omitempty"`
-
-    // Destination defines the destination for the artifact.
-    // If specified, it will override the destination specified at Application level.
-    // +optional
-    Destination *ApplicationDestination `json:"destination"`
-
     // Rollout defines the rollout Configurations to be used.
-    // If specified, a uniform Continuous Delivery policy is configured for this installed object.
+    // If specified, a uniform Rollout policy is configured for this installed object.
     // +optional
     Rollout *RolloutConfig `json:"rolloutPolicy,omitempty"`
 }
 
 type RolloutConfig struct {
-    // Testload defines Whether to install testload for users. Default is true.
-    // testload generates traffic during canary analysis.
-    // If set it to false, user need to install the testload himself.
-    // If set it to true or leave it blank, Kurator will install the flagger's testload.
+    // Testloader defines Whether to install testloader for users. Default is true.
+    // Testloader generates traffic during canary analysis.
+    // If set it to false, user need to install the testloader himself.
+    // If set it to true or leave it blank, Kurator will install the flagger's testloader.
     // +optional
-    TestLoad bool `json:"testLoad,omitempty"`
+    TestLoader bool `json:"testLoader,omitempty"`
 
     // Kurator only supports istio for now.
     // New Provider will be added later.
@@ -212,11 +173,11 @@ type RolloutConfig struct {
     // Workload of type deployment or daemonSet.
     Workload *WorkloadReference `json:"workload"`
 
-    // Port of the Workload which want to test.
-    Port int32 `json:"port"`
+    // ServiceName holds the name of a service which matches the `Workload`.
+    ServiceName string `json:"serviceName"`
 
-    // ServiceName holds the name of a service which selects pods with Workload.
-    ServiceName string `json:"serviceName,omitempty"`
+    // Port of the workload's Service which traffic access.
+    Port int32 `json:"port"`
 
     // Primary is the labels and annotations to add to the primary service.
     // Primary service is stable service.
@@ -233,13 +194,20 @@ type RolloutConfig struct {
 }
 ```
 
-`Testload` indicates whether the user wants to install the test traffic load themselves. If you don't want to install the Testload yourself, Kurator will install flagger's Testload by default.
+`Testloader` indicates whether the user wants to install the test traffic load themselves. If you don't want to install the Testloader yourself, Kurator will install flagger's Testloader by default.
 
-`RolloutPolicy` defines the Continuous Delivery configuration for this installation workload. Although there is no detailed distinction in Kurator between canary, A/B testing and blue-green, giving users the freedom to configure traffic rules. Complete the release test. However, it is not allowed to configure canary and A/B or blue-green for the same workload.
+`RolloutPolicy` defines the Rollout configuration for this installation workload. Although there is no detailed distinction in Kurator between canary, A/B testing and blue-green, giving users the freedom to configure traffic rules. Complete the release test. However, it is not allowed to configure canary and A/B or blue-green for the same workload.
 
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type RolloutPolicy struct {
+    // Checknum defines the number of checks to run for A/B Testing and Blue/Green
+    // Note: Kurator determines whether blue-green or A/B related processing is required based on 
+    // the presence or absence of content in the Checknum field. 
+    // So can't configure Iterations and CanaryStrategy at the same time.
+    // +optional
+    CheckNum int `json:"checknum,omitempty"`
+
     // The TrafficRouting defines the configuration of the gateway, traffic distribution rules, and so on.
     TrafficRouting *TrafficRoutingConfig `json:"trafficRouting"`
 
@@ -270,17 +238,20 @@ type RolloutPolicy struct {
 }
 ```
 
-TargetObjectReference contains enough information to let you locate the typed referenced object in the same namespace. The two types of Kind now supported are `Deployment` and `DaemonSet`.
+WorkloadReference contains enough information to let you locate the typed referenced object in the same namespace. The two types of Kind now supported are `Deployment` and `DaemonSet`.
 
 ```console
-type TargetWorkloadReference struct {
+type WorkloadReference struct {
     // API version of the referent
     // +optional
     APIVersion string `json:"apiVersion,omitempty"`
 
-    // Kind of the referent
-    // +optional
-    Kind string `json:"kind,omitempty"`
+    // Kind of the referent.
+    // Support Deployment and DaemonSet.
+    Kind string `json:"kind"`
+
+    // Namespace of the referent
+    Namespace string `json:"namespace"`
 
     // Name of the referent
     Name string `json:"name"`
@@ -302,15 +273,12 @@ type TrafficRoutingConfig struct {
     // +optional
     Gateways []string `json:"gateways,omitempty"`
 
-    // Iterations defines the number of checks to run for A/B Testing and Blue/Green
-    // Note: Flagger determines whether blue-green or A/B related processing is required based on 
-    // the presence or absence of content in the Iterations field. 
-    // So can't configure Iterations and CanaryStrategy at the same time.
-    // +optional
-    Iterations int `json:"iterations,omitempty"`
-
     // Threshold defines the Max number of failed checks before the rollout is terminated.
     Threshold int `json:"threshold"`
+
+    // Defaults to the RolloutConfig.ServiceName
+    // +optional
+    Hosts []string `json:"hosts,omitempty"`
 
     // Match conditions of HTTP header.
     // +optional
@@ -342,7 +310,7 @@ type TrafficRoutingConfig struct {
     CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
 
     // CanaryStrategy defines parameters for canary test.
-    CanaryStrategy CanaryConfig `json:"canaryStrategy,omitempty"
+    CanaryStrategy CanaryConfig `json:"canaryStrategy,omitempty"`
 }
 
 type CanaryConfig struct {
@@ -534,13 +502,13 @@ challenging to test, should be called out.
 
 -->
 
-End-to-End Tests: Comprehensive E2E tests should be conducted to ensure the  Continuous Delivery processes work seamlessly across different clusters.
+End-to-End Tests: Comprehensive E2E tests should be conducted to ensure the  Rollout processes work seamlessly across different clusters.
 
 Integration Tests: Integration tests should be designed to ensure Kurator's integration with Flagger functions as expected.
 
 Unit Tests: Unit tests should cover the core functionalities and edge cases.
 
-Isolation Testing: The Delivery processes functionalities should be tested in isolation and in conjunction with other components to ensure compatibility and performance.
+Isolation Testing: The Rollout processes functionalities should be tested in isolation and in conjunction with other components to ensure compatibility and performance.
 
 ### Alternatives
 
@@ -557,7 +525,7 @@ https://github.com/kubernetes/enhancements/tree/3317d4cb548c396a430d1c1ac6625226
 
 Alternative: Integrating with Other CD Tools
 
-Consideration: Integrating with other existing Continuous Delivery tools like Argo CD, Argo Rollout was also considered.
+Consideration: Integrating with other existing Rollout tools like Argo CD, Argo Rollout was also considered.
 
 Rationale for Rejection: While these tools are powerful, they may not offer the same level of customization and Kubernetes-native capabilities as Flagger.
 Additionally, this approach would have required extensive modifications to align with the cloud-native focus of the Kurator project.
