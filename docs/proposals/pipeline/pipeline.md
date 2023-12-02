@@ -2,8 +2,8 @@
 title: Pipeline in Kurator
 authors:
 - "@Xieql"
-  reviewers:
-  approvers:
+reviewers:
+approvers:
 
 creation-date: 2023-11-22
 
@@ -135,30 +135,20 @@ The design will focus on creating a user interface within Kurator that interacts
 The interface will provide options to select, customize, and deploy Pipeline templates. 
 The pipeline controller will auto transform kurator pipeline into Tekton custom resources.
 
+#### Overall Design
+
+![use-pipeline](./image/use-pipeline.svg)
+
+
 #### API Design
 
 In this section, we delve into the detailed API designs for Pipeline
 
 ##### Pipeline API
 
-Here's the preliminary design for the Unified Backup API:
+Here's the preliminary design for Pipeline API:
 
 ```console
-/*
-Copyright Kurator Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 
 package v1alpha1
 
@@ -202,10 +192,10 @@ type PipelineTask struct {
 	// Name is the name of the task.
 	Name string `json:"name"`
 
-	// PredefinedTask is a reference to a predefined task template.
-	// Users should provide a PredefinedTask name from a predefined library.
+	// TaskRef is a reference to a predefined task template.
+	// Users should provide a TaskRef name from a predefined library.
 	// +optional
-	PredefinedTask *PredefinedTask `json:"predefinedTask,omitempty"`
+	TaskRef *TaskRef `json:"taskRef,omitempty"`
 
 	// CustomTask enables defining a task directly within the CRD if TaskRef is not used.
 	// This should only be used when TaskRef is not provided.
@@ -217,7 +207,7 @@ type PipelineTask struct {
 	Retries *int `json:"retries,omitempty"`
 }
 
-type PredefinedTask struct {
+type TaskRef struct {
 	// TaskType is used to specify the type of the predefined task.
 	// This is a required field and determines which task template will be used.
 	TaskType string `json:"taskType"`
@@ -278,10 +268,23 @@ type CustomTask struct {
 	Script string `json:"script,omitempty"`
 }
 
+type PipelinePhase string
+
+const(
+	// RunningPhase indicates that the associated resources are currently being created.
+	RunningPhase PipelinePhase = "Running"
+
+	// FailedPhase signifies that the creation of associated resources has failed.
+	FailedPhase PipelinePhase = "Failed"
+
+	// ReadyPhase represents the state where all associated resources have been successfully created.
+	ReadyPhase PipelinePhase = "Ready"
+)
+
 type PipelineStatus struct {
 	// Phase describes the overall state of the Pipeline.
 	// +optional
-	Phase *string `json:"phase,omitempty"`
+	Phase PipelinePhase `json:"phase,omitempty"`
 
     // EventListenerServiceName specifies the name of the service created by Kurator for event listeners. 
     // This name is useful for users when setting up a gateway service and routing to this service.
@@ -299,9 +302,6 @@ type PipelineList struct {
 }
 ```
 
-#### How to use pipeline
-
-![use-pipeline](./image/use-pipeline.svg)
 
 #### How to trigger pipeline
 
