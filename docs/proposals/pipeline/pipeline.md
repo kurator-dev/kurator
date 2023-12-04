@@ -207,10 +207,37 @@ type PipelineTask struct {
 	Retries *int `json:"retries,omitempty"`
 }
 
+type PredefinedTask string
+
+const (
+	// GitClone is typically the first task in the entire pipeline.
+	// It clones the user's code repository into the workspace. This allows subsequent tasks to operate on this basis.
+	// Since the pipeline is linked to a specific repository's webhook, Kurator automatically retrieves the repository information when triggered by the webhook.
+	// Users don't need to configure additional repository information for this task, except for authentication details for private repositories.
+	// Here are the params that user can config:
+	// - git-secret-name: the secret name of git basic auth, Kurator use this git credential to clone private repo. 
+	GitClone PredefinedTask = "git-clone"
+
+	// GoTest runs Go tests in specified packages with configurable environment
+	// Here are the params that user can config:
+	// - packages: packages to test (default: ./...)
+	// - context: path to the directory to use as context (default: .)
+	// - version: golang version to use for builds (default: latest)
+	// - flags: flags to use for go test command (default: -race -cover -v)
+	// - GOOS: operating system target (default: linux)
+	// - GOARCH: architecture target (default: amd64)
+	// - GO111MODULE: value of module support (default: auto)
+	// - GOCACHE: value for go caching path (default: "")
+	// - GOMODCACHE: value for go module caching path (default: "")
+	GoTest PredefinedTask = "go-test"
+	
+	// TODO: add more PredefinedTask
+)
+
 type TaskRef struct {
 	// TaskType is used to specify the type of the predefined task.
 	// This is a required field and determines which task template will be used.
-	TaskType string `json:"taskType"`
+	TaskType PredefinedTask `json:"taskType"`
 
 	// Params are key-value pairs of parameters for the predefined task.
 	// These parameters depend on the selected task template.
@@ -286,10 +313,10 @@ type PipelineStatus struct {
 	// +optional
 	Phase PipelinePhase `json:"phase,omitempty"`
 
-    // EventListenerServiceName specifies the name of the service created by Kurator for event listeners. 
-    // This name is useful for users when setting up a gateway service and routing to this service.
-    // +optional
-    EventListenerServiceName *string `json:"eventListenerServiceName,omitempty"`
+	// EventListenerServiceName specifies the name of the service created by Kurator for event listeners. 
+	// This name is useful for users when setting up a gateway service and routing to this service.
+	// +optional
+	EventListenerServiceName *string `json:"eventListenerServiceName,omitempty"`
 }
 
 // PipelineList contains a list of Pipeline.
