@@ -43,8 +43,6 @@ With the increase in project size and complexity and the development of cloud co
 
 CI/CD has many advantages such as increased development efficiency, improved quality, more reliable deployment and better continuous learning and improvement, which is more suitable for today's software development process.
 
-Kurator is an open source distributed cloud native suite that provides users with a one-stop open source solution for distributed cloud native scenarios.
-
 Therefore, CI/CD as an important feature of cloud native usage scenarios, Kurator needs to provide relevant functional support to achieve the vision of Kurator unified configuration distribution.
 
 #### Goals
@@ -56,7 +54,7 @@ know that this has succeeded?
 
 Unified rollout only requires the user to declare the required API configuration in one place, and Kurator implements subsequent validation releases based on that configuration.
 
-In Kurator, you can choose to distribute applications with the same configuration to multiple clusters for authentication. Test new features in different cluster environments with default or custom metrics. Reduce manual effort by automatically publishing when tests succeed and rolling back when tests fail.
+In Kurator, you can choose to distribute applications with the same configuration to multiple clusters for validating new features. Test new features in different cluster environments with default or custom metrics. Reduce manual effort by automatically publishing when tests succeed and rolling back when tests fail.
 
 - **Unified Rollout**
     - Supports unified configuration of releases for multiple clusters. Achieve the deployment configuration of the application to be distributed to the specified single or multiple clusters.
@@ -70,7 +68,7 @@ What is out of scope for this KEP? Listing non-goals helps to focus discussion
 and make progress.
 -->
 
-- **Traffic distribution tools other than istio are not supported** While Flagger is able to support a wide range of traffic distribution tools including istio, nginx for grey scale releases. However, Kurator currently only supports unified management of istio across clusters. Kurator may implement other traffic distribution tools in the future.
+- **Traffic distribution tools other than istio are not supported** While Flagger is able to support a wide range of traffic distribution tools including istio, nginx and so on for rollout test. However, Kurator currently only supports unified management of istio across clusters. Kurator may implement other traffic distribution tools in the future.
 
 ### Proposal
 
@@ -82,7 +80,7 @@ implementation. What is the desired outcome and how do we measure success?.
 The "Design Details" section below is for the real
 nitty-gritty.
 -->
-The purpose of this proposal is to introduce a unified Rollout for Kurator that supports A/B, Blue Green, and Canary.The main objectives of this proposal are as follows:
+The purpose of this proposal is to introduce a unified Rollout for Kurator that supports A/B, Blue/Green, and Canary.The main objectives of this proposal are as follows:
 
 Application Programming Interface (API): Design API to enable Uniform Rollout. Provide an API interface for defining configuration distribution rules for unified configuration distribution by extending the fields of application.
 
@@ -111,7 +109,7 @@ bogged down.
 
 ##### Story 2
 
-**User Role**: Application Operator.
+**User Role**: Application Operators.
 
 **Feature**: With the enhanced Kurator, developers can quickly release and A/B, Blue/Green or Canary test new requirements in their environment after they are completed.
 
@@ -145,116 +143,92 @@ Kurator puts the Rollout's api under the [Application](https://github.com/kurato
 Here's the preliminary design for the Unified Rollout:
 
 ```console
-// ApplicationSyncPolicy defines the configuration to sync an artifact.
-// Only oneof `kustomization` or `helm` can be specified to manage application sync.
-// ApplicationSyncPolicy distributes the Rollout configuration 
+// ApplicationSyncPolicy distributes the rollout configuration 
 // at the same time as the application deployment, if needed. 
 type ApplicationSyncPolicy struct {
-    // Rollout defines the rollout Configurations to be used.
-    // If specified, a uniform Rollout policy is configured for this installed object.
+    // Rollout defines the rollout configurations to be used.
+    // If specified, a uniform rollout policy is configured for this installed object.
     // +optional
-    Rollout *RolloutConfig `json:"rolloutPolicy,omitempty"`
+    Rollout *RolloutConfig `json:"rollout,omitempty"`
 }
 
 type RolloutConfig struct {
-    // Testloader defines Whether to install testloader for users. Default is true.
+    // Testloader defines whether to install testloader for users. Default is true.
     // Testloader generates traffic during canary analysis.
     // If set it to false, user need to install the testloader himself.
     // If set it to true or leave it blank, Kurator will install the flagger's testloader.
     // +optional
     TestLoader bool `json:"testLoader,omitempty"`
 
+    // TrafficRoutingProvider defines traffic routing provider.
     // Kurator only supports istio for now.
-    // New Provider will be added later.
+    // Other provider will be added later.
     // +optional
     TrafficRoutingProvider string `json:"trafficRoutingProvider,omitempty"`
 
     // Workload specifies what workload to deploy the test to. 
-    // Workload of type deployment or daemonSet.
-    Workload *WorkloadReference `json:"workload"`
+    // Workload of type Deployment or DaemonSet.
+    Workload *CrossNamespaceObjectReference `json:"workload"`
 
-    // ServiceName holds the name of a service which matches the `Workload`.
+    // ServiceName holds the name of a service which matches the workload.
     ServiceName string `json:"serviceName"`
 
-    // Port of the workload's Service which traffic access.
+    // Port exposed by the service.
     Port int32 `json:"port"`
 
     // Primary is the labels and annotations to add to the primary service.
-    // Primary service is stable service.
+    // Primary service is stable service. The name of the primary service in the cluster is <service name>-primary
     // +optional
     Primary *CustomMetadata `json:"primary,omitempty"`
 
-    // Canary is the labels and annotations to add to the canary service.
-    // Canary service is preview service.
+    // Preview is the labels and annotations to add to the preview service.
+    // The name of the preview service in the cluster is <service name>-canary
     // +optional
     Preview *CustomMetadata `json:"preview,omitempty"`
 
-    // RolloutPolicy defines the Release Strategy of workload.
+    // RolloutPolicy defines the release strategy of workload.
     RolloutPolicy *RolloutPolicy `json:"rolloutPolicy"`
 }
 ```
 
 `Testloader` indicates whether the user wants to install the test traffic load themselves. If you don't want to install the Testloader yourself, Kurator will install flagger's Testloader by default.
 
-`RolloutPolicy` defines the Rollout configuration for this installation workload. Although there is no detailed distinction in Kurator between canary, A/B testing and blue-green, giving users the freedom to configure traffic rules. Complete the release test. However, it is not allowed to configure canary and A/B or blue-green for the same workload.
+`RolloutPolicy` defines the Rollout configuration for this Application. Although there is no detailed distinction in Kurator between canary, A/B testing and Blue/Green, giving users the freedom to configure traffic rules. Complete the release test. However, it is not allowed to configure canary and A/B or Blue/Green for the same workload.
 
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type RolloutPolicy struct {
-    // Checknum defines the number of checks to run for A/B Testing and Blue/Green
-    // Note: Kurator determines whether blue-green or A/B related processing is required based on 
-    // the presence or absence of content in the Checknum field. 
-    // So can't configure Iterations and CanaryStrategy at the same time.
-    // +optional
-    CheckNum int `json:"checknum,omitempty"`
-
-    // The TrafficRouting defines the configuration of the gateway, traffic distribution rules, and so on.
+    // TrafficRouting defines the configuration of the gateway, traffic distribution rules, and so on.
     TrafficRouting *TrafficRoutingConfig `json:"trafficRouting"`
 
     // TrafficAnalysis defines the validation process of a release
     TrafficAnalysis *TrafficAnalysis `json:"trafficAnalysis,omitempty"`
 
-    // ProgressDeadlineSeconds represents the maximum time in seconds for a
-    // canary deployment to make progress before it is considered to be failed.
-    // Defaults to 600s.
+    // RolloutTimeoutSeconds represents the maximum time in seconds for a
+    // preview deployment to make progress before it is considered to be failed.
+    // Defaults to 600.
     // +optional
-    ProgressDeadlineSeconds *int32 `json:"progressDeadlineSeconds,omitempty"`
+    RolloutTimeoutSeconds *int `json:"progressDeadlineSeconds,omitempty"`
 
-    // SkipAnalysis promotes the canary without analyzing it
+    // SkipTrafficAnalysis promotes the preview release without analyzing it
     // +optional
     SkipTrafficAnalysis bool `json:"skipTrafficAnalysis,omitempty"`
 
-    // Restore resources to initial state when deleting canary resources.
+    // RevertOnDeletion defines whether to revert a resource to its initial state when deleting rollout resource.
     // Use of the revertOnDeletion property should be enabled
     // when you no longer plan to rely on Kurator for deployment management.
+    // Kurator will install the Flagger to the specified cluster via a fleet plugin. 
+    // If RevertOnDeletion is set to true, the Flagger will revert a resource to its initial state 
+    // when the deleting Application.Spec.ApplicationSyncPolicy.Rollout or 
+    // the Application.
     // +optional
     RevertOnDeletion bool `json:"revertOnDeletion,omitempty"`
 
-    // Suspend, if set to true will suspend the Canary, disabling any canary runs
+    // Suspend, if set to true will suspend the rollout, disabling any rollout runs
     // regardless of any changes to its target, services, etc. Note that if the
-    // Canary is suspended during an analysis, its paused until the Canary is uninterrupted.
+    // rollout is suspended during an analysis, its paused until the rollout is uninterrupted.
     // +optional
     Suspend bool `json:"suspend,omitempty"`
-}
-```
-
-WorkloadReference contains enough information to let you locate the typed referenced object in the same namespace. The two types of Kind now supported are `Deployment` and `DaemonSet`.
-
-```console
-type WorkloadReference struct {
-    // API version of the referent
-    // +optional
-    APIVersion string `json:"apiVersion,omitempty"`
-
-    // Kind of the referent.
-    // Support Deployment and DaemonSet.
-    Kind string `json:"kind"`
-
-    // Namespace of the referent
-    Namespace string `json:"namespace"`
-
-    // Name of the referent
-    Name string `json:"name"`
 }
 ```
 
@@ -263,29 +237,46 @@ Kurator will create a VirtualService resource based on the configuration in `Vir
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type TrafficRoutingConfig struct {
-    // Timeout of the HTTP or gRPC request.
-    // Timeout in upstream response time.
+    // TimeoutSeconds of the HTTP or gRPC request.
+    // TimeoutSeconds in upstream response time.
+    // e.g. timeoutSeconds: 500
     // +optional
-    Timeout string `json:"timeout,omitempty"`
+    TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
     // Gateways attached to the generated Istio virtual service.
     // Defaults to the internal mesh gateway.
     // +optional
     Gateways []string `json:"gateways,omitempty"`
 
-    // Threshold defines the Max number of failed checks before the rollout is terminated.
-    Threshold int `json:"threshold"`
-
     // Defaults to the RolloutConfig.ServiceName
     // +optional
     Hosts []string `json:"hosts,omitempty"`
 
-    // Match conditions of HTTP header.
+    // Match conditions of A/B and Blue/Green HTTP header.
+    // The header keys must be lowercase and use hyphen as the separator.
+    // values are case-sensitive and formatted as follows:
+    // - `exact: "value"` for exact string match
+    // - `prefix: "value"` for prefix-based match
+    // - `regex: "value"` for ECMAscript style regex-based match
+    // e.g.: 
+    // match:
+    //   - headers:
+    //       myheader:
+    //         regex: ".*XXXX.*"
+    //   - headers:
+    //       cookie:
+    //         regex: "^(.*?;)?(type=insider)(;.*)?$"
     // +optional
     Match []istiov1alpha3.HTTPMatchRequest `json:"match,omitempty"`
 
-    // Retries policy for Http links.
-    // +optional
+    // Retries describes the retry policy to use when a HTTP request fails. 
+    // For example, the following rule sets the maximum number of retries to three, 
+    // with a 2s timeout per retry attempt.
+    // e.g.:
+    // retries:
+    //   attempts: 3
+    //   perTryTimeout: 2s
+    //   retryOn: gateway-error,connect-failure,refused-stream
     Retries *istiov1alpha3.HTTPRetry `json:"retries,omitempty"`
 
     // Headers operations for the Request.
@@ -297,7 +288,7 @@ type TrafficRoutingConfig struct {
     // +optional
     Headers *istiov1alpha3.Headers `json:"headers,omitempty"`
 
-    // Cross-Origin Resource Sharing policy for the Request.
+    // Cross-Origin Resource Sharing policy for the request.
     // corsPolicy:
     //   allowHeaders:
     //   - x-some-header
@@ -326,9 +317,9 @@ type CanaryConfig struct {
     StepWeight int `json:"stepWeight,omitempty"`
 
     // StepWeights defines the incremental traffic weight steps for analysis phase
-    // Note: Cannot configure StepWeights and StepWeight at the same time.
-    // If both StepWeights and MaxWeight are configured, the traffic 
-    // will be scaled according to the settings in StepWeights only.
+    // Note: Cannot configure stepWeights and stepWeight at the same time.
+    // If both stepWeights and maxWeight are configured, the traffic 
+    // will be scaled according to the settings in stepWeights only.
     // If set stepWeights: [1, 10, 20, 80]
     // The flow ratio between PREVIEW and PRIMARY at each step is
     // (1:99) (10:90) (20:80) (80:20)
@@ -336,7 +327,7 @@ type CanaryConfig struct {
     StepWeights []int `json:"stepWeights,omitempty"`
 
     // StepWeightPromotion defines the incremental traffic weight step for promotion phase
-    // If maxWeight: 50 and set StepWeightPromotion: 20
+    // If maxWeight: 50 and set stepWeightPromotion: 20
     // After a successful test, traffic to the PRIMARY version changes as follows: 50 70 90 100.
     // +optional
     StepWeightPromotion int `json:"stepWeightPromotion,omitempty"`
@@ -348,11 +339,23 @@ As part of the TrafficAnalysis process, Kurator can validate service level objec
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type TrafficAnalysis struct {
-    // Schedule interval for this traffic analysis
-    Interval string `json:"interval"`
+    // CheckTimes defines the number of checks to run for A/B Testing and Blue/Green
+    // If set "checkTimes: 10". It means Kurator will checks the preview service ten times 
+    // Note: Kurator determines whether Blue/Green or A/B related processing is required based on 
+    // the presence or absence of content in the checkTimes field. 
+    // So can't configure checkTimes and canaryStrategy at the same time.
+    // +optional
+    CheckTimes *int `json:"checkTimes,omitempty"`
 
-    // Max number of failed checks before the traffic analysis is terminated
-    Threshold int `json:"threshold"`
+    // CheckIntervalSeconds defines the schedule interval for this traffic analysis.
+    // Interval is the time interval between each test. 
+    // Kurator changes the traffic distribution rules (if they need to be changed) 
+    // and performs a traffic analysis every so often.
+    CheckIntervalSeconds *int `json:"checkIntervalSeconds"`
+
+    // CheckFiledTimes defines the max number of failed checks before the traffic analysis is terminated
+    // If set "checkFiledTimes: 2". It means Kurator will rollback when check filed 2 times. 
+    CheckFiledTimes *int `json:"checkFiledTimes"`
 
     // Metric check list for this traffic analysis
     // Flagger comes with two builtin metric checks: HTTP request success rate and duration.
@@ -372,11 +375,11 @@ type TrafficAnalysis struct {
 
 type Metric struct {
     // Name of the metric.
-    // User also can use Name point to custom metric checks.
+    // User also can use name point to custom metric checks.
     Name string `json:"name"`
 
-    // Metrics query interval
-    Interval string `json:"interval,omitempty"`
+    // IntervalSeconds defines metrics query interval.
+    IntervalSeconds *int `json:"intervalSeconds,omitempty"`
 
     // Range value accepted for this metric
     // +optional
@@ -426,9 +429,14 @@ type CrossNamespaceObjectReference struct {
 // if the test is failing or not.
 // e.g.
 // webhooks:
-//   - name: "start gate"
-//     type: confirm-rollout
-//     url: http://flagger-loadtester.test/gate/approve
+//   - name: "load test"
+//     type: rollout
+//     url: http://flagger-loadtester.test/
+//     timeoutSeconds: 15
+//     metadata:
+//       cmd: "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
+// The above example means that during trafficAnalysis, the cmd of "http://flagger-loadtester.test/" is invoked 
+// to execute the command "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
 type Webhook struct {
     // Type of this webhook
     // Different types mean different actions when the webhook check fails.
@@ -440,8 +448,8 @@ type Webhook struct {
     // URL address of this webhook
     URL string `json:"url"`
 
-    // Request timeout for this webhook
-    Timeout string `json:"timeout,omitempty"`
+    // TimeoutSeconds defines request timeout for this webhook
+    TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
     // Metadata (key-value pairs) for this webhook
     // +optional
