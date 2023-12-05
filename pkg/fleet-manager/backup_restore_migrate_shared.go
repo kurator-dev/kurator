@@ -71,7 +71,7 @@ func fetchDestinationClusters(ctx context.Context, kubeClient client.Client, nam
 		return nil, fmt.Errorf("failed to retrieve fleet instance '%s' in namespace '%s': %w", destination.Fleet, namespace, err)
 	}
 
-	fleetClusters, err := buildFleetClusters(ctx, kubeClient, fleet)
+	fleetClusters, err := BuildFleetClusters(ctx, kubeClient, fleet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build fleet clusters from fleet instance '%s': %w", fleet.Name, err)
 	}

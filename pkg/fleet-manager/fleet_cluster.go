@@ -42,7 +42,7 @@ type ClusterKey struct {
 	Name string
 }
 
-func buildFleetClusters(ctx context.Context, client client.Client, fleet *fleetapi.Fleet) (map[ClusterKey]*FleetCluster, error) {
+func BuildFleetClusters(ctx context.Context, client client.Client, fleet *fleetapi.Fleet) (map[ClusterKey]*FleetCluster, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	res := make(map[ClusterKey]*FleetCluster, len(fleet.Spec.Clusters))
