@@ -12,7 +12,7 @@ reviewing issues/PRs.
 - Actively contributed to the community. Contributions may include, but are not limited to:
     - Authoring PRs.
     - Reviewing issues/PRs authored by other community members.
-    - Participating in community discussions on slack/mailing list.(We don't have it now, but will provide it later)
+    - Participating in community discussions on [slack/mailing list](https://github.com/kurator-dev/kurator/blob/main/README.md#contact).
     - Participate in Kurator community meetings.(We don't have it now, but will provide it later)
 - Have your sponsoring reviewers reply confirmation of sponsorship: +1
 - Once your sponsors have responded, your request will be reviewed by the org owners
