@@ -15,6 +15,7 @@ assignees: ''
 ## Requirements
 
 - [ ] I have reviewed the [community membership guidelines]
+- [ ] I have joined in the community [mailing group] and [slack]
 - [ ] I have watched kurator-dev/kurator on GitHub to subscribe updates (My account appears in the [watchers list])
 - [ ] I have enabled [two-factor authentication] on my GitHub account
 - [ ] I am actively contributing to 1 or more Kurator subprojects
@@ -36,5 +37,7 @@ assignees: ''
 
 <!-- Please don't edit the following lines -->
 [community membership guidelines]: https://github.com/kurator-dev/kurator/community/membership/community-membership.md
+[mailing group]: https://groups.google.com/g/kuator-dev
+[slack]: https://join.slack.com/t/kurator-hq/shared_invite/zt-1sowqzfnl-Vu1AhxgAjSr1XnaFoogq0A
 [watchers list]: https://github.com/kurator-dev/kurator/watchers
 [two-factor authentication]: https://help.github.com/en/github/authenticating-to-github/about-two-factor-authentication
