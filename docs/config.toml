@@ -86,6 +86,12 @@ sidebar_search_disable = false
 	icon = "fa fa-envelope"
   desc = "Kurator mailing list"
 
+[params.ui]
+# 'sidebar_menu_compact': Set to 'true' to display the sidebar menu in a compact form. By default, the menu shows the current section fully expanded. This parameter allows control over the sidebar menu's display style.
+sidebar_menu_compact = true
+# 'ul_show': Specifies the level of automatic expansion for the sidebar menu. A value of '1' means all items in the first level of the menu will be automatically expanded. Adjust this value to control the expansion depth of the menu.
+ul_show = 1
+
 # Adds an H2 section titled "Feedback" to the bottom of each doc. The responses are sent to Google Analytics as events.
 # This feature depends on [services.googleAnalytics] and will be disabled if "services.googleAnalytics.id" is not set.
 # If you want this feature, but occasionally need to remove the "Feedback" section from a single page,
