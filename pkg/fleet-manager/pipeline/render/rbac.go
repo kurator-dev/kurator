@@ -22,9 +22,8 @@ import (
 )
 
 const (
-	ServiceAccountNamePrefix     = "kurator-pipeline-robot-"
 	RoleBindingNameSuffix        = "-binding"
-	ClusterRoleBindingNameSuffix = "-clusterbinding"
+	ClusterRoleBindingNameSuffix = "-clusterrolebinding"
 	// RBACTemplateFileName is the name of the RBAC template file.
 	RBACTemplateFileName = "rbac.tpl"
 	RBACTemplateName     = "pipeline rbac template"
@@ -39,7 +38,7 @@ type RBACConfig struct {
 
 // ServiceAccountName generates the service account name using the pipeline name and namespace.
 func (rbac RBACConfig) ServiceAccountName() string {
-	return ServiceAccountNamePrefix + rbac.PipelineName + "-" + rbac.PipelineNamespace
+	return rbac.PipelineName
 }
 
 // RoleBindingName generates the role binding name using the service account name.

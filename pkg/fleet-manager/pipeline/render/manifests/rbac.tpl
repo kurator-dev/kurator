@@ -10,9 +10,9 @@ metadata:
   name: "{{ .RoleBindingName }}"
   namespace: "{{ .PipelineNamespace }}"
 subjects:
-  - kind: ServiceAccount
-    name: "{{ .ServiceAccountName }}"
-    namespace: "{{ .PipelineNamespace }}"
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -23,9 +23,9 @@ kind: ClusterRoleBinding
 metadata:
   name: "{{ .ClusterRoleBindingName }}"
 subjects:
-  - kind: ServiceAccount
-    name: "{{ .ServiceAccountName }}"
-    namespace: "{{ .PipelineNamespace }}"
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
