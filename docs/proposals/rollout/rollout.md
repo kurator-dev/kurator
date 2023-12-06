@@ -58,7 +58,7 @@ In Kurator, you can choose to distribute applications with the same configuratio
 
 - **Unified Rollout**
     - Supports unified configuration of releases for multiple clusters. Achieve the deployment configuration of the application to be distributed to the specified single or multiple clusters.
-    - Supports A/B, Blue/Green, and Canary releases and performs health checks based on set metrics.
+    - Supports A/B, Blue/Green, and Canary releases and performs health checks based on setting metrics.
     - Supports automatic rollback when release validation fails.
 
 #### Non-Goals
@@ -68,7 +68,7 @@ What is out of scope for this KEP? Listing non-goals helps to focus discussion
 and make progress.
 -->
 
-- **Traffic distribution tools other than istio are not supported** While Flagger is able to support a wide range of traffic distribution tools including istio, nginx and so on for rollout test. However, Kurator currently only supports unified management of istio across clusters. Kurator may implement other traffic distribution tools in the future.
+- **Traffic distribution tools other than istio are not supported** While Flagger is able to support a wide range of traffic routing tools including istio, nginx and so on for rollout testing. However, Kurator currently only take Istio to be traffic routing provider. Kurator may implement other traffic routing tools in the future.
 
 ### Proposal
 
@@ -103,9 +103,9 @@ bogged down.
 
 **Feature**: With the enhanced Kurator, developers can easily deploy their new releases to multiple clusters for validation testing.
 
-**Value**: Provides a simplified automated way to uniformly manage configuration distribution and grey scale releases across multiple clusters. Validate new features of the product across multiple clusters in different environments. Avoid duplicate configurations and reduce workload.
+**Value**: Provides a simplified automated way to uniformly manage configuration distribution and grey releases across multiple clusters. Validate new features of the product across multiple clusters in different environments. Avoid duplicate configurations and reduce workload.
 
-**Outcome**: With this feature, developers can easily assign uniform configurations to multiple clusters to improve reliability, availability, and storage efficiency for business publishing and easily achieve scalability.
+**Outcome**: With this feature, developers can easily distribute uniform configuration to multiple clusters to validate new features. Improve reliability and availability of releases and simplify work.
 
 ##### Story 2
 
@@ -115,7 +115,7 @@ bogged down.
 
 **Value**: Provides a simplified, automated way for developers to distribute configurations in a uniform manner. Enables validation testing in multiple usage environments. Provides A/B, Blue/Green or Canary tests to meet different testing needs.
 
-**Outcome**: With this feature, developers can easily assign uniform configurations to multiple clusters, test new releases, and ensure the quality of new releases. In addition, it also provides automatic rollback function when the test fails, reducing the developer's operational burden and bug impact time.
+**Outcome**: With this feature, developers can easily distribute uniform configuration to multiple clusters, test new releases. And ensure the quality of new releases. In addition, it also provides automatic rollback function when the test fails, reducing the developer's operational burden and bug impact time.
 
 ### Design Details
 
@@ -154,11 +154,18 @@ type ApplicationSyncPolicy struct {
 
 type RolloutConfig struct {
     // Testloader defines whether to install testloader for users. Default is true.
-    // Testloader generates traffic during canary analysis.
+    // Testloader generates traffic during rollout analysis.
     // If set it to false, user need to install the testloader himself.
     // If set it to true or leave it blank, Kurator will install the flagger's testloader.
     // +optional
-    TestLoader bool `json:"testLoader,omitempty"`
+    TestLoader *bool `json:"testLoader,omitempty"`
+
+    // removeTestloaderOnDelete defines wether to remove Testloader when delete 
+    // Application.Spec.ApplicationSyncPolicy.Rollout.
+    // If set true, Kurator will remove Testloader when delete 
+    // Application.Spec.ApplicationSyncPolicy.Rollout.
+    // Defines to false.
+    RemoveTestloaderOnDelete *bool `json:"removeTestloaderOnDelete,omitempty"`
 
     // TrafficRoutingProvider defines traffic routing provider.
     // Kurator only supports istio for now.
@@ -191,15 +198,15 @@ type RolloutConfig struct {
 }
 ```
 
-`Testloader` indicates whether the user wants to install the test traffic load themselves. If you don't want to install the Testloader yourself, Kurator will install flagger's Testloader by default.
+`Testloader` indicates whether the user wants to install the test traffic load by Kurator. If set testloader to true, Kurator will installs the teatloader itself. If set testload to flase, users need to provide their own traffic-generating services.
 
 `RolloutPolicy` defines the Rollout configuration for this Application. Although there is no detailed distinction in Kurator between canary, A/B testing and Blue/Green, giving users the freedom to configure traffic rules. Complete the release test. However, it is not allowed to configure canary and A/B or Blue/Green for the same workload.
 
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type RolloutPolicy struct {
-    // TrafficRouting defines the configuration of the gateway, traffic distribution rules, and so on.
-    TrafficRouting *TrafficRoutingConfig `json:"trafficRouting"`
+    // TrafficRouting defines the configuration of the gateway, traffic routing rules, and so on.
+    TrafficRouting *TrafficRoutingConfig `json:"trafficRouting,omitempty"`
 
     // TrafficAnalysis defines the validation process of a release
     TrafficAnalysis *TrafficAnalysis `json:"trafficAnalysis,omitempty"`
@@ -208,7 +215,7 @@ type RolloutPolicy struct {
     // preview deployment to make progress before it is considered to be failed.
     // Defaults to 600.
     // +optional
-    RolloutTimeoutSeconds *int `json:"progressDeadlineSeconds,omitempty"`
+    RolloutTimeoutSeconds *int `json:"rolloutTimeoutSeconds,omitempty"`
 
     // SkipTrafficAnalysis promotes the preview release without analyzing it
     // +optional
@@ -238,8 +245,6 @@ Kurator will create a VirtualService resource based on the configuration in `Vir
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type TrafficRoutingConfig struct {
     // TimeoutSeconds of the HTTP or gRPC request.
-    // TimeoutSeconds in upstream response time.
-    // e.g. timeoutSeconds: 500
     // +optional
     TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
@@ -251,23 +256,6 @@ type TrafficRoutingConfig struct {
     // Defaults to the RolloutConfig.ServiceName
     // +optional
     Hosts []string `json:"hosts,omitempty"`
-
-    // Match conditions of A/B and Blue/Green HTTP header.
-    // The header keys must be lowercase and use hyphen as the separator.
-    // values are case-sensitive and formatted as follows:
-    // - `exact: "value"` for exact string match
-    // - `prefix: "value"` for prefix-based match
-    // - `regex: "value"` for ECMAscript style regex-based match
-    // e.g.: 
-    // match:
-    //   - headers:
-    //       myheader:
-    //         regex: ".*XXXX.*"
-    //   - headers:
-    //       cookie:
-    //         regex: "^(.*?;)?(type=insider)(;.*)?$"
-    // +optional
-    Match []istiov1alpha3.HTTPMatchRequest `json:"match,omitempty"`
 
     // Retries describes the retry policy to use when a HTTP request fails. 
     // For example, the following rule sets the maximum number of retries to three, 
@@ -300,8 +288,39 @@ type TrafficRoutingConfig struct {
     // +optional
     CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
 
+    // RolloutAnalysisCheckTimes defines the number of traffic analysis checks to run for A/B Testing and Blue/Green
+    // If set "rolloutAnalysisCheckTimes: 10". It means Kurator will checks the preview service ten times. 
+    // Note: Kurator determines whether Blue/Green and A/B or canary related processing is required based on 
+    // the presence or absence of content in the rolloutAnalysisCheckTimes field. 
+    // So can't configure rolloutAnalysisCheckTimes and canaryStrategy at the same time.
+    // +optional
+    RolloutAnalysisCheckTimes *int `json:"analysisCheckTimes,omitempty"`
+
+    // Match conditions of A/B HTTP header.
+    // The header keys must be lowercase and use hyphen as the separator.
+    // values are case-sensitive and formatted as follows:
+    // - `exact: "value"` for exact string match
+    // - `prefix: "value"` for prefix-based match
+    // - `regex: "value"` for ECMAscript style regex-based match
+    // e.g.: 
+    // match:
+    //   - headers:
+    //       myheader:
+    //         regex: ".*XXXX.*"
+    //   - headers:
+    //       cookie:
+    //         regex: "^(.*?;)?(type=insider)(;.*)?$"
+    // Note: If you want to use A/B test, you need to configure rolloutAnalysisCheckTimes and match. 
+    // If you only configure rolloutAnalysisCheckTimes, it will trigger Blue/Green test.
+    // You can configure both canaryStrategy and match.
+    // If configure both canaryStrategy and match, Traffic that meets match goes towards the preview service. 
+    // Traffic that doesn't meet the match will go to the primary service and preview service proportionally.
+    // +optional
+    Match []istiov1alpha3.HTTPMatchRequest `json:"match,omitempty"`
+
     // CanaryStrategy defines parameters for canary test.
-    CanaryStrategy CanaryConfig `json:"canaryStrategy,omitempty"`
+    // +optional
+    CanaryStrategy *CanaryConfig `json:"canaryStrategy,omitempty"`
 }
 
 type CanaryConfig struct {
@@ -339,23 +358,16 @@ As part of the TrafficAnalysis process, Kurator can validate service level objec
 ```console
 // Note: refer to https://github.com/fluxcd/flagger/blob/main/pkg/apis/flagger/v1beta1/canary.go
 type TrafficAnalysis struct {
-    // CheckTimes defines the number of checks to run for A/B Testing and Blue/Green
-    // If set "checkTimes: 10". It means Kurator will checks the preview service ten times 
-    // Note: Kurator determines whether Blue/Green or A/B related processing is required based on 
-    // the presence or absence of content in the checkTimes field. 
-    // So can't configure checkTimes and canaryStrategy at the same time.
-    // +optional
-    CheckTimes *int `json:"checkTimes,omitempty"`
-
     // CheckIntervalSeconds defines the schedule interval for this traffic analysis.
     // Interval is the time interval between each test. 
     // Kurator changes the traffic distribution rules (if they need to be changed) 
     // and performs a traffic analysis every so often.
+    // Defaults to 60.
     CheckIntervalSeconds *int `json:"checkIntervalSeconds"`
 
-    // CheckFiledTimes defines the max number of failed checks before the traffic analysis is terminated
-    // If set "checkFiledTimes: 2". It means Kurator will rollback when check filed 2 times. 
-    CheckFiledTimes *int `json:"checkFiledTimes"`
+    // CheckFailedTimes defines the max number of failed checks before the traffic analysis is terminated
+    // If set "checkFailedTimes: 2". It means Kurator will rollback when check failed 2 times. 
+    CheckFailedTimes *int `json:"checkFailedTimes"`
 
     // Metric check list for this traffic analysis
     // Flagger comes with two builtin metric checks: HTTP request success rate and duration.
@@ -386,12 +398,57 @@ type Metric struct {
     ThresholdRange *CanaryThresholdRange `json:"thresholdRange,omitempty"`
 
     // TemplateRef references a metric template object
+    // The metric can be custom by users.
     // +optional
-    TemplateRef *CrossNamespaceObjectReference `json:"templateRef,omitempty"`
+    TemplateRef *MetricTemplate `json:"templateRef,omitempty"`
+}
 
-    // TemplateVariables provides a map of key/value pairs that can be used to inject variables into a metric query.
+// MetricTemplate defines custom metric template.
+// The results were obtained by querying Prometheus metrics and 
+// combining the calculations to validate the preview service.
+// Note: If use delete `Application.Spec.ApplicationSyncPolicy.Rollout` or
+// `Application`, Kurator will delete metricTemplate.
+type MetricTemplate struct {
+    // Name of MetricTemplate
+    // Name must be unique within a namespace.
+    // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names#names
+    Name string `json:"name,omitempty"`
+
+    // Namespace of MetricTemplate
+    // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces
+    Namespace string `json:"namespace,omitempty"`
+
+    // MetricProvider defines the metric provider of metricTemplate.
+    // Kurator now only supports `Prometheus` as metricProvider.
+    // Default is prometheus
+    MetricProvider string `json:"metricProvider,omitempty"`
+
+    // HTTP(S) address of above metricProvider.
+    // Kurator uses this address to access the provider to get the metric.
+    // e.g.:
+    // MetricProviderAddress: http://prometheus.istio-system:9090
+    MetricProviderAddress string `json:"metricProviderAddress,omitempty"`
+
+    // Secret reference containing the provider credentials
     // +optional
-    TemplateVariables map[string]string `json:"templateVariables,omitempty"`
+    Secret  *corev1.LocalObjectReference `json:"secret,omitempty"`
+
+    // MetricQuery defines PromQL for querying metrics in prometheus.
+    // e.g.:
+    // metricQuery:
+    //     histogram_quantile(
+    //        0.99,
+    //        sum(
+    //            rate(
+    //                istio_request_duration_seconds_bucket{
+    //                    reporter="destination",
+    //                    destination_workload_namespace="{{ namespace }}",
+    //                    destination_workload=~"{{ target }}"
+    //                }[{{ interval }}]
+    //            )
+    //        ) by (le)
+    //     )
+    MetricQuery string `json:"metricQuery,omitempty"`
 }
 
 // CanaryThresholdRange defines the range used for metrics validation
@@ -424,17 +481,14 @@ type CrossNamespaceObjectReference struct {
     Namespace string `json:"namespace,omitempty"`
 }
 
-// The traffic analysis can be extended with webhooks.
-// Kurator will call each webhook URL and determine from the response status code (HTTP 2xx)
-// if the test is failing or not.
+// Kurator calls the testloader via webhook to generate a load of traffic accessing service.
 // e.g.
 // webhooks:
 //   - name: "load test"
 //     type: rollout
-//     url: http://flagger-loadtester.test/
 //     timeoutSeconds: 15
-//     metadata:
-//       cmd: "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
+//     commend:
+//       - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
 // The above example means that during trafficAnalysis, the cmd of "http://flagger-loadtester.test/" is invoked 
 // to execute the command "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
 type Webhook struct {
@@ -445,15 +499,13 @@ type Webhook struct {
     // Name of this webhook
     Name string `json:"name"`
 
-    // URL address of this webhook
-    URL string `json:"url"`
-
     // TimeoutSeconds defines request timeout for this webhook
+    // Defaults to 60
     TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
-    // Metadata (key-value pairs) for this webhook
+    // Command defines to commends that executed by webhook.
     // +optional
-    Metadata *map[string]string `json:"metadata,omitempty"`
+    Command []string `json:"command,omitempty"`
 }
 
 // HookType can be pre, post or during rollout
@@ -461,21 +513,11 @@ type HookType string
 
 const (
     // RolloutHook execute webhook during the canary analysis
+    // The webhook is called at the beginning of the analysis execution process.
     RolloutHook HookType = "rollout"
     // PreRolloutHook execute webhook before routing traffic to canary
+    // The webhook is executed after checking the status of the pod and before the analysis actually starts.
     PreRolloutHook HookType = "pre-rollout"
-    // PostRolloutHook execute webhook after the canary analysis
-    PostRolloutHook HookType = "post-rollout"
-    // ConfirmRolloutHook halt canary analysis until webhook returns HTTP 200
-    ConfirmRolloutHook HookType = "confirm-rollout"
-    // ConfirmPromotionHook halt canary promotion until webhook returns HTTP 200
-    ConfirmPromotionHook HookType = "confirm-promotion"
-    // EventHook dispatches Flagger events to the specified endpoint
-    EventHook HookType = "event"
-    // RollbackHook rollback canary analysis if webhook returns HTTP 200
-    RollbackHook HookType = "rollback"
-    // ConfirmTrafficIncreaseHook increases traffic weight if webhook returns HTTP 200
-    ConfirmTrafficIncreaseHook = "confirm-traffic-increase"
 )
 
 type SessionAffinity struct {
