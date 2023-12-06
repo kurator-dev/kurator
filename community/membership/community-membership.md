@@ -28,6 +28,51 @@ reviewing issues/PRs.
 - Guide new contributors to relevant docs/files.
 - Help/Motivate new members in contributing to Kurator.
 
+## Reviewer
+
+Reviewers are able to review code for quality and correctness on some part of a subproject.
+They are knowledgeable about both the codebase and software engineering principles.
+
+### Requirements
+
+- member for at least 1 months
+- Primary reviewer for at least 5 PRs to the codebase
+- Reviewed or merged at least 20 substantial PRs to the codebase
+- Knowledgeable about the codebase
+- May either self-nominate,  or be nominated by an approver
+
+### Responsibilities and privileges
+
+- Code reviewer status may be a precondition to accepting large code contributions
+- Responsible for project quality control
+- Focus on code quality and correctness, including testing and refactoring
+- May also review for more holistic issues, but not a requirement
+- Expected to be responsive to review requests, add `lgtm` label to reviewed PRs
+
+## Maintainer
+
+Maintainers are approvers who have shown good technical judgement in feature design/development in the past.
+Has overall knowledge of the project and features in the project.
+
+### Requirements
+
+- Sponsor from 2 owners
+- Approver for at least 2 months
+- Nominated by a project owner
+- Good technical judgement in feature design/development
+
+### Responsibilities and privileges
+
+- Participate in release planning
+- Maintain project code quality
+- Ensure API compatibility with forward/backward versions based on feature graduation criteria
+- Analyze and propose new features/enhancements in Kurator project
+- Demonstrate sound technical judgement
+- Mentor contributors and approvers
+- Have top level write access to relevant repository (able click Merge PR button when manual check-in is necessary)
+- Name entry in Maintainers file of the repository
+- Participate & Drive design/development of multiple features
+
 ## Inactive members
 
 _Members are continuously active contributors in the community._
