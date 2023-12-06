@@ -22,8 +22,6 @@ import (
 )
 
 const (
-	RoleBindingNameSuffix        = "-binding"
-	ClusterRoleBindingNameSuffix = "-clusterrolebinding"
 	// RBACTemplateFileName is the name of the RBAC template file.
 	RBACTemplateFileName = "rbac.tpl"
 	RBACTemplateName     = "pipeline rbac template"
@@ -43,12 +41,12 @@ func (rbac RBACConfig) ServiceAccountName() string {
 
 // RoleBindingName generates the role binding name using the service account name.
 func (rbac RBACConfig) RoleBindingName() string {
-	return rbac.ServiceAccountName() + RoleBindingNameSuffix
+	return rbac.ServiceAccountName()
 }
 
 // ClusterRoleBindingName generates the cluster role binding name using the service account name.
 func (rbac RBACConfig) ClusterRoleBindingName() string {
-	return rbac.ServiceAccountName() + ClusterRoleBindingNameSuffix
+	return rbac.ServiceAccountName()
 }
 
 // renderRBAC renders the RBAC configuration using a specified template.
