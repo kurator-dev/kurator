@@ -25,6 +25,8 @@ const (
 	// RBACTemplateFileName is the name of the RBAC template file.
 	RBACTemplateFileName = "rbac.tpl"
 	RBACTemplateName     = "pipeline rbac template"
+	SecretSuffix         = "-secret"
+	BroadResourceSuffix  = "-broad-resource"
 )
 
 // RBACConfig contains the configuration data required for the RBAC template.
@@ -40,13 +42,13 @@ func (rbac RBACConfig) ServiceAccountName() string {
 }
 
 // RoleBindingName generates the role binding name using the service account name.
-func (rbac RBACConfig) RoleBindingName() string {
-	return rbac.ServiceAccountName()
+func (rbac RBACConfig) BroadResourceRoleBindingName() string {
+	return rbac.ServiceAccountName() + BroadResourceSuffix
 }
 
 // ClusterRoleBindingName generates the cluster role binding name using the service account name.
-func (rbac RBACConfig) ClusterRoleBindingName() string {
-	return rbac.ServiceAccountName()
+func (rbac RBACConfig) SecretRoleBindingName() string {
+	return rbac.ServiceAccountName() + SecretSuffix
 }
 
 // renderRBAC renders the RBAC configuration using a specified template.
