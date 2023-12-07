@@ -7,7 +7,14 @@ set -o nounset
 set -o pipefail
 
 PKG_PATH=kurator.dev/kurator/pkg/client-go
-APIS_PATHS=(kurator.dev/kurator/pkg/apis/cluster/v1alpha1 kurator.dev/kurator/pkg/apis/infra/v1alpha1 kurator.dev/kurator/pkg/apis/fleet/v1alpha1 kurator.dev/kurator/pkg/apis/apps/v1alpha1 kurator.dev/kurator/pkg/apis/backups/v1alpha1)
+APIS_PATHS=(
+    kurator.dev/kurator/pkg/apis/cluster/v1alpha1
+    kurator.dev/kurator/pkg/apis/infra/v1alpha1
+    kurator.dev/kurator/pkg/apis/fleet/v1alpha1
+    kurator.dev/kurator/pkg/apis/apps/v1alpha1
+    kurator.dev/kurator/pkg/apis/backups/v1alpha1
+    kurator.dev/kurator/pkg/apis/pipeline/v1alpha1
+)
 ALL_APIS=$(IFS=, ; echo "${APIS_PATHS[*]}")
 
 # For all commands, the working directory is the parent directory(repo root).
