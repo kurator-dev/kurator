@@ -388,17 +388,17 @@ string
 </tr>
 <tr>
 <td>
-<code>taskRef</code><br>
+<code>TaskTemplate</code><br>
 <em>
-<a href="#pipeline.kurator.dev/v1alpha1.TaskRef">
-TaskRef
+<a href="#pipeline.kurator.dev/v1alpha1.TaskTemplate">
+TaskTemplate
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>TaskRef is a reference to a predefined task template.
-Users should provide a TaskRef name from a predefined library.</p>
+<p>TaskTemplate allows users to select a predefined task.
+Users can choose a task from a set list and fill in their own parameters.</p>
 </td>
 </tr>
 <tr>
@@ -425,7 +425,8 @@ int
 </td>
 <td>
 <em>(Optional)</em>
-<p>Retries represents how many times this task should be retried in case of task failure.</p>
+<p>Retries represents how many times this task should be retried in case of task failure.
+default values is zero.</p>
 </td>
 </tr>
 </tbody>
@@ -436,14 +437,15 @@ int
 (<code>string</code> alias)</h3>
 <p>
 (<em>Appears on:</em>
-<a href="#pipeline.kurator.dev/v1alpha1.TaskRef">TaskRef</a>)
+<a href="#pipeline.kurator.dev/v1alpha1.TaskTemplate">TaskTemplate</a>)
 </p>
-<h3 id="pipeline.kurator.dev/v1alpha1.TaskRef">TaskRef
+<h3 id="pipeline.kurator.dev/v1alpha1.TaskTemplate">TaskTemplate
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#pipeline.kurator.dev/v1alpha1.PipelineTask">PipelineTask</a>)
 </p>
+<p>TaskTemplate provides a structure for defining a PredefinedTask.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
 <table>
@@ -464,8 +466,8 @@ PredefinedTask
 </em>
 </td>
 <td>
-<p>TaskType is used to specify the type of the predefined task.
-This is a required field and determines which task template will be used.</p>
+<p>TaskType specifies the type of predefined task to be used.
+This field is required to select the appropriate PredefinedTask.</p>
 </td>
 </tr>
 <tr>
@@ -477,8 +479,8 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Params are key-value pairs of parameters for the predefined task.
-These parameters depend on the selected task template.</p>
+<p>Params contains key-value pairs for task-specific parameters.
+The required parameters vary depending on the TaskType chosen.</p>
 </td>
 </tr>
 </tbody>

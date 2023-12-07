@@ -53,6 +53,26 @@ spec:
                   in the order they are listed.
                 items:
                   properties:
+                    TaskTemplate:
+                      description: TaskTemplate allows users to select a predefined
+                        task. Users can choose a task from a set list and fill in
+                        their own parameters.
+                      properties:
+                        params:
+                          additionalProperties:
+                            type: string
+                          description: Params contains key-value pairs for task-specific
+                            parameters. The required parameters vary depending on
+                            the TaskType chosen.
+                          type: object
+                        taskType:
+                          description: TaskType specifies the type of predefined task
+                            to be used. This field is required to select the appropriate
+                            PredefinedTask.
+                          type: string
+                      required:
+                      - taskType
+                      type: object
                     customTask:
                       description: CustomTask enables defining a task directly within
                         the CRD if TaskRef is not used. This should only be used when
@@ -264,27 +284,8 @@ spec:
                       type: string
                     retries:
                       description: Retries represents how many times this task should
-                        be retried in case of task failure.
+                        be retried in case of task failure. default values is zero.
                       type: integer
-                    taskRef:
-                      description: TaskRef is a reference to a predefined task template.
-                        Users should provide a TaskRef name from a predefined library.
-                      properties:
-                        params:
-                          additionalProperties:
-                            type: string
-                          description: Params are key-value pairs of parameters for
-                            the predefined task. These parameters depend on the selected
-                            task template.
-                          type: object
-                        taskType:
-                          description: TaskType is used to specify the type of the
-                            predefined task. This is a required field and determines
-                            which task template will be used.
-                          type: string
-                      required:
-                      - taskType
-                      type: object
                   required:
                   - name
                   type: object
