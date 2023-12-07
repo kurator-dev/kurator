@@ -49,9 +49,9 @@ They are knowledgeable about both the codebase and software engineering principl
 - May also review for more holistic issues, but not a requirement
 - Expected to be responsive to review requests, add `lgtm` label to reviewed PRs
 
-## Maintainer
+## Approver
 
-Maintainers are approvers who have shown good technical judgement in feature design/development in the past.
+Approvers have shown good technical judgement in feature design/development in the past.
 Has overall knowledge of the project and features in the project.
 
 ### Requirements
@@ -68,9 +68,9 @@ Has overall knowledge of the project and features in the project.
 - Ensure API compatibility with forward/backward versions based on feature graduation criteria
 - Analyze and propose new features/enhancements in Kurator project
 - Demonstrate sound technical judgement
-- Mentor contributors and approvers
+- Mentor contributors and other approvers
 - Have top level write access to relevant repository (able click Merge PR button when manual check-in is necessary)
-- Name entry in Maintainers file of the repository
+- Name entry in Approvers file of the repository
 - Participate & Drive design/development of multiple features
 
 ## Inactive members
