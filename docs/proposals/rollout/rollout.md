@@ -224,7 +224,7 @@ type RolloutPolicy struct {
     // preview deployment to make progress before it is considered to be failed.
     // Defaults to 600.
     // +optional
-    RolloutTimeoutSeconds int `json:"rolloutTimeoutSeconds,omitempty"`
+    RolloutTimeoutSeconds *int `json:"rolloutTimeoutSeconds,omitempty"`
 
     // SkipTrafficAnalysis promotes the preview release without analyzing it
     // +optional
@@ -298,9 +298,9 @@ type TrafficRoutingConfig struct {
     CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
 
     // CanaryStrategy defines parameters for canary test.
-    // Note: Kurator determines whether A/B Testing and Blue/Green Deployment or Canary Deployment 
-    // related processing is required based on  the presence or absence of content in the analysisTimes field.
-    // So can't configure analysisTimes and canaryStrategy at the same time.
+    // Note: Kurator determines A/B testing, blue/green deployment, or canary deployment 
+    // based on the presence of content in the canaryStrategy field.
+    // So can't configure canaryStrategy analysisTimes at the same time.
     // +optional
     CanaryStrategy *CanaryConfig `json:"canaryStrategy,omitempty"`
 
@@ -373,7 +373,7 @@ type TrafficAnalysis struct {
     // Kurator changes the traffic distribution rules (if they need to be changed) 
     // and performs a traffic analysis every so often.
     // Defaults to 60.
-    CheckIntervalSeconds int `json:"checkIntervalSeconds"`
+    CheckIntervalSeconds *int `json:"checkIntervalSeconds"`
 
     // CheckFailedTimes defines the max number of failed checks before the traffic analysis is terminated
     // If set "checkFailedTimes: 2". It means Kurator will rollback when check failed 2 times. 
@@ -397,15 +397,16 @@ type TrafficAnalysis struct {
 
 type Metric struct {
     // Name of the metric.
-    // The metrics now used in kurator are `request-success-rate` and `request-duration`
-    // `request-success-rate` calculates the ratio of successful request to total request for a 
-    // checkIntervalSeconds time. It returns a value from 0 to 100.
-    // `request-duration` returns the elapsed time for the longest request within a CheckIntervalSeconds.
+    // Currently supported metric are `request-success-rate` and `request-duration`.
+    // `request-success-rate` indicates the successful request ratio during this checking intervalSeconds.
+    // It returns a value from 0 to 100.
+    // `request-duration` returns the P99 latency within intervalSeconds.
     // `request-duration` returns in milliseconds.
     Name string `json:"name"`
 
     // IntervalSeconds defines metrics query interval.
-    IntervalSeconds int `json:"intervalSeconds,omitempty"`
+    // Defaults to 60.
+    IntervalSeconds *int `json:"intervalSeconds,omitempty"`
 
     // Range value accepted for this metric
     // +optional
@@ -453,7 +454,7 @@ type CrossNamespaceObjectReference struct {
 type Webhook struct {
     // TimeoutSeconds defines request timeout for this webhook
     // Defaults to 60
-    TimeoutSeconds int `json:"timeoutSeconds,omitempty"`
+    TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
     // Command defines to commends that executed by webhook.
     // +optional
