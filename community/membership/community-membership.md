@@ -59,23 +59,19 @@ Has overall knowledge of the project and features in the project.
 
 ### Requirements
 
-- Deep understanding of the technical goals and direction of the project.
-- Deep understanding of the technical domain (specifically the language) of the project.
-- Approver for at least 2 months
-- Good technical judgement in feature design/development
-- Pass super-majority(two-thirds/ 66.66%) vote.
+- Reviewer of the codebase for at least 1 months.
+- Primary reviewer for at least 10 substantial PRs to the codebase.
+- Reviewed or merged at least 30 PRs to the codebase.
+- Have good codebase knowledge.
 
 ### Responsibilities and privileges
 
-- Participate in release planning
-- Maintain project code quality
-- Ensure API compatibility with forward/backward versions based on feature graduation criteria
-- Analyze and propose new features/enhancements in Kurator project
-- Demonstrate sound technical judgement
-- Mentor contributors and other approvers
-- Have top level write access to relevant repository (able click Merge PR button when manual check-in is necessary)
-- Name entry in Approvers file of the repository
-- Participate & Drive design/development of multiple features
+- Review code to maintain/improve code quality.
+- Expected to be responsive to review requests.
+- Acknowledge and work on review requests from community members.
+- May approve code contributions for acceptance related to relevant expertise.
+- Have 'write access' to specific packages inside a repo, enforced via bot.
+- Continue to contribute and guide other community members to contribute in Kurator project.
 
 ## Inactive members
 
