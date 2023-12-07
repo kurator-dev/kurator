@@ -8,14 +8,15 @@ reviewing issues/PRs.
 ### Requirements
 
 - Sponsor from 2 reviewers
-- Enabled [two-factor authentication] on their GitHub account
-- Actively contributed to the community. Contributions may include, but are not limited to:
+- Enabled [two-factor authentication](https://docs.github.com/en/authentication/securing-your-account-with-two-factor-authentication-2fa/about-two-factor-authentication) on their GitHub account
+- Actively contributed to Kurator. Contributions may include, but are not limited to:
     - Authoring PRs.
     - Reviewing issues/PRs authored by other community members.
     - Participating in community discussions on [slack/mailing list](https://github.com/kurator-dev/kurator/blob/main/README.md#contact).
     - Participate in Kurator community meetings.(We don't have it now, but will provide it later)
+- Have read the [contributor guide](https://github.com/kurator-dev/kurator/blob/main/CONTRIBUTING.md)
 - Have your sponsoring reviewers reply confirmation of sponsorship: +1
-- Once your sponsors have responded, your request will be reviewed by the org owners
+- Once your sponsors have responded, your request will be reviewed by the `Kurator Github Admin Team`
 
 **Note:** Record the PR number of your author and the PR number of the review. We will ask you to provide proof of this when you apply to become a member of the community.
 
@@ -25,6 +26,8 @@ reviewing issues/PRs.
 - Can be assigned to issues and PRs and community members can also request their review.
 - Participate in assigned issues and PRs.
 - Welcome new contributors.
+- They can be assigned to issues and PRs.
+- Members can do `/lgtm` on open PRs.
 - Guide new contributors to relevant docs/files.
 - Help/Motivate new members in contributing to Kurator.
 
@@ -47,7 +50,7 @@ They are knowledgeable about both the codebase and software engineering principl
 - Responsible for project quality control
 - Focus on code quality and correctness, including testing and refactoring
 - May also review for more holistic issues, but not a requirement
-- Expected to be responsive to review requests, add `lgtm` label to reviewed PRs
+- May get a badge on PR and issue comments.
 
 ## Approver
 
@@ -56,10 +59,11 @@ Has overall knowledge of the project and features in the project.
 
 ### Requirements
 
-- Sponsor from 2 owners
+- Deep understanding of the technical goals and direction of the project.
+- Deep understanding of the technical domain (specifically the language) of the project.
 - Approver for at least 2 months
-- Nominated by a project owner
 - Good technical judgement in feature design/development
+- Pass super-majority(two-thirds/ 66.66%) vote.
 
 ### Responsibilities and privileges
 
