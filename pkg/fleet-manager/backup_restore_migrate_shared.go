@@ -150,7 +150,7 @@ func newSyncVeleroTaskFunc(ctx context.Context, clusterAccess *FleetCluster, obj
 
 func syncVeleroObj(ctx context.Context, cluster *FleetCluster, veleroObj client.Object) error {
 	// Get the client
-	clusterClient := cluster.client.CtrlRuntimeClient()
+	clusterClient := cluster.GetRuntimeClient()
 
 	// create or update veleroRestore
 	_, syncErr := controllerutil.CreateOrUpdate(ctx, clusterClient, veleroObj, func() error {
@@ -206,7 +206,7 @@ func deleteResourcesInClusters(ctx context.Context, namespace, labelKey string, 
 		for i := 0; i < itemsValue.Len(); i++ {
 			item := itemsValue.Index(i).Addr().Interface().(client.Object)
 
-			clusterClient := clusterAccess.client.CtrlRuntimeClient()
+			clusterClient := clusterAccess.GetRuntimeClient()
 
 			if err := clusterClient.Delete(ctx, item); err != nil && !apierrors.IsNotFound(err) {
 				log.Error(err, "Failed to delete resource in cluster", "ResourceName", item.GetName(), "ResourceNamespace", item.GetNamespace(), "ClusterName", clusterKey.Name)
@@ -289,7 +289,7 @@ func GetCronInterval(cronExpr string) (time.Duration, error) {
 
 // getResourceFromClusterClient retrieves a specific Kubernetes resource from the provided cluster.
 func getResourceFromClusterClient(ctx context.Context, name, namespace string, clusterAccess FleetCluster, obj client.Object) error {
-	clusterClient := clusterAccess.client.CtrlRuntimeClient()
+	clusterClient := clusterAccess.GetRuntimeClient()
 
 	resourceKey := types.NamespacedName{
 		Name:      name,
@@ -301,7 +301,7 @@ func getResourceFromClusterClient(ctx context.Context, name, namespace string, c
 // listResourcesFromClusterClient retrieves resources from a cluster based on the provided namespace and label.
 func listResourcesFromClusterClient(ctx context.Context, namespace string, labelKey string, labelValue string, clusterAccess FleetCluster, objList client.ObjectList) error {
 	// Create the cluster client
-	clusterClient := clusterAccess.client.CtrlRuntimeClient()
+	clusterClient := clusterAccess.GetRuntimeClient()
 	// Create the label selector
 	labelSelector := labels.Set(map[string]string{labelKey: labelValue}).AsSelector()
 
