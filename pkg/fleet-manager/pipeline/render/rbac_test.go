@@ -25,7 +25,7 @@ import (
 	"kurator.dev/kurator/pkg/fleet-manager/manifests"
 )
 
-var manifestFS = manifests.BuiltinOrDir("manifests")
+var manifestFS = manifests.BuiltinOrDir("manifests/rbac/")
 
 const expectedRBACFilePath = "testdata/rbac/"
 
