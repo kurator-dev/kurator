@@ -56,10 +56,10 @@ type PipelineTask struct {
 	// Name is the name of the task.
 	Name string `json:"name"`
 
-	// TaskRef is a reference to a predefined task template.
-	// Users should provide a TaskRef name from a predefined library.
+	// TaskTemplate allows users to select a predefined task.
+	// Users can choose a task from a set list and fill in their own parameters.
 	// +optional
-	TaskRef *TaskRef `json:"taskRef,omitempty"`
+	TaskTemplate *TaskTemplate `json:"TaskTemplate,omitempty"`
 
 	// CustomTask enables defining a task directly within the CRD if TaskRef is not used.
 	// This should only be used when TaskRef is not provided.
@@ -67,8 +67,9 @@ type PipelineTask struct {
 	CustomTask *CustomTask `json:"customTask,omitempty"`
 
 	// Retries represents how many times this task should be retried in case of task failure.
+	// default values is zero.
 	// +optional
-	Retries *int `json:"retries,omitempty"`
+	Retries int `json:"retries,omitempty"`
 }
 
 type PredefinedTask string
@@ -80,7 +81,15 @@ const (
 	// Users don't need to configure additional repository information for this task, except for authentication details for private repositories.
 	// This Predefined Task is origin from https://github.com/tektoncd/catalog/tree/main/task/git-clone/0.9
 	// Here are the params that user can config:
-	// - git-secret-name: the secret name of git basic auth, Kurator use this git credential to clone private repo.
+	// - git-secret-name: The name of the secret for Git basic authentication.
+	//   Kurator uses this Git credential to clone private repositories.
+	//   The secret is formatted as follows, and more details can be found at:
+	//   https://kurator.dev/docs/fleet-manager/pipeline/
+	//   .gitconfig example:
+	//   |   [credential "https://<hostname>"]
+	//   |       helper = store
+	//   .git-credentials example:
+	//   |   https://<user>:<pass>@<hostname>
 	GitClone PredefinedTask = "git-clone"
 
 	// GoTest runs Go tests in specified packages with configurable environment
@@ -100,13 +109,15 @@ const (
 	// TODO: add more PredefinedTask
 )
 
-type TaskRef struct {
-	// TaskType is used to specify the type of the predefined task.
-	// This is a required field and determines which task template will be used.
+// TaskTemplate provides a structure for defining a PredefinedTask.
+type TaskTemplate struct {
+	// TaskType specifies the type of predefined task to be used.
+	// This field is required to select the appropriate PredefinedTask.
+	// +required
 	TaskType PredefinedTask `json:"taskType"`
 
-	// Params are key-value pairs of parameters for the predefined task.
-	// These parameters depend on the selected task template.
+	// Params contains key-value pairs for task-specific parameters.
+	// The required parameters vary depending on the TaskType chosen.
 	// +optional
 	Params map[string]string `json:"params,omitempty"`
 }
@@ -116,7 +127,7 @@ type CustomTask struct {
 	// Image specifies the Docker image name.
 	// More info: https://kubernetes.io/docs/concepts/containers/images
 	// +optional
-	Image string `json:"image,omitempty" protobuf:"bytes,2,opt,name=image"`
+	Image string `json:"image,omitempty"`
 
 	// Command is the entrypoint array. It's not executed in a shell.
 	// If not provided, the image's ENTRYPOINT is used.
@@ -124,7 +135,7 @@ type CustomTask struct {
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
 	// +listType=atomic
-	Command []string `json:"command,omitempty" protobuf:"bytes,3,rep,name=command"`
+	Command []string `json:"command,omitempty"`
 
 	// Args are the arguments for the entrypoint.
 	// If not provided, the image's CMD is used.
@@ -132,14 +143,14 @@ type CustomTask struct {
 	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
 	// +optional
 	// +listType=atomic
-	Args []string `json:"args,omitempty" protobuf:"bytes,4,rep,name=args"`
+	Args []string `json:"args,omitempty"`
 
 	// Step's working directory.
 	// If not specified, the container runtime's default will be used, which
 	// might be configured in the container image.
 	// Cannot be updated.
 	// +optional
-	WorkingDir string `json:"workingDir,omitempty" protobuf:"bytes,5,opt,name=workingDir"`
+	WorkingDir string `json:"workingDir,omitempty"`
 
 	// List of environment variables to set in the Step.
 	// Cannot be updated.
@@ -147,13 +158,13 @@ type CustomTask struct {
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	// +listType=atomic
-	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,7,rep,name=env"`
+	Env []corev1.EnvVar `json:"env,omitempty" patchStrategy:"merge" patchMergeKey:"name"`
 
 	// ResourceRequirements required by this Step.
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	// +optional
-	ResourceRequirements corev1.ResourceRequirements `json:"computeResources,omitempty" protobuf:"bytes,8,opt,name=computeResources"`
+	ResourceRequirements corev1.ResourceRequirements `json:"computeResources,omitempty"`
 
 	// Script is the contents of an executable file to execute.
 	// If Script is not empty, the CustomTask cannot have a Command and the Args will be passed to the Script.
