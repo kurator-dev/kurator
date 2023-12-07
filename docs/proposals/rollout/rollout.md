@@ -417,11 +417,11 @@ type Metric struct {
 type CanaryThresholdRange struct {
     // Minimum value
     // +optional
-    Min *float64 `json:"min,omitempty"`
+    Min string `json:"min,omitempty"`
 
     // Maximum value
     // +optional
-    Max *float64 `json:"max,omitempty"`
+    Max string `json:"max,omitempty"`
 }
 
 // CrossNamespaceObjectReference contains enough information to let you locate the
