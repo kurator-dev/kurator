@@ -28,6 +28,7 @@ import (
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	infrav1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
+	pipelinev1alpha1 "kurator.dev/kurator/pkg/apis/pipeline/v1alpha1"
 )
 
 // GenericInformer is type of SharedIndexInformer which will locate and delegate to other
@@ -79,6 +80,10 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().CustomClusters().Informer()}, nil
 	case infrav1alpha1.SchemeGroupVersion.WithResource("custommachines"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Infrastructure().V1alpha1().CustomMachines().Informer()}, nil
+
+		// Group=pipeline.kurator.dev, Version=v1alpha1
+	case pipelinev1alpha1.SchemeGroupVersion.WithResource("pipelines"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Pipeline().V1alpha1().Pipelines().Informer()}, nil
 
 	}
 

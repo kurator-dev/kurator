@@ -30,6 +30,7 @@ import (
 	clusterv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/cluster/v1alpha1"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
+	pipelinev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/pipeline/v1alpha1"
 )
 
 type Interface interface {
@@ -39,9 +40,11 @@ type Interface interface {
 	ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface
 	FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface
 	InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface
+	PipelineV1alpha1() pipelinev1alpha1.PipelineV1alpha1Interface
 }
 
-// Clientset contains the clients for groups.
+// Clientset contains the clients for groups. Each group has exactly one
+// version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
 	appsV1alpha1           *appsv1alpha1.AppsV1alpha1Client
@@ -49,6 +52,7 @@ type Clientset struct {
 	clusterV1alpha1        *clusterv1alpha1.ClusterV1alpha1Client
 	fleetV1alpha1          *fleetv1alpha1.FleetV1alpha1Client
 	infrastructureV1alpha1 *infrastructurev1alpha1.InfrastructureV1alpha1Client
+	pipelineV1alpha1       *pipelinev1alpha1.PipelineV1alpha1Client
 }
 
 // AppsV1alpha1 retrieves the AppsV1alpha1Client
@@ -74,6 +78,11 @@ func (c *Clientset) FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface {
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
 func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface {
 	return c.infrastructureV1alpha1
+}
+
+// PipelineV1alpha1 retrieves the PipelineV1alpha1Client
+func (c *Clientset) PipelineV1alpha1() pipelinev1alpha1.PipelineV1alpha1Interface {
+	return c.pipelineV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -140,6 +149,10 @@ func NewForConfigAndClient(c *rest.Config, httpClient *http.Client) (*Clientset,
 	if err != nil {
 		return nil, err
 	}
+	cs.pipelineV1alpha1, err = pipelinev1alpha1.NewForConfigAndClient(&configShallowCopy, httpClient)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfigAndClient(&configShallowCopy, httpClient)
 	if err != nil {
@@ -166,6 +179,7 @@ func New(c rest.Interface) *Clientset {
 	cs.clusterV1alpha1 = clusterv1alpha1.New(c)
 	cs.fleetV1alpha1 = fleetv1alpha1.New(c)
 	cs.infrastructureV1alpha1 = infrastructurev1alpha1.New(c)
+	cs.pipelineV1alpha1 = pipelinev1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

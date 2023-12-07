@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -35,9 +36,9 @@ type FakeBackups struct {
 	ns   string
 }
 
-var backupsResource = v1alpha1.SchemeGroupVersion.WithResource("backups")
+var backupsResource = schema.GroupVersionResource{Group: "backup.kurator.dev", Version: "v1alpha1", Resource: "backups"}
 
-var backupsKind = v1alpha1.SchemeGroupVersion.WithKind("Backup")
+var backupsKind = schema.GroupVersionKind{Group: "backup.kurator.dev", Version: "v1alpha1", Kind: "Backup"}
 
 // Get takes name of the backup, and returns the corresponding backup object, and an error if there is any.
 func (c *FakeBackups) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Backup, err error) {

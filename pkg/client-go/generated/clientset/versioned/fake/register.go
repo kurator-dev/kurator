@@ -29,6 +29,7 @@ import (
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetv1alpha1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/apis/infra/v1alpha1"
+	pipelinev1alpha1 "kurator.dev/kurator/pkg/apis/pipeline/v1alpha1"
 )
 
 var scheme = runtime.NewScheme()
@@ -40,6 +41,7 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	clusterv1alpha1.AddToScheme,
 	fleetv1alpha1.AddToScheme,
 	infrastructurev1alpha1.AddToScheme,
+	pipelinev1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

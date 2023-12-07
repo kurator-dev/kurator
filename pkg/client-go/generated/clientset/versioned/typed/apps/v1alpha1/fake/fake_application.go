@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -35,9 +36,9 @@ type FakeApplications struct {
 	ns   string
 }
 
-var applicationsResource = v1alpha1.SchemeGroupVersion.WithResource("applications")
+var applicationsResource = schema.GroupVersionResource{Group: "apps.kurator.dev", Version: "v1alpha1", Resource: "applications"}
 
-var applicationsKind = v1alpha1.SchemeGroupVersion.WithKind("Application")
+var applicationsKind = schema.GroupVersionKind{Group: "apps.kurator.dev", Version: "v1alpha1", Kind: "Application"}
 
 // Get takes name of the application, and returns the corresponding application object, and an error if there is any.
 func (c *FakeApplications) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Application, err error) {
