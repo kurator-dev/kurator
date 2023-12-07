@@ -400,7 +400,7 @@ type Metric struct {
     // Currently supported metric are `request-success-rate` and `request-duration`.
     // `request-success-rate` indicates the successful request ratio during this checking intervalSeconds.
     // It returns a value from 0 to 100.
-    // `request-duration` returns the P99 latency within intervalSeconds.
+    // `request-duration` indicates P99 latency of the requests during the check interval.
     // `request-duration` returns in milliseconds.
     Name string `json:"name"`
 
@@ -408,7 +408,7 @@ type Metric struct {
     // Defaults to 60.
     IntervalSeconds *int `json:"intervalSeconds,omitempty"`
 
-    // Range value accepted for this metric
+    // ThresholdRange defines valid value accepted for this metric.
     // +optional
     ThresholdRange *CanaryThresholdRange `json:"thresholdRange,omitempty"`
 }
