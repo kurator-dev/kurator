@@ -1154,6 +1154,702 @@ spec:
                       description: Name defines the name of the sync policy. If unspecified,
                         a name of format `<application name>-<index>` will be generated.
                       type: string
+                    rollout:
+                      description: Rollout defines the rollout configurations to be
+                        used. If specified, a uniform rollout policy is configured
+                        for this installed object.
+                      properties:
+                        port:
+                          description: Port exposed by the service.
+                          format: int32
+                          type: integer
+                        preview:
+                          description: Preview is the labels and annotations are added
+                            to the preview service. The name of the preview service
+                            in the cluster is <service name>-canary
+                          properties:
+                            annotations:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            labels:
+                              additionalProperties:
+                                type: string
+                              type: object
+                          type: object
+                        primary:
+                          description: Primary is the labels and annotations are added
+                            to the primary service. Primary service is stable service.
+                            The name of the primary service in the cluster is <service
+                            name>-primary
+                          properties:
+                            annotations:
+                              additionalProperties:
+                                type: string
+                              type: object
+                            labels:
+                              additionalProperties:
+                                type: string
+                              type: object
+                          type: object
+                        rolloutPolicy:
+                          description: RolloutPolicy defines the release strategy
+                            of workload.
+                          properties:
+                            revertOnDeletion:
+                              description: RevertOnDeletion defines whether to revert
+                                a resource to its initial state when deleting rollout
+                                resource. Use of the revertOnDeletion property should
+                                be enabled when you no longer plan to rely on Kurator
+                                for deployment management. Kurator will install the
+                                Flagger to the specified cluster via a fleet plugin.
+                                If RevertOnDeletion is set to true, the Flagger will
+                                revert a resource to its initial state when the deleting
+                                Application.Spec.ApplicationSyncPolicy.Rollout or
+                                the Application.
+                              type: boolean
+                            rolloutTimeoutSeconds:
+                              description: RolloutTimeoutSeconds represents the maximum
+                                time in seconds for a preview deployment to make progress
+                                before it is considered to be failed. Defaults to
+                                600.
+                              type: integer
+                            skipTrafficAnalysis:
+                              description: SkipTrafficAnalysis promotes the preview
+                                release without analyzing it.
+                              type: boolean
+                            suspend:
+                              description: Suspend, if set to true will suspend the
+                                rollout, disabling any rollout runs regardless of
+                                any changes to its target, services, etc. Note that
+                                if the rollout is suspended during an analysis, its
+                                paused until the rollout is uninterrupted.
+                              type: boolean
+                            trafficAnalysis:
+                              description: TrafficAnalysis defines the validation
+                                process of a release
+                              properties:
+                                checkFailedTimes:
+                                  description: 'CheckFailedTimes defines the max number
+                                    of failed checks before the traffic analysis is
+                                    terminated If set "checkFailedTimes: 2". It means
+                                    Kurator will rollback when check failed 2 times.'
+                                  minimum: 0
+                                  type: integer
+                                checkIntervalSeconds:
+                                  description: CheckIntervalSeconds defines the schedule
+                                    interval for this traffic analysis. Interval is
+                                    the time interval between each test. Kurator changes
+                                    the traffic distribution rules (if they need to
+                                    be changed) and performs a traffic analysis every
+                                    so often. Defaults to 60.
+                                  type: integer
+                                metrics:
+                                  description: 'Metric check list for this traffic
+                                    analysis Flagger comes with two builtin metric
+                                    checks: HTTP request success rate and duration.
+                                    Can use either built-in metric checks or custom
+                                    checks. If you want use custom checks, you can
+                                    refer to https://docs.flagger.app/usage/metrics#custom-metrics.'
+                                  items:
+                                    properties:
+                                      intervalSeconds:
+                                        description: IntervalSeconds defines metrics
+                                          query interval. Defaults to 60.
+                                        type: integer
+                                      name:
+                                        description: Name of the metric. Currently
+                                          supported metric are `request-success-rate`
+                                          and `request-duration`. `request-success-rate`
+                                          indicates the successful request ratio during
+                                          this checking intervalSeconds. It returns
+                                          a value from 0 to 100. `request-duration`
+                                          indicates P99 latency of the requests during
+                                          the check interval. `request-duration` returns
+                                          in milliseconds.
+                                        type: string
+                                      thresholdRange:
+                                        description: ThresholdRange defines valid
+                                          value accepted for this metric.
+                                        properties:
+                                          max:
+                                            description: Maximum value
+                                            type: number
+                                          min:
+                                            description: Minimum value
+                                            type: number
+                                        type: object
+                                    required:
+                                    - name
+                                    type: object
+                                  type: array
+                                sessionAffinity:
+                                  description: SessionAffinity represents the session
+                                    affinity settings for a analysis run.
+                                  properties:
+                                    cookieName:
+                                      description: CookieName is the key that will
+                                        be used for the session affinity cookie.
+                                      type: string
+                                    maxAge:
+                                      description: 'MaxAge indicates the number of
+                                        seconds until the session affinity cookie
+                                        will expire. ref: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes
+                                        The default value is 86,400 seconds, i.e.
+                                        a day.'
+                                      type: integer
+                                  type: object
+                                webhooks:
+                                  description: Webhook list for this traffic analysis
+                                  items:
+                                    description: 'Kurator generates traffic load by
+                                      invoking the testloader through a webhook to
+                                      request the service. e.g. webhooks: - timeoutSeconds:
+                                      15 commend: - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
+                                      The above example means that during trafficAnalysis,
+                                      the cmd of "http://flagger-loadtester.test/"
+                                      is invoked to execute the command "hey -z 1m
+                                      -q 10 -c 2 http://podinfo-canary.test:9898/"'
+                                    properties:
+                                      command:
+                                        description: Command defines to commends that
+                                          executed by webhook.
+                                        items:
+                                          type: string
+                                        type: array
+                                      timeoutSeconds:
+                                        description: TimeoutSeconds defines request
+                                          timeout for this webhook Defaults to 60
+                                        type: integer
+                                    type: object
+                                  type: array
+                              required:
+                              - checkFailedTimes
+                              - checkIntervalSeconds
+                              type: object
+                            trafficRouting:
+                              description: TrafficRouting defines the configuration
+                                of the gateway, traffic routing rules, and so on.
+                              properties:
+                                analysisTimes:
+                                  description: 'AnalysisTimes defines the number of
+                                    traffic analysis checks to run for A/B Testing
+                                    and Blue/Green Deployment If set "analysisTimes:
+                                    10". It means Kurator will checks the preview
+                                    service ten times.'
+                                  type: integer
+                                canaryStrategy:
+                                  description: 'CanaryStrategy defines parameters
+                                    for Canary Deployment. Note: Kurator determines
+                                    A/B Testing, Blue/Green Deployment, or Canary
+                                    Deployment based on the presence of content in
+                                    the canaryStrategy field. So can''t configure
+                                    canaryStrategy and analysisTimes at the same time.'
+                                  properties:
+                                    maxWeight:
+                                      description: Max traffic weight routed to preview
+                                        service. If empty and no stepweights are set,
+                                        100 will be used by default.
+                                      type: integer
+                                    stepWeight:
+                                      description: 'StepWeight defines the incremental
+                                        traffic weight step for analysis phase If
+                                        set stepWeight: 10 and set maxWeight: 50 The
+                                        flow ratio between PREVIEW and PRIMARY at
+                                        each step is (10:90) (20:80) (30:70) (40:60)
+                                        (50:50)'
+                                      type: integer
+                                    stepWeightPromotion:
+                                      description: 'StepWeightPromotion defines the
+                                        incremental traffic weight step for promotion
+                                        phase If maxWeight: 50 and set stepWeightPromotion:
+                                        20 After a successful test, traffic to the
+                                        PRIMARY version changes as follows: 50 70
+                                        90 100.'
+                                      type: integer
+                                    stepWeights:
+                                      description: 'StepWeights defines the incremental
+                                        traffic weight steps for analysis phase Note:
+                                        Cannot configure stepWeights and stepWeight
+                                        at the same time. If both stepWeights and
+                                        maxWeight are configured, the traffic will
+                                        be scaled according to the settings in stepWeights
+                                        only. If set stepWeights: [1, 10, 20, 80]
+                                        The flow ratio between PREVIEW and PRIMARY
+                                        at each step is (1:99) (10:90) (20:80) (80:20)'
+                                      items:
+                                        type: integer
+                                      type: array
+                                  type: object
+                                corsPolicy:
+                                  description: 'Cross-Origin Resource Sharing policy
+                                    for the request. corsPolicy: allowHeaders: - x-some-header
+                                    allowMethods: - GET allowOrigin: - example.com
+                                    maxAge: 24h'
+                                  properties:
+                                    allowCredentials:
+                                      description: Indicates whether the caller is
+                                        allowed to send the actual request (not the
+                                        preflight) using credentials. Translates to
+                                        Access-Control-Allow-Credentials header.
+                                      type: boolean
+                                    allowHeaders:
+                                      description: List of HTTP headers that can be
+                                        used when requesting the resource. Serialized
+                                        to Access-Control-Allow-Methods header.
+                                      items:
+                                        type: string
+                                      type: array
+                                    allowMethods:
+                                      description: List of HTTP methods allowed to
+                                        access the resource. The content will be serialized
+                                        into the Access-Control-Allow-Methods header.
+                                      items:
+                                        type: string
+                                      type: array
+                                    allowOrigin:
+                                      description: The list of origins that are allowed
+                                        to perform CORS requests. The content will
+                                        be serialized into the Access-Control-Allow-Origin
+                                        header. Wildcard * will allow all origins.
+                                      items:
+                                        type: string
+                                      type: array
+                                    allowOrigins:
+                                      description: String patterns that match allowed
+                                        origins. An origin is allowed if any of the
+                                        string matchers match. If a match is found,
+                                        then the outgoing Access-Control-Allow-Origin
+                                        would be set to the origin as provided by
+                                        the client.
+                                      items:
+                                        description: Describes how to match a given
+                                          string in HTTP headers. Match is case-sensitive.
+                                        properties:
+                                          exact:
+                                            description: exact string match
+                                            type: string
+                                          prefix:
+                                            description: prefix-based match
+                                            type: string
+                                          regex:
+                                            description: ECMAscript style regex-based
+                                              match
+                                            type: string
+                                          suffix:
+                                            description: suffix-based match.
+                                            type: string
+                                        type: object
+                                      type: array
+                                    exposeHeaders:
+                                      description: A white list of HTTP headers that
+                                        the browsers are allowed to access. Serialized
+                                        into Access-Control-Expose-Headers header.
+                                      items:
+                                        type: string
+                                      type: array
+                                    maxAge:
+                                      description: Specifies how long the the results
+                                        of a preflight request can be cached. Translates
+                                        to the Access-Control-Max-Age header.
+                                      type: string
+                                  type: object
+                                gateways:
+                                  description: Gateways attached to the generated
+                                    Istio virtual service. Defaults to the internal
+                                    mesh gateway.
+                                  items:
+                                    type: string
+                                  type: array
+                                headers:
+                                  description: 'Headers operations for the Request.
+                                    e.g. headers: request: add: x-some-header: "value"'
+                                  properties:
+                                    request:
+                                      description: Header manipulation rules to apply
+                                        before forwarding a request to the destination
+                                        service
+                                      properties:
+                                        add:
+                                          additionalProperties:
+                                            type: string
+                                          description: Append the given values to
+                                            the headers specified by keys (will create
+                                            a comma-separated list of values)
+                                          type: object
+                                        remove:
+                                          description: Remove the specified headers
+                                          items:
+                                            type: string
+                                          type: array
+                                        set:
+                                          additionalProperties:
+                                            type: string
+                                          description: Overwrite the headers specified
+                                            by key with the given values
+                                          type: object
+                                      type: object
+                                    response:
+                                      description: Header manipulation rules to apply
+                                        before returning a response to the caller
+                                      properties:
+                                        add:
+                                          additionalProperties:
+                                            type: string
+                                          description: Append the given values to
+                                            the headers specified by keys (will create
+                                            a comma-separated list of values)
+                                          type: object
+                                        remove:
+                                          description: Remove the specified headers
+                                          items:
+                                            type: string
+                                          type: array
+                                        set:
+                                          additionalProperties:
+                                            type: string
+                                          description: Overwrite the headers specified
+                                            by key with the given values
+                                          type: object
+                                      type: object
+                                  type: object
+                                hosts:
+                                  description: Defaults to the RolloutConfig.ServiceName
+                                  items:
+                                    type: string
+                                  type: array
+                                match:
+                                  description: 'Match conditions of A/B Testing HTTP
+                                    header. The header keys must be lowercase and
+                                    use hyphen as the separator. values are case-sensitive
+                                    and formatted as follows: - `exact: "value"` for
+                                    exact string match - `prefix: "value"` for prefix-based
+                                    match - `regex: "value"` for ECMAscript style
+                                    regex-based match e.g.: match: - headers: myheader:
+                                    regex: ".*XXXX.*" - headers: cookie: regex: "^(.*?;)?(type=insider)(;.*)?$"
+                                    Note: If you want to use A/B Testing, you need
+                                    to configure analysisTimes and match. If you only
+                                    configure analysisTimes, it will trigger Blue/Green
+                                    Deployment. You can configure both canaryStrategy
+                                    and match. If configure both canaryStrategy and
+                                    match, Traffic that meets match goes towards the
+                                    preview service. Traffic that doesn''t meet the
+                                    match will go to the primary service and preview
+                                    service proportionally.'
+                                  items:
+                                    description: "HttpMatchRequest specifies a set
+                                      of criterion to be met in order for the rule
+                                      to be applied to the HTTP request. For example,
+                                      the following restricts the rule to match only
+                                      requests where the URL path starts with /ratings/v2/
+                                      and the request contains a \"cookie\" with value
+                                      \"user=jason\". \n apiVersion: networking.istio.io/v1alpha3
+                                      kind: VirtualService metadata: name: ratings-route
+                                      spec: hosts: - ratings http: - match: - headers:
+                                      cookie: regex: \"^(.*?;)?(user=jason)(;.*)?\"
+                                      uri: prefix: \"/ratings/v2/\" route: - destination:
+                                      host: ratings \n HTTPMatchRequest CANNOT be
+                                      empty."
+                                    properties:
+                                      authority:
+                                        description: "HTTP Authority values are case-sensitive
+                                          and formatted as follows: \n - `exact: \"value\"`
+                                          for exact string match \n - `prefix: \"value\"`
+                                          for prefix-based match \n - `regex: \"value\"`
+                                          for ECMAscript style regex-based match"
+                                        properties:
+                                          exact:
+                                            description: exact string match
+                                            type: string
+                                          prefix:
+                                            description: prefix-based match
+                                            type: string
+                                          regex:
+                                            description: ECMAscript style regex-based
+                                              match
+                                            type: string
+                                          suffix:
+                                            description: suffix-based match.
+                                            type: string
+                                        type: object
+                                      gateways:
+                                        description: Names of gateways where the rule
+                                          should be applied to. Gateway names at the
+                                          top of the VirtualService (if any) are overridden.
+                                          The gateway match is independent of sourceLabels.
+                                        items:
+                                          type: string
+                                        type: array
+                                      headers:
+                                        additionalProperties:
+                                          description: Describes how to match a given
+                                            string in HTTP headers. Match is case-sensitive.
+                                          properties:
+                                            exact:
+                                              description: exact string match
+                                              type: string
+                                            prefix:
+                                              description: prefix-based match
+                                              type: string
+                                            regex:
+                                              description: ECMAscript style regex-based
+                                                match
+                                              type: string
+                                            suffix:
+                                              description: suffix-based match.
+                                              type: string
+                                          type: object
+                                        description: "The header keys must be lowercase
+                                          and use hyphen as the separator, e.g. _x-request-id_.
+                                          \n Header values are case-sensitive and
+                                          formatted as follows: \n - `exact: \"value\"`
+                                          for exact string match \n - `prefix: \"value\"`
+                                          for prefix-based match \n - `regex: \"value\"`
+                                          for ECMAscript style regex-based match \n
+                                          **Note:** The keys `uri`, `scheme`, `method`,
+                                          and `authority` will be ignored."
+                                        type: object
+                                      ignoreUriCase:
+                                        description: "Flag to specify whether the
+                                          URI matching should be case-insensitive.
+                                          \n **Note:** The case will be ignored only
+                                          in the case of `exact` and `prefix` URI
+                                          matches."
+                                        type: boolean
+                                      method:
+                                        description: "HTTP Method values are case-sensitive
+                                          and formatted as follows: \n - `exact: \"value\"`
+                                          for exact string match \n - `prefix: \"value\"`
+                                          for prefix-based match \n - `regex: \"value\"`
+                                          for ECMAscript style regex-based match"
+                                        properties:
+                                          exact:
+                                            description: exact string match
+                                            type: string
+                                          prefix:
+                                            description: prefix-based match
+                                            type: string
+                                          regex:
+                                            description: ECMAscript style regex-based
+                                              match
+                                            type: string
+                                          suffix:
+                                            description: suffix-based match.
+                                            type: string
+                                        type: object
+                                      name:
+                                        description: The name assigned to a match.
+                                          The match's name will be concatenated with
+                                          the parent route's name and will be logged
+                                          in the access logs for requests matching
+                                          this route.
+                                        type: string
+                                      port:
+                                        description: Specifies the ports on the host
+                                          that is being addressed. Many services only
+                                          expose a single port or label ports with
+                                          the protocols they support, in these cases
+                                          it is not required to explicitly select
+                                          the port.
+                                        format: int32
+                                        type: integer
+                                      queryParams:
+                                        additionalProperties:
+                                          description: Describes how to match a given
+                                            string in HTTP headers. Match is case-sensitive.
+                                          properties:
+                                            exact:
+                                              description: exact string match
+                                              type: string
+                                            prefix:
+                                              description: prefix-based match
+                                              type: string
+                                            regex:
+                                              description: ECMAscript style regex-based
+                                                match
+                                              type: string
+                                            suffix:
+                                              description: suffix-based match.
+                                              type: string
+                                          type: object
+                                        description: "Query parameters for matching.
+                                          \n Ex: - For a query parameter like \"?key=true\",
+                                          the map key would be \"key\" and the string
+                                          match could be defined as `exact: \"true\"`.
+                                          - For a query parameter like \"?key\", the
+                                          map key would be \"key\" and the string
+                                          match could be defined as `exact: \"\"`.
+                                          - For a query parameter like \"?key=123\",
+                                          the map key would be \"key\" and the string
+                                          match could be defined as `regex: \"\\d+$\"`.
+                                          Note that this configuration will only match
+                                          values like \"123\" but not \"a123\" or
+                                          \"123a\". \n **Note:** `prefix` matching
+                                          is currently not supported."
+                                        type: object
+                                      scheme:
+                                        description: "URI Scheme values are case-sensitive
+                                          and formatted as follows: \n - `exact: \"value\"`
+                                          for exact string match \n - `prefix: \"value\"`
+                                          for prefix-based match \n - `regex: \"value\"`
+                                          for ECMAscript style regex-based match"
+                                        properties:
+                                          exact:
+                                            description: exact string match
+                                            type: string
+                                          prefix:
+                                            description: prefix-based match
+                                            type: string
+                                          regex:
+                                            description: ECMAscript style regex-based
+                                              match
+                                            type: string
+                                          suffix:
+                                            description: suffix-based match.
+                                            type: string
+                                        type: object
+                                      sourceLabels:
+                                        additionalProperties:
+                                          type: string
+                                        description: One or more labels that constrain
+                                          the applicability of a rule to workloads
+                                          with the given labels. If the VirtualService
+                                          has a list of gateways specified at the
+                                          top, it should include the reserved gateway
+                                          `mesh` in order for this field to be applicable.
+                                        type: object
+                                      sourceNamespace:
+                                        description: Source namespace constraining
+                                          the applicability of a rule to workloads
+                                          in that namespace. If the VirtualService
+                                          has a list of gateways specified in the
+                                          top-level `gateways` field, it must include
+                                          the reserved gateway `mesh` for this field
+                                          to be applicable.
+                                        type: string
+                                      uri:
+                                        description: "URI to match values are case-sensitive
+                                          and formatted as follows: \n - `exact: \"value\"`
+                                          for exact string match \n - `prefix: \"value\"`
+                                          for prefix-based match \n - `regex: \"value\"`
+                                          for ECMAscript style regex-based match"
+                                        properties:
+                                          exact:
+                                            description: exact string match
+                                            type: string
+                                          prefix:
+                                            description: prefix-based match
+                                            type: string
+                                          regex:
+                                            description: ECMAscript style regex-based
+                                              match
+                                            type: string
+                                          suffix:
+                                            description: suffix-based match.
+                                            type: string
+                                        type: object
+                                      withoutHeaders:
+                                        additionalProperties:
+                                          description: Describes how to match a given
+                                            string in HTTP headers. Match is case-sensitive.
+                                          properties:
+                                            exact:
+                                              description: exact string match
+                                              type: string
+                                            prefix:
+                                              description: prefix-based match
+                                              type: string
+                                            regex:
+                                              description: ECMAscript style regex-based
+                                                match
+                                              type: string
+                                            suffix:
+                                              description: suffix-based match.
+                                              type: string
+                                          type: object
+                                        description: withoutHeader has the same syntax
+                                          with the header, but has opposite meaning.
+                                          If a header is matched with a matching rule
+                                          among withoutHeader, the traffic becomes
+                                          not matched one.
+                                        type: object
+                                    type: object
+                                  type: array
+                                retries:
+                                  description: 'Retries describes the retry policy
+                                    to use when a HTTP request fails. For example,
+                                    the following rule sets the maximum number of
+                                    retries to three, with a 2s timeout per retry
+                                    attempt. e.g.: retries: attempts: 3 perTryTimeout:
+                                    2s retryOn: gateway-error,connect-failure,refused-stream'
+                                  properties:
+                                    attempts:
+                                      description: REQUIRED. Number of retries for
+                                        a given request. The interval between retries
+                                        will be determined automatically (25ms+).
+                                        Actual number of retries attempted depends
+                                        on the httpReqTimeout.
+                                      type: integer
+                                    perTryTimeout:
+                                      description: 'Timeout per retry attempt for
+                                        a given request. format: 1h/1m/1s/1ms. MUST
+                                        BE >=1ms.'
+                                      type: string
+                                    retryOn:
+                                      description: Specifies the conditions under
+                                        which retry takes place. One or more policies
+                                        can be specified using a ‘,’ delimited list.
+                                        The supported policies can be found in <https://www.envoyproxy.io/docs/envoy/latest/configuration/http_filters/router_filter#x-envoy-retry-on>
+                                        and <https://www.envoyproxy.io/docs/envoy/latest/configuration/http_filters/router_filter#x-envoy-retry-grpc-on>
+                                      type: string
+                                  type: object
+                                timeoutSeconds:
+                                  description: TimeoutSeconds of the HTTP or gRPC
+                                    request.
+                                  type: integer
+                              type: object
+                          type: object
+                        serviceName:
+                          description: ServiceName holds the name of a service which
+                            matches the workload.
+                          type: string
+                        testLoader:
+                          description: Testloader defines whether to install testloader
+                            for Kurator. Default is true. Testloader generates traffic
+                            during rollout analysis. If set it to false, user need
+                            to install the testloader himself. If set it to true or
+                            leave it blank, Kurator will install the flagger's testloader.
+                          type: boolean
+                        trafficRoutingProvider:
+                          description: TrafficRoutingProvider defines traffic routing
+                            provider. Kurator only supports istio for now. Other provider
+                            will be added later.
+                          type: string
+                        workload:
+                          description: Workload specifies what workload to deploy
+                            the test to. Workload of type Deployment or DaemonSet.
+                          properties:
+                            apiVersion:
+                              description: API version of the referent
+                              type: string
+                            kind:
+                              description: Kind of the referent
+                              type: string
+                            name:
+                              description: Name of the referent
+                              type: string
+                            namespace:
+                              description: Namespace of the referent
+                              type: string
+                          required:
+                          - name
+                          type: object
+                      required:
+                      - port
+                      - rolloutPolicy
+                      - serviceName
+                      - workload
+                      type: object
                   type: object
                 type: array
             required:
