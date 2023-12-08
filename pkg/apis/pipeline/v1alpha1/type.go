@@ -56,10 +56,10 @@ type PipelineTask struct {
 	// Name is the name of the task.
 	Name string `json:"name"`
 
-	// TaskTemplate allows users to select a predefined task.
-	// Users can choose a task from a set list and fill in their own parameters.
+	// PredefinedTask allows users to select a predefined task.
+	// Users can choose a predefined task from a set list and fill in their own parameters.
 	// +optional
-	TaskTemplate *TaskTemplate `json:"TaskTemplate,omitempty"`
+	PredefinedTask *PredefinedTask `json:"predefinedTask,omitempty"`
 
 	// CustomTask enables defining a task directly within the CRD if TaskRef is not used.
 	// This should only be used when TaskRef is not provided.
@@ -72,7 +72,7 @@ type PipelineTask struct {
 	Retries int `json:"retries,omitempty"`
 }
 
-type PredefinedTask string
+type TaskTemplate string
 
 const (
 	// GitClone is typically the first task in the entire pipeline.
@@ -85,12 +85,9 @@ const (
 	//   Kurator uses this Git credential to clone private repositories.
 	//   The secret is formatted as follows, and more details can be found at:
 	//   https://kurator.dev/docs/fleet-manager/pipeline/
-	//   .gitconfig example:
-	//   |   [credential "https://<hostname>"]
-	//   |       helper = store
-	//   .git-credentials example:
-	//   |   https://<user>:<pass>@<hostname>
-	GitClone PredefinedTask = "git-clone"
+	//   - username: <cleartext username>
+	//   - password: <cleartext password>
+	GitClone TaskTemplate = "git-clone"
 
 	// GoTest runs Go tests in specified packages with configurable environment
 	// This Predefined Task is origin from https://github.com/tektoncd/catalog/tree/main/task/golang-test/0.2/
@@ -104,17 +101,17 @@ const (
 	// - GO111MODULE: value of module support (default: auto)
 	// - GOCACHE: value for go caching path (default: "")
 	// - GOMODCACHE: value for go module caching path (default: "")
-	GoTest PredefinedTask = "go-test"
+	GoTest TaskTemplate = "go-test"
 
 	// TODO: add more PredefinedTask
 )
 
-// TaskTemplate provides a structure for defining a PredefinedTask.
-type TaskTemplate struct {
+// PredefinedTask provides a structure for defining a PredefinedTask.
+type PredefinedTask struct {
 	// TaskType specifies the type of predefined task to be used.
 	// This field is required to select the appropriate PredefinedTask.
 	// +required
-	TaskType PredefinedTask `json:"taskType"`
+	TaskType TaskTemplate `json:"taskType"`
 
 	// Params contains key-value pairs for task-specific parameters.
 	// The required parameters vary depending on the TaskType chosen.

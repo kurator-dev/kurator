@@ -388,17 +388,17 @@ string
 </tr>
 <tr>
 <td>
-<code>TaskTemplate</code><br>
+<code>predefinedTask</code><br>
 <em>
-<a href="#pipeline.kurator.dev/v1alpha1.TaskTemplate">
-TaskTemplate
+<a href="#pipeline.kurator.dev/v1alpha1.PredefinedTask">
+PredefinedTask
 </a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>TaskTemplate allows users to select a predefined task.
-Users can choose a task from a set list and fill in their own parameters.</p>
+<p>PredefinedTask allows users to select a predefined task.
+Users can choose a predefined task from a set list and fill in their own parameters.</p>
 </td>
 </tr>
 <tr>
@@ -434,18 +434,12 @@ default values is zero.</p>
 </div>
 </div>
 <h3 id="pipeline.kurator.dev/v1alpha1.PredefinedTask">PredefinedTask
-(<code>string</code> alias)</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#pipeline.kurator.dev/v1alpha1.TaskTemplate">TaskTemplate</a>)
-</p>
-<h3 id="pipeline.kurator.dev/v1alpha1.TaskTemplate">TaskTemplate
 </h3>
 <p>
 (<em>Appears on:</em>
 <a href="#pipeline.kurator.dev/v1alpha1.PipelineTask">PipelineTask</a>)
 </p>
-<p>TaskTemplate provides a structure for defining a PredefinedTask.</p>
+<p>PredefinedTask provides a structure for defining a PredefinedTask.</p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
 <table>
@@ -460,8 +454,8 @@ default values is zero.</p>
 <td>
 <code>taskType</code><br>
 <em>
-<a href="#pipeline.kurator.dev/v1alpha1.PredefinedTask">
-PredefinedTask
+<a href="#pipeline.kurator.dev/v1alpha1.TaskTemplate">
+TaskTemplate
 </a>
 </em>
 </td>
@@ -487,6 +481,12 @@ The required parameters vary depending on the TaskType chosen.</p>
 </table>
 </div>
 </div>
+<h3 id="pipeline.kurator.dev/v1alpha1.TaskTemplate">TaskTemplate
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PredefinedTask">PredefinedTask</a>)
+</p>
 <div class="admonition note">
 <p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
 </div>
