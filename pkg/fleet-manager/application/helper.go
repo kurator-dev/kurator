@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fleet
+package application
 
 import (
 	"context"
@@ -36,6 +36,7 @@ import (
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
+	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
 )
 
 // syncPolicyResource synchronizes the sync policy resources for a given application.
@@ -63,15 +64,15 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 }
 
 // fetchFleetClusterList fetch fleet cluster list that recorded in fleet and matches the selector.
-func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *fleetapi.Fleet, selector *applicationapi.ClusterSelector) ([]ClusterInterface, ctrl.Result, error) {
+func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *fleetapi.Fleet, selector *applicationapi.ClusterSelector) ([]fleetmanager.ClusterInterface, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
-	var fleetClusterList []ClusterInterface
+	var fleetClusterList []fleetmanager.ClusterInterface
 
 	for _, cluster := range fleet.Spec.Clusters {
 		// cluster.kind cluster.name that recorded in fleet must be valid
 		kind := cluster.Kind
 		name := cluster.Name
-		if kind == ClusterKind {
+		if kind == fleetmanager.ClusterKind {
 			cluster := &clusterv1alpha1.Cluster{}
 			key := client.ObjectKey{
 				Name:      name,
@@ -79,7 +80,7 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			}
 			err := a.Client.Get(ctx, key, cluster)
 			if apierrors.IsNotFound(err) {
-				return nil, ctrl.Result{RequeueAfter: RequeueAfter}, nil
+				return nil, ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
 			}
 			if err != nil {
 				return nil, ctrl.Result{}, err
@@ -87,7 +88,7 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			if doLabelsMatchSelector(cluster.Labels, selector) {
 				fleetClusterList = append(fleetClusterList, cluster)
 			}
-		} else if kind == AttachedClusterKind {
+		} else if kind == fleetmanager.AttachedClusterKind {
 			attachedCluster := &clusterv1alpha1.AttachedCluster{}
 			key := client.ObjectKey{
 				Name:      name,
@@ -95,7 +96,7 @@ func (a *ApplicationManager) fetchFleetClusterList(ctx context.Context, fleet *f
 			}
 			err := a.Client.Get(ctx, key, attachedCluster)
 			if apierrors.IsNotFound(err) {
-				return nil, ctrl.Result{RequeueAfter: RequeueAfter}, nil
+				return nil, ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
 			}
 			if err != nil {
 				return nil, ctrl.Result{}, err
@@ -141,7 +142,7 @@ func (a *ApplicationManager) handleSyncPolicyByKind(
 	policyKind string,
 	syncPolicy *applicationapi.ApplicationSyncPolicy,
 	policyName string,
-	fleetCluster ClusterInterface,
+	fleetCluster fleetmanager.ClusterInterface,
 	kubeConfig *fluxmeta.KubeConfigReference,
 ) (ctrl.Result, error) {
 	policyResourceName := generatePolicyResourceName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
@@ -168,7 +169,7 @@ func (a *ApplicationManager) handleSyncPolicyByKind(
 }
 
 // generateKubeConfig generates the kubeconfig reference for a cluster within a Fleet.
-func (a *ApplicationManager) generateKubeConfig(fleetCluster ClusterInterface) *fluxmeta.KubeConfigReference {
+func (a *ApplicationManager) generateKubeConfig(fleetCluster fleetmanager.ClusterInterface) *fluxmeta.KubeConfigReference {
 	secretRef := fluxmeta.SecretKeyReference{
 		Name: fleetCluster.GetSecretName(),
 		Key:  fleetCluster.GetSecretKey(),
