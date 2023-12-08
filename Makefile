@@ -20,7 +20,7 @@ LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(VERSION) \
 GO_BUILD=CGO_ENABLED=0 GOOS=$(GOOS) go build -ldflags $(LDFLAGS)
 DOCKER_BUILD=docker build --build-arg BASE_VERSION=nonroot --build-arg BASE_IMAGE=gcr.io/distroless/static
 
-FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor \) -prune -o -type f
+FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor -o -path ./.gopath \) -prune -o -type f
 XARGS = xargs -0 -r
 
 IMAGE_HUB ?= ghcr.io/kurator-dev
