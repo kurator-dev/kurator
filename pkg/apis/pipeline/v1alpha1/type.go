@@ -142,13 +142,6 @@ type CustomTask struct {
 	// +listType=atomic
 	Args []string `json:"args,omitempty"`
 
-	// Step's working directory.
-	// If not specified, the container runtime's default will be used, which
-	// might be configured in the container image.
-	// Cannot be updated.
-	// +optional
-	WorkingDir string `json:"workingDir,omitempty"`
-
 	// List of environment variables to set in the Step.
 	// Cannot be updated.
 	// +optional

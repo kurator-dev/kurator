@@ -253,11 +253,6 @@ spec:
                             to execute. If Script is not empty, the CustomTask cannot
                             have a Command and the Args will be passed to the Script.
                           type: string
-                        workingDir:
-                          description: Step's working directory. If not specified,
-                            the container runtime's default will be used, which might
-                            be configured in the container image. Cannot be updated.
-                          type: string
                       type: object
                     name:
                       description: Name is the name of the task.
