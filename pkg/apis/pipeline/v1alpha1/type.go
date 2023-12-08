@@ -108,10 +108,10 @@ const (
 
 // PredefinedTask provides a structure for defining a PredefinedTask.
 type PredefinedTask struct {
-	// TaskType specifies the type of predefined task to be used.
+	// Name specifies the predefined task template to be used.
 	// This field is required to select the appropriate PredefinedTask.
 	// +required
-	TaskType TaskTemplate `json:"taskType"`
+	Name TaskTemplate `json:"name"`
 
 	// Params contains key-value pairs for task-specific parameters.
 	// The required parameters vary depending on the TaskType chosen.

@@ -267,6 +267,11 @@ spec:
                         task. Users can choose a predefined task from a set list and
                         fill in their own parameters.
                       properties:
+                        name:
+                          description: Name specifies the predefined task template
+                            to be used. This field is required to select the appropriate
+                            PredefinedTask.
+                          type: string
                         params:
                           additionalProperties:
                             type: string
@@ -274,13 +279,8 @@ spec:
                             parameters. The required parameters vary depending on
                             the TaskType chosen.
                           type: object
-                        taskType:
-                          description: TaskType specifies the type of predefined task
-                            to be used. This field is required to select the appropriate
-                            PredefinedTask.
-                          type: string
                       required:
-                      - taskType
+                      - name
                       type: object
                     retries:
                       description: Retries represents how many times this task should
