@@ -473,6 +473,21 @@ ApplicationDestination
 If specified, it will override the destination specified at Application level.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>rollout</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutConfig">
+RolloutConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Rollout defines the rollout configurations to be used.
+If specified, a uniform rollout policy is configured for this installed object.</p>
+</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -526,6 +541,131 @@ github.com/fluxcd/helm-controller/api/v2beta1.HelmReleaseStatus
 </em>
 </td>
 <td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.CanaryConfig">CanaryConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.TrafficRoutingConfig">TrafficRoutingConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>maxWeight</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Max traffic weight routed to preview service.
+If empty and no stepweights are set, 100 will be used by default.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stepWeight</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>StepWeight defines the incremental traffic weight step for analysis phase
+If set stepWeight: 10 and set maxWeight: 50
+The flow ratio between PREVIEW and PRIMARY at each step is
+(10:90) (20:80) (30:70) (40:60) (50:50)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stepWeights</code><br>
+<em>
+[]int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>StepWeights defines the incremental traffic weight steps for analysis phase
+Note: Cannot configure stepWeights and stepWeight at the same time.
+If both stepWeights and maxWeight are configured, the traffic
+will be scaled according to the settings in stepWeights only.
+If set stepWeights: [1, 10, 20, 80]
+The flow ratio between PREVIEW and PRIMARY at each step is
+(1:99) (10:90) (20:80) (80:20)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>stepWeightPromotion</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>StepWeightPromotion defines the incremental traffic weight step for promotion phase
+If maxWeight: 50 and set stepWeightPromotion: 20
+After a successful test, traffic to the PRIMARY version changes as follows: 50 70 90 100.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.CanaryThresholdRange">CanaryThresholdRange
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.Metric">Metric</a>)
+</p>
+<p>CanaryThresholdRange defines the range used for metrics validation</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>min</code><br>
+<em>
+float64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Minimum value</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>max</code><br>
+<em>
+float64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Maximum value</p>
 </td>
 </tr>
 </tbody>
@@ -603,6 +743,116 @@ map[string]string
 <td>
 <em>(Optional)</em>
 <p>Labels to be added to the object&rsquo;s metadata.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.CrossNamespaceObjectReference">CrossNamespaceObjectReference
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutConfig">RolloutConfig</a>)
+</p>
+<p>CrossNamespaceObjectReference contains enough information to let you locate the
+typed referenced object at cluster level</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>API version of the referent</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Kind of the referent</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the referent</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Namespace of the referent</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.CustomMetadata">CustomMetadata
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutConfig">RolloutConfig</a>)
+</p>
+<p>CustomMetadata holds labels and annotations to set on generated objects.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>labels</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>annotations</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
 </td>
 </tr>
 </tbody>
@@ -1321,6 +1571,661 @@ when patching fails due to an immutable field change.</p>
 <td>
 <em>(Optional)</em>
 <p>Components specifies relative paths to specifications of other Components.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.Metric">Metric
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.TrafficAnalysis">TrafficAnalysis</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name of the metric.
+Currently supported metric are <code>request-success-rate</code> and <code>request-duration</code>.
+<code>request-success-rate</code> indicates the successful request ratio during this checking intervalSeconds.
+It returns a value from 0 to 100.
+<code>request-duration</code> indicates P99 latency of the requests during the check interval.
+<code>request-duration</code> returns in milliseconds.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>intervalSeconds</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>IntervalSeconds defines metrics query interval.
+Defaults to 60.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>thresholdRange</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.CanaryThresholdRange">
+CanaryThresholdRange
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ThresholdRange defines valid value accepted for this metric.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.RolloutConfig">RolloutConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncPolicy">ApplicationSyncPolicy</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>testLoader</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Testloader defines whether to install a private testloader for Kurator.
+Testloader generates traffic during rollout analysis.
+Default is false. Because Kurator will installs a public testloader with the flagger installation.
+If set it to true, Kurator will install a private testloader dedicated to requesting the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trafficRoutingProvider</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrafficRoutingProvider defines traffic routing provider.
+Kurator only supports istio for now.
+Other provider will be added later.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workload</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.CrossNamespaceObjectReference">
+CrossNamespaceObjectReference
+</a>
+</em>
+</td>
+<td>
+<p>Workload specifies what workload to deploy the test to.
+Workload of type Deployment or DaemonSet.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ServiceName holds the name of a service which matches the workload.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>port</code><br>
+<em>
+int32
+</em>
+</td>
+<td>
+<p>Port exposed by the service.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>primary</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.CustomMetadata">
+CustomMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Primary is the labels and annotations are added to the primary service.
+Primary service is stable service. The name of the primary service in the cluster is <service name>-primary</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>preview</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.CustomMetadata">
+CustomMetadata
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Preview is the labels and annotations are added to the preview service.
+The name of the preview service in the cluster is <service name>-canary</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rolloutPolicy</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutPolicy">
+RolloutPolicy
+</a>
+</em>
+</td>
+<td>
+<p>RolloutPolicy defines the release strategy of workload.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.RolloutPolicy">RolloutPolicy
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutConfig">RolloutConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>trafficRouting</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.TrafficRoutingConfig">
+TrafficRoutingConfig
+</a>
+</em>
+</td>
+<td>
+<p>TrafficRouting defines the configuration of the gateway, traffic routing rules, and so on.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>trafficAnalysis</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.TrafficAnalysis">
+TrafficAnalysis
+</a>
+</em>
+</td>
+<td>
+<p>TrafficAnalysis defines the validation process of a release</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>rolloutTimeoutSeconds</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RolloutTimeoutSeconds represents the maximum time in seconds for a
+preview deployment to make progress before it is considered to be failed.
+Defaults to 600.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>skipTrafficAnalysis</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SkipTrafficAnalysis promotes the preview release without analyzing it.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>revertOnDeletion</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RevertOnDeletion defines whether to revert a resource to its initial state when deleting rollout resource.
+Use of the revertOnDeletion property should be enabled
+when you no longer plan to rely on Kurator for deployment management.
+Kurator will install the Flagger to the specified cluster via a fleet plugin.
+If RevertOnDeletion is set to true, the Flagger will revert a resource to its initial state
+when the deleting Application.Spec.ApplicationSyncPolicy.Rollout or
+the Application.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>suspend</code><br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Suspend, if set to true will suspend the rollout, disabling any rollout runs
+regardless of any changes to its target, services, etc. Note that if the
+rollout is suspended during an analysis, its paused until the rollout is uninterrupted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.SessionAffinity">SessionAffinity
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.TrafficAnalysis">TrafficAnalysis</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>cookieName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>CookieName is the key that will be used for the session affinity cookie.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>maxAge</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MaxAge indicates the number of seconds until the session affinity cookie will expire.
+ref: <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes">https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes</a>
+The default value is 86,400 seconds, i.e. a day.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.TrafficAnalysis">TrafficAnalysis
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutPolicy">RolloutPolicy</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>checkIntervalSeconds</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>CheckIntervalSeconds defines the schedule interval for this traffic analysis.
+Interval is the time interval between each test.
+Kurator changes the traffic distribution rules (if they need to be changed)
+and performs a traffic analysis every so often.
+Defaults to 60.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>checkFailedTimes</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>CheckFailedTimes defines the max number of failed checks before the traffic analysis is terminated
+If set &ldquo;checkFailedTimes: 2&rdquo;. It means Kurator will rollback when check failed 2 times.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metrics</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.Metric">
+[]Metric
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metric check list for this traffic analysis
+Flagger comes with two builtin metric checks: HTTP request success rate and duration.
+Can use either built-in metric checks or custom checks.
+If you want use custom checks, you can refer to <a href="https://docs.flagger.app/usage/metrics#custom-metrics">https://docs.flagger.app/usage/metrics#custom-metrics</a>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>webhooks</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.Webhook">
+[]Webhook
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Webhook list for this traffic analysis</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sessionAffinity</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.SessionAffinity">
+SessionAffinity
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SessionAffinity represents the session affinity settings for a analysis run.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.TrafficRoutingConfig">TrafficRoutingConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutPolicy">RolloutPolicy</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>timeoutSeconds</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TimeoutSeconds of the HTTP or gRPC request.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>gateways</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Gateways attached to the generated Istio virtual service.
+Defaults to the internal mesh gateway.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>hosts</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Defaults to the RolloutConfig.ServiceName</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retries</code><br>
+<em>
+github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.HTTPRetry
+</em>
+</td>
+<td>
+<p>Retries describes the retry policy to use when a HTTP request fails.
+For example, the following rule sets the maximum number of retries to three,
+with a 2s timeout per retry attempt.
+e.g.:
+retries:
+attempts: 3
+perTryTimeout: 2s
+retryOn: gateway-error,connect-failure,refused-stream</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>headers</code><br>
+<em>
+github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.Headers
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Headers operations for the Request.
+e.g.
+headers:
+request:
+add:
+x-some-header: &ldquo;value&rdquo;</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>corsPolicy</code><br>
+<em>
+github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.CorsPolicy
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Cross-Origin Resource Sharing policy for the request.
+corsPolicy:
+allowHeaders:
+- x-some-header
+allowMethods:
+- GET
+allowOrigin:
+- example.com
+maxAge: 24h</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>canaryStrategy</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.CanaryConfig">
+CanaryConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CanaryStrategy defines parameters for Canary Deployment.
+Note: Kurator determines A/B Testing, Blue/Green Deployment, or Canary Deployment
+based on the presence of content in the canaryStrategy field.
+So can&rsquo;t configure canaryStrategy and analysisTimes at the same time.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>analysisTimes</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AnalysisTimes defines the number of traffic analysis checks to run for A/B Testing and Blue/Green Deployment
+If set &ldquo;analysisTimes: 10&rdquo;. It means Kurator will checks the preview service ten times.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>match</code><br>
+<em>
+[]github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.HTTPMatchRequest
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Match conditions of A/B Testing HTTP header.
+The header keys must be lowercase and use hyphen as the separator.
+values are case-sensitive and formatted as follows:
+- <code>exact: &quot;value&quot;</code> for exact string match
+- <code>prefix: &quot;value&quot;</code> for prefix-based match
+- <code>regex: &quot;value&quot;</code> for ECMAscript style regex-based match
+e.g.:
+match:
+- headers:
+myheader:
+regex: &ldquo;.<em>XXXX.</em>&rdquo;
+- headers:
+cookie:
+regex: &ldquo;^(.<em>?;)?(type=insider)(;.</em>)?$&rdquo;
+Note: If you want to use A/B Testing, you need to configure analysisTimes and match.
+If you only configure analysisTimes, it will trigger Blue/Green Deployment.
+You can configure both canaryStrategy and match.
+If configure both canaryStrategy and match, Traffic that meets match goes towards the preview service.
+Traffic that doesn&rsquo;t meet the match will go to the primary service and preview service proportionally.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="apps.kurator.dev/v1alpha1.Webhook">Webhook
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.TrafficAnalysis">TrafficAnalysis</a>)
+</p>
+<p>Kurator generates traffic load by invoking the testloader through a webhook to request the service.
+e.g.
+webhooks:
+- timeoutSeconds: 15
+commend:
+- &ldquo;hey -z 1m -q 10 -c 2 <a href="http://podinfo-canary.test:9898/&quot;">http://podinfo-canary.test:9898/&rdquo;</a>
+The above example means that during trafficAnalysis, the cmd of &ldquo;<a href="http://flagger-loadtester.test/&quot;">http://flagger-loadtester.test/&rdquo;</a> is invoked
+to execute the command &ldquo;hey -z 1m -q 10 -c 2 <a href="http://podinfo-canary.test:9898/&quot;">http://podinfo-canary.test:9898/&rdquo;</a></p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>timeoutSeconds</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<p>TimeoutSeconds defines request timeout for this webhook
+Defaults to 60</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>command</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Command defines to commends that executed by webhook.</p>
 </td>
 </tr>
 </tbody>
