@@ -107,10 +107,10 @@ type ApplicationSyncPolicy struct {
 }
 
 type RolloutConfig struct {
-	// Testloader defines whether to install testloader for Kurator. Default is true.
+	// Testloader defines whether to install a private testloader for Kurator.
 	// Testloader generates traffic during rollout analysis.
-	// If set it to false, user need to install the testloader himself.
-	// If set it to true or leave it blank, Kurator will install the flagger's testloader.
+	// Default is false. Because Kurator will installs a public testloader with the flagger installation.
+	// If set it to true, Kurator will install a private testloader dedicated to requesting the workload.
 	// +optional
 	TestLoader *bool `json:"testLoader,omitempty"`
 
