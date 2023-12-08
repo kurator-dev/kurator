@@ -190,6 +190,8 @@ $(GOPATH_SHIM):
 	@echo Create gopath shim... >&2
 	@mkdir -p $(GOPATH_SHIM)
 
+# learn from kyverno/kyverno project, this will allow you run client-gen everywhere without put project into GOPATH
+# DO NOT REMOVE THIS `.INTERMEDIATE`
 .INTERMEDIATE: $(PACKAGE_SHIM)
 $(PACKAGE_SHIM): $(GOPATH_SHIM)
 	@echo Create package shim... >&2
