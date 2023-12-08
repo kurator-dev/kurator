@@ -111,3 +111,7 @@ func clientForCluster(client client.Client, ns string, cluster ClusterInterface)
 
 	return kclient.NewClient(kclient.NewRESTClientGetter(rest))
 }
+
+func (cluster FleetCluster) GetRuntimeClient() client.Client {
+	return cluster.client.CtrlRuntimeClient()
+}

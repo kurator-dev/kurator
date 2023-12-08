@@ -207,7 +207,7 @@ func getObjStoreCredentials(ctx context.Context, client client.Client, namespace
 // It uses the kube client from the FleetCluster instance to create the new secret in the respective cluster.
 func createNewSecretInFleetCluster(ctx context.Context, cluster *FleetCluster, newSecret *corev1.Secret) error {
 	// Get the kubeclient.Interface instance
-	kubeClient := cluster.client.CtrlRuntimeClient()
+	kubeClient := cluster.GetRuntimeClient()
 
 	// Get the namespace of the secret
 	namespace := newSecret.Namespace
