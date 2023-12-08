@@ -141,7 +141,9 @@ test: clean tidy
 clean:
 	go clean -testcache
 	go clean -cache
-	rm -rf $(OUT_BASE_PATH)
+	@rm -rf $(OUT_BASE_PATH)
+	@rm -rf .tools
+	@rm -rf .gopath
 
 .PHONY: gen
 gen: clean \
@@ -167,9 +169,10 @@ doc.serve:
 doc.build:
 	KURATOR_VERSION=$(VERSION) hack/local-docsite-build.sh
 
+TOOL_DIR := ${PWD}/.tools
 PHONY: init-codegen
-init-codegen:
-	hack/init-codegen.sh
+init-codegen: ## Install code generation tools
+	@hack/init-codegen.sh
 
 .PHONY: gen-api
 gen-api: gen-code gen-crd gen-api-doc
@@ -178,9 +181,29 @@ gen-api: gen-code gen-crd gen-api-doc
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	hack/update-crdgen.sh
 
+
+PACKAGE					    := kurator.dev
+GOPATH_SHIM                 := ${PWD}/.gopath
+PACKAGE_SHIM                := $(GOPATH_SHIM)/src/$(PACKAGE)
+
+$(GOPATH_SHIM):
+	@echo Create gopath shim... >&2
+	@mkdir -p $(GOPATH_SHIM)
+
+.INTERMEDIATE: $(PACKAGE_SHIM)
+$(PACKAGE_SHIM): $(GOPATH_SHIM)
+	@echo Create package shim... >&2
+	@mkdir -p $(GOPATH_SHIM)/src/kurator.dev && ln -s -f ${PWD} $(PACKAGE_SHIM)
+
 .PHONY: gen-code
-gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+gen-code: $(PACKAGE_SHIM) init-codegen gen-code-clean ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	hack/update-codegen.sh
+
+.PHONY: gen-code-clean
+gen-code-clean: ## Clean up generated files
+	@echo "Cleaning up generated files..."
+	@find pkg/apis -type f -name zz_generated* | xargs rm
+	@find pkg/client-go -type f -name *.go | xargs rm
 
 .PHONY: gen-api-doc
 gen-api-doc: ## Generate API documentation

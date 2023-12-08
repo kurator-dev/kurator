@@ -31,3 +31,6 @@ node_modules/
 # ignore all local dev files
 .vscode/
 .local/
+
+.tools
+.gopath
