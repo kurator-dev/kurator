@@ -1,0 +1,477 @@
+<p>Packages:</p>
+<ul class="simple">
+<li>
+<a href="#pipeline.kurator.dev%2fv1alpha1">pipeline.kurator.dev/v1alpha1</a>
+</li>
+</ul>
+<h2 id="pipeline.kurator.dev/v1alpha1">pipeline.kurator.dev/v1alpha1</h2>
+<p>Package v1alpha1 contains API Schema definitions for the fleet v1alpha1 API group</p>
+Resource Types:
+<ul class="simple"><li>
+<a href="#pipeline.kurator.dev/v1alpha1.Pipeline">Pipeline</a>
+</li></ul>
+<h3 id="pipeline.kurator.dev/v1alpha1.Pipeline">Pipeline
+</h3>
+<p>Pipeline is the top-level type for Kurator CI Pipeline.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code><br>
+string</td>
+<td>
+<code>pipeline.kurator.dev/v1alpha1</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code><br>
+string
+</td>
+<td>
+<code>Pipeline</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#objectmeta-v1-meta">
+Kubernetes meta/v1.ObjectMeta
+</a>
+</em>
+</td>
+<td>
+Refer to the Kubernetes API documentation for the fields of the
+<code>metadata</code> field.
+</td>
+</tr>
+<tr>
+<td>
+<code>spec</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineSpec">
+PipelineSpec
+</a>
+</em>
+</td>
+<td>
+<table>
+<tr>
+<td>
+<code>description</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Description allows an administrator to provide a description of the pipeline.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tasks</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineTask">
+[]PipelineTask
+</a>
+</em>
+</td>
+<td>
+<p>Tasks is an ordered list of tasks in the pipeline, containing detailed information about each task.
+The tasks will be executed in the order they are listed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sharedWorkspace</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SharedWorkspace is the name of the PVC. If not specified, a PVC with the Pipeline&rsquo;s name as prefix will be created by default.
+If not set, Kurator will create a PVC named Pipeline.name using default config</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td>
+<code>status</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineStatus">
+PipelineStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="pipeline.kurator.dev/v1alpha1.CustomTask">CustomTask
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineTask">PipelineTask</a>)
+</p>
+<p>CustomTask defines the specification for a user-defined task.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>image</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Image specifies the Docker image name.
+More info: <a href="https://kubernetes.io/docs/concepts/containers/images">https://kubernetes.io/docs/concepts/containers/images</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>command</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Command is the entrypoint array. It&rsquo;s not executed in a shell.
+If not provided, the image&rsquo;s ENTRYPOINT is used.
+Environment variables can be used in the format $(VAR_NAME).
+More info: <a href="https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell">https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>args</code><br>
+<em>
+[]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Args are the arguments for the entrypoint.
+If not provided, the image&rsquo;s CMD is used.
+Supports environment variable expansion in the format $(VAR_NAME).
+More info: <a href="https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell">https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>env</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#envvar-v1-core">
+[]Kubernetes core/v1.EnvVar
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>List of environment variables to set in the Step.
+Cannot be updated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>computeResources</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#resourcerequirements-v1-core">
+Kubernetes core/v1.ResourceRequirements
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceRequirements required by this Step.
+Cannot be updated.
+More info: <a href="https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/">https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>script</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Script is the contents of an executable file to execute.
+If Script is not empty, the CustomTask cannot have a Command and the Args will be passed to the Script.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="pipeline.kurator.dev/v1alpha1.PipelinePhase">PipelinePhase
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineStatus">PipelineStatus</a>)
+</p>
+<h3 id="pipeline.kurator.dev/v1alpha1.PipelineSpec">PipelineSpec
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.Pipeline">Pipeline</a>)
+</p>
+<p>PipelineSpec defines the desired state of a Pipeline.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>description</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Description allows an administrator to provide a description of the pipeline.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>tasks</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineTask">
+[]PipelineTask
+</a>
+</em>
+</td>
+<td>
+<p>Tasks is an ordered list of tasks in the pipeline, containing detailed information about each task.
+The tasks will be executed in the order they are listed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sharedWorkspace</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SharedWorkspace is the name of the PVC. If not specified, a PVC with the Pipeline&rsquo;s name as prefix will be created by default.
+If not set, Kurator will create a PVC named Pipeline.name using default config</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="pipeline.kurator.dev/v1alpha1.PipelineStatus">PipelineStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.Pipeline">Pipeline</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>phase</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelinePhase">
+PipelinePhase
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Phase describes the overall state of the Pipeline.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>eventListenerServiceName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>EventListenerServiceName specifies the name of the service created by Kurator for event listeners.
+This name is useful for users when setting up a gateway service and routing to this service.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="pipeline.kurator.dev/v1alpha1.PipelineTask">PipelineTask
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineSpec">PipelineSpec</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the task.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>predefinedTask</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.PredefinedTask">
+PredefinedTask
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>PredefinedTask allows users to select a predefined task.
+Users can choose a predefined task from a set list and fill in their own parameters.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>customTask</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.CustomTask">
+CustomTask
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CustomTask enables defining a task directly within the CRD if TaskRef is not used.
+This should only be used when TaskRef is not provided.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>retries</code><br>
+<em>
+int
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Retries represents how many times this task should be retried in case of task failure.
+default values is zero.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="pipeline.kurator.dev/v1alpha1.PredefinedTask">PredefinedTask
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineTask">PipelineTask</a>)
+</p>
+<p>PredefinedTask provides a structure for defining a PredefinedTask.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code><br>
+<em>
+<a href="#pipeline.kurator.dev/v1alpha1.TaskTemplate">
+TaskTemplate
+</a>
+</em>
+</td>
+<td>
+<p>Name specifies the predefined task template to be used.
+This field is required to select the appropriate PredefinedTask.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>params</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Params contains key-value pairs for task-specific parameters.
+The required parameters vary depending on the TaskType chosen.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="pipeline.kurator.dev/v1alpha1.TaskTemplate">TaskTemplate
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PredefinedTask">PredefinedTask</a>)
+</p>
+<div class="admonition note">
+<p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
+</div>

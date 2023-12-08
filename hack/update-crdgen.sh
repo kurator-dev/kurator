@@ -22,7 +22,12 @@ kubectl kustomize "${CRD_PATH}" -o "${CRD_PATH}"/infrastructure.cluster.x-k8s.io
 mv "${CRD_PATH}"/*.yaml "${OPERATOR_CHART_PATH}"/crds/
 
 echo "Generating crd for fleet manager"
-APIS_PATHS=( "./pkg/apis/fleet/..." "./pkg/apis/apps/..." "./pkg/apis/backups/...")
+APIS_PATHS=(
+    "./pkg/apis/fleet/..."
+    "./pkg/apis/apps/..."
+    "./pkg/apis/backups/..."
+    "./pkg/apis/pipeline/..."
+)
 FLEET_CHART_PATH=${FLEET_CHART_PATH:-"manifests/charts/fleet-manager"}
 for APIS_PATH in "${APIS_PATHS[@]}"
 do

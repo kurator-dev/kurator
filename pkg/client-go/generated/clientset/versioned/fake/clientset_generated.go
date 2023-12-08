@@ -35,6 +35,8 @@ import (
 	fakefleetv1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/fleet/v1alpha1/fake"
 	infrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1"
 	fakeinfrastructurev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/infra/v1alpha1/fake"
+	pipelinev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/pipeline/v1alpha1"
+	fakepipelinev1alpha1 "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned/typed/pipeline/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -110,4 +112,9 @@ func (c *Clientset) FleetV1alpha1() fleetv1alpha1.FleetV1alpha1Interface {
 // InfrastructureV1alpha1 retrieves the InfrastructureV1alpha1Client
 func (c *Clientset) InfrastructureV1alpha1() infrastructurev1alpha1.InfrastructureV1alpha1Interface {
 	return &fakeinfrastructurev1alpha1.FakeInfrastructureV1alpha1{Fake: &c.Fake}
+}
+
+// PipelineV1alpha1 retrieves the PipelineV1alpha1Client
+func (c *Clientset) PipelineV1alpha1() pipelinev1alpha1.PipelineV1alpha1Interface {
+	return &fakepipelinev1alpha1.FakePipelineV1alpha1{Fake: &c.Fake}
 }

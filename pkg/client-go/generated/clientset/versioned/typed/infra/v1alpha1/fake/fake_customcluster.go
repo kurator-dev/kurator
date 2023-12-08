@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
+	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -35,9 +36,9 @@ type FakeCustomClusters struct {
 	ns   string
 }
 
-var customclustersResource = v1alpha1.SchemeGroupVersion.WithResource("customclusters")
+var customclustersResource = schema.GroupVersionResource{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Resource: "customclusters"}
 
-var customclustersKind = v1alpha1.SchemeGroupVersion.WithKind("CustomCluster")
+var customclustersKind = schema.GroupVersionKind{Group: "infrastructure.cluster.x-k8s.io", Version: "v1alpha1", Kind: "CustomCluster"}
 
 // Get takes name of the customCluster, and returns the corresponding customCluster object, and an error if there is any.
 func (c *FakeCustomClusters) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.CustomCluster, err error) {
