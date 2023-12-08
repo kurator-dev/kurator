@@ -27,7 +27,7 @@ FLEET_CHART_PATH=${FLEET_CHART_PATH:-"manifests/charts/fleet-manager"}
 for APIS_PATH in "${APIS_PATHS[@]}"
 do
     echo "Generating CRD for ${APIS_PATH}"
-    ${CONTROLLER_GEN} crd paths="${APIS_PATH}" output:crd:dir="${CRD_PATH}"
+    ${CONTROLLER_GEN} crd:allowDangerousTypes=true paths="${APIS_PATH}" output:crd:dir="${CRD_PATH}"
 done
 
 mv "${CRD_PATH}"/*.yaml "${FLEET_CHART_PATH}"/crds/
