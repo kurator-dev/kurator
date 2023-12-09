@@ -4,7 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/..
+REPO_ROOT=$(git rev-parse --show-toplevel)
 GOLANGCI_LINT_PKG="github.com/golangci/golangci-lint/cmd/golangci-lint"
 GOLANGCI_LINT_VER="v1.51.2"
 

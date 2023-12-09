@@ -6,7 +6,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+REPO_ROOT=$(git rev-parse --show-toplevel)
 THANOS_OUT_PATH="${REPO_ROOT}/out/thanos"
 THANOS_MANIFESTS_PATH="${REPO_ROOT}/manifests/profiles/thanos"
 KUBE_THANOS_VER=${KUBE_THANOS_VER:-v0.26.0}

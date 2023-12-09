@@ -5,7 +5,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+REPO_ROOT=$(git rev-parse --show-toplevel)
 
 JSONNET_BUNDLER_VERSION=${JSONNET_BUNDLER_VERSION:-v0.5.1}
 JSONTOYAML_VERSION=${JSONTOYAML_VERSION:-v0.1.0}

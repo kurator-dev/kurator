@@ -6,7 +6,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+REPO_ROOT=$(git rev-parse --show-toplevel)
 PROM_OUT_PATH=${REPO_ROOT}/out/prom
 PROM_JSONNET_FILE=${REPO_ROOT}/$1
 PROM_MANIFESTS_PATH=${REPO_ROOT}/${2}
