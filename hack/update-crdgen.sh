@@ -22,7 +22,7 @@ do
 done
 
 echo "running kustomize to generate the final CRDs"
-${KUSTOMIZE} "${CRD_PATH}" -o "${CRD_PATH}"/infrastructure.cluster.x-k8s.io_customclusters.yaml
+${KUSTOMIZE} build "${CRD_PATH}" -o "${CRD_PATH}"/infrastructure.cluster.x-k8s.io_customclusters.yaml
 mv "${CRD_PATH}"/*.yaml "${OPERATOR_CHART_PATH}"/crds/
 
 echo "Generating crd for fleet manager"
