@@ -28,7 +28,7 @@ pushd "${THANOS_OUT_PATH}"
 
     cp "${REPO_ROOT}/hack/build-thanos.sh" build.sh
 
-    bash build.sh thanos.jsonnet
+    PATH="${REPO_ROOT}/.tools:$PATH" bash build.sh thanos.jsonnet
 popd
 
 cp -r "${THANOS_OUT_PATH}"/manifests/* "${THANOS_MANIFESTS_PATH}"

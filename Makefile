@@ -36,6 +36,8 @@ else
 endif
 export PATH := $(GOBIN):$(PATH)
 
+include Makefile.tools.mk
+
 .PHONY: build
 build: tidy kurator cluster-operator fleet-manager
 
@@ -107,22 +109,23 @@ fix-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
 		${XARGS} hack/fix_copyright_banner.sh
 
-golangci-lint:
+.PHONY: golangci-lint
+golangci-lint: $(golangci-lint) ## Run golangci-lint
 	hack/golangci-lint.sh
 
-init-gen:
-	hack/init-gen-tools.sh
+.PHONY: init-gen-tools
+init-gen-tools: $(jb) $(gojsontoyaml) $(jsonnet)
 
 .PHONY: gen-prom
-gen-prom: init-gen
+gen-prom: init-gen-tools
 	hack/gen-prom.sh manifests/jsonnet/prometheus/prometheus.jsonnet manifests/profiles/prom/
 
 .PHONY: gen-prom-thanos
-gen-prom-thanos: init-gen
+gen-prom-thanos: init-gen-tools
 	hack/gen-prom.sh manifests/jsonnet/prometheus/thanos.jsonnet manifests/profiles/prom-thanos/
 
 .PHONY: gen-thanos
-gen-thanos: init-gen
+gen-thanos: init-gen-tools
 	hack/gen-thanos.sh
 
 .PHONY: sync-crds
@@ -169,10 +172,14 @@ doc.serve:
 doc.build:
 	KURATOR_VERSION=$(VERSION) hack/local-docsite-build.sh
 
-TOOL_DIR := ${PWD}/.tools
 PHONY: init-codegen
-init-codegen: ## Install code generation tools
-	@hack/init-codegen.sh
+init-codegen: $(kustomize) \
+				$(deepcopy-gen) \
+				$(client-gen) \
+				$(lister-gen) \
+				$(informer-gen) \
+				$(register-gen) \
+ 			    $(controller-gen) ## Install code generation tools
 
 .PHONY: gen-api
 gen-api: gen-code gen-crd gen-api-doc
@@ -208,7 +215,7 @@ gen-code-clean: ## Clean up generated files
 	@find pkg/client-go -type f -name *.go | xargs rm
 
 .PHONY: gen-api-doc
-gen-api-doc: ## Generate API documentation
+gen-api-doc: $(gen-crd-api-reference-docs) ## Generate API documentation
 	hack/gen-api-doc.sh
 
 .PHONY: release-artifacts
