@@ -5,9 +5,9 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-ROOT_DIR=$(git rev-parse --show-toplevel)/hack
-KIND_CONFIGS_ROOT=${ROOT_DIR}/kind-configs
-source "${ROOT_DIR}"/util.sh
+HACK_DIR=$(git rev-parse --show-toplevel)/hack
+KIND_CONFIGS_ROOT=${HACK_DIR}/kind-configs
+source "${HACK_DIR}"/util.sh
 
 KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.25.3"}
 
@@ -20,7 +20,7 @@ TEMP_PATH=$(mktemp -d)
 echo -e "Preparing kind config in path: ${TEMP_PATH}"
 #When the Enable worker option is turned on, select to copy the configuration that contains the worker.
 if [ ${ENABLE_KIND_WITH_WORKER} = "true" ]; then
-    cp -rf ${ROOT_DIR}/kind-configs-with-worker/*.yaml "${TEMP_PATH}"/
+    cp -rf ${HACK_DIR}/kind-configs-with-worker/*.yaml "${TEMP_PATH}"/
 else
     cp -rf "${KIND_CONFIGS_ROOT}"/*.yaml "${TEMP_PATH}"/
 fi
