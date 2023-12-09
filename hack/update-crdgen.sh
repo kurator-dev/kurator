@@ -5,10 +5,10 @@ set -o nounset
 set -o pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
-TOOL_DIR="${REPO_ROOT}/.tools"
+TOOLS_DIR="${REPO_ROOT}/.tools"
 
-CONTROLLER_GEN=${CONTROLLER_GEN:-"${TOOL_DIR}/controller-gen"}
-KUSTOMIZE=${KUSTOMIZE:-"${TOOL_DIR}/kustomize"}
+CONTROLLER_GEN=${CONTROLLER_GEN:-"${TOOLS_DIR}/controller-gen"}
+KUSTOMIZE=${KUSTOMIZE:-"${TOOLS_DIR}/kustomize"}
 CRD_PATH=${CRD_PATH:-"manifests/config/crds"}
 
 echo "Generating crd for cluster operator"
