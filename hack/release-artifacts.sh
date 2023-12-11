@@ -8,7 +8,7 @@ GOOS=${GOOS:-"linux"}
 GOARCH=${GOARCH:-"amd64"}
 
 VERSION=${VERSION:-"latest"}
-REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
+REPO_ROOT=$(git rev-parse --show-toplevel)
 OUT_BASE_PATH=${OUT_BASE_PATH:-"${REPO_ROOT}/out"}
 RELEASE_PATH="${OUT_BASE_PATH}/release-artifacts"
 CHART_PATH="${OUT_BASE_PATH}/charts"

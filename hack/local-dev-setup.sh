@@ -10,9 +10,9 @@ set -o pipefail
 # This script depends on utils in: ${REPO_ROOT}/hack/util.sh
 # 1. used by developer to setup develop environment quickly.
 # 2. used by e2e testing to setup test environment automatically.
-REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")
-KIND_CONFIGS_ROOT=${REPO_ROOT}/kind-configs
-source "${REPO_ROOT}"/util.sh
+ROOT_DIR=$(git rev-parse --show-toplevel)/hack
+KIND_CONFIGS_ROOT=${ROOT_DIR}/kind-configs
+source "${ROOT_DIR}"/util.sh
 
 KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.25.3"}
 
@@ -31,7 +31,7 @@ TEMP_PATH=$(mktemp -d)
 echo -e "Preparing kind config in path: ${TEMP_PATH}"
 #When the Enable worker option is turned on, select to copy the configuration that contains the worker.
 if [ ${ENABLE_KIND_WITH_WORKER} = "true" ]; then
-    cp -rf ${REPO_ROOT}/kind-configs-with-worker/*.yaml "${TEMP_PATH}"/
+    cp -rf ${ROOT_DIR}/kind-configs-with-worker/*.yaml "${TEMP_PATH}"/
 else
     cp -rf "${KIND_CONFIGS_ROOT}"/*.yaml "${TEMP_PATH}"/
 fi

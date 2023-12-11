@@ -4,7 +4,7 @@
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+REPO_ROOT=$(git rev-parse --show-toplevel)
 HELM_CRD_BASE=${REPO_ROOT}/manifests/charts/cluster-operator/crds
 WEBHOOK_BASE=${REPO_ROOT}/manifests/charts/cluster-operator/templates
 CLUSTER_API_PROVIDER_VERSION=${CLUSTER_API_PROVIDER_VERSION:-'v1.2.5'}

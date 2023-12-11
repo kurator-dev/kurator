@@ -4,7 +4,7 @@
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+REPO_ROOT=$(git rev-parse --show-toplevel)
 
 OUT_BASE_PATH=${REPO_ROOT}/out
 CHART_OUT_PATH=${OUT_BASE_PATH}/charts

@@ -6,7 +6,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+REPO_ROOT=$(git rev-parse --show-toplevel)
+JB="${REPO_ROOT}/.tools/jb"
 THANOS_OUT_PATH="${REPO_ROOT}/out/thanos"
 THANOS_MANIFESTS_PATH="${REPO_ROOT}/manifests/profiles/thanos"
 KUBE_THANOS_VER=${KUBE_THANOS_VER:-v0.26.0}
@@ -22,13 +23,13 @@ echo "path: ${THANOS_OUT_PATH}";
 echo "version: ${KUBE_THANOS_VER}"
 
 pushd "${THANOS_OUT_PATH}"
-    jb init
-    jb install github.com/thanos-io/kube-thanos/jsonnet/kube-thanos@"${KUBE_THANOS_VER}"
-    jb update
+    ${JB} init
+    ${JB} install github.com/thanos-io/kube-thanos/jsonnet/kube-thanos@"${KUBE_THANOS_VER}"
+    ${JB} update
 
     cp "${REPO_ROOT}/hack/build-thanos.sh" build.sh
 
-    bash build.sh thanos.jsonnet
+    PATH="${REPO_ROOT}/.tools:$PATH" bash build.sh thanos.jsonnet
 popd
 
 cp -r "${THANOS_OUT_PATH}"/manifests/* "${THANOS_MANIFESTS_PATH}"

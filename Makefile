@@ -20,7 +20,7 @@ LDFLAGS := "-X kurator.dev/kurator/pkg/version.gitVersion=$(VERSION) \
 GO_BUILD=CGO_ENABLED=0 GOOS=$(GOOS) go build -ldflags $(LDFLAGS)
 DOCKER_BUILD=docker build --build-arg BASE_VERSION=nonroot --build-arg BASE_IMAGE=gcr.io/distroless/static
 
-FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor \) -prune -o -type f
+FINDFILES=find . \( -path ./common-protos -o -path ./.git -o -path ./out -o -path ./.github  -o -path ./hack -o -path ./licenses -o -path ./vendor -o -path ./.gopath \) -prune -o -type f
 XARGS = xargs -0 -r
 
 IMAGE_HUB ?= ghcr.io/kurator-dev
@@ -35,6 +35,8 @@ else
 	GOBIN=$(shell go env GOBIN)
 endif
 export PATH := $(GOBIN):$(PATH)
+
+include Makefile.tools.mk
 
 .PHONY: build
 build: tidy kurator cluster-operator fleet-manager
@@ -107,22 +109,23 @@ fix-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
 		${XARGS} hack/fix_copyright_banner.sh
 
-golangci-lint:
+.PHONY: golangci-lint
+golangci-lint: $(golangci-lint) ## Run golangci-lint
 	hack/golangci-lint.sh
 
-init-gen:
-	hack/init-gen-tools.sh
+.PHONY: init-gen-tools
+init-gen-tools: $(jb) $(gojsontoyaml) $(jsonnet)
 
 .PHONY: gen-prom
-gen-prom: init-gen
+gen-prom: init-gen-tools
 	hack/gen-prom.sh manifests/jsonnet/prometheus/prometheus.jsonnet manifests/profiles/prom/
 
 .PHONY: gen-prom-thanos
-gen-prom-thanos: init-gen
+gen-prom-thanos: init-gen-tools
 	hack/gen-prom.sh manifests/jsonnet/prometheus/thanos.jsonnet manifests/profiles/prom-thanos/
 
 .PHONY: gen-thanos
-gen-thanos: init-gen
+gen-thanos: init-gen-tools
 	hack/gen-thanos.sh
 
 .PHONY: sync-crds
@@ -141,7 +144,9 @@ test: clean tidy
 clean:
 	go clean -testcache
 	go clean -cache
-	rm -rf $(OUT_BASE_PATH)
+	@rm -rf $(OUT_BASE_PATH)
+	@rm -rf .tools
+	@rm -rf .gopath
 
 .PHONY: gen
 gen: clean \
@@ -168,8 +173,13 @@ doc.build:
 	KURATOR_VERSION=$(VERSION) hack/local-docsite-build.sh
 
 PHONY: init-codegen
-init-codegen:
-	hack/init-codegen.sh
+init-codegen: $(kustomize) \
+				$(deepcopy-gen) \
+				$(client-gen) \
+				$(lister-gen) \
+				$(informer-gen) \
+				$(register-gen) \
+ 			    $(controller-gen) ## Install code generation tools
 
 .PHONY: gen-api
 gen-api: gen-code gen-crd gen-api-doc
@@ -178,12 +188,34 @@ gen-api: gen-code gen-crd gen-api-doc
 gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	hack/update-crdgen.sh
 
+
+PACKAGE					    := kurator.dev
+GOPATH_SHIM                 := ${PWD}/.gopath
+PACKAGE_SHIM                := $(GOPATH_SHIM)/src/$(PACKAGE)
+
+$(GOPATH_SHIM):
+	@echo Create gopath shim... >&2
+	@mkdir -p $(GOPATH_SHIM)
+
+# learn from kyverno/kyverno project, this will allow you run client-gen everywhere without put project into GOPATH
+# DO NOT REMOVE THIS `.INTERMEDIATE`
+.INTERMEDIATE: $(PACKAGE_SHIM)
+$(PACKAGE_SHIM): $(GOPATH_SHIM)
+	@echo Create package shim... >&2
+	@mkdir -p $(GOPATH_SHIM)/src/kurator.dev && ln -s -f ${PWD} $(PACKAGE_SHIM)
+
 .PHONY: gen-code
-gen-code: init-codegen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+gen-code: $(PACKAGE_SHIM) init-codegen gen-code-clean ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	hack/update-codegen.sh
 
+.PHONY: gen-code-clean
+gen-code-clean: ## Clean up generated files
+	@echo "Cleaning up generated files..."
+	@find pkg/apis -type f -name zz_generated* | xargs rm
+	@find pkg/client-go -type f -name *.go | xargs rm
+
 .PHONY: gen-api-doc
-gen-api-doc: ## Generate API documentation
+gen-api-doc: $(gen-crd-api-reference-docs) ## Generate API documentation
 	hack/gen-api-doc.sh
 
 .PHONY: release-artifacts
