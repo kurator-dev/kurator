@@ -46,10 +46,32 @@ type PipelineSpec struct {
 	// The tasks will be executed in the order they are listed.
 	Tasks []PipelineTask `json:"tasks"`
 
-	// SharedWorkspace is the name of the PVC. If not specified, a PVC with the Pipeline's name as prefix will be created by default.
+	// SharedWorkspace is the config of the PVC where task using
+	// The PersistentVolumeClaim with this config will be created for each pipeline execution
+	// it allows the user to specify e.g. size and StorageClass for the volume.
 	// If not set, Kurator will create a PVC named Pipeline.name using default config
 	// +optional
-	SharedWorkspace *string `json:"sharedWorkspace,omitempty"`
+	SharedWorkspace *VolumeClaimTemplate `json:"sharedWorkspace,omitempty"`
+}
+
+// VolumeClaimTemplate is the configuration for the volume claim template in pipeline execution.
+// For more details, see https://github.com/kubernetes/api/blob/master/core/v1/types.go
+type VolumeClaimTemplate struct {
+	// AccessMode determines the access modes for the volume, e.g., ReadWriteOnce.
+	// This affects how the volume can be mounted.
+	AccessMode string `json:"accessMode,omitempty"`
+
+	// RequestsStorage defines the storage size required for this PVC, e.g., 1Gi, 100Mi.
+	// It specifies the storage capacity needed as part of ResourceRequirements.
+	RequestsStorage string `json:"requestsStorage,omitempty"`
+
+	// StorageClassName specifies the StorageClass name to which this persistent volume belongs, e.g., manual.
+	// It allows the PVC to use the characteristics defined by the StorageClass.
+	StorageClassName string `json:"storageClassName,omitempty"`
+
+	// VolumeMode specifies whether the volume should be used with a formatted filesystem (Filesystem)
+	// or remain in raw block state (Block). The Filesystem value is implied when not included.
+	VolumeMode string `json:"volumeMode,omitempty"`
 }
 
 type PipelineTask struct {
