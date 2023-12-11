@@ -24,13 +24,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/fleet-manager/options"
-	"kurator.dev/kurator/pkg/fleet-manager"
+	"kurator.dev/kurator/pkg/fleet-manager/backup"
 )
 
 var log = ctrl.Log.WithName("backup")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
-	if err := (&fleet.BackupManager{
+	if err := (&backup.BackupManager{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
@@ -38,7 +38,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		return err
 	}
 
-	if err := (&fleet.RestoreManager{
+	if err := (&backup.RestoreManager{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {
@@ -46,7 +46,7 @@ func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manage
 		return err
 	}
 
-	if err := (&fleet.MigrateManager{
+	if err := (&backup.MigrateManager{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {

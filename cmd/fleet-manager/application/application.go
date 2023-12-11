@@ -24,14 +24,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	"kurator.dev/kurator/cmd/fleet-manager/options"
-	"kurator.dev/kurator/pkg/fleet-manager"
+	"kurator.dev/kurator/pkg/fleet-manager/application"
 	"kurator.dev/kurator/pkg/webhooks"
 )
 
 var log = ctrl.Log.WithName("application")
 
 func InitControllers(ctx context.Context, opts *options.Options, mgr ctrl.Manager) error {
-	if err := (&fleet.ApplicationManager{
+	if err := (&application.ApplicationManager{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(ctx, mgr, controller.Options{MaxConcurrentReconciles: opts.Concurrency, RecoverPanic: ptr.Of[bool](true)}); err != nil {

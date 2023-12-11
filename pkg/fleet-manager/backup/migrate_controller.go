@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fleet
+package backup
 
 import (
 	"context"
@@ -31,6 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
+	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
 )
 
 // MigrateManager reconciles a Migrate object
@@ -115,8 +116,8 @@ func (m *MigrateManager) reconcileMigrateBackup(ctx context.Context, migrate *ba
 		log.Error(err, "Failed to fetch source cluster for migration")
 		return ctrl.Result{}, fmt.Errorf("fetching source cluster: %w", err)
 	}
-	var sourceClusterKey ClusterKey
-	var sourceClusterAccess *FleetCluster
+	var sourceClusterKey fleetmanager.ClusterKey
+	var sourceClusterAccess *fleetmanager.FleetCluster
 	// "migrate.Spec.SourceCluster" must contain one clusters, it is ensured by admission webhook
 	for key, value := range fleetClusters {
 		sourceClusterKey = key
@@ -155,7 +156,7 @@ func (m *MigrateManager) reconcileMigrateBackup(ctx context.Context, migrate *ba
 		conditions.MarkTrue(migrate, backupapi.SourceReadyCondition)
 	} else {
 		log.Info("Waiting for source backup to be ready", "sourceBackupName", sourceBackupName)
-		return ctrl.Result{RequeueAfter: RequeueAfter}, nil
+		return ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
 	}
 
 	return ctrl.Result{}, nil
@@ -188,7 +189,7 @@ func (m *MigrateManager) reconcileMigrateRestore(ctx context.Context, migrate *b
 		if err = getResourceFromClusterClient(ctx, referredBackupName, VeleroNamespace, *clusterAccess, referredVeleroBackup); err != nil {
 			if apierrors.IsNotFound(err) {
 				// if not found, requeue with `RequeueAfter`
-				return ctrl.Result{RequeueAfter: RequeueAfter}, nil
+				return ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
 			} else {
 				return ctrl.Result{}, err
 			}

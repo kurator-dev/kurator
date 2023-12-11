@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fleet
+package backup
 
 import (
 	"os"
@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
+	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
 )
 
 const backupTestDataPath = "testdata/backup/"
@@ -543,42 +544,42 @@ func getExpectedRestore(caseName string) ([]byte, error) {
 func TestIsFleetClusterSubset(t *testing.T) {
 	tests := []struct {
 		name           string
-		baseClusters   map[ClusterKey]*FleetCluster
-		subsetClusters map[ClusterKey]*FleetCluster
+		baseClusters   map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster
+		subsetClusters map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster
 		wantResult     bool
 	}{
 		{
 			name: "Subset is a true subset of base",
-			baseClusters: map[ClusterKey]*FleetCluster{
-				{"Kind1", "Name1"}: {},
-				{"Kind2", "Name2"}: {},
+			baseClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{
+				{Kind: "Kind1", Name: "Name1"}: {},
+				{Kind: "Kind2", Name: "Name2"}: {},
 			},
-			subsetClusters: map[ClusterKey]*FleetCluster{
-				{"Kind1", "Name1"}: {},
+			subsetClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{
+				{Kind: "Kind1", Name: "Name1"}: {},
 			},
 			wantResult: true,
 		},
 		{
 			name: "Subset is not a subset of base",
-			baseClusters: map[ClusterKey]*FleetCluster{
-				{"Kind1", "Name1"}: {},
+			baseClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{
+				{Kind: "Kind1", Name: "Name1"}: {},
 			},
-			subsetClusters: map[ClusterKey]*FleetCluster{
-				{"Kind2", "Name2"}: {},
+			subsetClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{
+				{Kind: "Kind2", Name: "Name2"}: {},
 			},
 			wantResult: false,
 		},
 		{
 			name:           "Both base and subset are empty",
-			baseClusters:   map[ClusterKey]*FleetCluster{},
-			subsetClusters: map[ClusterKey]*FleetCluster{},
+			baseClusters:   map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{},
+			subsetClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{},
 			wantResult:     true,
 		},
 		{
 			name:         "Base is empty, but subset is not",
-			baseClusters: map[ClusterKey]*FleetCluster{},
-			subsetClusters: map[ClusterKey]*FleetCluster{
-				{"Kind1", "Name1"}: {},
+			baseClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{},
+			subsetClusters: map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster{
+				{Kind: "Kind1", Name: "Name1"}: {},
 			},
 			wantResult: false,
 		},

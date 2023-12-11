@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fleet
+package application
 
 import (
 	"context"
@@ -38,6 +38,7 @@ import (
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
+	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
 )
 
 const (
@@ -140,7 +141,7 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
 		if apierrors.IsNotFound(err) {
 			log.Info("fleet does not exist", "fleet", fleetKey)
-			return ctrl.Result{RequeueAfter: RequeueAfter}, nil
+			return ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
 		}
 		// Log error and requeue request if error occurred during fleet retrieval
 		log.Error(err, "failed to find fleet", "fleet", fleetKey)

@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package fleet
+package backup
 
 import (
 	"context"
@@ -33,6 +33,7 @@ import (
 
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
+	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
 	"kurator.dev/kurator/pkg/fleet-manager/plugin"
 )
 
@@ -60,7 +61,7 @@ const (
 )
 
 // fetchDestinationClusters retrieves the clusters from the specified destination and filters them based on the 'Clusters' defined in the destination. It returns a map of selected clusters along with any error encountered during the process.
-func fetchDestinationClusters(ctx context.Context, kubeClient client.Client, namespace string, destination backupapi.Destination) (map[ClusterKey]*FleetCluster, error) {
+func fetchDestinationClusters(ctx context.Context, kubeClient client.Client, namespace string, destination backupapi.Destination) (map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, error) {
 	// Fetch fleet instance
 	fleet := &fleetapi.Fleet{}
 	fleetKey := client.ObjectKey{
@@ -71,7 +72,7 @@ func fetchDestinationClusters(ctx context.Context, kubeClient client.Client, nam
 		return nil, fmt.Errorf("failed to retrieve fleet instance '%s' in namespace '%s': %w", destination.Fleet, namespace, err)
 	}
 
-	fleetClusters, err := BuildFleetClusters(ctx, kubeClient, fleet)
+	fleetClusters, err := fleetmanager.BuildFleetClusters(ctx, kubeClient, fleet)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build fleet clusters from fleet instance '%s': %w", fleet.Name, err)
 	}
@@ -81,7 +82,7 @@ func fetchDestinationClusters(ctx context.Context, kubeClient client.Client, nam
 		return fleetClusters, nil
 	}
 
-	selectedFleetCluster := make(map[ClusterKey]*FleetCluster)
+	selectedFleetCluster := make(map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster)
 	// Check and return clusters with client
 	for _, cluster := range destination.Clusters {
 		name := cluster.Name
@@ -142,13 +143,13 @@ func buildVeleroBackupSpec(backupPolicy *backupapi.BackupPolicy) velerov1.Backup
 	}
 }
 
-func newSyncVeleroTaskFunc(ctx context.Context, clusterAccess *FleetCluster, obj client.Object) func() error {
+func newSyncVeleroTaskFunc(ctx context.Context, clusterAccess *fleetmanager.FleetCluster, obj client.Object) func() error {
 	return func() error {
 		return syncVeleroObj(ctx, clusterAccess, obj)
 	}
 }
 
-func syncVeleroObj(ctx context.Context, cluster *FleetCluster, veleroObj client.Object) error {
+func syncVeleroObj(ctx context.Context, cluster *fleetmanager.FleetCluster, veleroObj client.Object) error {
 	// Get the client
 	clusterClient := cluster.GetRuntimeClient()
 
@@ -183,7 +184,7 @@ func allBackupsCompleted(status backupapi.BackupStatus) bool {
 // Returns:
 // - error: if any error occurs during the deletion process
 // deleteResourcesInClusters deletes instances of a Kubernetes resource based on the specified label key and value.
-func deleteResourcesInClusters(ctx context.Context, namespace, labelKey string, labelValue string, destinationClusters map[ClusterKey]*FleetCluster, objList client.ObjectList) error {
+func deleteResourcesInClusters(ctx context.Context, namespace, labelKey string, labelValue string, destinationClusters map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, objList client.ObjectList) error {
 	// Log setup
 	log := ctrl.LoggerFrom(ctx)
 
@@ -224,9 +225,9 @@ func isScheduleBackup(backup *backupapi.Backup) bool {
 
 func generateVeleroInstanceLabel(createdByLabel, creatorName, fleetName string) map[string]string {
 	return map[string]string{
-		createdByLabel:  creatorName,
-		FleetLabel:      fleetName,
-		FleetPluginName: plugin.BackupPluginName,
+		createdByLabel:               creatorName,
+		fleetmanager.FleetLabel:      fleetName,
+		fleetmanager.FleetPluginName: plugin.BackupPluginName,
 	}
 }
 
@@ -288,7 +289,7 @@ func GetCronInterval(cronExpr string) (time.Duration, error) {
 }
 
 // getResourceFromClusterClient retrieves a specific Kubernetes resource from the provided cluster.
-func getResourceFromClusterClient(ctx context.Context, name, namespace string, clusterAccess FleetCluster, obj client.Object) error {
+func getResourceFromClusterClient(ctx context.Context, name, namespace string, clusterAccess fleetmanager.FleetCluster, obj client.Object) error {
 	clusterClient := clusterAccess.GetRuntimeClient()
 
 	resourceKey := types.NamespacedName{
@@ -299,7 +300,7 @@ func getResourceFromClusterClient(ctx context.Context, name, namespace string, c
 }
 
 // listResourcesFromClusterClient retrieves resources from a cluster based on the provided namespace and label.
-func listResourcesFromClusterClient(ctx context.Context, namespace string, labelKey string, labelValue string, clusterAccess FleetCluster, objList client.ObjectList) error {
+func listResourcesFromClusterClient(ctx context.Context, namespace string, labelKey string, labelValue string, clusterAccess fleetmanager.FleetCluster, objList client.ObjectList) error {
 	// Create the cluster client
 	clusterClient := clusterAccess.GetRuntimeClient()
 	// Create the label selector
@@ -322,7 +323,7 @@ func listResourcesFromClusterClient(ctx context.Context, namespace string, label
 // - string: The name of the fleet where the restore's set of fleetClusters resides.
 // - map[ClusterKey]*FleetCluster: A map of cluster keys to fleet clusters.
 // - error: An error object indicating any issues encountered during the operation.
-func (r *RestoreManager) fetchRestoreDestinationClusters(ctx context.Context, restore *backupapi.Restore) (string, map[ClusterKey]*FleetCluster, error) {
+func (r *RestoreManager) fetchRestoreDestinationClusters(ctx context.Context, restore *backupapi.Restore) (string, map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, error) {
 	// Retrieve the referred backup in the current Kurator host cluster
 	key := client.ObjectKey{
 		Name:      restore.Spec.BackupName,
@@ -365,7 +366,7 @@ func (r *RestoreManager) fetchRestoreDestinationClusters(ctx context.Context, re
 }
 
 // isFleetClusterSubset is the helper function to check if one set of clusters is a subset of another
-func isFleetClusterSubset(baseClusters, subsetClusters map[ClusterKey]*FleetCluster) bool {
+func isFleetClusterSubset(baseClusters, subsetClusters map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster) bool {
 	for key := range subsetClusters {
 		if _, exists := baseClusters[key]; !exists {
 			return false
@@ -418,7 +419,7 @@ func allRestoreCompleted(clusterDetails []*backupapi.RestoreDetails) bool {
 
 // syncVeleroRestoreStatus synchronizes the status of Velero restore resources across different clusters.
 // Note: Returns the modified ClusterDetails to capture internal changes due to Go's slice behavior.
-func syncVeleroRestoreStatus(ctx context.Context, destinationClusters map[ClusterKey]*FleetCluster, clusterDetails []*backupapi.RestoreDetails, creatorKind, creatorNamespace, creatorName string) ([]*backupapi.RestoreDetails, error) {
+func syncVeleroRestoreStatus(ctx context.Context, destinationClusters map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, clusterDetails []*backupapi.RestoreDetails, creatorKind, creatorNamespace, creatorName string) ([]*backupapi.RestoreDetails, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	if clusterDetails == nil {
