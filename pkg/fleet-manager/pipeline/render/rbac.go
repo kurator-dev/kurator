@@ -41,12 +41,12 @@ func (rbac RBACConfig) ServiceAccountName() string {
 	return rbac.PipelineName
 }
 
-// RoleBindingName generates the role binding name using the service account name.
+// BroadResourceRoleBindingName generates the role binding name using the service account name.
 func (rbac RBACConfig) BroadResourceRoleBindingName() string {
 	return rbac.ServiceAccountName() + BroadResourceSuffix
 }
 
-// ClusterRoleBindingName generates the cluster role binding name using the service account name.
+// SecretRoleBindingName generates the cluster role binding name using the service account name.
 func (rbac RBACConfig) SecretRoleBindingName() string {
 	return rbac.ServiceAccountName() + SecretSuffix
 }
@@ -56,5 +56,5 @@ func renderRBAC(fsys fs.FS, cfg RBACConfig) ([]byte, error) {
 	if cfg.PipelineName == "" || cfg.PipelineNamespace == "" {
 		return nil, fmt.Errorf("invalid RBACConfig: PipelineName and PipelineNamespace must not be empty")
 	}
-	return renderPipelineTemplate(fsys, RBACTemplateFileName, RBACTemplateName, cfg)
+	return renderTemplate(fsys, RBACTemplateFileName, RBACTemplateName, cfg)
 }
