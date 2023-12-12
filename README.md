@@ -29,9 +29,7 @@ It provides powerful capabilities for multi-cloud and multi-cluster management, 
 
 ## Architecture
 
-<div  align="center">
-    <img src="./docs/images/kurator-arch.svg" width = "80%" align="center">
-</div>
+![Kurator architecture diagram](./docs/images/kurator-arch.svg)
 
 ## Documentation
 
