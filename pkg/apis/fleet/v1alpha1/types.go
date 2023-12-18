@@ -85,6 +85,8 @@ type PluginConfig struct {
 	Backup *BackupConfig `json:"backup,omitempty"`
 	// DistributedStorage define the configuration for the distributed storage(Implemented with Rook)
 	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
+	// Flagger defines the configuretion for the kurator rollout engine.
+	Flagger *FlaggerConfig `json:"flagger,omitempty"`
 }
 
 type MetricConfig struct {
@@ -505,6 +507,32 @@ type Device struct {
 	// +nullable
 	// +optional
 	Config map[string]string `json:"config,omitempty"`
+}
+
+type FlaggerConfig struct {
+	// Chart defines the helm chart config of the flagger.
+	// default values is
+	//
+	// chart:
+	//   repository: oci://ghcr.io/fluxcd/charts
+	//   name: flagger
+	//   version: 1.x
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+	// ExtraArgs is the set of extra arguments for flagger chart.
+	//
+	// For Example, using following configuration to change replica count.
+	// extraArgs:
+	//   flagger:
+	//     replicaCount: 2
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+	// PublicTestloader defines whether to install the publictestloader or not.
+	// In addition to the public testloader you can configure here,
+	// you can also specify a private testloader in the Application.Spec.SyncPolicies.Rollout.TestLoader
+	PublicTestloader bool `json:"publicTestloader,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet

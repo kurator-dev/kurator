@@ -2999,6 +2999,41 @@ spec:
                     required:
                     - storage
                     type: object
+                  flagger:
+                    description: Flagger defines the configuretion for the kurator
+                      rollout engine.
+                    properties:
+                      chart:
+                        description: "Chart defines the helm chart config of the flagger.
+                          default values is \n chart: repository: oci://ghcr.io/fluxcd/charts
+                          name: flagger version: 1.x"
+                        properties:
+                          name:
+                            description: Name defines the name of the chart. Default
+                              value depends on the kind of the component.
+                            type: string
+                          repository:
+                            description: Repository defines the repository of chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          version:
+                            description: Version defines the version of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                        type: object
+                      extraArgs:
+                        description: "ExtraArgs is the set of extra arguments for
+                          flagger chart. \n For Example, using following configuration
+                          to change replica count. extraArgs: flagger: replicaCount:
+                          2"
+                        x-kubernetes-preserve-unknown-fields: true
+                      publicTestloader:
+                        description: PublicTestloader defines whether to install the
+                          publictestloader or not. In addition to the public testloader
+                          you can configure here, you can also specify a private testloader
+                          in the Application.Spec.SyncPolicies.Rollout.TestLoader
+                        type: boolean
+                    type: object
                   grafana:
                     description: Grafana defines the configuration for the grafana
                       installation and observation.
