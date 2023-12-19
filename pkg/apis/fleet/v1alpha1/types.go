@@ -85,6 +85,8 @@ type PluginConfig struct {
 	Backup *BackupConfig `json:"backup,omitempty"`
 	// DistributedStorage define the configuration for the distributed storage(Implemented with Rook)
 	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
+	// Flagger defines the configuretion for the kurator rollout engine.
+	Flagger *FlaggerConfig `json:"flagger,omitempty"`
 }
 
 type MetricConfig struct {
@@ -98,12 +100,14 @@ type MetricConfig struct {
 
 type PrometheusConfig struct {
 	// Chart defines the helm chart config of the prometheus.
-	// default values is
+	// default value is
 	//
+	// ```yaml
 	// chart:
 	//   repository: oci://registry-1.docker.io/bitnamicharts
 	//   name: kube-prometheus
 	//   version: 8.9.1
+	// ```
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
@@ -114,12 +118,14 @@ type PrometheusConfig struct {
 	// +optional
 	KubeStateMetrics *PrometheusExporterConfig `json:"kubeStateMetrics,omitempty"`
 	// ExtraArgs is the set of extra arguments for Prometheus chart.
-	//
 	// For Example, using following configuration to create a ServiceMonitor to monitor prometheus itself.
+	//
+	// ```yaml
 	// extraArgs:
 	//   prometheus:
 	//     serviceMonitor:
 	//       enabled: true
+	// ```
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
@@ -147,12 +153,14 @@ type ChartConfig struct {
 
 type ThanosConfig struct {
 	// Chart defines the helm chart config of the thanos.
-	// default values is
+	// default value is
 	//
+	// ```yaml
 	// chart:
 	//   repository: oci://registry-1.docker.io/bitnamicharts
 	//   name: thanos
 	//   version: 12.5.1
+	// ```
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
@@ -161,12 +169,13 @@ type ThanosConfig struct {
 	// +required
 	ObjectStoreConfig ObjectStoreConfig `json:"objectStoreConfig"`
 	// ExtraArgs is the set of extra arguments for Thanos chart.
-	//
 	// For Example, using following configuration to enable query frontend.
+	//
+	// ```yaml
 	// extraArgs:
 	//   queryFrontend:
 	//     enabled: true
-	//
+	// ```
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
@@ -180,21 +189,25 @@ type ObjectStoreConfig struct {
 
 type GrafanaConfig struct {
 	// Chart defines the helm chart config of the grafana.
-	// default values is
+	// default value is
 	//
+	// ```yaml
 	// chart:
 	//   repository: oci://registry-1.docker.io/bitnamicharts
 	//   name: grafana
 	//   version: 8.2.33
+	// ```
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
 	// ExtraArgs is the set of extra arguments for Grafana chart.
-	//
 	// For Example, using following configuration to change replica count.
+	//
+	// ```yaml
 	// extraArgs:
 	//   grafana:
 	//     replicaCount: 2
+	// ```
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
@@ -210,11 +223,14 @@ type PolicyConfig struct {
 
 type KyvernoConfig struct {
 	// Chart defines the helm chart config of the kyverno.
-	// default values is
+	// default value is
+	//
+	// ```yaml
 	// chart:
 	//   repository: https://kyverno.github.io/kyverno/
 	//   name: kyverno
 	//   version: 3.0.0
+	// ```
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
@@ -222,11 +238,13 @@ type KyvernoConfig struct {
 	// +optional
 	PodSecurity *PodSecurityPolicy `json:"podSecurity,omitempty"`
 	// ExtraArgs is the set of extra arguments for Grafana chart.
-	//
 	// For Example, using following configuration to change image pull policy.
+	//
+	// ```yaml
 	// extraArgs:
 	//   image:
 	//     pullPolicy: Always
+	// ```
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
@@ -257,10 +275,12 @@ type BackupConfig struct {
 	// Chart defines the helm chart configuration of the backup engine.
 	// The default value is:
 	//
+	// ```yaml
 	// chart:
 	//   repository: https://vmware-tanzu.github.io/helm-charts
 	//   name: velero
 	//   version: 5.0.2
+	// ```
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
@@ -271,11 +291,13 @@ type BackupConfig struct {
 	// ExtraArgs provides the extra chart values for the backup engine chart.
 	// For example, use the following configuration to change the image tag or pull policy:
 	//
+	// ```yaml
 	// extraArgs:
 	//   image:
 	//     repository: velero/velero
 	//     tag: v1.11.1
 	//     pullPolicy: IfNotPresent
+	// ```
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
@@ -335,10 +357,12 @@ type DistributedStorageConfig struct {
 	// Chart defines the helm chart configuration of the distributed storage engine.
 	// The default value is:
 	//
+	// ```yaml
 	// chart:
 	//   repository: https://charts.rook.io/release
 	//   name: rook
 	//   version: 1.11.11
+	// ```
 	//
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
@@ -349,9 +373,11 @@ type DistributedStorageConfig struct {
 	// ExtraArgs provides the extra chart values for rook chart.
 	// For example, use the following configuration to change the pull policy:
 	//
+	// ```yaml
 	// extraArgs:
 	//   image:
 	//     pullPolicy: Always
+	// ```
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
@@ -505,6 +531,36 @@ type Device struct {
 	// +nullable
 	// +optional
 	Config map[string]string `json:"config,omitempty"`
+}
+
+type FlaggerConfig struct {
+	// Chart defines the helm chart config of the flagger.
+	// default value is
+	//
+	// ```yaml
+	// chart:
+	//   repository: oci://ghcr.io/fluxcd/charts
+	//   name: flagger
+	//   version: 1.x
+	// ```
+	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+	// ExtraArgs is the set of extra arguments for flagger chart.
+	// For Example, using following configuration to change replica count.
+	//
+	// ```yaml
+	// extraArgs:
+	//   flagger:
+	//     replicaCount: 2
+	// ```
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+	// PublicTestloader defines whether to install the publictestloader or not.
+	// In addition to the public testloader you can configure here,
+	// you can also specify a private testloader in the Application.Spec.SyncPolicies.Rollout.TestLoader
+	PublicTestloader bool `json:"publicTestloader,omitempty"`
 }
 
 // FleetStatus defines the observed state of the fleet

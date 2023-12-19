@@ -116,9 +116,9 @@ spec:
                     properties:
                       chart:
                         description: "Chart defines the helm chart configuration of
-                          the backup engine. The default value is: \n chart: repository:
-                          https://vmware-tanzu.github.io/helm-charts name: velero
-                          version: 5.0.2"
+                          the backup engine. The default value is: \n ```yaml chart:
+                          repository: https://vmware-tanzu.github.io/helm-charts name:
+                          velero version: 5.0.2 ```"
                         properties:
                           name:
                             description: Name defines the name of the chart. Default
@@ -137,8 +137,8 @@ spec:
                         description: "ExtraArgs provides the extra chart values for
                           the backup engine chart. For example, use the following
                           configuration to change the image tag or pull policy: \n
-                          extraArgs: image: repository: velero/velero tag: v1.11.1
-                          pullPolicy: IfNotPresent"
+                          ```yaml extraArgs: image: repository: velero/velero tag:
+                          v1.11.1 pullPolicy: IfNotPresent ```"
                         x-kubernetes-preserve-unknown-fields: true
                       storage:
                         description: Storage provides details on where the backup
@@ -212,8 +212,8 @@ spec:
                       chart:
                         description: "Chart defines the helm chart configuration of
                           the distributed storage engine. The default value is: \n
-                          chart: repository: https://charts.rook.io/release name:
-                          rook version: 1.11.11"
+                          ```yaml chart: repository: https://charts.rook.io/release
+                          name: rook version: 1.11.11 ```"
                         properties:
                           name:
                             description: Name defines the name of the chart. Default
@@ -231,8 +231,8 @@ spec:
                       extraArgs:
                         description: "ExtraArgs provides the extra chart values for
                           rook chart. For example, use the following configuration
-                          to change the pull policy: \n extraArgs: image: pullPolicy:
-                          Always"
+                          to change the pull policy: \n ```yaml extraArgs: image:
+                          pullPolicy: Always ```"
                         x-kubernetes-preserve-unknown-fields: true
                       storage:
                         description: Storage provides detailed settings for unified
@@ -2999,14 +2999,14 @@ spec:
                     required:
                     - storage
                     type: object
-                  grafana:
-                    description: Grafana defines the configuration for the grafana
-                      installation and observation.
+                  flagger:
+                    description: Flagger defines the configuretion for the kurator
+                      rollout engine.
                     properties:
                       chart:
-                        description: "Chart defines the helm chart config of the grafana.
-                          default values is \n chart: repository: oci://registry-1.docker.io/bitnamicharts
-                          name: grafana version: 8.2.33"
+                        description: "Chart defines the helm chart config of the flagger.
+                          default value is \n ```yaml chart: repository: oci://ghcr.io/fluxcd/charts
+                          name: flagger version: 1.x ```"
                         properties:
                           name:
                             description: Name defines the name of the chart. Default
@@ -3023,9 +3023,44 @@ spec:
                         type: object
                       extraArgs:
                         description: "ExtraArgs is the set of extra arguments for
-                          Grafana chart. \n For Example, using following configuration
-                          to change replica count. extraArgs: grafana: replicaCount:
-                          2"
+                          flagger chart. For Example, using following configuration
+                          to change replica count. \n ```yaml extraArgs: flagger:
+                          replicaCount: 2 ```"
+                        x-kubernetes-preserve-unknown-fields: true
+                      publicTestloader:
+                        description: PublicTestloader defines whether to install the
+                          publictestloader or not. In addition to the public testloader
+                          you can configure here, you can also specify a private testloader
+                          in the Application.Spec.SyncPolicies.Rollout.TestLoader
+                        type: boolean
+                    type: object
+                  grafana:
+                    description: Grafana defines the configuration for the grafana
+                      installation and observation.
+                    properties:
+                      chart:
+                        description: "Chart defines the helm chart config of the grafana.
+                          default value is \n ```yaml chart: repository: oci://registry-1.docker.io/bitnamicharts
+                          name: grafana version: 8.2.33 ```"
+                        properties:
+                          name:
+                            description: Name defines the name of the chart. Default
+                              value depends on the kind of the component.
+                            type: string
+                          repository:
+                            description: Repository defines the repository of chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          version:
+                            description: Version defines the version of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                        type: object
+                      extraArgs:
+                        description: "ExtraArgs is the set of extra arguments for
+                          Grafana chart. For Example, using following configuration
+                          to change replica count. \n ```yaml extraArgs: grafana:
+                          replicaCount: 2 ```"
                         x-kubernetes-preserve-unknown-fields: true
                     type: object
                   metric:
@@ -3040,9 +3075,9 @@ spec:
                         properties:
                           chart:
                             description: "Chart defines the helm chart config of the
-                              prometheus. default values is \n chart: repository:
+                              prometheus. default value is \n ```yaml chart: repository:
                               oci://registry-1.docker.io/bitnamicharts name: kube-prometheus
-                              version: 8.9.1"
+                              version: 8.9.1 ```"
                             properties:
                               name:
                                 description: Name defines the name of the chart. Default
@@ -3060,10 +3095,10 @@ spec:
                             type: object
                           extraArgs:
                             description: "ExtraArgs is the set of extra arguments
-                              for Prometheus chart. \n For Example, using following
-                              configuration to create a ServiceMonitor to monitor
-                              prometheus itself. extraArgs: prometheus: serviceMonitor:
-                              enabled: true"
+                              for Prometheus chart. For Example, using following configuration
+                              to create a ServiceMonitor to monitor prometheus itself.
+                              \n ```yaml extraArgs: prometheus: serviceMonitor: enabled:
+                              true ```"
                             x-kubernetes-preserve-unknown-fields: true
                           kubeStateMetrics:
                             description: KubeStateMetrics defines the configuration
@@ -3090,8 +3125,9 @@ spec:
                         properties:
                           chart:
                             description: "Chart defines the helm chart config of the
-                              thanos. default values is \n chart: repository: oci://registry-1.docker.io/bitnamicharts
-                              name: thanos version: 12.5.1"
+                              thanos. default value is \n ```yaml chart: repository:
+                              oci://registry-1.docker.io/bitnamicharts name: thanos
+                              version: 12.5.1 ```"
                             properties:
                               name:
                                 description: Name defines the name of the chart. Default
@@ -3109,9 +3145,9 @@ spec:
                             type: object
                           extraArgs:
                             description: "ExtraArgs is the set of extra arguments
-                              for Thanos chart. \n For Example, using following configuration
-                              to enable query frontend. extraArgs: queryFrontend:
-                              enabled: true"
+                              for Thanos chart. For Example, using following configuration
+                              to enable query frontend. \n ```yaml extraArgs: queryFrontend:
+                              enabled: true ```"
                             x-kubernetes-preserve-unknown-fields: true
                           objectStoreConfig:
                             description: 'ObjectStoreConfig is the secret reference
@@ -3138,9 +3174,10 @@ spec:
                           installation and policy management.
                         properties:
                           chart:
-                            description: 'Chart defines the helm chart config of the
-                              kyverno. default values is chart: repository: https://kyverno.github.io/kyverno/
-                              name: kyverno version: 3.0.0'
+                            description: "Chart defines the helm chart config of the
+                              kyverno. default value is \n ```yaml chart: repository:
+                              https://kyverno.github.io/kyverno/ name: kyverno version:
+                              3.0.0 ```"
                             properties:
                               name:
                                 description: Name defines the name of the chart. Default
@@ -3158,9 +3195,9 @@ spec:
                             type: object
                           extraArgs:
                             description: "ExtraArgs is the set of extra arguments
-                              for Grafana chart. \n For Example, using following configuration
-                              to change image pull policy. extraArgs: image: pullPolicy:
-                              Always"
+                              for Grafana chart. For Example, using following configuration
+                              to change image pull policy. \n ```yaml extraArgs: image:
+                              pullPolicy: Always ```"
                             x-kubernetes-preserve-unknown-fields: true
                           podSecurity:
                             description: PodSecurity defines the pod security configuration
