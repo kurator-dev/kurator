@@ -21,15 +21,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"kurator.dev/kurator/pkg/fleet-manager/manifests"
 )
 
-var manifestFS = manifests.BuiltinOrDir("manifests/rbac/")
-
-const expectedRBACFilePath = "testdata/rbac/"
-
 func TestRenderRBAC(t *testing.T) {
+	const expectedRBACFilePath = "testdata/rbac/"
 	// Define test cases including both valid and error scenarios.
 	cases := []struct {
 		name         string
@@ -70,6 +68,21 @@ func TestRenderRBAC(t *testing.T) {
 			},
 			expectError: true,
 		},
+		{
+			name: "configuration with OwnerReference",
+			cfg: RBACConfig{
+				PipelineName:      "example-with-owner",
+				PipelineNamespace: "default",
+				OwnerReference: &metav1.OwnerReference{
+					APIVersion: "v1",
+					Kind:       "Deployment",
+					Name:       "example-deployment",
+					UID:        "12345678-1234-1234-1234-123456789abc",
+				},
+			},
+			expectError:  false,
+			expectedFile: "with-owner.yaml",
+		},
 	}
 
 	for _, tc := range cases {
@@ -80,7 +93,7 @@ func TestRenderRBAC(t *testing.T) {
 				fs = manifests.BuiltinOrDir("invalid-path")
 			}
 
-			result, err := renderRBAC(fs, tc.cfg)
+			result, err := RenderRBAC(fs, tc.cfg)
 
 			if tc.expectError {
 				assert.Error(t, err)
