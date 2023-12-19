@@ -141,10 +141,11 @@ ChartConfig
 <em>(Optional)</em>
 <p>Chart defines the helm chart configuration of the backup engine.
 The default value is:</p>
-<p>chart:
-repository: <a href="https://vmware-tanzu.github.io/helm-charts">https://vmware-tanzu.github.io/helm-charts</a>
+<pre><code class="language-yaml">chart:
+repository: https://vmware-tanzu.github.io/helm-charts
 name: velero
-version: 5.0.2</p>
+version: 5.0.2
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -173,11 +174,12 @@ Kubernetes /apiextensions/v1.JSON
 <em>(Optional)</em>
 <p>ExtraArgs provides the extra chart values for the backup engine chart.
 For example, use the following configuration to change the image tag or pull policy:</p>
-<p>extraArgs:
+<pre><code class="language-yaml">extraArgs:
 image:
 repository: velero/velero
 tag: v1.11.1
-pullPolicy: IfNotPresent</p>
+pullPolicy: IfNotPresent
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -548,10 +550,11 @@ ChartConfig
 <em>(Optional)</em>
 <p>Chart defines the helm chart configuration of the distributed storage engine.
 The default value is:</p>
-<p>chart:
-repository: <a href="https://charts.rook.io/release">https://charts.rook.io/release</a>
+<pre><code class="language-yaml">chart:
+repository: https://charts.rook.io/release
 name: rook
-version: 1.11.11</p>
+version: 1.11.11
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -580,9 +583,10 @@ Kubernetes /apiextensions/v1.JSON
 <em>(Optional)</em>
 <p>ExtraArgs provides the extra chart values for rook chart.
 For example, use the following configuration to change the pull policy:</p>
-<p>extraArgs:
+<pre><code class="language-yaml">extraArgs:
 image:
-pullPolicy: Always</p>
+pullPolicy: Always
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -623,11 +627,12 @@ ChartConfig
 <td>
 <em>(Optional)</em>
 <p>Chart defines the helm chart config of the flagger.
-default values is</p>
-<p>chart:
+default value is</p>
+<pre><code class="language-yaml">chart:
 repository: oci://ghcr.io/fluxcd/charts
 name: flagger
-version: 1.x</p>
+version: 1.x
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -641,11 +646,12 @@ Kubernetes /apiextensions/v1.JSON
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExtraArgs is the set of extra arguments for flagger chart.</p>
-<p>For Example, using following configuration to change replica count.
-extraArgs:
+<p>ExtraArgs is the set of extra arguments for flagger chart.
+For Example, using following configuration to change replica count.</p>
+<pre><code class="language-yaml">extraArgs:
 flagger:
-replicaCount: 2</p>
+replicaCount: 2
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -843,11 +849,12 @@ ChartConfig
 <td>
 <em>(Optional)</em>
 <p>Chart defines the helm chart config of the grafana.
-default values is</p>
-<p>chart:
+default value is</p>
+<pre><code class="language-yaml">chart:
 repository: oci://registry-1.docker.io/bitnamicharts
 name: grafana
-version: 8.2.33</p>
+version: 8.2.33
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -861,11 +868,12 @@ Kubernetes /apiextensions/v1.JSON
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExtraArgs is the set of extra arguments for Grafana chart.</p>
-<p>For Example, using following configuration to change replica count.
-extraArgs:
+<p>ExtraArgs is the set of extra arguments for Grafana chart.
+For Example, using following configuration to change replica count.</p>
+<pre><code class="language-yaml">extraArgs:
 grafana:
-replicaCount: 2</p>
+replicaCount: 2
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -900,11 +908,12 @@ ChartConfig
 <td>
 <em>(Optional)</em>
 <p>Chart defines the helm chart config of the kyverno.
-default values is
-chart:
-repository: <a href="https://kyverno.github.io/kyverno/">https://kyverno.github.io/kyverno/</a>
+default value is</p>
+<pre><code class="language-yaml">chart:
+repository: https://kyverno.github.io/kyverno/
 name: kyverno
-version: 3.0.0</p>
+version: 3.0.0
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -932,11 +941,12 @@ Kubernetes /apiextensions/v1.JSON
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExtraArgs is the set of extra arguments for Grafana chart.</p>
-<p>For Example, using following configuration to change image pull policy.
-extraArgs:
+<p>ExtraArgs is the set of extra arguments for Grafana chart.
+For Example, using following configuration to change image pull policy.</p>
+<pre><code class="language-yaml">extraArgs:
 image:
-pullPolicy: Always</p>
+pullPolicy: Always
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -1530,11 +1540,12 @@ ChartConfig
 <td>
 <em>(Optional)</em>
 <p>Chart defines the helm chart config of the prometheus.
-default values is</p>
-<p>chart:
+default value is</p>
+<pre><code class="language-yaml">chart:
 repository: oci://registry-1.docker.io/bitnamicharts
 name: kube-prometheus
-version: 8.9.1</p>
+version: 8.9.1
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -1576,12 +1587,13 @@ Kubernetes /apiextensions/v1.JSON
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExtraArgs is the set of extra arguments for Prometheus chart.</p>
-<p>For Example, using following configuration to create a ServiceMonitor to monitor prometheus itself.
-extraArgs:
+<p>ExtraArgs is the set of extra arguments for Prometheus chart.
+For Example, using following configuration to create a ServiceMonitor to monitor prometheus itself.</p>
+<pre><code class="language-yaml">extraArgs:
 prometheus:
 serviceMonitor:
-enabled: true</p>
+enabled: true
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -1746,11 +1758,12 @@ ChartConfig
 <td>
 <em>(Optional)</em>
 <p>Chart defines the helm chart config of the thanos.
-default values is</p>
-<p>chart:
+default value is</p>
+<pre><code class="language-yaml">chart:
 repository: oci://registry-1.docker.io/bitnamicharts
 name: thanos
-version: 12.5.1</p>
+version: 12.5.1
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -1778,11 +1791,12 @@ Kubernetes /apiextensions/v1.JSON
 </td>
 <td>
 <em>(Optional)</em>
-<p>ExtraArgs is the set of extra arguments for Thanos chart.</p>
-<p>For Example, using following configuration to enable query frontend.
-extraArgs:
+<p>ExtraArgs is the set of extra arguments for Thanos chart.
+For Example, using following configuration to enable query frontend.</p>
+<pre><code class="language-yaml">extraArgs:
 queryFrontend:
-enabled: true</p>
+enabled: true
+</code></pre>
 </td>
 </tr>
 </tbody>
