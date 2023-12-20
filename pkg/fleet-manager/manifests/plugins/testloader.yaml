@@ -1,0 +1,5 @@
+type: default
+repo: https://flagger.app
+name: loadtester
+version: 0.30.0
+targetNamespace: istio-system
