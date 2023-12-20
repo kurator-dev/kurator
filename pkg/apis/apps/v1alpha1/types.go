@@ -340,7 +340,7 @@ type TrafficAnalysis struct {
 type Metric struct {
 	// Name of the metric.
 	// Currently supported metric are `request-success-rate` and `request-duration`.
-	Name MetricType `json:"name"`
+	Name MetricName `json:"name"`
 
 	// IntervalSeconds defines metrics query interval.
 	// Defaults to 60.
@@ -352,15 +352,15 @@ type Metric struct {
 	ThresholdRange *CanaryThresholdRange `json:"thresholdRange,omitempty"`
 }
 
-type MetricType string
+type MetricName string
 
 const (
 	// `request-success-rate` indicates the successful request ratio during this checking intervalSeconds.
 	// It returns a value from 0 to 100.
-	RequestSuccessRate MetricType = "request-success-rate"
+	RequestSuccessRate MetricName = "request-success-rate"
 	// `request-duration` indicates P99 latency of the requests during the check interval.
 	// `request-duration` returns in milliseconds.
-	RequestDuration MetricType = "request-duration"
+	RequestDuration MetricName = "request-duration"
 )
 
 // CanaryThresholdRange defines the range used for metrics validation
