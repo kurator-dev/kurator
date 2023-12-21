@@ -34,7 +34,7 @@ import (
 type FleetCluster struct {
 	Secret    string
 	SecretKey string
-	client    *kclient.Client
+	Client    *kclient.Client
 }
 
 type ClusterKey struct {
@@ -59,14 +59,14 @@ func BuildFleetClusters(ctx context.Context, client client.Client, fleet *fleeta
 			continue
 		}
 
-		kclient, err := clientForCluster(client, fleet.Namespace, clusterInterface)
+		kclient, err := ClientForCluster(client, fleet.Namespace, clusterInterface)
 		if err != nil {
 			return nil, err
 		}
 		res[ClusterKey{Kind: cluster.Kind, Name: cluster.Name}] = &FleetCluster{
 			Secret:    clusterInterface.GetSecretName(),
 			SecretKey: clusterInterface.GetSecretKey(),
-			client:    kclient,
+			Client:    kclient,
 		}
 	}
 
@@ -92,7 +92,7 @@ func getFleetClusterInterface(ctx context.Context, client client.Client, kind st
 	}
 }
 
-func clientForCluster(client client.Client, ns string, cluster ClusterInterface) (*kclient.Client, error) {
+func ClientForCluster(client client.Client, ns string, cluster ClusterInterface) (*kclient.Client, error) {
 	secret := &corev1.Secret{}
 	nn := types.NamespacedName{Namespace: ns, Name: cluster.GetSecretName()}
 	if err := client.Get(context.Background(), nn, secret); err != nil {
@@ -113,5 +113,5 @@ func clientForCluster(client client.Client, ns string, cluster ClusterInterface)
 }
 
 func (cluster FleetCluster) GetRuntimeClient() client.Client {
-	return cluster.client.CtrlRuntimeClient()
+	return cluster.Client.CtrlRuntimeClient()
 }

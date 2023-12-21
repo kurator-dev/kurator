@@ -49,12 +49,12 @@ func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context
 
 		// reconcile objstore secret's owner reference
 		// a statefulset named prometheus-prometheus-prometheus is created by HelmRelease in each cluster
-		sts, err := fleetCluster.client.KubeClient().AppsV1().StatefulSets(MonitoringNamespace).Get(ctx, "prometheus-prometheus-prometheus", metav1.GetOptions{})
+		sts, err := fleetCluster.Client.KubeClient().AppsV1().StatefulSets(MonitoringNamespace).Get(ctx, "prometheus-prometheus-prometheus", metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 
-		secret, err := fleetCluster.client.KubeClient().CoreV1().Secrets(MonitoringNamespace).Get(ctx, fleet.Spec.Plugin.Metric.Thanos.ObjectStoreConfig.SecretName, metav1.GetOptions{})
+		secret, err := fleetCluster.Client.KubeClient().CoreV1().Secrets(MonitoringNamespace).Get(ctx, fleet.Spec.Plugin.Metric.Thanos.ObjectStoreConfig.SecretName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func (f *FleetManager) reconcileObjStoreSecretOwnerReference(ctx context.Context
 		}
 		if !capiutil.HasOwnerRef(secret.OwnerReferences, stsOwnerReference) {
 			secret.OwnerReferences = append(secret.OwnerReferences, stsOwnerReference)
-			if _, err := fleetCluster.client.KubeClient().CoreV1().Secrets(MonitoringNamespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
+			if _, err := fleetCluster.Client.KubeClient().CoreV1().Secrets(MonitoringNamespace).Update(ctx, secret, metav1.UpdateOptions{}); err != nil {
 				return err
 			}
 		}
@@ -89,7 +89,7 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 			continue
 		}
 
-		svc, err := fleetCluster.client.KubeClient().CoreV1().Services(MonitoringNamespace).Get(ctx, PrometheusThanosServiceName, metav1.GetOptions{})
+		svc, err := fleetCluster.Client.KubeClient().CoreV1().Services(MonitoringNamespace).Get(ctx, PrometheusThanosServiceName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -199,9 +199,9 @@ func (f *FleetManager) reconcileSidecarRemoteService(ctx context.Context, fleet 
 
 // syncObjStoreSecret syncs the secret to the cluster
 func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *FleetCluster, secret *corev1.Secret) error {
-	_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Get(ctx, secret.Namespace, metav1.GetOptions{})
+	_, err := fleetCluster.Client.KubeClient().CoreV1().Namespaces().Get(ctx, secret.Namespace, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		_, err := fleetCluster.client.KubeClient().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
+		_, err := fleetCluster.Client.KubeClient().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: secret.Namespace,
 			},
@@ -213,9 +213,9 @@ func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *Fle
 		return nil
 	}
 
-	s, err := fleetCluster.client.KubeClient().CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
+	s, err := fleetCluster.Client.KubeClient().CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
-		_, err := fleetCluster.client.KubeClient().CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
+		_, err := fleetCluster.Client.KubeClient().CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -224,7 +224,7 @@ func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *Fle
 	}
 
 	s.Data = secret.Data
-	_, err = fleetCluster.client.KubeClient().CoreV1().Secrets(secret.Namespace).Update(ctx, s, metav1.UpdateOptions{})
+	_, err = fleetCluster.Client.KubeClient().CoreV1().Secrets(secret.Namespace).Update(ctx, s, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}

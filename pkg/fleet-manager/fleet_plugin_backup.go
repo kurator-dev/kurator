@@ -237,7 +237,7 @@ func createNewSecretInFleetCluster(ctx context.Context, cluster *FleetCluster, n
 // updateNewSecretOwnerReference updates the OwnerReferences of the given secret in the specified fleet cluster.
 func (f *FleetManager) updateNewSecretOwnerReference(ctx context.Context, clusterName string, cluster *FleetCluster, newSecret *corev1.Secret) error {
 	// Get the kubeclient.Interface instance
-	kubeClient := cluster.client.KubeClient()
+	kubeClient := cluster.Client.KubeClient()
 
 	veleroDeploymentName := getVeleroDeploymentName(clusterName)
 	veleroDeployment, err := kubeClient.AppsV1().Deployments(newSecret.Namespace).Get(ctx, veleroDeploymentName, metav1.GetOptions{})
