@@ -578,7 +578,10 @@ func TestRendeFlagger(t *testing.T) {
 				Name:       "fleet-1",
 				UID:        "xxxxxx",
 			},
-			config: &v1alpha1.FlaggerConfig{},
+			config: &v1alpha1.FlaggerConfig{
+				PublicTestloader:       true,
+				TrafficRoutingProvider: v1alpha1.Istio,
+			},
 		},
 	}
 
@@ -618,7 +621,10 @@ func TestRendeRolloutTestloader(t *testing.T) {
 				Name:       "fleet-1",
 				UID:        "xxxxxx",
 			},
-			config: &v1alpha1.FlaggerConfig{},
+			config: &v1alpha1.FlaggerConfig{
+				PublicTestloader:       true,
+				TrafficRoutingProvider: v1alpha1.Istio,
+			},
 		},
 	}
 

@@ -656,6 +656,23 @@ replicaCount: 2
 </tr>
 <tr>
 <td>
+<code>trafficRoutingProvider</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.Provider">
+Provider
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>TrafficRoutingProvider defines traffic routing provider.
+And Kurator will install flagger in trafficRoutingProvider&rsquo;s namespace
+For example, If you use <code>istio</code> as a provider, flager will be installed in istio&rsquo;s namespace <code>istio-system</code>.
+Other provider will be added later.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>publicTestloader</code><br>
 <em>
 bool
@@ -1631,6 +1648,14 @@ bool
 </table>
 </div>
 </div>
+<h3 id="fleet.kurator.dev/v1alpha1.Provider">Provider
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.FlaggerConfig">FlaggerConfig</a>)
+</p>
+<p>Provider only can be istio now.
+TODO: add Linkerd, APP Mesh, NGINX, Kuma, Gateway, Gloo</p>
 <h3 id="fleet.kurator.dev/v1alpha1.StorageDeviceSelection">StorageDeviceSelection
 </h3>
 <p>

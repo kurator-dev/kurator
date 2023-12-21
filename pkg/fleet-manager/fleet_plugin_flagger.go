@@ -62,20 +62,9 @@ func (f *FleetManager) reconcileFlaggerPlugin(ctx context.Context, fleet *fleeta
 			return nil, ctrl.Result{}, err
 		}
 		resources = append(resources, flaggerResources...)
-	}
 
-	log.V(4).Info("wait for flagger helm release to be reconciled")
-	if !f.helmReleaseReady(ctx, fleet, resources) {
-		// wait for HelmRelease to be ready
-		return nil, ctrl.Result{
-			// HelmRelease check interval is 1m, so we set 30s here
-			RequeueAfter: 30 * time.Second,
-		}, nil
-	}
-
-	// install public testloader if needed
-	if flaggerCfg.PublicTestloader {
-		for key, cluster := range fleetClusters {
+		// install public testloader if needed
+		if flaggerCfg.PublicTestloader {
 			b, err := plugin.RendeRolloutTestloader(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 				Name:       key.Name,
 				SecretName: cluster.Secret,
@@ -86,11 +75,11 @@ func (f *FleetManager) reconcileFlaggerPlugin(ctx context.Context, fleet *fleeta
 			}
 
 			// apply flagger helm resources
-			flaggerResources, err := util.PatchResources(b)
+			testloaderResources, err := util.PatchResources(b)
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}
-			resources = append(resources, flaggerResources...)
+			resources = append(resources, testloaderResources...)
 		}
 	}
 

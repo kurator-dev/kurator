@@ -3033,6 +3033,13 @@ spec:
                           you can configure here, you can also specify a private testloader
                           in the Application.Spec.SyncPolicies.Rollout.TestLoader
                         type: boolean
+                      trafficRoutingProvider:
+                        description: TrafficRoutingProvider defines traffic routing
+                          provider. And Kurator will install flagger in trafficRoutingProvider's
+                          namespace For example, If you use `istio` as a provider,
+                          flager will be installed in istio's namespace `istio-system`.
+                          Other provider will be added later.
+                        type: string
                     type: object
                   grafana:
                     description: Grafana defines the configuration for the grafana

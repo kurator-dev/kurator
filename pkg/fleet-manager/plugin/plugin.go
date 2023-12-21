@@ -55,6 +55,10 @@ const (
 	OCIReposiotryPrefix = "oci://"
 )
 
+var ProviderNamespace = map[fleetv1a1.Provider]string{
+	"istio": "istio-system",
+}
+
 type GrafanaDataSource struct {
 	Name       string `json:"name"`
 	SourceType string `json:"type"`
@@ -390,6 +394,7 @@ func RendeFlagger(
 		return nil, err
 	}
 	mergeChartConfig(c, flaggerConfig.Chart)
+	c.TargetNamespace = ProviderNamespace[flaggerConfig.TrafficRoutingProvider]
 
 	values, err := toMap(flaggerConfig.ExtraArgs)
 	if err != nil {
@@ -419,6 +424,8 @@ func RendeRolloutTestloader(
 	if err != nil {
 		return nil, err
 	}
+	// Installed in the same namespace as flagger.
+	c.TargetNamespace = ProviderNamespace[flaggerConfig.TrafficRoutingProvider]
 	// make sure use the specified testlaoder.
 	mergeChartConfig(c, nil)
 	values, err := toMap(flaggerConfig.ExtraArgs)
