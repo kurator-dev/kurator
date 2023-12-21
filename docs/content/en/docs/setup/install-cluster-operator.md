@@ -47,7 +47,6 @@ Install cluster operator into the management cluster.
 
 ```console
 helm install --create-namespace  kurator-cluster-operator kurator/cluster-operator --version={{< kurator-version >}} -n kurator-system 
-
 ```
 
 Verify the cluster operator chart installation:
