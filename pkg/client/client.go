@@ -27,6 +27,7 @@ import (
 	karmadaclientset "github.com/karmada-io/karmada/pkg/generated/clientset/versioned"
 	promclient "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	"github.com/sirupsen/logrus"
+	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	veleroapi "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
 	helmclient "helm.sh/helm/v3/pkg/kube"
 	corev1 "k8s.io/api/core/v1"
@@ -48,7 +49,7 @@ type Client struct {
 
 	karmada karmadaclientset.Interface
 	prom    promclient.Interface
-	// it currently only support k8s core API and velero API, because only these schemes are registered
+	// it currently only support k8s core API, tekton API and velero API, because only these schemes are registered
 	ctrlRuntimeClient client.Client
 }
 
@@ -71,6 +72,9 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 	}
 	if err := veleroapi.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("failed to add veleroapi to scheme: %v", err)
+	}
+	if err := tektonapi.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to add tektonapi to scheme: %v", err)
 	}
 	// create controller-runtime client with scheme
 	ctrlRuntimeClient, err := client.New(c, client.Options{Scheme: scheme})
