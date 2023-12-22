@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	flaggerv1b1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	istiov1alpha3 "github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3"
 	helmv2beta1 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
@@ -196,22 +197,34 @@ type TrafficRoutingConfig struct {
 	// For example, the following rule sets the maximum number of retries to three,
 	// with a 2s timeout per retry attempt.
 	// e.g.:
+	//
+	// ```yaml
 	// retries:
 	//   attempts: 3
 	//   perTryTimeout: 2s
 	//   retryOn: gateway-error,connect-failure,refused-stream
+	// ```
+	//
+	// +optional
 	Retries *istiov1alpha3.HTTPRetry `json:"retries,omitempty"`
 
 	// Headers operations for the Request.
 	// e.g.
+	//
+	// ```yaml
 	// headers:
 	//   request:
 	//     add:
 	//       x-some-header: "value"
+	// ```
+	//
 	// +optional
 	Headers *istiov1alpha3.Headers `json:"headers,omitempty"`
 
 	// Cross-Origin Resource Sharing policy for the request.
+	// e.g.
+	//
+	// ```yaml
 	// corsPolicy:
 	//   allowHeaders:
 	//   - x-some-header
@@ -220,6 +233,8 @@ type TrafficRoutingConfig struct {
 	//   allowOrigin:
 	//   - example.com
 	//   maxAge: 24h
+	// ```
+	//
 	// +optional
 	CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
 
@@ -232,6 +247,7 @@ type TrafficRoutingConfig struct {
 
 	// AnalysisTimes defines the number of traffic analysis checks to run for A/B Testing and Blue/Green Deployment
 	// If set "analysisTimes: 10". It means Kurator will checks the preview service ten times.
+	// +kubebuilder:validation:Minimum=0
 	// +optional
 	AnalysisTimes int `json:"analysisTimes,omitempty"`
 
@@ -242,6 +258,8 @@ type TrafficRoutingConfig struct {
 	// - `prefix: "value"` for prefix-based match
 	// - `regex: "value"` for ECMAscript style regex-based match
 	// e.g.:
+	//
+	// ```yaml
 	// match:
 	//   - headers:
 	//       myheader:
@@ -249,6 +267,8 @@ type TrafficRoutingConfig struct {
 	//   - headers:
 	//       cookie:
 	//         regex: "^(.*?;)?(type=insider)(;.*)?$"
+	// ```
+	//
 	// Note: If you want to use A/B Testing, you need to configure analysisTimes and match.
 	// If you only configure analysisTimes, it will trigger Blue/Green Deployment.
 	// You can configure both canaryStrategy and match.
@@ -310,7 +330,7 @@ type TrafficAnalysis struct {
 
 	// Webhook list for this traffic analysis
 	// +optional
-	Webhooks []Webhook `json:"webhooks,omitempty"`
+	Webhooks Webhook `json:"webhooks,omitempty"`
 
 	// SessionAffinity represents the session affinity settings for a analysis run.
 	// +optional
@@ -320,20 +340,28 @@ type TrafficAnalysis struct {
 type Metric struct {
 	// Name of the metric.
 	// Currently supported metric are `request-success-rate` and `request-duration`.
-	// `request-success-rate` indicates the successful request ratio during this checking intervalSeconds.
-	// It returns a value from 0 to 100.
-	// `request-duration` indicates P99 latency of the requests during the check interval.
-	// `request-duration` returns in milliseconds.
-	Name string `json:"name"`
+	Name MetricName `json:"name"`
 
 	// IntervalSeconds defines metrics query interval.
 	// Defaults to 60.
 	IntervalSeconds *int `json:"intervalSeconds,omitempty"`
 
 	// ThresholdRange defines valid value accepted for this metric.
+	// If no thresholdRange are set, Kurator will default every check is successful.
 	// +optional
 	ThresholdRange *CanaryThresholdRange `json:"thresholdRange,omitempty"`
 }
+
+type MetricName string
+
+const (
+	// `request-success-rate` indicates the successful request ratio during this checking intervalSeconds.
+	// It returns a value from 0 to 100.
+	RequestSuccessRate MetricName = "request-success-rate"
+	// `request-duration` indicates P99 latency of the requests during the check interval.
+	// `request-duration` returns in milliseconds.
+	RequestDuration MetricName = "request-duration"
+)
 
 // CanaryThresholdRange defines the range used for metrics validation
 type CanaryThresholdRange struct {
@@ -367,10 +395,14 @@ type CrossNamespaceObjectReference struct {
 
 // Kurator generates traffic load by invoking the testloader through a webhook to request the service.
 // e.g.
+//
+// ```yaml
 // webhooks:
 //   - timeoutSeconds: 15
 //     commend:
 //       - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
+// ```
+//
 // The above example means that during trafficAnalysis, the cmd of "http://flagger-loadtester.test/" is invoked
 // to execute the command "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
 type Webhook struct {
@@ -378,9 +410,9 @@ type Webhook struct {
 	// Defaults to 60
 	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
-	// Command defines to commends that executed by webhook.
+	// Commands define to commends that executed by webhook.
 	// +optional
-	Command []string `json:"command,omitempty"`
+	Commands []string `json:"command,omitempty"`
 }
 
 type SessionAffinity struct {
@@ -417,6 +449,22 @@ type ApplicationSyncStatus struct {
 	Name                string                                `json:"name,omitempty"`
 	KustomizationStatus *kustomizev1beta2.KustomizationStatus `json:"kustomizationStatus,omitempty"`
 	HelmReleaseStatus   *helmv2beta1.HelmReleaseStatus        `json:"HelmReleaseStatus,omitempty"`
+	RolloutStatus       []*RolloutStatus                      `json:"rolloutStatus,omitempty"`
+}
+
+// RolloutStatus defines the observed state of Rollout.
+type RolloutStatus struct {
+	// ClusterName is the Name of the cluster where the rollout is being performed.
+	// +optional
+	ClusterName string `json:"clusterName,omitempty"`
+
+	// RolloutNameInCluster is the name of the rollout being performed within this cluster.
+	// +optional
+	RolloutNameInCluster string `json:"backupNameInCluster,omitempty"`
+
+	// RolloutStatusInCluster is the current status of the Rollout performed within this cluster.
+	// +optional
+	RolloutStatusInCluster *flaggerv1b1.CanaryStatus `json:"backupStatusInCluster,omitempty"`
 }
 
 // ApplicationList contains a list of Application.

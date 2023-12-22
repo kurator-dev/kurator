@@ -1260,17 +1260,13 @@ spec:
                                       name:
                                         description: Name of the metric. Currently
                                           supported metric are `request-success-rate`
-                                          and `request-duration`. `request-success-rate`
-                                          indicates the successful request ratio during
-                                          this checking intervalSeconds. It returns
-                                          a value from 0 to 100. `request-duration`
-                                          indicates P99 latency of the requests during
-                                          the check interval. `request-duration` returns
-                                          in milliseconds.
+                                          and `request-duration`.
                                         type: string
                                       thresholdRange:
                                         description: ThresholdRange defines valid
-                                          value accepted for this metric.
+                                          value accepted for this metric. If no thresholdRange
+                                          are set, Kurator will default every check
+                                          is successful.
                                         properties:
                                           max:
                                             description: Maximum value
@@ -1301,28 +1297,18 @@ spec:
                                   type: object
                                 webhooks:
                                   description: Webhook list for this traffic analysis
-                                  items:
-                                    description: 'Kurator generates traffic load by
-                                      invoking the testloader through a webhook to
-                                      request the service. e.g. webhooks: - timeoutSeconds:
-                                      15 commend: - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
-                                      The above example means that during trafficAnalysis,
-                                      the cmd of "http://flagger-loadtester.test/"
-                                      is invoked to execute the command "hey -z 1m
-                                      -q 10 -c 2 http://podinfo-canary.test:9898/"'
-                                    properties:
-                                      command:
-                                        description: Command defines to commends that
-                                          executed by webhook.
-                                        items:
-                                          type: string
-                                        type: array
-                                      timeoutSeconds:
-                                        description: TimeoutSeconds defines request
-                                          timeout for this webhook Defaults to 60
-                                        type: integer
-                                    type: object
-                                  type: array
+                                  properties:
+                                    command:
+                                      description: Commands define to commends that
+                                        executed by webhook.
+                                      items:
+                                        type: string
+                                      type: array
+                                    timeoutSeconds:
+                                      description: TimeoutSeconds defines request
+                                        timeout for this webhook Defaults to 60
+                                      type: integer
+                                  type: object
                               required:
                               - checkFailedTimes
                               - checkIntervalSeconds
@@ -1337,6 +1323,7 @@ spec:
                                     and Blue/Green Deployment If set "analysisTimes:
                                     10". It means Kurator will checks the preview
                                     service ten times.'
+                                  minimum: 0
                                   type: integer
                                 canaryStrategy:
                                   description: 'CanaryStrategy defines parameters
@@ -1382,10 +1369,10 @@ spec:
                                       type: array
                                   type: object
                                 corsPolicy:
-                                  description: 'Cross-Origin Resource Sharing policy
-                                    for the request. corsPolicy: allowHeaders: - x-some-header
-                                    allowMethods: - GET allowOrigin: - example.com
-                                    maxAge: 24h'
+                                  description: "Cross-Origin Resource Sharing policy
+                                    for the request. e.g. \n ```yaml corsPolicy: allowHeaders:
+                                    - x-some-header allowMethods: - GET allowOrigin:
+                                    - example.com maxAge: 24h ```"
                                   properties:
                                     allowCredentials:
                                       description: Indicates whether the caller is
@@ -1462,8 +1449,9 @@ spec:
                                     type: string
                                   type: array
                                 headers:
-                                  description: 'Headers operations for the Request.
-                                    e.g. headers: request: add: x-some-header: "value"'
+                                  description: "Headers operations for the Request.
+                                    e.g. \n ```yaml headers: request: add: x-some-header:
+                                    \"value\" ```"
                                   properties:
                                     request:
                                       description: Header manipulation rules to apply
@@ -1519,23 +1507,24 @@ spec:
                                     type: string
                                   type: array
                                 match:
-                                  description: 'Match conditions of A/B Testing HTTP
+                                  description: "Match conditions of A/B Testing HTTP
                                     header. The header keys must be lowercase and
                                     use hyphen as the separator. values are case-sensitive
-                                    and formatted as follows: - `exact: "value"` for
-                                    exact string match - `prefix: "value"` for prefix-based
-                                    match - `regex: "value"` for ECMAscript style
-                                    regex-based match e.g.: match: - headers: myheader:
-                                    regex: ".*XXXX.*" - headers: cookie: regex: "^(.*?;)?(type=insider)(;.*)?$"
-                                    Note: If you want to use A/B Testing, you need
-                                    to configure analysisTimes and match. If you only
-                                    configure analysisTimes, it will trigger Blue/Green
-                                    Deployment. You can configure both canaryStrategy
-                                    and match. If configure both canaryStrategy and
-                                    match, Traffic that meets match goes towards the
-                                    preview service. Traffic that doesn''t meet the
-                                    match will go to the primary service and preview
-                                    service proportionally.'
+                                    and formatted as follows: - `exact: \"value\"`
+                                    for exact string match - `prefix: \"value\"` for
+                                    prefix-based match - `regex: \"value\"` for ECMAscript
+                                    style regex-based match e.g.: \n ```yaml match:
+                                    - headers: myheader: regex: \".*XXXX.*\" - headers:
+                                    cookie: regex: \"^(.*?;)?(type=insider)(;.*)?$\"
+                                    ``` \n Note: If you want to use A/B Testing, you
+                                    need to configure analysisTimes and match. If
+                                    you only configure analysisTimes, it will trigger
+                                    Blue/Green Deployment. You can configure both
+                                    canaryStrategy and match. If configure both canaryStrategy
+                                    and match, Traffic that meets match goes towards
+                                    the preview service. Traffic that doesn't meet
+                                    the match will go to the primary service and preview
+                                    service proportionally."
                                   items:
                                     description: "HttpMatchRequest specifies a set
                                       of criterion to be met in order for the rule
@@ -1776,12 +1765,13 @@ spec:
                                     type: object
                                   type: array
                                 retries:
-                                  description: 'Retries describes the retry policy
+                                  description: "Retries describes the retry policy
                                     to use when a HTTP request fails. For example,
                                     the following rule sets the maximum number of
                                     retries to three, with a 2s timeout per retry
-                                    attempt. e.g.: retries: attempts: 3 perTryTimeout:
-                                    2s retryOn: gateway-error,connect-failure,refused-stream'
+                                    attempt. e.g.: \n ```yaml retries: attempts: 3
+                                    perTryTimeout: 2s retryOn: gateway-error,connect-failure,refused-stream
+                                    ```"
                                   properties:
                                     attempts:
                                       description: REQUIRED. Number of retries for
@@ -2689,6 +2679,86 @@ spec:
                       type: object
                     name:
                       type: string
+                    rolloutStatus:
+                      items:
+                        description: RolloutStatus defines the observed state of Rollout.
+                        properties:
+                          backupNameInCluster:
+                            description: RolloutNameInCluster is the name of the rollout
+                              being performed within this cluster.
+                            type: string
+                          backupStatusInCluster:
+                            description: RolloutStatusInCluster is the current status
+                              of the Rollout performed within this cluster.
+                            properties:
+                              canaryWeight:
+                                type: integer
+                              conditions:
+                                items:
+                                  description: CanaryCondition is a status condition
+                                    for a Canary
+                                  properties:
+                                    lastTransitionTime:
+                                      description: LastTransitionTime of this condition
+                                      format: date-time
+                                      type: string
+                                    lastUpdateTime:
+                                      description: LastUpdateTime of this condition
+                                      format: date-time
+                                      type: string
+                                    message:
+                                      description: Message associated with this condition
+                                      type: string
+                                    reason:
+                                      description: Reason for the current status of
+                                        this condition
+                                      type: string
+                                    status:
+                                      description: Status of this condition
+                                      type: string
+                                    type:
+                                      description: Type of this condition
+                                      type: string
+                                  required:
+                                  - status
+                                  - type
+                                  type: object
+                                type: array
+                              failedChecks:
+                                type: integer
+                              iterations:
+                                type: integer
+                              lastAppliedSpec:
+                                type: string
+                              lastPromotedSpec:
+                                type: string
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              phase:
+                                description: CanaryPhase is a label for the condition
+                                  of a canary at the current time
+                                type: string
+                              previousSessionAffinityCookie:
+                                type: string
+                              sessionAffinityCookie:
+                                type: string
+                              trackedConfigs:
+                                additionalProperties:
+                                  type: string
+                                type: object
+                            required:
+                            - canaryWeight
+                            - failedChecks
+                            - iterations
+                            - phase
+                            type: object
+                          clusterName:
+                            description: ClusterName is the Name of the cluster where
+                              the rollout is being performed.
+                            type: string
+                        type: object
+                      type: array
                   type: object
                 type: array
             type: object

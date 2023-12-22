@@ -543,6 +543,18 @@ github.com/fluxcd/helm-controller/api/v2beta1.HelmReleaseStatus
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>rolloutStatus</code><br>
+<em>
+<a href="#apps.kurator.dev/v1alpha1.RolloutStatus">
+[]RolloutStatus
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1597,16 +1609,14 @@ when patching fails due to an immutable field change.</p>
 <td>
 <code>name</code><br>
 <em>
-string
+<a href="#apps.kurator.dev/v1alpha1.MetricName">
+MetricName
+</a>
 </em>
 </td>
 <td>
 <p>Name of the metric.
-Currently supported metric are <code>request-success-rate</code> and <code>request-duration</code>.
-<code>request-success-rate</code> indicates the successful request ratio during this checking intervalSeconds.
-It returns a value from 0 to 100.
-<code>request-duration</code> indicates P99 latency of the requests during the check interval.
-<code>request-duration</code> returns in milliseconds.</p>
+Currently supported metric are <code>request-success-rate</code> and <code>request-duration</code>.</p>
 </td>
 </tr>
 <tr>
@@ -1632,13 +1642,20 @@ CanaryThresholdRange
 </td>
 <td>
 <em>(Optional)</em>
-<p>ThresholdRange defines valid value accepted for this metric.</p>
+<p>ThresholdRange defines valid value accepted for this metric.
+If no thresholdRange are set, Kurator will default every check is successful.</p>
 </td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
+<h3 id="apps.kurator.dev/v1alpha1.MetricName">MetricName
+(<code>string</code> alias)</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.Metric">Metric</a>)
+</p>
 <h3 id="apps.kurator.dev/v1alpha1.RolloutConfig">RolloutConfig
 </h3>
 <p>
@@ -1871,6 +1888,63 @@ rollout is suspended during an analysis, its paused until the rollout is uninter
 </table>
 </div>
 </div>
+<h3 id="apps.kurator.dev/v1alpha1.RolloutStatus">RolloutStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#apps.kurator.dev/v1alpha1.ApplicationSyncStatus">ApplicationSyncStatus</a>)
+</p>
+<p>RolloutStatus defines the observed state of Rollout.</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>clusterName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ClusterName is the Name of the cluster where the rollout is being performed.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>backupNameInCluster</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RolloutNameInCluster is the name of the rollout being performed within this cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>backupStatusInCluster</code><br>
+<em>
+github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1.CanaryStatus
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>RolloutStatusInCluster is the current status of the Rollout performed within this cluster.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <h3 id="apps.kurator.dev/v1alpha1.SessionAffinity">SessionAffinity
 </h3>
 <p>
@@ -1981,7 +2055,7 @@ If you want use custom checks, you can refer to <a href="https://docs.flagger.ap
 <code>webhooks</code><br>
 <em>
 <a href="#apps.kurator.dev/v1alpha1.Webhook">
-[]Webhook
+Webhook
 </a>
 </em>
 </td>
@@ -2069,14 +2143,16 @@ github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.HTTPRetry
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>Retries describes the retry policy to use when a HTTP request fails.
 For example, the following rule sets the maximum number of retries to three,
 with a 2s timeout per retry attempt.
-e.g.:
-retries:
+e.g.:</p>
+<pre><code class="language-yaml">retries:
 attempts: 3
 perTryTimeout: 2s
-retryOn: gateway-error,connect-failure,refused-stream</p>
+retryOn: gateway-error,connect-failure,refused-stream
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -2089,11 +2165,12 @@ github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.Headers
 <td>
 <em>(Optional)</em>
 <p>Headers operations for the Request.
-e.g.
-headers:
+e.g.</p>
+<pre><code class="language-yaml">headers:
 request:
 add:
-x-some-header: &ldquo;value&rdquo;</p>
+x-some-header: &quot;value&quot;
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -2106,14 +2183,16 @@ github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3.CorsPolicy
 <td>
 <em>(Optional)</em>
 <p>Cross-Origin Resource Sharing policy for the request.
-corsPolicy:
+e.g.</p>
+<pre><code class="language-yaml">corsPolicy:
 allowHeaders:
 - x-some-header
 allowMethods:
 - GET
 allowOrigin:
 - example.com
-maxAge: 24h</p>
+maxAge: 24h
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -2161,15 +2240,16 @@ values are case-sensitive and formatted as follows:
 - <code>exact: &quot;value&quot;</code> for exact string match
 - <code>prefix: &quot;value&quot;</code> for prefix-based match
 - <code>regex: &quot;value&quot;</code> for ECMAscript style regex-based match
-e.g.:
-match:
+e.g.:</p>
+<pre><code class="language-yaml">match:
 - headers:
 myheader:
-regex: &ldquo;.<em>XXXX.</em>&rdquo;
+regex: &quot;.*XXXX.*&quot;
 - headers:
 cookie:
-regex: &ldquo;^(.<em>?;)?(type=insider)(;.</em>)?$&rdquo;
-Note: If you want to use A/B Testing, you need to configure analysisTimes and match.
+regex: &quot;^(.*?;)?(type=insider)(;.*)?$&quot;
+</code></pre>
+<p>Note: If you want to use A/B Testing, you need to configure analysisTimes and match.
 If you only configure analysisTimes, it will trigger Blue/Green Deployment.
 You can configure both canaryStrategy and match.
 If configure both canaryStrategy and match, Traffic that meets match goes towards the preview service.
@@ -2187,12 +2267,13 @@ Traffic that doesn&rsquo;t meet the match will go to the primary service and pre
 <a href="#apps.kurator.dev/v1alpha1.TrafficAnalysis">TrafficAnalysis</a>)
 </p>
 <p>Kurator generates traffic load by invoking the testloader through a webhook to request the service.
-e.g.
-webhooks:
+e.g.</p>
+<pre><code class="language-yaml">webhooks:
 - timeoutSeconds: 15
 commend:
-- &ldquo;hey -z 1m -q 10 -c 2 <a href="http://podinfo-canary.test:9898/&quot;">http://podinfo-canary.test:9898/&rdquo;</a>
-The above example means that during trafficAnalysis, the cmd of &ldquo;<a href="http://flagger-loadtester.test/&quot;">http://flagger-loadtester.test/&rdquo;</a> is invoked
+- &quot;hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/&quot;
+</code></pre>
+<p>The above example means that during trafficAnalysis, the cmd of &ldquo;<a href="http://flagger-loadtester.test/&quot;">http://flagger-loadtester.test/&rdquo;</a> is invoked
 to execute the command &ldquo;hey -z 1m -q 10 -c 2 <a href="http://podinfo-canary.test:9898/&quot;">http://podinfo-canary.test:9898/&rdquo;</a></p>
 <div class="md-typeset__scrollwrap">
 <div class="md-typeset__table td-content">
@@ -2225,7 +2306,7 @@ Defaults to 60</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Command defines to commends that executed by webhook.</p>
+<p>Commands define to commends that executed by webhook.</p>
 </td>
 </tr>
 </tbody>
