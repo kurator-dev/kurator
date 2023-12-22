@@ -6,11 +6,13 @@ replace k8s.io/client-go => k8s.io/client-go v0.27.8
 
 replace k8s.io/api => k8s.io/api v0.27.8
 
-replace k8s.io/apimachinery => k8s.io/apimachinery v0.27.8
-
 replace k8s.io/dynamic-resource-allocation => k8s.io/dynamic-resource-allocation v0.27.8
 
 replace k8s.io/kms => k8s.io/kms v0.27.8
+
+replace k8s.io/apimachinery => k8s.io/apimachinery v0.27.8
+
+replace github.com/google/cel-go => github.com/google/cel-go v0.14.0
 
 exclude github.com/mitchellh/osext v0.0.0-20151018003038-5e2d6d41470f
 
