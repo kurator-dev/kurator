@@ -557,11 +557,25 @@ type FlaggerConfig struct {
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+	// TrafficRoutingProvider defines traffic routing provider.
+	// And Kurator will install flagger in trafficRoutingProvider's namespace
+	// For example, If you use `istio` as a provider, flager will be installed in istio's namespace `istio-system`.
+	// Other provider will be added later.
+	// +optional
+	TrafficRoutingProvider Provider `json:"trafficRoutingProvider,omitempty"`
 	// PublicTestloader defines whether to install the publictestloader or not.
 	// In addition to the public testloader you can configure here,
 	// you can also specify a private testloader in the Application.Spec.SyncPolicies.Rollout.TestLoader
 	PublicTestloader bool `json:"publicTestloader,omitempty"`
 }
+
+// Provider only can be istio now.
+// TODO: add Linkerd, APP Mesh, NGINX, Kuma, Gateway, Gloo
+type Provider string
+
+const (
+	Istio Provider = "istio"
+)
 
 // FleetStatus defines the observed state of the fleet
 type FleetStatus struct {

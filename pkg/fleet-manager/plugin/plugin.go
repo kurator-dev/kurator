@@ -38,6 +38,8 @@ const (
 	BackupPluginName          = "backup"
 	StorageOperatorPluginName = "storage-operator"
 	ClusterStoragePluginName  = "cluster-storage"
+	FlaggerPluginName         = "flagger"
+	PublicTestloaderName      = "testloader"
 
 	ThanosComponentName        = "thanos"
 	PrometheusComponentName    = "prometheus"
@@ -47,9 +49,15 @@ const (
 	VeleroComponentName        = "velero"
 	RookOperatorComponentName  = "rook"
 	RookClusterComponentName   = "rook-ceph"
+	FlaggerComponentName       = "flagger"
+	TestloaderComponentName    = "testloader"
 
 	OCIReposiotryPrefix = "oci://"
 )
+
+var ProviderNamespace = map[fleetv1a1.Provider]string{
+	"istio": "istio-system",
+}
 
 type GrafanaDataSource struct {
 	Name       string `json:"name"`
@@ -365,6 +373,69 @@ func RenderClusterStorage(
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           ClusterStoragePluginName,
 		Component:      RookClusterComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RendeFlagger(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+	flaggerConfig *fleetv1a1.FlaggerConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, FlaggerComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, flaggerConfig.Chart)
+	c.TargetNamespace = ProviderNamespace[flaggerConfig.TrafficRoutingProvider]
+
+	values, err := toMap(flaggerConfig.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           FlaggerPluginName,
+		Component:      FlaggerComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RendeRolloutTestloader(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+	flaggerConfig *fleetv1a1.FlaggerConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, TestloaderComponentName)
+	if err != nil {
+		return nil, err
+	}
+	// Installed in the same namespace as flagger.
+	c.TargetNamespace = ProviderNamespace[flaggerConfig.TrafficRoutingProvider]
+	// make sure use the specified testlaoder.
+	mergeChartConfig(c, nil)
+	values, err := toMap(flaggerConfig.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           PublicTestloaderName,
+		Component:      TestloaderComponentName,
 		Fleet:          fleetNN,
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,
