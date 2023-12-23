@@ -400,7 +400,8 @@ type CrossNamespaceObjectReference struct {
 // webhooks:
 //   - timeoutSeconds: 15
 //     commend:
-//       - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
+//   - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
+//
 // ```
 //
 // The above example means that during trafficAnalysis, the cmd of "http://flagger-loadtester.test/" is invoked
@@ -449,7 +450,7 @@ type ApplicationSyncStatus struct {
 	Name                string                                `json:"name,omitempty"`
 	KustomizationStatus *kustomizev1beta2.KustomizationStatus `json:"kustomizationStatus,omitempty"`
 	HelmReleaseStatus   *helmv2beta1.HelmReleaseStatus        `json:"HelmReleaseStatus,omitempty"`
-	RolloutStatus       []*RolloutStatus                      `json:"rolloutStatus,omitempty"`
+	RolloutStatus       *RolloutStatus                        `json:"rolloutStatus,omitempty"`
 }
 
 // RolloutStatus defines the observed state of Rollout.

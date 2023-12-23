@@ -294,14 +294,8 @@ func (in *ApplicationSyncStatus) DeepCopyInto(out *ApplicationSyncStatus) {
 	}
 	if in.RolloutStatus != nil {
 		in, out := &in.RolloutStatus, &out.RolloutStatus
-		*out = make([]*RolloutStatus, len(*in))
-		for i := range *in {
-			if (*in)[i] != nil {
-				in, out := &(*in)[i], &(*out)[i]
-				*out = new(RolloutStatus)
-				(*in).DeepCopyInto(*out)
-			}
-		}
+		*out = new(RolloutStatus)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }
