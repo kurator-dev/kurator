@@ -2680,85 +2680,83 @@ spec:
                     name:
                       type: string
                     rolloutStatus:
-                      items:
-                        description: RolloutStatus defines the observed state of Rollout.
-                        properties:
-                          backupNameInCluster:
-                            description: RolloutNameInCluster is the name of the rollout
-                              being performed within this cluster.
-                            type: string
-                          backupStatusInCluster:
-                            description: RolloutStatusInCluster is the current status
-                              of the Rollout performed within this cluster.
-                            properties:
-                              canaryWeight:
-                                type: integer
-                              conditions:
-                                items:
-                                  description: CanaryCondition is a status condition
-                                    for a Canary
-                                  properties:
-                                    lastTransitionTime:
-                                      description: LastTransitionTime of this condition
-                                      format: date-time
-                                      type: string
-                                    lastUpdateTime:
-                                      description: LastUpdateTime of this condition
-                                      format: date-time
-                                      type: string
-                                    message:
-                                      description: Message associated with this condition
-                                      type: string
-                                    reason:
-                                      description: Reason for the current status of
-                                        this condition
-                                      type: string
-                                    status:
-                                      description: Status of this condition
-                                      type: string
-                                    type:
-                                      description: Type of this condition
-                                      type: string
-                                  required:
-                                  - status
-                                  - type
-                                  type: object
-                                type: array
-                              failedChecks:
-                                type: integer
-                              iterations:
-                                type: integer
-                              lastAppliedSpec:
-                                type: string
-                              lastPromotedSpec:
-                                type: string
-                              lastTransitionTime:
-                                format: date-time
-                                type: string
-                              phase:
-                                description: CanaryPhase is a label for the condition
-                                  of a canary at the current time
-                                type: string
-                              previousSessionAffinityCookie:
-                                type: string
-                              sessionAffinityCookie:
-                                type: string
-                              trackedConfigs:
-                                additionalProperties:
-                                  type: string
+                      description: RolloutStatus defines the observed state of Rollout.
+                      properties:
+                        backupNameInCluster:
+                          description: RolloutNameInCluster is the name of the rollout
+                            being performed within this cluster.
+                          type: string
+                        backupStatusInCluster:
+                          description: RolloutStatusInCluster is the current status
+                            of the Rollout performed within this cluster.
+                          properties:
+                            canaryWeight:
+                              type: integer
+                            conditions:
+                              items:
+                                description: CanaryCondition is a status condition
+                                  for a Canary
+                                properties:
+                                  lastTransitionTime:
+                                    description: LastTransitionTime of this condition
+                                    format: date-time
+                                    type: string
+                                  lastUpdateTime:
+                                    description: LastUpdateTime of this condition
+                                    format: date-time
+                                    type: string
+                                  message:
+                                    description: Message associated with this condition
+                                    type: string
+                                  reason:
+                                    description: Reason for the current status of
+                                      this condition
+                                    type: string
+                                  status:
+                                    description: Status of this condition
+                                    type: string
+                                  type:
+                                    description: Type of this condition
+                                    type: string
+                                required:
+                                - status
+                                - type
                                 type: object
-                            required:
-                            - canaryWeight
-                            - failedChecks
-                            - iterations
-                            - phase
-                            type: object
-                          clusterName:
-                            description: ClusterName is the Name of the cluster where
-                              the rollout is being performed.
-                            type: string
-                        type: object
-                      type: array
+                              type: array
+                            failedChecks:
+                              type: integer
+                            iterations:
+                              type: integer
+                            lastAppliedSpec:
+                              type: string
+                            lastPromotedSpec:
+                              type: string
+                            lastTransitionTime:
+                              format: date-time
+                              type: string
+                            phase:
+                              description: CanaryPhase is a label for the condition
+                                of a canary at the current time
+                              type: string
+                            previousSessionAffinityCookie:
+                              type: string
+                            sessionAffinityCookie:
+                              type: string
+                            trackedConfigs:
+                              additionalProperties:
+                                type: string
+                              type: object
+                          required:
+                          - canaryWeight
+                          - failedChecks
+                          - iterations
+                          - phase
+                          type: object
+                        clusterName:
+                          description: ClusterName is the Name of the cluster where
+                            the rollout is being performed.
+                          type: string
+                      type: object
                   type: object
                 type: array
             type: object
