@@ -59,11 +59,16 @@ type PipelineSpec struct {
 type VolumeClaimTemplate struct {
 	// AccessMode determines the access modes for the volume, e.g., ReadWriteOnce.
 	// This affects how the volume can be mounted.
-	AccessMode string `json:"accessMode,omitempty"`
+	// "ReadWriteOnce" can be mounted in read/write mode to exactly 1 host
+	// "ReadOnlyMany" can be mounted in read-only mode to many hosts
+	// "ReadWriteMany" can be mounted in read/write mode to many hosts
+	// "ReadWriteOncePod" can be mounted in read/write mode to exactly 1 pod, cannot be used in combination with other access modes
+	AccessMode corev1.PersistentVolumeAccessMode `json:"accessMode,omitempty"`
 
-	// RequestsStorage defines the storage size required for this PVC, e.g., 1Gi, 100Mi.
+	// StorageRequest defines the storage size required for this PVC, e.g., 1Gi, 100Mi.
 	// It specifies the storage capacity needed as part of ResourceRequirements.
-	RequestsStorage string `json:"requestsStorage,omitempty"`
+	// +kubebuilder:validation:Pattern="^[0-9]+(\\.[0-9]+)?(Gi|Mi)$"
+	StorageRequest string `json:"requestsStorage,omitempty"`
 
 	// StorageClassName specifies the StorageClass name to which this persistent volume belongs, e.g., manual.
 	// It allows the PVC to use the characteristics defined by the StorageClass.
@@ -71,7 +76,9 @@ type VolumeClaimTemplate struct {
 
 	// VolumeMode specifies whether the volume should be used with a formatted filesystem (Filesystem)
 	// or remain in raw block state (Block). The Filesystem value is implied when not included.
-	VolumeMode string `json:"volumeMode,omitempty"`
+	// "Block"  means the volume will not be formatted with a filesystem and will remain a raw block device.
+	// "Filesystem"  means the volume will be or is formatted with a filesystem.
+	VolumeMode corev1.PersistentVolumeMode `json:"volumeMode,omitempty"`
 }
 
 type PipelineTask struct {

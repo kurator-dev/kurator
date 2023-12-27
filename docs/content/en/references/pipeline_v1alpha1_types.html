@@ -95,12 +95,16 @@ The tasks will be executed in the order they are listed.</p>
 <td>
 <code>sharedWorkspace</code><br>
 <em>
-string
+<a href="#pipeline.kurator.dev/v1alpha1.VolumeClaimTemplate">
+VolumeClaimTemplate
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>SharedWorkspace is the name of the PVC. If not specified, a PVC with the Pipeline&rsquo;s name as prefix will be created by default.
+<p>SharedWorkspace is the config of the PVC where task using
+The PersistentVolumeClaim with this config will be created for each pipeline execution
+it allows the user to specify e.g. size and StorageClass for the volume.
 If not set, Kurator will create a PVC named Pipeline.name using default config</p>
 </td>
 </tr>
@@ -284,12 +288,16 @@ The tasks will be executed in the order they are listed.</p>
 <td>
 <code>sharedWorkspace</code><br>
 <em>
-string
+<a href="#pipeline.kurator.dev/v1alpha1.VolumeClaimTemplate">
+VolumeClaimTemplate
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>SharedWorkspace is the name of the PVC. If not specified, a PVC with the Pipeline&rsquo;s name as prefix will be created by default.
+<p>SharedWorkspace is the config of the PVC where task using
+The PersistentVolumeClaim with this config will be created for each pipeline execution
+it allows the user to specify e.g. size and StorageClass for the volume.
 If not set, Kurator will create a PVC named Pipeline.name using default config</p>
 </td>
 </tr>
@@ -472,6 +480,86 @@ The required parameters vary depending on the TaskType chosen.</p>
 (<em>Appears on:</em>
 <a href="#pipeline.kurator.dev/v1alpha1.PredefinedTask">PredefinedTask</a>)
 </p>
+<h3 id="pipeline.kurator.dev/v1alpha1.VolumeClaimTemplate">VolumeClaimTemplate
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#pipeline.kurator.dev/v1alpha1.PipelineSpec">PipelineSpec</a>)
+</p>
+<p>VolumeClaimTemplate is the configuration for the volume claim template in pipeline execution.
+For more details, see <a href="https://github.com/kubernetes/api/blob/master/core/v1/types.go">https://github.com/kubernetes/api/blob/master/core/v1/types.go</a></p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>accessMode</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#persistentvolumeaccessmode-v1-core">
+Kubernetes core/v1.PersistentVolumeAccessMode
+</a>
+</em>
+</td>
+<td>
+<p>AccessMode determines the access modes for the volume, e.g., ReadWriteOnce.
+This affects how the volume can be mounted.
+&ldquo;ReadWriteOnce&rdquo; can be mounted in read/write mode to exactly 1 host
+&ldquo;ReadOnlyMany&rdquo; can be mounted in read-only mode to many hosts
+&ldquo;ReadWriteMany&rdquo; can be mounted in read/write mode to many hosts
+&ldquo;ReadWriteOncePod&rdquo; can be mounted in read/write mode to exactly 1 pod, cannot be used in combination with other access modes</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>requestsStorage</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>StorageRequest defines the storage size required for this PVC, e.g., 1Gi, 100Mi.
+It specifies the storage capacity needed as part of ResourceRequirements.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>storageClassName</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>StorageClassName specifies the StorageClass name to which this persistent volume belongs, e.g., manual.
+It allows the PVC to use the characteristics defined by the StorageClass.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>volumeMode</code><br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.25/#persistentvolumemode-v1-core">
+Kubernetes core/v1.PersistentVolumeMode
+</a>
+</em>
+</td>
+<td>
+<p>VolumeMode specifies whether the volume should be used with a formatted filesystem (Filesystem)
+or remain in raw block state (Block). The Filesystem value is implied when not included.
+&ldquo;Block&rdquo;  means the volume will not be formatted with a filesystem and will remain a raw block device.
+&ldquo;Filesystem&rdquo;  means the volume will be or is formatted with a filesystem.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <div class="admonition note">
 <p class="last">This page was automatically generated with <code>gen-crd-api-reference-docs</code></p>
 </div>
