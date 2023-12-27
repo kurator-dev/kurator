@@ -18,7 +18,6 @@ package render
 
 import (
 	"bytes"
-	"io/fs"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -26,15 +25,8 @@ import (
 )
 
 // renderTemplate reads, parses, and renders a template file using the provided configuration data.
-func renderTemplate(fsys fs.FS, tplFileName, tplName string, cfg interface{}) ([]byte, error) {
-	out, err := fs.ReadFile(fsys, tplFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	t := template.New(tplName)
-
-	tpl, err := t.Funcs(funMap()).Parse(string(out))
+func renderTemplate(tplFileString, tplName string, cfg interface{}) ([]byte, error) {
+	tpl, err := template.New(tplName).Funcs(funMap()).Parse(tplFileString)
 	if err != nil {
 		return nil, err
 	}
@@ -64,3 +56,62 @@ func toYaml(value interface{}) string {
 
 	return string(y)
 }
+
+const RBACTemplateContent = `apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+secrets:
+  - name: "chain-credentials"
+    namespace: "{{ .PipelineNamespace }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "{{ .BroadResourceRoleBindingName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles # add role for handle broad-resource, such as eventListener, triggers, configmaps and so on. tekton-triggers-eventlistener-roles is provided by Tekton
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "{{ .SecretRoleBindingName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles # add role for handle secret, clustertriggerbinding and clusterinterceptors. tekton-triggers-eventlistener-clusterroles is provided by Tekton
+`
