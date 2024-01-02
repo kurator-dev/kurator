@@ -368,35 +368,55 @@ For more details, see [Tekton signed-provenance-tutorial](https://tekton.dev/doc
 
 #### Kurator Pipeline cli
 
-##### 1. Pipeline Commands
+We are focused on providing the viewing logs of Pipeline executions. Therefore, we have concentrated the CLI's features on this core requirement.
 
-- **`pipeline list`**
-  
-    Display all current Pipelines.
+For viewing information about Pipeline objects, users can directly utilize existing tools like kubectl.
 
-- **`pipeline describe <name>`**
+##### Pipeline Execution Commands
 
-    Show detailed information of a specified Pipeline.
+###### List Commands
 
-- **`pipeline log --lastExecution <name>`**
+- **`kurator pipeline execution list -n`**
 
-    Display the logs of the most recent PipelineExecution triggered by an event for a specified Pipeline.
+This command is used to list all Pipeline execution instances and groups them according to the creator (Pipeline). Each instance will display its creation time and the name of the creator.
 
-##### 2. PipelineExecution Commands
+Here is an example output.
 
-- **`pipeline-execution list [--pipeline=<name>]`**
-  
-    List all PipelineExecution instances. The list includes each execution's event information and timestamp. 
-    
-    If the `--pipeline` parameter is provided, only list PipelineExecutions belonging to a specific Pipeline.
+```console
+-----------------------------------------------------------------------------------
+Execution Name                  | Creation Time          | Namespace        | Pipeline
+-----------------------------------------------------------------------------------
+quick-start-run-frb7l           | 2024-01-02 10:15:30    | kurator-pipeline | quick-start
+quick-start-run-h65wx           | 2024-01-02 11:20:45    | kurator-pipeline | quick-start
+my-app-pipeline-run-a1b2c       | 2024-01-03 14:25:05    | kurator-pipeline | my-app-pipeline
+my-app-pipeline-run-d3e4f       | 2024-01-03 15:55:30    | kurator-pipeline | my-app-pipeline
+my-app-pipeline-run-g6h7i       | 2024-01-03 17:10:00    | kurator-pipeline | my-app-pipeline
+```
 
-- **`pipeline-execution describe <name>`**
+###### Logs Commands
 
-    Show detailed information of a specified PipelineExecution, including task composition, current status.
+- **`kurator pipeline execution logs <execution-name>`**
 
-- **`pipeline-execution logs <name>`**
+This command retrieves and displays the logs for a specified pipeline execution, providing detailed insights into its operational flow.
 
-    Retrieve and display logs of a specified PipelineExecution.
+Here is an example output.
+
+```console
+$ kurator pipeline execution logs quick-start-run-frb7l -n kurator-pipeline
++ '[' true '=' true ]
++ cp /workspace/basic-auth/.git-credentials /home/git/.git-credentials
++ cp /workspace/basic-auth/.gitconfig /home/git/.gitconfig
++ chmod 400 /home/git/.git-credentials
++ chmod 400 /home/git/.gitconfig
+...
+INFO[0158] Running: [/bin/sh -c chown -R app:app ./]    
+INFO[0158] Taking snapshot of full filesystem...        
+INFO[0158] USER app                                     
+INFO[0158] Cmd: USER                                    
+INFO[0158] CMD ["./podinfo"]                            
+INFO[0158] Pushing image to ghcr.io/xieql/kurator-test:0.4.1 
+INFO[0186] Pushed ghcr.io/xieql/kurator-test@sha256:5c8d9af38ab924b7d920de000a161bed8e695769a006ab7a03dd407c041942af 
+```
 
 #### Test Plan
 
