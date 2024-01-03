@@ -256,6 +256,7 @@ func generateDeployConfig(fsys fs.FS, fileName, name, namespace string) (*appsv1
 
 	deploy.SetName(name + "-testloader")
 	deploy.SetNamespace(namespace)
+	// Set up labels to make sure it's a resource created by kurator.
 	deploy.SetLabels(map[string]string{
 		"app": name + "-testloader",
 	})
@@ -283,6 +284,7 @@ func generateSvcConfig(fsys fs.FS, fileName string, name, namespace string) (*co
 
 	svc.SetName(name + "-testloader")
 	svc.SetNamespace(namespace)
+	// Set up labels to make sure it's a resource created by kurator.
 	svc.SetLabels(map[string]string{
 		"app": name + "-testloader",
 	})
@@ -351,14 +353,17 @@ func renderCanaryService(rolloutPolicy applicationapi.RolloutConfig, service *co
 
 func renderCanaryAnalysis(rolloutPolicy applicationapi.RolloutConfig, clusterName string) *flaggerv1b1.CanaryAnalysis {
 	canaryAnalysis := flaggerv1b1.CanaryAnalysis{
-		Iterations:          rolloutPolicy.RolloutPolicy.TrafficRouting.AnalysisTimes,
-		MaxWeight:           rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.MaxWeight,
-		StepWeight:          rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.StepWeight,
-		StepWeights:         rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.StepWeights,
-		StepWeightPromotion: rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.StepWeightPromotion,
-		Threshold:           *rolloutPolicy.RolloutPolicy.TrafficAnalysis.CheckFailedTimes,
-		Match:               rolloutPolicy.RolloutPolicy.TrafficRouting.Match,
-		SessionAffinity:     (*flaggerv1b1.SessionAffinity)(rolloutPolicy.RolloutPolicy.TrafficAnalysis.SessionAffinity),
+		Iterations:      rolloutPolicy.RolloutPolicy.TrafficRouting.AnalysisTimes,
+		Threshold:       *rolloutPolicy.RolloutPolicy.TrafficAnalysis.CheckFailedTimes,
+		Match:           rolloutPolicy.RolloutPolicy.TrafficRouting.Match,
+		SessionAffinity: (*flaggerv1b1.SessionAffinity)(rolloutPolicy.RolloutPolicy.TrafficAnalysis.SessionAffinity),
+	}
+
+	if rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy != nil {
+		canaryAnalysis.MaxWeight = rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.MaxWeight
+		canaryAnalysis.StepWeight = rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.StepWeight
+		canaryAnalysis.StepWeights = rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.StepWeights
+		canaryAnalysis.StepWeightPromotion = rolloutPolicy.RolloutPolicy.TrafficRouting.CanaryStrategy.StepWeightPromotion
 	}
 
 	CheckInterval := fmt.Sprintf("%d", *rolloutPolicy.RolloutPolicy.TrafficAnalysis.CheckIntervalSeconds) + "s"
