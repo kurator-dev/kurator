@@ -92,7 +92,6 @@ sidebar_menu_compact = true
 # 'ul_show': Specifies the level of automatic expansion for the sidebar menu. A value of '1' means all items in the first level of the menu will be automatically expanded. Adjust this value to control the expansion depth of the menu.
 ul_show = 1
 sidebar_menu_foldable = true
-
 sidebar_menu_truncate = 1000
 # Set to true to disable breadcrumb navigation.
 breadcrumb_disable = false
