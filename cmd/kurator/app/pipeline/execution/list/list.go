@@ -26,10 +26,9 @@ import (
 	"kurator.dev/kurator/pkg/pipeline/execution/list"
 )
 
-var Args = list.Args{}
-
 func NewCmd(opts *generic.Options) *cobra.Command {
-	PipelineListCmd := &cobra.Command{
+	var Args = list.Args{}
+	listCmd := &cobra.Command{
 		Use:     "list",
 		Short:   "list the kurator pipeline execution",
 		Example: getExample(),
@@ -50,18 +49,20 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 		},
 	}
 
-	PipelineListCmd.PersistentFlags().StringVarP(&Args.Namespace, "namespace", "n", "default", "specific namespace")
-	PipelineListCmd.PersistentFlags().BoolVarP(&Args.AllNamespaces, "all-namespaces", "A", false, "If true, list the pipelineRuns across all namespaces")
+	listCmd.PersistentFlags().StringVarP(&Args.Namespace, "namespace", "n", "default", "specific namespace")
+	listCmd.PersistentFlags().BoolVarP(&Args.AllNamespaces, "all-namespaces", "A", false, "If true, list the pipelineRuns across all namespaces")
 
-	return PipelineListCmd
+	return listCmd
 }
 
 func getExample() string {
 	return `  # List kurator pipeline objects in the default namespace
-  kurator pipeline list
+  kurator pipeline execution list
+
   # List the pipelines in a specific namespace (replace 'example-namespace' with your namespace)
-  kurator pipeline list -n example-namespace
+  kurator pipeline execution list -n example-namespace
+
   # List the pipelines across all namespaces
-  kurator pipeline list -A
+  kurator pipeline execution list -A
 `
 }

@@ -24,7 +24,7 @@ import (
 )
 
 func NewCmd(opts *generic.Options) *cobra.Command {
-	joinCmd := &cobra.Command{
+	executionCmd := &cobra.Command{
 		Use:                   "execution",
 		Short:                 "manage kurator pipeline execution",
 		DisableFlagsInUseLine: true,
@@ -33,7 +33,7 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 		},
 	}
 
-	joinCmd.AddCommand(list.NewCmd(opts))
+	executionCmd.AddCommand(list.NewCmd(opts))
 
-	return joinCmd
+	return executionCmd
 }

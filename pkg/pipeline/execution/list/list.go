@@ -19,9 +19,9 @@ package list
 import (
 	"context"
 	"fmt"
-	"os"
 	"sort"
 
+	"github.com/sirupsen/logrus"
 	tektonapi "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -77,7 +77,7 @@ func (p *pipelineList) ListExecute() error {
 
 	pipelineRunList := &tektonapi.PipelineRunList{}
 	if err := p.CtrlRuntimeClient().List(context.Background(), pipelineRunList, listOpts); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get PipelineRunList: %v\n", err)
+		logrus.Errorf("failed to get PipelineRunList, %v", err)
 		return err
 	}
 
