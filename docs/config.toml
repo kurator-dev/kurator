@@ -95,9 +95,9 @@ sidebar_menu_foldable = true
 
 sidebar_menu_truncate = 1000
 # Set to true to disable breadcrumb navigation.
-breadcrumb_disable: false
+breadcrumb_disable = false
 # Set to true to hide the sidebar search box (the top nav search box will still be displayed if search is enabled)
-sidebar_search_disable: true
+sidebar_search_disable = true
 
 
 # Adds an H2 section titled "Feedback" to the bottom of each doc. The responses are sent to Google Analytics as events.
