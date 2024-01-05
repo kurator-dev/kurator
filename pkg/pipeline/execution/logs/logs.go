@@ -42,7 +42,7 @@ type pipelineLogs struct {
 // Args holds the command line arguments for the logs command.
 type Args struct {
 	Namespace string // Namespace from which to fetch the logs.
-	TailLines int64  // Number of lines to display from the end of the logs, must be greater than 0 to take effect
+	TailLines int64  // Number of lines to display from the end of the logs in each task pod container, must be greater than 0 to take effect
 }
 
 // NewPipelineLogs creates a new pipelineLogs instance.
@@ -137,7 +137,7 @@ func (p *pipelineLogs) fetchAndPrintPodLogs(taskRunName, namespace string) error
 	return nil
 }
 
-// generatePodName gets the pod name for a taskrun. The taskRunName and the name of the pod executing the task differ only by "-pod"
+// getPodNameFromTaskRun gets the pod name for a taskrun. The taskRunName and the name of the pod executing the task differ only by "-pod"
 func getPodNameFromTaskRun(taskRunName string) string {
 	return taskRunName + "-pod"
 }

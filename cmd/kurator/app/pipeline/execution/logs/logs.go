@@ -56,7 +56,7 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	}
 
 	logsCmd.PersistentFlags().StringVarP(&Args.Namespace, "namespace", "n", "default", "specific namespace")
-	logsCmd.PersistentFlags().Int64Var(&Args.TailLines, "tail", 0, "number of lines to display from the end of the logs; must be greater than 0 to take effect")
+	logsCmd.PersistentFlags().Int64Var(&Args.TailLines, "tail", 0, "number of lines to display from the end of the logs in each task pod container, must be greater than 0 to take effect")
 
 	return logsCmd
 }
