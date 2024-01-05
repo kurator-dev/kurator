@@ -10,7 +10,7 @@ secrets:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: "example-broad-resource"
+  name: "example"
   namespace: "default"
 subjects:
 - kind: ServiceAccount
@@ -24,7 +24,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: "example-secret"
+  name: "example"
   namespace: "default"
 subjects:
 - kind: ServiceAccount

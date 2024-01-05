@@ -23,9 +23,7 @@ import (
 )
 
 const (
-	RBACTemplateName    = "pipeline rbac template"
-	SecretSuffix        = "-secret"
-	BroadResourceSuffix = "-broad-resource"
+	RBACTemplateName = "pipeline rbac template"
 )
 
 // RBACConfig contains the configuration data required for the RBAC template.
@@ -36,19 +34,9 @@ type RBACConfig struct {
 	OwnerReference    *metav1.OwnerReference
 }
 
-// ServiceAccountName generates the service account name using the pipeline name \
+// ServiceAccountName generates the service account name using the pipeline name.
 func (rbac RBACConfig) ServiceAccountName() string {
 	return rbac.PipelineName
-}
-
-// BroadResourceRoleBindingName generates the role binding name using the service account name.
-func (rbac RBACConfig) BroadResourceRoleBindingName() string {
-	return rbac.ServiceAccountName() + BroadResourceSuffix
-}
-
-// SecretRoleBindingName generates the cluster role binding name using the service account name.
-func (rbac RBACConfig) SecretRoleBindingName() string {
-	return rbac.ServiceAccountName() + SecretSuffix
 }
 
 // RenderRBAC renders the RBAC configuration using a specified template.
@@ -58,3 +46,62 @@ func RenderRBAC(cfg RBACConfig) ([]byte, error) {
 	}
 	return renderTemplate(RBACTemplateContent, RBACTemplateName, cfg)
 }
+
+const RBACTemplateContent = `apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+secrets:
+  - name: "chain-credentials"
+    namespace: "{{ .PipelineNamespace }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "{{ .PipelineName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles # add role for handle broad-resource, such as eventListener, triggers, configmaps and so on. tekton-triggers-eventlistener-roles is provided by Tekton
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "{{ .PipelineName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles # add role for handle secret, clustertriggerbinding and clusterinterceptors. tekton-triggers-eventlistener-clusterroles is provided by Tekton
+`

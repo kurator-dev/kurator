@@ -15,7 +15,7 @@ secrets:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: "example-with-owner-broad-resource"
+  name: "example-with-owner"
   namespace: "default"
   ownerReferences:
   - apiVersion: "v1"
@@ -34,7 +34,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: "example-with-owner-secret"
+  name: "example-with-owner"
   namespace: "default"
   ownerReferences:
   - apiVersion: "v1"
