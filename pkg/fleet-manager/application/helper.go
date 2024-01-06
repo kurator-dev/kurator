@@ -61,15 +61,15 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 		}
 	}
 
-	// after finish instaill application, start handle rollout policy
-	rolloutCluster, err := a.fetchRolloutClusters(ctx, app, a.Client, fleet, syncPolicy)
-	if err != nil {
-		log.Error(err, "failed to fetch destination clusters for syncPolicy")
-		return ctrl.Result{}, err
-	}
-
 	if syncPolicy.Rollout != nil {
-		if result, err := a.syncRolloutPolicyForCluster(ctx, syncPolicy.Rollout, rolloutCluster, policyName); err != nil {
+		// after finish application install, start handling rollout policy
+		rolloutClusters, err := a.fetchRolloutClusters(ctx, app, a.Client, fleet, syncPolicy)
+		if err != nil {
+			log.Error(err, "failed to fetch destination clusters for rollout")
+			return ctrl.Result{}, err
+		}
+
+		if result, err := a.syncRolloutPolicyForCluster(ctx, syncPolicy.Rollout, rolloutClusters, policyName); err != nil {
 			return result, errors.Wrapf(err, "failed to handleSyncPolicyByKind currentFleetCluster")
 		}
 	}

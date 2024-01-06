@@ -28,9 +28,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 	"kurator.dev/kurator/pkg/fleet-manager/manifests"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func generateRolloutPloicy(installPrivateTestloader *bool) applicationapi.RolloutConfig {
@@ -420,5 +420,89 @@ func Test_generateSvcConfig(t *testing.T) {
 	}
 	if _, err := generateSvcConfig(filepath, svcname, namespacedName.Name, namespacedName.Namespace); err != nil {
 		fmt.Printf("failed get testloader deployment configuration: %v", err)
+	}
+}
+
+func Test_addLablesOrAnnotaions(t *testing.T) {
+	type args struct {
+		obj                client.Object
+		labelsOrAnnotaions string
+		key                string
+		value              string
+	}
+	tests := []struct {
+		name string
+		args args
+		want client.Object
+	}{
+		{
+			name: "function test",
+			args: args{
+				obj: &corev1.Namespace{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Namespace",
+						APIVersion: "v1",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "webapp",
+						Labels: map[string]string{
+							"xxx": "abc",
+						},
+					},
+				},
+				labelsOrAnnotaions: "labels",
+				key:                "istio-injection",
+				value:              "ebabled",
+			},
+			want: &corev1.Namespace{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Namespace",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "webapp",
+					Labels: map[string]string{
+						"xxx":             "abc",
+						"istio-injection": "ebabled",
+					},
+				},
+			},
+		},
+		{
+			name: "empty labels test",
+			args: args{
+				obj: &corev1.Namespace{
+					TypeMeta: metav1.TypeMeta{
+						Kind:       "Namespace",
+						APIVersion: "v1",
+					},
+					ObjectMeta: metav1.ObjectMeta{
+						Name: "webapp",
+					},
+				},
+				labelsOrAnnotaions: "labels",
+				key:                "XXX",
+				value:              "abc",
+			},
+			want: &corev1.Namespace{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Namespace",
+					APIVersion: "v1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "webapp",
+					Labels: map[string]string{
+						"XXX": "abc",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := addLablesOrAnnotaions(tt.args.obj, tt.args.labelsOrAnnotaions, tt.args.key, tt.args.value); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("addLablesOrAnnotaions() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
