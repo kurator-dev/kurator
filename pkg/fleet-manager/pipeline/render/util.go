@@ -18,23 +18,15 @@ package render
 
 import (
 	"bytes"
-	"html/template"
-	"io/fs"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"sigs.k8s.io/yaml"
 )
 
-// renderPipelineTemplate reads, parses, and renders a template file using the provided configuration data.
-func renderPipelineTemplate(fsys fs.FS, tplFileName, tplName string, cfg interface{}) ([]byte, error) {
-	out, err := fs.ReadFile(fsys, tplFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	t := template.New(tplName)
-
-	tpl, err := t.Funcs(funMap()).Parse(string(out))
+// renderTemplate reads, parses, and renders a template file using the provided configuration data.
+func renderTemplate(tplFileString, tplName string, cfg interface{}) ([]byte, error) {
+	tpl, err := template.New(tplName).Funcs(funMap()).Parse(tplFileString)
 	if err != nil {
 		return nil, err
 	}
