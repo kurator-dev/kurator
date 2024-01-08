@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: resource-task-test-pipeline
+  namespace: default
+spec:
+  description: >-
+    This task is a user-custom, single-step task.
+    The workspace is automatically and exclusively created named "source",
+    and assigned to the workspace of the pipeline in which this task is located.
+  workspaces:
+  - name: source
+    description: The workspace where user to run user-custom task.
+  steps:
+  - name: resource-task-test-pipeline
+    image: golang:1.16
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 2Gi
