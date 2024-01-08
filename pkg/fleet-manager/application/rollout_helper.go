@@ -19,7 +19,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"time"
 
 	flaggerv1b1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
@@ -28,25 +27,22 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/yaml"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
-	"kurator.dev/kurator/pkg/fleet-manager/manifests"
+	render "kurator.dev/kurator/pkg/fleet-manager/application/manifests"
 	plugin "kurator.dev/kurator/pkg/fleet-manager/plugin"
+	"kurator.dev/kurator/pkg/infra/util"
 )
 
 const (
 	// kurator rollout labels
-	RolloutLabel  = "kurator.dev/rollout"
-	sidecarInject = "istio-injection"
+	RolloutIdentifier = "kurator.dev/rollout"
+	sidecarInject     = "istio-injection"
 
-	// testloader configuration path
-	testloaderDeployPath = "plugins/testloader-deploy.yaml"
-	testloaderSvcPath    = "plugins/testloader-svc.yaml"
 	// StatusSyncInterval specifies the interval for requeueing when synchronizing status. It determines how frequently the status should be checked and updated.
 	StatusSyncInterval = 30 * time.Second
 )
@@ -89,10 +85,6 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 ) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	annotations := map[string]string{
-		RolloutLabel: policyName,
-	}
-
 	serviceNamespaceName := types.NamespacedName{
 		Namespace: rolloutPolicy.Workload.Namespace,
 		Name:      rolloutPolicy.ServiceName,
@@ -103,12 +95,16 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		Name:      rolloutPolicy.Workload.Name + "-testloader",
 	}
 
-	for clusterKey, fleetCluster := range destinationClusters {
-		newClient := fleetCluster.Client.CtrlRuntimeClient()
+	annotation := map[string]string{
+		RolloutIdentifier: policyName,
+	}
 
-		// if trafficRoutingProvider is istio, find workload namespace with Istio sidecar injection enabled.
+	for clusterKey, fleetCluster := range destinationClusters {
+		fleetClusterClient := fleetCluster.Client.CtrlRuntimeClient()
+
+		// If the trafficRoutingProvider is Istio, add the sidecar injection label to the workload's namespace.
 		if rolloutPolicy.TrafficRoutingProvider == "istio" {
-			err := namespaceSidecarInject(ctx, newClient, rolloutPolicy.Workload.Namespace)
+			err := enableIstioSidecarInjection(ctx, fleetClusterClient, rolloutPolicy.Workload.Namespace)
 			if err != nil {
 				return ctrl.Result{}, errors.Wrapf(err, "failed to set namespace %s istio-injection enable", rolloutPolicy.Workload.Namespace)
 			}
@@ -117,25 +113,23 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		// if delete private testloader when rollout polity has changed
 		if rolloutPolicy.TestLoader == nil || !*rolloutPolicy.TestLoader {
 			testloaderDeploy := &appsv1.Deployment{}
-			if err := deleteResourceCreateByKurator(ctx, testloaderNamespaceName, newClient, testloaderDeploy); err != nil {
+			if err := deleteResourceCreatedByKurator(ctx, testloaderNamespaceName, fleetClusterClient, testloaderDeploy); err != nil {
 				return ctrl.Result{}, err
 			}
 			testloaderSvc := &corev1.Service{}
-			if err := deleteResourceCreateByKurator(ctx, testloaderNamespaceName, newClient, testloaderSvc); err != nil {
+			if err := deleteResourceCreatedByKurator(ctx, testloaderNamespaceName, fleetClusterClient, testloaderSvc); err != nil {
 				return ctrl.Result{}, err
 			}
-		}
-
-		// Installation of private testloader if needed
-		if rolloutPolicy.TestLoader != nil && *rolloutPolicy.TestLoader {
-			if result, err := installPrivateTestloader(ctx, testloaderNamespaceName, *fleetCluster, annotations); err != nil {
-				return result, fmt.Errorf("failed to install private testloader for workload: %w", err)
+		} else {
+			// Installation of private testloader if needed
+			if err := installPrivateTestloader(ctx, testloaderNamespaceName, RolloutIdentifier, policyName); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to install private testloader for workload: %w", err)
 			}
 		}
 
 		// Get the configuration of the workload's service and generate a canaryService.
 		service := &corev1.Service{}
-		if err := newClient.Get(ctx, serviceNamespaceName, service); err != nil {
+		if err := fleetClusterClient.Get(ctx, serviceNamespaceName, service); err != nil {
 			if apierrors.IsNotFound(err) {
 				return ctrl.Result{RequeueAfter: StatusSyncInterval}, errors.Wrapf(err, "not found service %s in %s", rolloutPolicy.ServiceName, rolloutPolicy.Workload.Namespace)
 			}
@@ -143,7 +137,11 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		}
 
 		canaryInCluster := &flaggerv1b1.Canary{}
-		getErr := newClient.Get(ctx, serviceNamespaceName, canaryInCluster)
+		getErr := fleetClusterClient.Get(ctx, serviceNamespaceName, canaryInCluster)
+		if getErr != nil && !apierrors.IsNotFound(getErr) {
+			return ctrl.Result{}, errors.Wrapf(getErr, "failed to get canary %s in %s", serviceNamespaceName.Name, serviceNamespaceName.Namespace)
+		}
+
 		canaryInCluster = renderCanary(*rolloutPolicy, canaryInCluster)
 		if canaryService, err := renderCanaryService(*rolloutPolicy, service); err != nil {
 			return ctrl.Result{}, errors.Wrapf(err, "failed rander canary configuration")
@@ -152,26 +150,24 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		}
 		canaryInCluster.Spec.Analysis = renderCanaryAnalysis(*rolloutPolicy, clusterKey.Name)
 		// Set up annotations to make sure it's a resource created by kurator
-		canaryInCluster.SetAnnotations(annotations)
+		canaryInCluster.SetAnnotations(annotation)
 
-		if getErr != nil {
-			if apierrors.IsNotFound(getErr) {
-				if err := newClient.Create(ctx, canaryInCluster); err != nil {
-					return ctrl.Result{}, fmt.Errorf("failed to create rolloutPolicy: %v", err)
-				}
+		if apierrors.IsNotFound(getErr) {
+			if err := fleetClusterClient.Create(ctx, canaryInCluster); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to create rolloutPolicy: %v", err)
 			}
-			return ctrl.Result{}, errors.Wrapf(getErr, "failed to get canary %s in %s", serviceNamespaceName.Name, serviceNamespaceName.Namespace)
-		}
-		if err := newClient.Update(ctx, canaryInCluster); err != nil {
-			return ctrl.Result{}, fmt.Errorf("failed to update rolloutPolicy: %v", err)
+		} else {
+			if err := fleetClusterClient.Update(ctx, canaryInCluster); err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to update rolloutPolicy: %v", err)
+			}
 		}
 
-		log.Info("sync rolloutPolicy for cluster successful")
+		log.Info("sync rolloutPolicy successful")
 	}
 	return ctrl.Result{}, nil
 }
 
-func namespaceSidecarInject(ctx context.Context, kubeClient client.Client, namespace string) error {
+func enableIstioSidecarInjection(ctx context.Context, kubeClient client.Client, namespace string) error {
 	log := ctrl.LoggerFrom(ctx)
 
 	ns := &corev1.Namespace{}
@@ -183,12 +179,14 @@ func namespaceSidecarInject(ctx context.Context, kubeClient client.Client, names
 		// if no found, create a namespace
 		if apierrors.IsNotFound(err) {
 			ns.SetName(namespace)
-			ns := addLablesOrAnnotaions(ns, "labels", sidecarInject, "enabled")
+			ns.SetLabels(map[string]string{
+				sidecarInject: "enabled",
+			})
 			if createErr := kubeClient.Create(ctx, ns); createErr != nil {
 				return errors.Wrapf(createErr, "failed to create namespace %s", namespacedName.Namespace)
 			}
 		}
-		ns := addLablesOrAnnotaions(ns, "labels", sidecarInject, "enabled")
+		ns := addLabels(ns, sidecarInject, "enabled")
 		if updateErr := kubeClient.Update(ctx, ns); updateErr != nil {
 			return errors.Wrapf(updateErr, "failed to update namespace %s", namespacedName.Namespace)
 		}
@@ -197,105 +195,45 @@ func namespaceSidecarInject(ctx context.Context, kubeClient client.Client, names
 	return nil
 }
 
-func installPrivateTestloader(ctx context.Context,
-	namespacedName types.NamespacedName,
-	fleetCluster fleetmanager.FleetCluster,
-	annotations map[string]string,
-) (ctrl.Result, error) {
+func installPrivateTestloader(ctx context.Context, namespacedName types.NamespacedName, annotationKey, annotationValue string) error {
 	log := ctrl.LoggerFrom(ctx)
-	clusterClient := fleetCluster.Client.CtrlRuntimeClient()
-
-	// Creating a private testload deployment from a configuration file
-	filepath := manifests.BuiltinOrDir("")
-	deploy, err1 := generateDeployConfig(filepath, testloaderDeployPath, namespacedName.Name, namespacedName.Namespace)
-	if err1 != nil {
-		return ctrl.Result{}, fmt.Errorf("failed get testloader deployment configuration: %v", err1)
+	// apply testloader deployment resource
+	testloaderDeploy, deployErr := render.RenderTestloaderConfig(render.TestlaoderDeployment, namespacedName, annotationKey, annotationValue)
+	if deployErr != nil {
+		return deployErr
 	}
-	// Set up annotations to make sure it's a resource created by kurator.
-	deploy.SetAnnotations(annotations)
-
-	if err := clusterClient.Create(ctx, deploy); err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			if updateErr := clusterClient.Update(ctx, deploy); updateErr != nil {
-				return ctrl.Result{}, errors.Wrapf(err, "failed to update private testloader deployment")
-			}
-			return ctrl.Result{}, nil
-		}
-		return ctrl.Result{}, errors.Wrapf(err, "failed to create private testloader deployment")
+	if _, err := util.PatchResources(testloaderDeploy); err != nil {
+		return err
 	}
 
-	// Creating a private testload service from a configuration file
-	svc, err2 := generateSvcConfig(filepath, testloaderSvcPath, namespacedName.Name, namespacedName.Namespace)
-	if err2 != nil {
-		return ctrl.Result{}, fmt.Errorf("failed get testloader service configuration: %v", err2)
+	// apply testloader service resource
+	testloaderSvc, svcErr := render.RenderTestloaderConfig(render.TestlaoderService, namespacedName, annotationKey, annotationValue)
+	if svcErr != nil {
+		return svcErr
 	}
-	// Set up annotations to make sure it's a resource created by kurator.
-	svc.SetAnnotations(annotations)
-
-	if err := clusterClient.Create(ctx, svc); err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			if updateErr := clusterClient.Update(ctx, svc); updateErr != nil {
-				return ctrl.Result{}, errors.Wrapf(err, "failed to update private testloader service")
-			}
-		}
-		return ctrl.Result{}, errors.Wrapf(err, "failed to create private testloader service")
+	if _, err := util.PatchResources(testloaderSvc); err != nil {
+		return err
 	}
 
-	log.Info("Create private workload successful")
-	return ctrl.Result{}, nil
+	log.Info("install testloader successful")
+	return nil
 }
 
-func generateDeployConfig(fsys fs.FS, fileName, name, namespace string) (*appsv1.Deployment, error) {
-	file, err := fs.ReadFile(fsys, fileName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open telstloader deployment configuration: %v", err)
+func deleteResourceCreatedByKurator(ctx context.Context, namespaceName types.NamespacedName, kubeClient client.Client, obj client.Object) error {
+	if err := kubeClient.Get(ctx, namespaceName, obj); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return errors.Wrapf(err, "get kubernetes resource error")
+		}
+	} else {
+		// verify if the deployment were created by kurator
+		annotations := obj.GetAnnotations()
+		if _, exist := annotations[RolloutIdentifier]; exist {
+			if deleteErr := kubeClient.Delete(ctx, obj); deleteErr != nil {
+				return errors.Wrapf(deleteErr, "failed to delete kubernetes resource")
+			}
+		}
 	}
-
-	deploy := appsv1.Deployment{}
-	if err := yaml.Unmarshal(file, &deploy); err != nil {
-		return nil, err
-	}
-
-	deploy.SetName(name)
-	deploy.SetNamespace(namespace)
-	// Set up labels to make sure it's a resource created by kurator.
-	deploy.SetLabels(map[string]string{
-		"app": name,
-	})
-	// let svc's selector to select private testloader pod
-	deploy.Spec.Selector.MatchLabels = map[string]string{
-		"app": name,
-	}
-	deploy.Spec.Template.ObjectMeta.Labels = map[string]string{
-		"app": name,
-	}
-
-	return &deploy, nil
-}
-
-func generateSvcConfig(fsys fs.FS, fileName string, name, namespace string) (*corev1.Service, error) {
-	file, err1 := fs.ReadFile(fsys, fileName)
-	if err1 != nil {
-		return nil, fmt.Errorf("failed to open telstloader service configuration: %v", err1)
-	}
-
-	svc := corev1.Service{}
-	if err := yaml.Unmarshal(file, &svc); err != nil {
-		return nil, err
-	}
-
-	svc.SetName(name)
-	svc.SetNamespace(namespace)
-	// Set up labels to make sure it's a resource created by kurator.
-	svc.SetLabels(map[string]string{
-		"app": name,
-	})
-	// let svc's selector to select private testloader pod
-	svc.Spec.Selector = map[string]string{
-		"app": name,
-	}
-
-	return &svc, nil
+	return nil
 }
 
 // create/update canary configuration
@@ -428,46 +366,16 @@ func generateWebhookUrl(name, namespace string) string {
 	return url
 }
 
-func deleteResourceCreateByKurator(ctx context.Context, namespaceName types.NamespacedName, kubeClient client.Client, obj client.Object) error {
-	if err := kubeClient.Get(ctx, namespaceName, obj); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(err, "get kubernetes resource error")
-		}
-	} else {
-		// verify if the deployment were created by kurator
-		annotations := obj.GetAnnotations()
-		if _, exist := annotations[RolloutLabel]; exist {
-			if deleteErr := kubeClient.Delete(ctx, obj); deleteErr != nil {
-				return errors.Wrapf(deleteErr, "failed to delete kubernetes resource")
-			}
-		}
+func addLabels(obj client.Object, key, value string) client.Object {
+	labels := obj.GetLabels()
+	// prevent nil pointer panic
+	if labels == nil {
+		obj.SetLabels(map[string]string{
+			key: value,
+		})
+		return obj
 	}
-	return nil
-}
-
-func addLablesOrAnnotaions(obj client.Object, labelsOrAnnotaions, key, value string) client.Object {
-	switch labelsOrAnnotaions {
-	case "labels":
-		labels := obj.GetLabels()
-		if labels == nil {
-			obj.SetLabels(map[string]string{
-				key: value,
-			})
-			return obj
-		}
-		labels[key] = value
-		obj.SetLabels(labels)
-	case "annotations":
-		annotations := obj.GetAnnotations()
-		if annotations == nil {
-			obj.SetAnnotations(map[string]string{
-				key: value,
-			})
-			return obj
-		}
-		annotations[key] = value
-		obj.SetAnnotations(annotations)
-	}
-
+	labels[key] = value
+	obj.SetLabels(labels)
 	return obj
 }

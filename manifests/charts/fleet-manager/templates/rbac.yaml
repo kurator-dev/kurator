@@ -162,6 +162,7 @@ rules:
       - create
       - delete
       - list
+      - update
   - apiGroups:
       - "source.toolkit.fluxcd.io"
     resources:

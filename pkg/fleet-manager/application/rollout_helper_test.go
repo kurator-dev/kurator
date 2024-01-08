@@ -17,7 +17,6 @@ limitations under the License.
 package application
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -26,11 +25,10 @@ import (
 	istiov1alpha3 "github.com/fluxcd/flagger/pkg/apis/istio/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
-	"kurator.dev/kurator/pkg/fleet-manager/manifests"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 )
 
 func generateRolloutPloicy(installPrivateTestloader *bool) applicationapi.RolloutConfig {
@@ -397,6 +395,7 @@ func Test_renderCanaryAnalysis(t *testing.T) {
 	}
 }
 
+/*
 func Test_generateDeployConfig(t *testing.T) {
 	filepath := manifests.BuiltinOrDir("")
 	//fmt.Printf("%s", filepath)
@@ -422,13 +421,13 @@ func Test_generateSvcConfig(t *testing.T) {
 		fmt.Printf("failed get testloader deployment configuration: %v", err)
 	}
 }
+*/
 
-func Test_addLablesOrAnnotaions(t *testing.T) {
+func Test_addLables(t *testing.T) {
 	type args struct {
-		obj                client.Object
-		labelsOrAnnotaions string
-		key                string
-		value              string
+		obj   client.Object
+		key   string
+		value string
 	}
 	tests := []struct {
 		name string
@@ -450,9 +449,8 @@ func Test_addLablesOrAnnotaions(t *testing.T) {
 						},
 					},
 				},
-				labelsOrAnnotaions: "labels",
-				key:                "istio-injection",
-				value:              "ebabled",
+				key:   "istio-injection",
+				value: "ebabled",
 			},
 			want: &corev1.Namespace{
 				TypeMeta: metav1.TypeMeta{
@@ -480,9 +478,8 @@ func Test_addLablesOrAnnotaions(t *testing.T) {
 						Name: "webapp",
 					},
 				},
-				labelsOrAnnotaions: "labels",
-				key:                "XXX",
-				value:              "abc",
+				key:   "XXX",
+				value: "abc",
 			},
 			want: &corev1.Namespace{
 				TypeMeta: metav1.TypeMeta{
@@ -500,7 +497,7 @@ func Test_addLablesOrAnnotaions(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := addLablesOrAnnotaions(tt.args.obj, tt.args.labelsOrAnnotaions, tt.args.key, tt.args.value); !reflect.DeepEqual(got, tt.want) {
+			if got := addLabels(tt.args.obj, tt.args.key, tt.args.value); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addLablesOrAnnotaions() = %v, want %v", got, tt.want)
 			}
 		})
