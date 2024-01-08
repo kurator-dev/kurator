@@ -20,6 +20,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"kurator.dev/kurator/cmd/kurator/app/pipeline/execution/list"
+	"kurator.dev/kurator/cmd/kurator/app/pipeline/execution/logs"
 	"kurator.dev/kurator/pkg/generic"
 )
 
@@ -34,6 +35,7 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 	}
 
 	executionCmd.AddCommand(list.NewCmd(opts))
+	executionCmd.AddCommand(logs.NewCmd(opts))
 
 	return executionCmd
 }
