@@ -1,0 +1,21 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cat-readme-test-pipeline
+  namespace: default
+spec:
+  description: >-
+    This task is a user-custom, single-step task.
+    The workspace is automatically and exclusively created named "source",
+    and assigned to the workspace of the pipeline in which this task is located.
+  workspaces:
+  - name: source
+    description: The workspace where user to run user-custom task.
+  steps:
+  - name: cat-readme-test-pipeline
+    image: zshusers/zsh:4.3.15
+    command:
+    - /bin/sh
+    - -c
+    args:
+    - cat $(workspaces.source.path)/README.md
