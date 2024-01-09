@@ -1213,6 +1213,7 @@ spec:
                                 time in seconds for a preview deployment to make progress
                                 before it is considered to be failed. Defaults to
                                 600.
+                              format: int32
                               type: integer
                             skipTrafficAnalysis:
                               description: SkipTrafficAnalysis promotes the preview

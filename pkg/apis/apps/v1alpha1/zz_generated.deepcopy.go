@@ -738,7 +738,7 @@ func (in *RolloutPolicy) DeepCopyInto(out *RolloutPolicy) {
 	}
 	if in.RolloutTimeoutSeconds != nil {
 		in, out := &in.RolloutTimeoutSeconds, &out.RolloutTimeoutSeconds
-		*out = new(int)
+		*out = new(int32)
 		**out = **in
 	}
 	return
