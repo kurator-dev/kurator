@@ -132,6 +132,37 @@ const (
 	// - GOMODCACHE: value for go module caching path (default: "")
 	GoTest TaskTemplate = "go-test"
 
+	// GoLint performs linting on Go source code, checking for coding style issues and common errors.
+	// This task uses golangci-lint, a popular linter aggregator for Go, providing a comprehensive check of the code.
+	// The following parameters can be configured for the task:
+	// - package: The base package (and its children) under validation. Defaults to the current directory.
+	// - context: The directory path to use as context for the linting process. Defaults to the current directory.
+	// - flags: Additional flags to use for the lint command. Defaults to "--verbose" for detailed linting output.
+	// - version: The golangci-lint version to use for linting. Defaults to the latest available version.
+	// - GOOS: The target operating system for the running program. Defaults to "linux".
+	// - GOARCH: The target architecture for the running program. Defaults to "amd64".
+	// - GO111MODULE: Specifies the module support. Defaults to "auto".
+	// - GOCACHE: The path for Go caching. Defaults to an empty string, allowing Go to use its default path.
+	// - GOMODCACHE: The path for Go mod caching. Also defaults to an empty string.
+	// - GOLANGCI_LINT_CACHE: The path for golangci-lint caching. Defaults to an empty string.
+	GoLint TaskTemplate = "go-lint"
+
+	// BuildPushImage builds and pushes a Docker image using Kaniko.
+	// This Task builds a simple Dockerfile with Kaniko and pushes it to a registry.
+	// It stores the image name and digest as results, enabling Tekton Chains to recognize
+	// that an image was built and to sign it.
+	// The params for this Task include:
+	// - IMAGE: The name (reference) of the image to build. This parameter must be explicitly set by the user.
+	// - DOCKERFILE: The path to the Dockerfile that should be built.
+	//   Defaults to "./Dockerfile".
+	// - CONTEXT: The build context used by Kaniko.
+	//   Defaults to "./".
+	// - EXTRA_ARGS: An array of extra arguments for the Kaniko build. More details can be found in the Kaniko documentation.See https://github.com/GoogleContainerTools/kaniko?tab=readme-ov-file#additional-flags.
+	//   Default to []
+	// - BUILDER_IMAGE: The kaniko image that will be used to run the builds.
+	//   Defaults to is v1.19.2 debug version: gcr.io/kaniko-project/executor@sha256:899886a2db1c127ff1565d5c7b1e574af1810bbdad048e9850e4f40b5848d79c
+	BuildPushImage TaskTemplate = "build-and-push-image"
+
 	// TODO: add more PredefinedTask
 )
 

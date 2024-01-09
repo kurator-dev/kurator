@@ -18,23 +18,18 @@ package render
 
 import (
 	"bytes"
-	"html/template"
-	"io/fs"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/yaml"
+
+	pipelineapi "kurator.dev/kurator/pkg/apis/pipeline/v1alpha1"
 )
 
-// renderPipelineTemplate reads, parses, and renders a template file using the provided configuration data.
-func renderPipelineTemplate(fsys fs.FS, tplFileName, tplName string, cfg interface{}) ([]byte, error) {
-	out, err := fs.ReadFile(fsys, tplFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	t := template.New(tplName)
-
-	tpl, err := t.Funcs(funMap()).Parse(string(out))
+// renderTemplate reads, parses, and renders a template file using the provided configuration data.
+func renderTemplate(tplFileString, tplName string, cfg interface{}) ([]byte, error) {
+	tpl, err := template.New(tplName).Funcs(funMap()).Parse(tplFileString)
 	if err != nil {
 		return nil, err
 	}
@@ -63,4 +58,13 @@ func toYaml(value interface{}) string {
 	}
 
 	return string(y)
+}
+
+func GeneratePipelineOwnerRef(pipeline *pipelineapi.Pipeline) *metav1.OwnerReference {
+	return &metav1.OwnerReference{
+		APIVersion: pipeline.APIVersion,
+		Kind:       pipeline.Kind,
+		Name:       pipeline.Name,
+		UID:        pipeline.UID,
+	}
 }

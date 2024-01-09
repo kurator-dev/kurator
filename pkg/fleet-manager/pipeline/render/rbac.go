@@ -18,15 +18,12 @@ package render
 
 import (
 	"fmt"
-	"io/fs"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	// RBACTemplateFileName is the name of the RBAC template file.
-	RBACTemplateFileName = "rbac.tpl"
-	RBACTemplateName     = "pipeline rbac template"
-	SecretSuffix         = "-secret"
-	BroadResourceSuffix  = "-broad-resource"
+	RBACTemplateName = "pipeline rbac template"
 )
 
 // RBACConfig contains the configuration data required for the RBAC template.
@@ -34,27 +31,77 @@ const (
 type RBACConfig struct {
 	PipelineName      string // Name of the pipeline.
 	PipelineNamespace string // Kubernetes namespace where the pipeline is deployed.
+	OwnerReference    *metav1.OwnerReference
 }
 
-// ServiceAccountName generates the service account name using the pipeline name and namespace.
+// ServiceAccountName generates the service account name using the pipeline name.
 func (rbac RBACConfig) ServiceAccountName() string {
 	return rbac.PipelineName
 }
 
-// RoleBindingName generates the role binding name using the service account name.
-func (rbac RBACConfig) BroadResourceRoleBindingName() string {
-	return rbac.ServiceAccountName() + BroadResourceSuffix
-}
-
-// ClusterRoleBindingName generates the cluster role binding name using the service account name.
-func (rbac RBACConfig) SecretRoleBindingName() string {
-	return rbac.ServiceAccountName() + SecretSuffix
-}
-
-// renderRBAC renders the RBAC configuration using a specified template.
-func renderRBAC(fsys fs.FS, cfg RBACConfig) ([]byte, error) {
+// RenderRBAC renders the RBAC configuration using a specified template.
+func RenderRBAC(cfg RBACConfig) ([]byte, error) {
 	if cfg.PipelineName == "" || cfg.PipelineNamespace == "" {
 		return nil, fmt.Errorf("invalid RBACConfig: PipelineName and PipelineNamespace must not be empty")
 	}
-	return renderPipelineTemplate(fsys, RBACTemplateFileName, RBACTemplateName, cfg)
+	return renderTemplate(RBACTemplateContent, RBACTemplateName, cfg)
 }
+
+const RBACTemplateContent = `apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+secrets:
+  - name: "chain-credentials"
+    namespace: "{{ .PipelineNamespace }}"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: "{{ .PipelineName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-roles # add role for handle broad-resource, such as eventListener, triggers, configmaps and so on. tekton-triggers-eventlistener-roles is provided by Tekton
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "{{ .PipelineName }}"
+  namespace: "{{ .PipelineNamespace }}"
+{{- if .OwnerReference }}
+  ownerReferences:
+  - apiVersion: "{{ .OwnerReference.APIVersion }}"
+    kind: "{{ .OwnerReference.Kind }}"
+    name: "{{ .OwnerReference.Name }}"
+    uid: "{{ .OwnerReference.UID }}"
+{{- end }}
+subjects:
+- kind: ServiceAccount
+  name: "{{ .ServiceAccountName }}"
+  namespace: "{{ .PipelineNamespace }}"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tekton-triggers-eventlistener-clusterroles # add role for handle secret, clustertriggerbinding and clusterinterceptors. tekton-triggers-eventlistener-clusterroles is provided by Tekton
+`
