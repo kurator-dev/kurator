@@ -24,20 +24,9 @@ import (
 	pipelineapi "kurator.dev/kurator/pkg/apis/pipeline/v1alpha1"
 )
 
-const (
-	// GitCloneTask is the predefined task template name of git clone task
-	GitCloneTask = "git-clone"
-	// GoTestTask is the predefined task template name of go test task
-	GoTestTask = "go-test"
-	// GoLintTask is the predefined task template name of golangci lint task
-	GoLintTask = "go-lint"
-	// BuildPushImage is the predefined task template name of task about building image and pushing it to image repo
-	BuildPushImage = "build-and-push-image"
-)
-
 type PredefinedTaskConfig struct {
-	PipelineName      string
-	PipelineNamespace string
+	PipelineName string
+	Namespace    string
 	// TemplateName is set by user in `Pipeline.Tasks[i].PredefinedTask.Name`
 	TemplateName string
 	// Params is set by user in `Pipeline.Tasks[i].PredefinedTask.Params`
@@ -53,11 +42,11 @@ func (cfg PredefinedTaskConfig) PredefinedTaskName() string {
 // RenderPredefinedTaskWithPipeline takes a Pipeline object and generates YAML byte array configuration representing the PredefinedTask configuration.
 func RenderPredefinedTaskWithPipeline(pipeline *pipelineapi.Pipeline, task *pipelineapi.PredefinedTask) ([]byte, error) {
 	cfg := PredefinedTaskConfig{
-		PipelineName:      pipeline.Name,
-		PipelineNamespace: pipeline.Namespace,
-		TemplateName:      string(task.Name),
-		Params:            task.Params,
-		OwnerReference:    GeneratePipelineOwnerRef(pipeline),
+		PipelineName:   pipeline.Name,
+		Namespace:      pipeline.Namespace,
+		TemplateName:   string(task.Name),
+		Params:         task.Params,
+		OwnerReference: GeneratePipelineOwnerRef(pipeline),
 	}
 
 	return RenderPredefinedTask(cfg)
@@ -74,12 +63,12 @@ func RenderPredefinedTask(cfg PredefinedTaskConfig) ([]byte, error) {
 }
 
 func generateTaskTemplateName(taskType string) string {
-	return "pipeline " + taskType + " task template"
+	return "pipeline-" + taskType + "-task template"
 }
 
 var predefinedTaskTemplates = map[string]string{
-	GitCloneTask:   GitCloneTaskContent,
-	GoTestTask:     GoTestTaskContent,
-	GoLintTask:     GoLintTaskContent,
-	BuildPushImage: BuildPushImageContent,
+	string(pipelineapi.GitClone):       GitCloneTaskContent,
+	string(pipelineapi.GoTest):         GoTestTaskContent,
+	string(pipelineapi.GoLint):         GoLintTaskContent,
+	string(pipelineapi.BuildPushImage): BuildPushImageContent,
 }

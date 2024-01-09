@@ -22,6 +22,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	pipelineapi "kurator.dev/kurator/pkg/apis/pipeline/v1alpha1"
 )
 
 func TestRenderPredefinedTask(t *testing.T) {
@@ -39,10 +41,10 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "git-clone with basic parameters",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "kurator-pipeline",
-				TemplateName:      "git-clone",
-				Params:            map[string]string{},
+				PipelineName: "test-pipeline",
+				Namespace:    "kurator-pipeline",
+				TemplateName: string(pipelineapi.GitClone),
+				Params:       map[string]string{},
 			},
 			expectError:  false,
 			expectedFile: "git-clone.yaml",
@@ -54,10 +56,10 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "go-test with default parameters",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "default",
-				TemplateName:      GoTestTask,
-				Params:            map[string]string{},
+				PipelineName: "test-pipeline",
+				Namespace:    "default",
+				TemplateName: string(pipelineapi.GoTest),
+				Params:       map[string]string{},
 			},
 			expectError:  false,
 			expectedFile: "go-test-default.yaml",
@@ -69,9 +71,9 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "go-test with custom parameters - Go 1.20, ./pkg/..., Linux ARM",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "kurator-pipeline",
-				TemplateName:      GoTestTask,
+				PipelineName: "test-pipeline",
+				Namespace:    "kurator-pipeline",
+				TemplateName: string(pipelineapi.GoTest),
 				Params: map[string]string{
 					"packages": "./pkg/...",
 					"version":  "1.20",
@@ -90,10 +92,10 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "go-lint with custom parameters - latest version, ./src/..., extra flags",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "kurator-pipeline",
-				TemplateName:      GoLintTask,
-				Params:            map[string]string{},
+				PipelineName: "test-pipeline",
+				Namespace:    "kurator-pipeline",
+				TemplateName: string(pipelineapi.GoLint),
+				Params:       map[string]string{},
 			},
 			expectError:  false,
 			expectedFile: "go-lint-custom-value.yaml",
@@ -106,9 +108,9 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "advanced go-lint custom configuration - version 1.25.0, ./cmd/..., specific flags",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "kurator-pipeline",
-				TemplateName:      GoLintTask,
+				PipelineName: "test-pipeline",
+				Namespace:    "kurator-pipeline",
+				TemplateName: string(pipelineapi.GoLint),
 				Params: map[string]string{
 					"package": "./cmd/...",
 					"version": "1.25.0",
@@ -125,9 +127,9 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "Custom Configuration for Kaniko Build Task",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "kurator-pipeline",
-				TemplateName:      BuildPushImage,
+				PipelineName: "test-pipeline",
+				Namespace:    "kurator-pipeline",
+				TemplateName: string(pipelineapi.BuildPushImage),
 				Params: map[string]string{
 					"image": "ghcr.io/test-orz/test-image:0.3.1",
 				},
@@ -145,9 +147,9 @@ func TestRenderPredefinedTask(t *testing.T) {
 		{
 			name: "Custom Dockerfile and Context for Kaniko Build Task",
 			cfg: PredefinedTaskConfig{
-				PipelineName:      "test-pipeline",
-				PipelineNamespace: "kurator-pipeline",
-				TemplateName:      BuildPushImage,
+				PipelineName: "test-pipeline",
+				Namespace:    "kurator-pipeline",
+				TemplateName: string(pipelineapi.BuildPushImage),
 				Params: map[string]string{
 					"image":      "ghcr.io/test-orz/test-image:0.3.2",
 					"dockerfile": "./app/Dockerfile",
@@ -164,7 +166,7 @@ func TestRenderPredefinedTask(t *testing.T) {
 			expectedFile: "build-and-push-image-custom.yaml",
 		},
 
-		// TODO: Add more test cases here for different task templates or configurations...
+		// TODO: Add more test cases here for different task templates or configurations
 	}
 
 	for _, tc := range cases {

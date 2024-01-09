@@ -20,7 +20,7 @@ const GitCloneTaskContent = `apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: {{ .PredefinedTaskName }}
-  namespace: {{ .PipelineNamespace }}
+  namespace: {{ .Namespace }}
   labels:
     app.kubernetes.io/version: "0.9"
   annotations:
@@ -263,7 +263,7 @@ const GoTestTaskContent = `apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: {{ .PredefinedTaskName }}
-  namespace: {{ .PipelineNamespace }}
+  namespace: {{ .Namespace }}
   labels:
     app.kubernetes.io/version: "0.2"
   annotations:
@@ -345,7 +345,7 @@ const GoLintTaskContent = `apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: {{ .PredefinedTaskName }}
-  namespace: {{ .PipelineNamespace }}
+  namespace: {{ .Namespace }}
   labels:
     app.kubernetes.io/version: "0.2"
   annotations:
@@ -425,7 +425,7 @@ const BuildPushImageContent = `apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: {{ .PredefinedTaskName }}
-  namespace: {{ .PipelineNamespace }}
+  namespace: {{ .Namespace }}
   labels:
     app.kubernetes.io/version: "0.6"
   annotations:
