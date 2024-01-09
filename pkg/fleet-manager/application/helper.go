@@ -70,7 +70,7 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 		}
 
 		if result, err := a.syncRolloutPolicyForCluster(ctx, syncPolicy.Rollout, rolloutClusters, policyName); err != nil {
-			return result, errors.Wrapf(err, "failed to handleSyncPolicyByKind currentFleetCluster")
+			return result, errors.Wrapf(err, "failed to syncRolloutPolicy")
 		}
 	}
 

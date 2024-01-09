@@ -33,6 +33,7 @@ import (
 
 func generateRolloutPloicy(installPrivateTestloader *bool) applicationapi.RolloutConfig {
 	timeout := 50
+	RolloutTimeoutSeconds := int32(50)
 	min := 99.0
 	max := 500.0
 
@@ -128,7 +129,7 @@ func generateRolloutPloicy(installPrivateTestloader *bool) applicationapi.Rollou
 					MaxAge:     24,
 				},
 			},
-			RolloutTimeoutSeconds: &timeout,
+			RolloutTimeoutSeconds: &RolloutTimeoutSeconds,
 			SkipTrafficAnalysis:   false,
 			RevertOnDeletion:      false,
 			Suspend:               false,

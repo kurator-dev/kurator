@@ -222,13 +222,13 @@ func installPrivateTestloader(ctx context.Context, namespacedName types.Namespac
 func deleteResourceCreatedByKurator(ctx context.Context, namespaceName types.NamespacedName, kubeClient client.Client, obj client.Object) error {
 	if err := kubeClient.Get(ctx, namespaceName, obj); err != nil {
 		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(err, "get kubernetes resource error")
+			return errors.Wrapf(err, "falied to get resource %s in %s", namespaceName.Name, namespaceName.Namespace)
 		}
 	} else {
 		// verify if the deployment were created by kurator
 		annotations := obj.GetAnnotations()
 		if _, exist := annotations[RolloutIdentifier]; exist {
-			if deleteErr := kubeClient.Delete(ctx, obj); deleteErr != nil {
+			if deleteErr := kubeClient.Delete(ctx, obj); deleteErr != nil && !apierrors.IsNotFound(deleteErr) {
 				return errors.Wrapf(deleteErr, "failed to delete kubernetes resource")
 			}
 		}
@@ -238,9 +238,6 @@ func deleteResourceCreatedByKurator(ctx context.Context, namespaceName types.Nam
 
 // create/update canary configuration
 func renderCanary(rolloutPolicy applicationapi.RolloutConfig, canaryInCluster *flaggerv1b1.Canary) *flaggerv1b1.Canary {
-	value := int32(*rolloutPolicy.RolloutPolicy.RolloutTimeoutSeconds)
-	ptrValue := &value
-
 	canaryInCluster.ObjectMeta.Namespace = rolloutPolicy.Workload.Namespace
 	canaryInCluster.ObjectMeta.Name = rolloutPolicy.Workload.Name
 	canaryInCluster.TypeMeta.Kind = "Canary"
@@ -252,7 +249,7 @@ func renderCanary(rolloutPolicy applicationapi.RolloutConfig, canaryInCluster *f
 			Kind:       rolloutPolicy.Workload.Kind,
 			Name:       rolloutPolicy.Workload.Name,
 		},
-		ProgressDeadlineSeconds: ptrValue,
+		ProgressDeadlineSeconds: rolloutPolicy.RolloutPolicy.RolloutTimeoutSeconds,
 		SkipAnalysis:            rolloutPolicy.RolloutPolicy.SkipTrafficAnalysis,
 		RevertOnDeletion:        rolloutPolicy.RolloutPolicy.RevertOnDeletion,
 		Suspend:                 rolloutPolicy.RolloutPolicy.Suspend,

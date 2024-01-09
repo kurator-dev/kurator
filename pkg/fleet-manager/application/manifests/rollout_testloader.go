@@ -17,9 +17,7 @@ import (
 	"bytes"
 	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/yaml"
 )
 
 type TestloaderConfig struct {
@@ -62,21 +60,8 @@ func renderTestloaderTemplateConfig(constTemplateName string, cfg TestloaderConf
 	return b.Bytes(), nil
 }
 
-// funMap returns a map of functions for use in the template.
 func funMap() template.FuncMap {
-	m := sprig.TxtFuncMap()
-	m["toYaml"] = toYaml
-	return m
-}
-
-// toYaml converts a given value to its YAML representation.
-func toYaml(value interface{}) string {
-	y, err := yaml.Marshal(value)
-	if err != nil {
-		return ""
-	}
-
-	return string(y)
+	return nil
 }
 
 const TestlaoderDeployment = `apiVersion: apps/v1
