@@ -19,6 +19,7 @@ package render
 import (
 	"fmt"
 	"strings"
+	"text/template"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,8 +27,9 @@ import (
 )
 
 const (
-	PipelineTemplateName  = "pipeline template"
-	DockerCredentialsName = "docker-credentials"
+	PipelineTemplateName       = "pipeline-template"
+	DockerCredentialsName      = "dockerconfig"
+	DockerCredentialsWorkspace = "docker-credentials"
 )
 
 // PipelineConfig defines the configuration needed to render a pipeline.
@@ -67,76 +69,81 @@ func renderPipeline(cfg PipelineConfig) ([]byte, error) {
 	return renderTemplate(PipelineTemplateContent, PipelineTemplateName, cfg)
 }
 
-// generateTasksInfo creates a string representation of tasks for inclusion in a pipeline.
-// It returns the name of Docker credentials if required by the tasks.
-func generateTasksInfo(pipelineName string, tasks []pipelineapi.PipelineTask) (dockerCredentials string, tasksInfo string, err error) {
-	var tasksBuilder strings.Builder
+type TaskInfo struct {
+	Name       string
+	TaskRef    string
+	RunAfter   string
+	Workspaces []Workspace
+	Retries    int
+}
 
-	lastTask := "git-clone" // GitCloneTask is always the first task.
+type Workspace struct {
+	Name      string
+	Workspace string
+}
+
+func generateTasksInfo(pipelineName string, tasks []pipelineapi.PipelineTask) (dockerCredentialsWorkspace string, tasksInfo string, err error) {
+	var tasksInfoBuilder strings.Builder
+	tmpl, err := template.New("task").Parse(taskTemplate)
+	if err != nil {
+		return "", "", err
+	}
+
+	lastTask := string(pipelineapi.GitClone) // GitCloneTask is always the first task.
 	for _, task := range tasks {
-		if task.Name == "git-clone" {
-			continue // Skip the first git-clone task.because it is already fixed in template.
+		if task.Name == string(pipelineapi.GitClone) {
+			continue // Skip the first git-clone task because it is already fixed in template.
 		}
 
-		var taskInfo string
+		// Validate task
 		if (task.CustomTask == nil && task.PredefinedTask == nil) || (task.CustomTask != nil && task.PredefinedTask != nil) {
 			return "", "", fmt.Errorf("only one of 'PredefinedTask' or 'CustomTask' must be set in 'PipelineTask'")
 		}
 
-		if task.Name == "build-and-push-image" { // build-and-push-image need special handle.
-			taskInfo = generateKanikoTaskInfo(task.Name, generatePipelineTaskName(task.Name, pipelineName), lastTask, task.Retries)
-			dockerCredentials = DockerCredentialsName
-		} else {
-			taskInfo = generateTaskInfo(task.Name, generatePipelineTaskName(task.Name, pipelineName), lastTask, task.Retries)
+		taskInfo := TaskInfo{
+			Name:     task.Name,
+			TaskRef:  generatePipelineTaskName(task.Name, pipelineName),
+			RunAfter: lastTask,
+			Retries:  task.Retries,
+			Workspaces: []Workspace{
+				{Name: "source", Workspace: "kurator-pipeline-shared-data"},
+			},
 		}
 
-		fmt.Fprintf(&tasksBuilder, "  %s", taskInfo)
+		// Handle special cases
+		if task.Name == string(pipelineapi.BuildPushImage) {
+			taskInfo.Workspaces = append(taskInfo.Workspaces, Workspace{Name: DockerCredentialsName, Workspace: DockerCredentialsWorkspace})
+			dockerCredentialsWorkspace = DockerCredentialsWorkspace
+		}
+
+		// Render task info using template
+		if err := tmpl.Execute(&tasksInfoBuilder, taskInfo); err != nil {
+			return "", "", err
+		}
+
 		lastTask = task.Name // Update the last task.
 	}
 
-	return dockerCredentials, tasksBuilder.String(), nil
-}
-
-// generateTaskInfo formats a single task's information.
-func generateTaskInfo(taskName, taskRefer, lastTask string, retries int) string {
-	return generateTaskInfoBase(taskName, taskRefer, lastTask, retries)
-}
-
-// generateKanikoTaskInfo formats Kaniko task information, including additional Docker credentials workspace.
-func generateKanikoTaskInfo(taskName, taskRefer, lastTask string, retries int) string {
-	dockerWorkspace := "    - name: dockerconfig\n      workspace: docker-credentials\n"
-	return generateTaskInfoBase(taskName, taskRefer, lastTask, retries, dockerWorkspace)
-}
-
-// generateTaskInfoBase formats the base information of a task.
-func generateTaskInfoBase(taskName, taskRefer, lastTask string, retries int, additionalWorkspaces ...string) string {
-	var taskBuilder strings.Builder
-
-	// Define task name and reference
-	fmt.Fprintf(&taskBuilder, "- name: %s\n    taskRef:\n      name: %s\n", taskName, taskRefer)
-
-	// Specify dependency on the preceding task
-	fmt.Fprintf(&taskBuilder, "    runAfter: [\"%s\"]\n", lastTask)
-
-	// Add fixed workspace configuration
-	taskBuilder.WriteString("    workspaces:\n    - name: source\n      workspace: kurator-pipeline-shared-data\n")
-
-	// Add additional workspaces if any additionalWorkspaces exist
-	for _, workspace := range additionalWorkspaces {
-		taskBuilder.WriteString(workspace)
-	}
-
-	// Include retry configuration if applicable
-	if retries > 0 {
-		fmt.Fprintf(&taskBuilder, "    retries: %d\n", retries)
-	}
-
-	return taskBuilder.String()
+	return dockerCredentialsWorkspace, tasksInfoBuilder.String(), nil
 }
 
 func generatePipelineTaskName(taskName, pipelineName string) string {
 	return taskName + "-" + pipelineName
 }
+
+const taskTemplate = `  - name: {{.Name}}
+    taskRef:
+      name: {{.TaskRef}}
+    runAfter: ["{{.RunAfter}}"]
+    workspaces:
+    {{- range .Workspaces}}
+    - name: {{.Name}}
+      workspace: {{.Workspace}}
+    {{- end}}
+    {{- if gt .Retries 0}}
+    retries: {{.Retries}}
+    {{- end}}
+`
 
 const PipelineTemplateContent = `apiVersion: tekton.dev/v1beta1
 kind: Pipeline
