@@ -156,7 +156,7 @@ type RolloutPolicy struct {
 	// preview deployment to make progress before it is considered to be failed.
 	// Defaults to 600.
 	// +optional
-	RolloutTimeoutSeconds *int `json:"rolloutTimeoutSeconds,omitempty"`
+	RolloutTimeoutSeconds *int32 `json:"rolloutTimeoutSeconds,omitempty"`
 
 	// SkipTrafficAnalysis promotes the preview release without analyzing it.
 	// +optional
