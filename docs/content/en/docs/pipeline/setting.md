@@ -14,7 +14,7 @@ This document provides a step-by-step guide to setting up your pipeline using Ku
 
 To start using Kurator pipeline, you need to install Tekton in your Kubernetes cluster. Run the following command to install Tekton components:
 
-```
+```console
 kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
 kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/latest/release.yaml
 kubectl apply --filename https://storage.googleapis.com/tekton-releases/triggers/latest/interceptors.yaml
@@ -26,7 +26,7 @@ kubectl apply --filename https://storage.googleapis.com/tekton-releases/chains/l
 Since the first task in a pipeline often involves pulling code from a Git repository, it's essential to configure Git repository authentication. 
 This can be done by creating a Kubernetes secret containing the authentication details. Use the following command to create this secret:
 
-```
+```console
 kubectl create secret generic git-credentials \
   --namespace=kurator-pipeline \
   --from-literal=.gitconfig=$'[credential "https://github.com"]\n\thelper = store' \
@@ -40,7 +40,7 @@ A Pipeline in Kurator contains a collection of tasks, defining the workflow of a
 
 Here is an example of a typical pipeline:
 
-```
+```yaml
 apiVersion: pipeline.kurator.dev/v1alpha1
 kind: Pipeline
 metadata:
@@ -99,19 +99,27 @@ tasks:
       params:
         git-secret-name: git-credentials
 ```
+
 ## Custom Tasks
 
 ### Introduction to Custom Tasks
+
 - **Customization of Tasks**: This feature enables users to tailor their pipelines by incorporating both common predefined CI tasks and custom tasks, catering to a broad range of needs and enhancing adaptability.
 
 ### Custom Task Configuration
+
 A Custom Task allows for greater flexibility by defining tasks directly within the pipeline configuration. The key fields to understand in a Custom Task are:
 
 - `Image`: Specifies the Docker image name.
+
 - `Command`: The entrypoint array, not executed in a shell.
+
 - `Args`: Arguments for the entrypoint, used if the Command is not provided.
+
 - `Env`: List of environment variables to set in the task.
+
 - `ResourceRequirements`: Specifies compute resource requirements.
+
 - `Script`: Contains the contents of an executable file to execute.
 
 Example of a Custom Task:
