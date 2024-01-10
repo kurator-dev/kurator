@@ -58,16 +58,16 @@ spec:
                       exactly 1 pod, cannot be used in combination with other access
                       modes
                     type: string
-                  requestsStorage:
-                    description: StorageRequest defines the storage size required
-                      for this PVC, e.g., 1Gi, 100Mi. It specifies the storage capacity
-                      needed as part of ResourceRequirements.
-                    pattern: ^[0-9]+(\.[0-9]+)?(Gi|Mi)$
-                    type: string
                   storageClassName:
                     description: StorageClassName specifies the StorageClass name
                       to which this persistent volume belongs, e.g., manual. It allows
                       the PVC to use the characteristics defined by the StorageClass.
+                    type: string
+                  storageRequest:
+                    description: StorageRequest defines the storage size required
+                      for this PVC, e.g., 1Gi, 100Mi. It specifies the storage capacity
+                      needed as part of ResourceRequirements.
+                    pattern: ^[0-9]+(\.[0-9]+)?(Gi|Mi)$
                     type: string
                   volumeMode:
                     description: VolumeMode specifies whether the volume should be
@@ -107,57 +107,6 @@ spec:
                             type: string
                           type: array
                           x-kubernetes-list-type: atomic
-                        computeResources:
-                          description: 'ResourceRequirements required by this Step.
-                            Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                          properties:
-                            claims:
-                              description: "Claims lists the names of resources, defined
-                                in spec.resourceClaims, that are used by this container.
-                                \n This is an alpha field and requires enabling the
-                                DynamicResourceAllocation feature gate. \n This field
-                                is immutable. It can only be set for containers."
-                              items:
-                                description: ResourceClaim references one entry in
-                                  PodSpec.ResourceClaims.
-                                properties:
-                                  name:
-                                    description: Name must match the name of one entry
-                                      in pod.spec.resourceClaims of the Pod where
-                                      this field is used. It makes that resource available
-                                      inside a container.
-                                    type: string
-                                required:
-                                - name
-                                type: object
-                              type: array
-                              x-kubernetes-list-map-keys:
-                              - name
-                              x-kubernetes-list-type: map
-                            limits:
-                              additionalProperties:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              description: 'Limits describes the maximum amount of
-                                compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                              type: object
-                            requests:
-                              additionalProperties:
-                                anyOf:
-                                - type: integer
-                                - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              description: 'Requests describes the minimum amount
-                                of compute resources required. If Requests is omitted
-                                for a container, it defaults to Limits if that is
-                                explicitly specified, otherwise to an implementation-defined
-                                value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                              type: object
-                          type: object
                         env:
                           description: List of environment variables to set in the
                             Step. Cannot be updated.
@@ -279,6 +228,57 @@ spec:
                           description: 'Image specifies the Docker image name. More
                             info: https://kubernetes.io/docs/concepts/containers/images'
                           type: string
+                        resourceRequirements:
+                          description: 'ResourceRequirements required by this Step.
+                            Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                          properties:
+                            claims:
+                              description: "Claims lists the names of resources, defined
+                                in spec.resourceClaims, that are used by this container.
+                                \n This is an alpha field and requires enabling the
+                                DynamicResourceAllocation feature gate. \n This field
+                                is immutable. It can only be set for containers."
+                              items:
+                                description: ResourceClaim references one entry in
+                                  PodSpec.ResourceClaims.
+                                properties:
+                                  name:
+                                    description: Name must match the name of one entry
+                                      in pod.spec.resourceClaims of the Pod where
+                                      this field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                              - name
+                              x-kubernetes-list-type: map
+                            limits:
+                              additionalProperties:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              description: 'Limits describes the maximum amount of
+                                compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                              type: object
+                            requests:
+                              additionalProperties:
+                                anyOf:
+                                - type: integer
+                                - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              description: 'Requests describes the minimum amount
+                                of compute resources required. If Requests is omitted
+                                for a container, it defaults to Limits if that is
+                                explicitly specified, otherwise to an implementation-defined
+                                value. Requests cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                              type: object
+                          type: object
                         script:
                           description: Script is the contents of an executable file
                             to execute. If Script is not empty, the CustomTask cannot

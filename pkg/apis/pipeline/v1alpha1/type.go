@@ -68,7 +68,7 @@ type VolumeClaimTemplate struct {
 	// StorageRequest defines the storage size required for this PVC, e.g., 1Gi, 100Mi.
 	// It specifies the storage capacity needed as part of ResourceRequirements.
 	// +kubebuilder:validation:Pattern="^[0-9]+(\\.[0-9]+)?(Gi|Mi)$"
-	StorageRequest string `json:"requestsStorage,omitempty"`
+	StorageRequest string `json:"storageRequest,omitempty"`
 
 	// StorageClassName specifies the StorageClass name to which this persistent volume belongs, e.g., manual.
 	// It allows the PVC to use the characteristics defined by the StorageClass.
@@ -214,7 +214,7 @@ type CustomTask struct {
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
 	// +optional
-	ResourceRequirements corev1.ResourceRequirements `json:"computeResources,omitempty"`
+	ResourceRequirements corev1.ResourceRequirements `json:"resourceRequirements,omitempty"`
 
 	// Script is the contents of an executable file to execute.
 	// If Script is not empty, the CustomTask cannot have a Command and the Args will be passed to the Script.
