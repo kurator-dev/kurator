@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -35,7 +36,6 @@ import (
 	fleetmanager "kurator.dev/kurator/pkg/fleet-manager"
 	render "kurator.dev/kurator/pkg/fleet-manager/application/manifests"
 	plugin "kurator.dev/kurator/pkg/fleet-manager/plugin"
-	"kurator.dev/kurator/pkg/infra/util"
 )
 
 const (
@@ -122,7 +122,7 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 			}
 		} else {
 			// Installation of private testloader if needed
-			if err := installPrivateTestloader(ctx, testloaderNamespaceName, RolloutIdentifier, policyName); err != nil {
+			if err := installPrivateTestloader(ctx, testloaderNamespaceName, RolloutIdentifier, policyName, fleetClusterClient); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to install private testloader for workload: %w", err)
 			}
 		}
@@ -195,15 +195,27 @@ func enableIstioSidecarInjection(ctx context.Context, kubeClient client.Client, 
 	return nil
 }
 
-func installPrivateTestloader(ctx context.Context, namespacedName types.NamespacedName, annotationKey, annotationValue string) error {
+func installPrivateTestloader(ctx context.Context, namespacedName types.NamespacedName, annotationKey, annotationValue string, kubeClient client.Client) error {
 	log := ctrl.LoggerFrom(ctx)
 	// apply testloader deployment resource
 	testloaderDeploy, deployErr := render.RenderTestloaderConfig(render.TestlaoderDeployment, namespacedName, annotationKey, annotationValue)
 	if deployErr != nil {
 		return deployErr
 	}
-	if _, err := util.PatchResources(testloaderDeploy); err != nil {
+	// b := bytes.NewBuffer(testloaderDeploy)
+	deploy := &appsv1.Deployment{}
+	if err := yaml.Unmarshal(testloaderDeploy, deploy); err != nil {
 		return err
+	}
+
+	if createErr := kubeClient.Create(ctx, deploy); createErr != nil {
+		if apierrors.IsAlreadyExists(createErr) {
+			if updateErr := kubeClient.Update(ctx, deploy); updateErr != nil {
+				return errors.Wrapf(updateErr, "failed to update testloader deployment")
+			}
+		} else {
+			return errors.Wrapf(createErr, "failed to create testloader deployment")
+		}
 	}
 
 	// apply testloader service resource
@@ -211,8 +223,19 @@ func installPrivateTestloader(ctx context.Context, namespacedName types.Namespac
 	if svcErr != nil {
 		return svcErr
 	}
-	if _, err := util.PatchResources(testloaderSvc); err != nil {
+	svc := &corev1.Service{}
+	if err := yaml.Unmarshal(testloaderSvc, svc); err != nil {
 		return err
+	}
+
+	if createErr := kubeClient.Create(ctx, svc); createErr != nil {
+		if apierrors.IsAlreadyExists(createErr) {
+			if updateErr := kubeClient.Update(ctx, svc); updateErr != nil {
+				return errors.Wrapf(updateErr, "failed to update testloader service")
+			}
+		} else {
+			return errors.Wrapf(createErr, "failed to create testloader service")
+		}
 	}
 
 	log.Info("install testloader successful")
