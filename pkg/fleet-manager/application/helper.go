@@ -41,8 +41,9 @@ import (
 
 // syncPolicyResource synchronizes the sync policy resources for a given application.
 func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet, syncPolicy *applicationapi.ApplicationSyncPolicy, policyName string) (ctrl.Result, error) {
-	policyKind := getSyncPolicyKind(syncPolicy)
+	log := ctrl.LoggerFrom(ctx)
 
+	policyKind := getSyncPolicyKind(syncPolicy)
 	destination := getPolicyDestination(app, syncPolicy)
 
 	// fetch fleet cluster list that recorded in fleet and matches the destination's cluster selector
@@ -57,6 +58,19 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 
 		if result, err1 := a.handleSyncPolicyByKind(ctx, app, policyKind, syncPolicy, policyName, currentFleetCluster, kubeconfig); err1 != nil || result.RequeueAfter > 0 {
 			return result, errors.Wrapf(err1, "failed to handleSyncPolicyByKind currentFleetCluster=%s", currentFleetCluster.GetObject().GetName())
+		}
+	}
+
+	if syncPolicy.Rollout != nil {
+		// after finish application install, start handling rollout policy
+		rolloutClusters, err := a.fetchRolloutClusters(ctx, app, a.Client, fleet, syncPolicy)
+		if err != nil {
+			log.Error(err, "failed to fetch destination clusters for rollout")
+			return ctrl.Result{}, err
+		}
+
+		if result, err := a.syncRolloutPolicyForCluster(ctx, syncPolicy.Rollout, rolloutClusters, policyName); err != nil {
+			return result, errors.Wrapf(err, "failed to syncRolloutPolicy")
 		}
 	}
 
