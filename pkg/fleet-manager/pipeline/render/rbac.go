@@ -29,9 +29,10 @@ const (
 // RBACConfig contains the configuration data required for the RBAC template.
 // Both PipelineName and PipelineNamespace are required.
 type RBACConfig struct {
-	PipelineName      string // Name of the pipeline.
-	PipelineNamespace string // Kubernetes namespace where the pipeline is deployed.
-	OwnerReference    *metav1.OwnerReference
+	PipelineName         string // Name of the pipeline.
+	PipelineNamespace    string // Kubernetes namespace where the pipeline is deployed.
+	OwnerReference       *metav1.OwnerReference
+	ChainCredentialsName string
 }
 
 // ServiceAccountName generates the service account name using the pipeline name.
@@ -59,9 +60,11 @@ metadata:
     name: "{{ .OwnerReference.Name }}"
     uid: "{{ .OwnerReference.UID }}"
 {{- end }}
+{{- if .ChainCredentialsName }}
 secrets:
   - name: "chain-credentials"
     namespace: "{{ .PipelineNamespace }}"
+{{- end }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

@@ -69,6 +69,7 @@ func TestRenderRBAC(t *testing.T) {
 					Name:       "example-deployment",
 					UID:        "12345678-1234-1234-1234-123456789abc",
 				},
+				ChainCredentialsName: "chain-credentials",
 			},
 			expectError:  false,
 			expectedFile: "with-owner.yaml",
