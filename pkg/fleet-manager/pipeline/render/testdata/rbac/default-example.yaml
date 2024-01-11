@@ -3,9 +3,6 @@ kind: ServiceAccount
 metadata:
   name: "example"
   namespace: "default"
-secrets:
-  - name: "chain-credentials"
-    namespace: "default"
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
