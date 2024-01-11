@@ -227,3 +227,14 @@ logs        Display aggregated logs from multiple tasks within kurator pipeline 
 
 ...
 ```
+
+
+## Cleanup
+
+To remove the pipeline examples used for testing, execute:
+
+```console
+kurator delete pipelines.pipeline.kurator.dev  -n kurator-pipeline test-predefined-task test-custom-task
+```
+
+> Please note: When the pipeline of Kurator is deleted, all the resources it created, including the pods of tasks and the services of event listener, will be deleted as well.
