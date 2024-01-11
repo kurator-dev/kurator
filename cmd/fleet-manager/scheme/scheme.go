@@ -25,6 +25,7 @@ import (
 	backupapi "kurator.dev/kurator/pkg/apis/backups/v1alpha1"
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
+	pipelineapi "kurator.dev/kurator/pkg/apis/pipeline/v1alpha1"
 )
 
 var (
@@ -38,4 +39,5 @@ func init() {
 	_ = hrapiv2b1.AddToScheme(Scheme)
 	_ = applicationapi.AddToScheme(Scheme)
 	_ = backupapi.AddToScheme(Scheme)
+	_ = pipelineapi.AddToScheme(Scheme)
 }
