@@ -461,11 +461,11 @@ type RolloutStatus struct {
 
 	// RolloutNameInCluster is the name of the rollout being performed within this cluster.
 	// +optional
-	RolloutNameInCluster string `json:"backupNameInCluster,omitempty"`
+	RolloutNameInCluster string `json:"rolloutNameInCluster,omitempty"`
 
 	// RolloutStatusInCluster is the current status of the Rollout performed within this cluster.
 	// +optional
-	RolloutStatusInCluster *flaggerv1b1.CanaryStatus `json:"backupStatusInCluster,omitempty"`
+	RolloutStatusInCluster *flaggerv1b1.CanaryStatus `json:"rolloutStatusInCluster,omitempty"`
 }
 
 // ApplicationList contains a list of Application.
