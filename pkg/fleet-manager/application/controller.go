@@ -168,7 +168,7 @@ func (a *ApplicationManager) reconcile(ctx context.Context, app *applicationapi.
 		return result, err
 	}
 
-	if err := a.reconcileStatus(ctx, app); err != nil {
+	if err := a.reconcileStatus(ctx, app, fleet); err != nil {
 		log.Error(err, "failed to reconcile status")
 		return ctrl.Result{}, err
 	}
@@ -201,12 +201,12 @@ func (a *ApplicationManager) reconcileApplicationResources(ctx context.Context, 
 // reconcileStatus updates the status of resources associated with the current Application resource.
 // It does this by fetching the current status of the source (either GitRepoKind or HelmRepoKind) and the sync policy from the API server,
 // and updating the Application's status to reflect these current statuses.
-func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicationapi.Application) error {
+func (a *ApplicationManager) reconcileStatus(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) error {
 	if err := a.reconcileSourceStatus(ctx, app); err != nil {
 		return err
 	}
 
-	if err := a.reconcileSyncStatus(ctx, app); err != nil {
+	if err := a.reconcileSyncStatus(ctx, app, fleet); err != nil {
 		return err
 	}
 
@@ -260,7 +260,7 @@ func (a *ApplicationManager) reconcileSourceStatus(ctx context.Context, app *app
 
 // reconcileSyncStatus reconciles the sync status of the given application by finding all Kustomizations and HelmReleases associated with it,
 // and updating the sync status of each resource in the application's SyncStatus field.
-func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *applicationapi.Application) error {
+func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) error {
 	var syncStatus []*applicationapi.ApplicationSyncStatus
 
 	// find all kustomization
@@ -289,6 +289,26 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 			HelmReleaseStatus: &helmRelease.Status,
 		}
 		syncStatus = append(syncStatus, helmReleaseStatus)
+	}
+
+	rolloutStatus := make(map[string]*applicationapi.RolloutStatus)
+	// Get rollout status from member clusters
+	for index, syncPolicy := range app.Spec.SyncPolicies {
+		policyName := generatePolicyName(app, index)
+		if syncPolicy.Rollout != nil {
+			status, _, err := a.reconcileRolloutSyncStatus(ctx, app, fleet, syncPolicy, policyName)
+			if err != nil {
+				return errors.Wrapf(err, "failed to reconcil rollout status")
+			}
+			rolloutStatus = mergeMap(status, rolloutStatus)
+		}
+	}
+
+	// update rollout status
+	for index, policyStatus := range syncStatus {
+		if _, exist := rolloutStatus[policyStatus.Name]; exist {
+			syncStatus[index].RolloutStatus = rolloutStatus[policyStatus.Name]
+		}
 	}
 
 	app.Status.SyncStatus = syncStatus

@@ -167,6 +167,53 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 	return ctrl.Result{}, nil
 }
 
+func (a *ApplicationManager) reconcileRolloutSyncStatus(ctx context.Context,
+	app *applicationapi.Application,
+	fleet *fleetapi.Fleet,
+	syncPolicy *applicationapi.ApplicationSyncPolicy,
+	policyName string,
+) (map[string]*applicationapi.RolloutStatus, ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+
+	// depend on fleet and cluster selector get destination clusters
+	destinationClusters, err := a.fetchRolloutClusters(ctx, app, a.Client, fleet, syncPolicy)
+	if err != nil {
+		log.Error(err, "failed to fetch destination clusters for syncPolicy")
+		return nil, ctrl.Result{}, err
+	}
+
+	rolloutStatus := map[string]*applicationapi.RolloutStatus{}
+	// Loop all destination cluster to get canary status
+	for clusterKey, cluster := range destinationClusters {
+		fleetClusterClient := cluster.Client.CtrlRuntimeClient()
+		name := generatePolicyResourceName(policyName, clusterKey.Kind, clusterKey.Name)
+		canary := &flaggerv1b1.Canary{}
+		canaryNamespacedName := types.NamespacedName{
+			Namespace: syncPolicy.Rollout.Workload.Namespace,
+			Name:      syncPolicy.Rollout.Workload.Name,
+		}
+		// Use the client of the target cluster to get the status of Flagger canary resources
+		if err := fleetClusterClient.Get(ctx, canaryNamespacedName, canary); err != nil {
+			return nil, ctrl.Result{}, errors.Wrapf(err, "failed to get canary %s in %s", canaryNamespacedName.Name, clusterKey.Name)
+		}
+
+		if status, exists := rolloutStatus[name]; exists {
+			// If a match is found, update the existing rolloutStatus with the new status.
+			status.RolloutStatusInCluster = &canary.Status
+		} else {
+			currentstatus := applicationapi.RolloutStatus{
+				ClusterName:            clusterKey.Name,
+				RolloutNameInCluster:   canaryNamespacedName.Name,
+				RolloutStatusInCluster: &canary.Status,
+			}
+			rolloutStatus[name] = &currentstatus
+		}
+	}
+
+	log.Info("finish get rollout status")
+	return rolloutStatus, ctrl.Result{RequeueAfter: StatusSyncInterval}, nil
+}
+
 func enableIstioSidecarInjection(ctx context.Context, kubeClient client.Client, namespace string) error {
 	log := ctrl.LoggerFrom(ctx)
 
@@ -398,4 +445,13 @@ func addLabels(obj client.Object, key, value string) client.Object {
 	labels[key] = value
 	obj.SetLabels(labels)
 	return obj
+}
+
+func mergeMap(map1, map2 map[string]*applicationapi.RolloutStatus) map[string]*applicationapi.RolloutStatus {
+	for name, rolloutStatus := range map1 {
+		if _, exist := map2[name]; !exist {
+			map2[name] = rolloutStatus
+		}
+	}
+	return map2
 }

@@ -396,34 +396,6 @@ func Test_renderCanaryAnalysis(t *testing.T) {
 	}
 }
 
-/*
-func Test_generateDeployConfig(t *testing.T) {
-	filepath := manifests.BuiltinOrDir("")
-	//fmt.Printf("%s", filepath)
-	deployname := "plugins/testloader-deploy.yaml"
-	namespacedName := types.NamespacedName{
-		Namespace: "test",
-		Name:      "podinfo",
-	}
-	if _, err := generateDeployConfig(filepath, deployname, namespacedName.Name, namespacedName.Namespace); err != nil {
-		fmt.Printf("failed get testloader deployment configuration: %v", err)
-	}
-}
-
-func Test_generateSvcConfig(t *testing.T) {
-	filepath := manifests.BuiltinOrDir("")
-	//fmt.Printf("%s", filepath)
-	svcname := "plugins/testloader-svc.yaml"
-	namespacedName := types.NamespacedName{
-		Namespace: "test",
-		Name:      "podinfo",
-	}
-	if _, err := generateSvcConfig(filepath, svcname, namespacedName.Name, namespacedName.Namespace); err != nil {
-		fmt.Printf("failed get testloader deployment configuration: %v", err)
-	}
-}
-*/
-
 func Test_addLables(t *testing.T) {
 	type args struct {
 		obj   client.Object
@@ -500,6 +472,93 @@ func Test_addLables(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := addLabels(tt.args.obj, tt.args.key, tt.args.value); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addLablesOrAnnotaions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMergeMap(t *testing.T) {
+	type args struct {
+		map1 map[string]*applicationapi.RolloutStatus
+		map2 map[string]*applicationapi.RolloutStatus
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]*applicationapi.RolloutStatus
+	}{
+		{
+			name: "function test",
+			args: args{
+				map1: map[string]*applicationapi.RolloutStatus{
+					"kurator": {
+						ClusterName:          "kurator-member1",
+						RolloutNameInCluster: "podinfo",
+						RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+							Phase: "success",
+						},
+					},
+					"istio": {
+						ClusterName:          "kurator-member2",
+						RolloutNameInCluster: "podinfo",
+						RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+							Phase: "Initializing",
+						},
+					},
+				},
+				map2: map[string]*applicationapi.RolloutStatus{
+					"kubeedge": {
+						ClusterName:          "kurator-member1",
+						RolloutNameInCluster: "podinfo",
+						RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+							Phase: "success",
+						},
+					},
+					"karmada": {
+						ClusterName:          "kurator-member1",
+						RolloutNameInCluster: "podinfo",
+						RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+							Phase: "Initializing",
+						},
+					},
+				},
+			},
+			want: map[string]*applicationapi.RolloutStatus{
+				"kurator": {
+					ClusterName:          "kurator-member1",
+					RolloutNameInCluster: "podinfo",
+					RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+						Phase: "success",
+					},
+				},
+				"istio": {
+					ClusterName:          "kurator-member2",
+					RolloutNameInCluster: "podinfo",
+					RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+						Phase: "Initializing",
+					},
+				},
+				"kubeedge": {
+					ClusterName:          "kurator-member1",
+					RolloutNameInCluster: "podinfo",
+					RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+						Phase: "success",
+					},
+				},
+				"karmada": {
+					ClusterName:          "kurator-member1",
+					RolloutNameInCluster: "podinfo",
+					RolloutStatusInCluster: &flaggerv1b1.CanaryStatus{
+						Phase: "Initializing",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := mergeMap(tt.args.map1, tt.args.map2); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("mergeMap() = %v, want %v", got, tt.want)
 			}
 		})
 	}
