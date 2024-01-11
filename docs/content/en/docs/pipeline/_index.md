@@ -33,9 +33,8 @@ link="./image/use-pipeline.svg"
 
 ## Architecture
 
-Below is the architecture diagram of the Kurator Fleet Backup feature.
+Below is the architecture diagram of the Kurator Pipeline feature.
 
 {{< image width="100%"
 link="./image/pipeline-arch.svg"
 >}} 
-
