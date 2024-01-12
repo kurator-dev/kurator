@@ -2683,11 +2683,15 @@ spec:
                     rolloutStatus:
                       description: RolloutStatus defines the observed state of Rollout.
                       properties:
-                        backupNameInCluster:
+                        clusterName:
+                          description: ClusterName is the Name of the cluster where
+                            the rollout is being performed.
+                          type: string
+                        rolloutNameInCluster:
                           description: RolloutNameInCluster is the name of the rollout
                             being performed within this cluster.
                           type: string
-                        backupStatusInCluster:
+                        rolloutStatusInCluster:
                           description: RolloutStatusInCluster is the current status
                             of the Rollout performed within this cluster.
                           properties:
@@ -2753,10 +2757,6 @@ spec:
                           - iterations
                           - phase
                           type: object
-                        clusterName:
-                          description: ClusterName is the Name of the cluster where
-                            the rollout is being performed.
-                          type: string
                       type: object
                   type: object
                 type: array
