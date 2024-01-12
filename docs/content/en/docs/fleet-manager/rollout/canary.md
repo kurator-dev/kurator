@@ -353,12 +353,13 @@ backend   Succeeded     0        2024-01-11T09:15:10Z
 link="./image/canary.svg"
 >}}
 
-As shown in the diagram, after triggering a canary deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
-It will then gradually shift traffic to the new version pod by increasing its traffic weight in the result metric over time. This `WEIGHT`  in the displayed result represents the current percentage of traffic accessing the new version pod during the analysis.
-Upon validating the new version through testing and confirming it is ready for release, Kurator will proceed to replace the old version with the new version across the entire cluster. It will then remove the canary pod, completing the rollout process.
+- As shown in the diagram, after triggering a canary deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
+- It will then gradually shift traffic to the new version pod by increasing its traffic weight in the result metric over time. This `WEIGHT`  in the displayed result represents the current percentage of traffic accessing the new version pod during the analysis.
+- Upon validating the new version through testing and confirming it is ready for release, Kurator will proceed to replace the old version with the new version across the entire cluster.
+- It will then remove the canary pod, completing the rollout process.
 
 ```console
-k get application rolllout-demo -oyaml
+kubectl get application rolllout-demo -oyaml
 
 rolloutStatus:
   rolloutNameInCluster: backend
