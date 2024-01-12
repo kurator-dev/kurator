@@ -214,6 +214,48 @@ func (a *ApplicationManager) reconcileRolloutSyncStatus(ctx context.Context,
 	return rolloutStatus, ctrl.Result{RequeueAfter: StatusSyncInterval}, nil
 }
 
+func (a *ApplicationManager) deleteResourcesInMemberClusters(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) error {
+	log := ctrl.LoggerFrom(ctx)
+
+	for _, syncPolicy := range app.Spec.SyncPolicies {
+		rolloutPolicy := syncPolicy.Rollout
+		if rolloutPolicy == nil {
+			continue
+		}
+		// Fetch rollout destination clusters. Delete rollout resource in this clusters
+		destinationClusters, err := a.fetchRolloutClusters(ctx, app, a.Client, fleet, syncPolicy)
+		if err != nil {
+			return errors.Wrapf(err, "failed to fetch destination clusters when delete rollout resource")
+		}
+
+		serviceNamespaceName := types.NamespacedName{
+			Namespace: rolloutPolicy.Workload.Namespace,
+			Name:      rolloutPolicy.ServiceName,
+		}
+		testloaderNamespaceName := types.NamespacedName{
+			Namespace: rolloutPolicy.Workload.Namespace,
+			Name:      rolloutPolicy.Workload.Name + "-testloader",
+		}
+		for _, cluster := range destinationClusters {
+			newClient := cluster.Client.CtrlRuntimeClient()
+			testloaderDeploy := &appsv1.Deployment{}
+			if err := deleteResourceCreatedByKurator(ctx, testloaderNamespaceName, newClient, testloaderDeploy); err != nil {
+				return errors.Wrapf(err, "failed to delete testloader deployment")
+			}
+			testloaderSvc := &corev1.Service{}
+			if err := deleteResourceCreatedByKurator(ctx, testloaderNamespaceName, newClient, testloaderSvc); err != nil {
+				return errors.Wrapf(err, "failed to delete testloader service")
+			}
+			canary := &flaggerv1b1.Canary{}
+			if err := deleteResourceCreatedByKurator(ctx, serviceNamespaceName, newClient, canary); err != nil {
+				return errors.Wrapf(err, "failed to delete canary")
+			}
+		}
+	}
+	log.Info("delete rollout resource successful")
+	return nil
+}
+
 func enableIstioSidecarInjection(ctx context.Context, kubeClient client.Client, namespace string) error {
 	log := ctrl.LoggerFrom(ctx)
 

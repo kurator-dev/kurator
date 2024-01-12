@@ -150,7 +150,7 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 
 	// Handle deletion reconciliation loop.
 	if app.DeletionTimestamp != nil {
-		return a.reconcileDelete(app)
+		return a.reconcileDelete(ctx, app, fleet)
 	}
 
 	// Handle normal loop.
@@ -315,8 +315,10 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 	return nil
 }
 
-func (a *ApplicationManager) reconcileDelete(app *applicationapi.Application) (ctrl.Result, error) {
-	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
+func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
+	if err := a.deleteResourcesInMemberClusters(ctx, app, fleet); err != nil {
+		return ctrl.Result{}, errors.Wrapf(err, "failed to delete rollout resource in cluster")
+	}
 
 	return ctrl.Result{}, nil
 }
