@@ -3,10 +3,10 @@ title: "Install Rollout Plugin"
 linkTitle: "Install Rollout Plugin"
 weight: 10
 description: >
-  Configure Rollout plugin for Fleet to enable Kurator's capabilities.
+  Configure rollout plugin in fleet to enable kurator's rollout capability.
 ---
 
-To support Kurator's Rollout, it's imperative to first configure the backup plugin for [Fleet](https://kurator.dev/docs/references/fleet-api/#fleet). This guide will walk you through configuring the [Flagger](https://docs.flagger.app/)-based rollout plugin for Fleet, laying the groundwork for Kurator's Rollout capabilities.
+To support Kurator's Rollout, it's imperative to first configure the Rollout plugin for [Fleet](https://kurator.dev/docs/references/fleet-api/#fleet). This guide will walk you through configuring the [Flagger](https://docs.flagger.app/)-based rollout plugin for Fleet, laying the groundwork for Kurator's Rollout capabilities.
 
 ## Prerequisites
 
@@ -14,7 +14,7 @@ To support Kurator's Rollout, it's imperative to first configure the backup plug
 
 Set up the Fleet manager by following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
 
-### 2. Secrets and Setup for Attached Clusters
+### 2. Secrets and Setup for [Attached Clusters](https://kurator.dev/docs/fleet-manager/manage-attachedcluster)
 
 ```console
 kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
@@ -43,7 +43,7 @@ spec:
 EOF
 ```
 
-## Create a Fleet with the Backup Plugin Enabled
+## Create a Fleet with the Rollout Plugin Enabled
 
 Run following command to create Flagger in the Fleet:
 
@@ -67,7 +67,7 @@ spec:
 EOF
 ```
 
-### Fleet Backup Plugin Configuration Explained
+### Fleet Rollout Plugin Configuration Explained
 
 Let's delve into the `spec` section of the above Fleet:
 
