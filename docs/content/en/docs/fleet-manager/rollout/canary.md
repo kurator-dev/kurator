@@ -3,7 +3,7 @@ title: "Canary Deployment"
 linkTitle: "Canary Deployment"
 weight: 20
 description: >
-  A comprehensive guide on Kurator's Canary Deployment, providing an overview and practical implementation steps.
+  A comprehensive guide on Kurator's Canary Deployment, providing an overview and quick start guide.
 ---
 
 ## Introduction
@@ -25,7 +25,7 @@ These are some of the prerequisites needed to use Kurator Rollout:
 
 ### Kubernetes Clusters
 
-Kubernetes v1.16 or higher is supported.
+Kubernetes v1.27.3 or higher is supported.
   
 You can use [Kind](https://kind.sigs.k8s.io/) to create clusters as needed.
 It is recommended to use [Kurator's scripts](https://kurator.dev/docs/setup/install-cluster-operator/#setup-kubernetes-clusters-with-kind) to create multi-clusters environment.
@@ -34,7 +34,7 @@ Notes: You can find the mapping between Kind node image versions and Kubernetes 
 
 ### Istio
 
-Istio v1.5 or higher is supported.
+Istio v1.18 or higher is supported.
 
 It is recommended to install Istio using istioctl. Refer to [istio documentation](https://istio.io/latest/docs/ops/diagnostic-tools/istioctl/) for instructions on installing istioctl.
 
@@ -302,28 +302,27 @@ Given the output provided, let's dive deeper to understand the various elements 
 - Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization or helmrelease. It will establish and implement Canary Deployment for these services according to the configuration defined here.
 - The `workload` defines the target resource for the Canary Deployment. The `kind` specifies the resource type, which can be either deployment or daemonset.
 - The `serviceName` and `port` specify the name of the service for the workload as well as the exposed port number.
-- The `trafficAnalysis` section defines the configuration for evaluating a new release version's health and readiness during a rollout process. 
+- The `trafficAnalysis` section defines the configuration for evaluating a new release version's health and readiness during a rollout process.
     - The `checkFailedTimes` parameter specifies the maximum number of failed check results allowed throughout the Canary Deployment lifecycle.
-    - `checkIntervalSeconds` denotes the time interval between consecutive health evaluation checks. 
-    - The `metrics` identify the metrics that will be monitored to determine the deployment's health status. Currently, only `request-success-rate` and `request-duration` two built-in metric types are supported. 
+    - `checkIntervalSeconds` denotes the time interval between consecutive health evaluation checks.
+    - The `metrics` identify the metrics that will be monitored to determine the deployment's health status. Currently, only `request-success-rate` and `request-duration` two built-in metric types are supported.
     - The `webhooks` provide an extensibility mechanism for the analysis procedures. In this configuration, webhooks communicate with the testloader to generate test traffic for the healthchecks.
-- The `trafficRouting` configuration specifies how traffic will be shifted to the canary deployment during the rollout process. 
-    - The `maxWeight` parameter defines the maximum percentage of traffic that can be routed to the canary before promotion. 
-    - `stepWeight` determines the incremental amount by which traffic will be increased after each successful analysis iteration, allowing the canary to be validated under a gradually growing proportion of real-world load. 
+- The `trafficRouting` configuration specifies how traffic will be shifted to the canary deployment during the rollout process.
+    - The `maxWeight` parameter defines the maximum percentage of traffic that can be routed to the canary before promotion.
+    - `stepWeight` determines the incremental amount by which traffic will be increased after each successful analysis iteration, allowing the canary to be validated under a gradually growing proportion of real-world load. Kurator also supports configuring both the traffic settings for the full release after validation completes, as well as non-graduated traffic shifts during the testing period. Please refer to [Application API Reference](https://kurator.dev/docs/references/app-api/#apps.kurator.dev/v1alpha1.CanaryConfig) for more details on directly setting the release and test traffic distributions.
     - The `gateways` and `host` represent the ingress points for external and internal service traffic, respectively.
 - The `rolloutStatus` section displays the actual processing status of rollout within the fleet.
 
 About a minute after submitting this configuration, you can check the rollout status by running the following command:
 
 ```conole
-k get canary -n webapp --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get canary -n webapp --kubeconfig=/root/.kube/kurator-member1.config
 
 NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
 backend   Initialized   0        2024-01-11T02:40:40Z
 ```
 
 If the status shows as `Initialized`, it means the initialization of rollout process has completed successfully.
-
 
 **Notes**: In the above configuration, we set the `kustomization.interval` to 0s. This disables Fluxcd's periodic synchronization of configurations between the local mirror and cluster. The reason is that Flagger needs to modify the replica counts in Deployments to complete its initialization process. If you are uncertain whether the replicas for all applications in your deployments are set to zero, it is recommended to also set `kustomization.interval` to 0s.
 
@@ -334,7 +333,7 @@ A Canary Deployment can be triggered by either updating the container image refe
 Review the results:
 
 ```console
-k get canary -n webapp -w --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get canary -n webapp -w --kubeconfig=/root/.kube/kurator-member1.config
 
 NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
 backend   Initialized   0        2024-01-11T02:40:40Z
@@ -349,6 +348,14 @@ backend   Promoting     0        2024-01-11T09:12:10Z
 backend   Finalising    0        2024-01-11T09:13:40Z
 backend   Succeeded     0        2024-01-11T09:15:10Z
 ```
+
+{{< image width="100%"
+link="./image/canary.svg"
+>}}
+
+As shown in the diagram, after triggering a canary deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
+It will then gradually shift traffic to the new version pod by increasing its traffic weight in the result metric over time. This `WEIGHT`  in the displayed result represents the current percentage of traffic accessing the new version pod during the analysis.
+Upon validating the new version through testing and confirming it is ready for release, Kurator will proceed to replace the old version with the new version across the entire cluster. It will then remove the canary pod, completing the rollout process.
 
 ```console
 k get application rolllout-demo -oyaml
