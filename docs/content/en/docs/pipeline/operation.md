@@ -1,7 +1,7 @@
 ---
 title: "Practical Operation Guide"
 linkTitle: "Practical Operation Guide"
-weight: 10
+weight: 20
 description: >
   A practical guide detailing the operational steps for Kurator pipelines, including task application, service exposure, and webhook setup.
 ---
@@ -139,7 +139,7 @@ and the trigger event selected as "Just the push event."
 Once the webhook is set up, you will see the status in GitHub page like the following indicating that the webhook is properly configured.
 
 {{< image width="100%"
-link="./image/webhook-.png"
+link="./image/webhook.png"
 >}}
 
 > After setting up webhooks, it's need to note that users may initially see a red exclamation mark instead of a green check mark.
@@ -227,7 +227,6 @@ logs        Display aggregated logs from multiple tasks within kurator pipeline 
 
 ...
 ```
-
 
 ## Cleanup
 
