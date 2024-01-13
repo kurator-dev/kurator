@@ -1,0 +1,64 @@
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: blue-green-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
+  syncPolicies:
+    - destination:
+        fleet: quickstart
+      kustomization:
+        interval: 0s
+        path: ./deploy/webapp
+        prune: true
+        timeout: 2m0s
+      rollout:
+        testLoader: true
+        trafficRoutingProvider: istio
+        workload:
+          apiVersion: apps/v1
+          name: backend
+          kind: Deployment
+          namespace: webapp
+        serviceName: backend
+        port: 9898
+        rolloutPolicy:
+          trafficRouting:
+            analysisTimes: 3
+            timeoutSeconds: 60
+            gateways:
+            - istio-system/public-gateway
+            hosts:
+            - backend.webapp
+          trafficAnalysis:
+             checkIntervalSeconds: 90
+             checkFailedTimes: 2
+             metrics:
+             - name: request-success-rate
+               intervalSeconds: 90
+               thresholdRange:
+                 min: 99
+             - name: request-duration
+               intervalSeconds: 90
+               thresholdRange:
+                 max: 500
+             webhooks:
+                 timeoutSeconds: 60
+                 command:
+                 - "hey -z 1m -q 10 -c 2 http://backend-canary.webapp:9898/"
+          rolloutTimeoutSeconds: 600
+    - destination:
+        fleet: quickstart
+      kustomization:
+        targetNamespace: default
+        interval: 5m0s
+        path: ./kustomize
+        prune: true
+        timeout: 2m0s
