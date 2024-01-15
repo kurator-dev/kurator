@@ -71,11 +71,10 @@ The tasks are structured as an array, comprising either predefinedTasks or Custo
 **PredefinedTask** provides users the option to select from a set of predefined tasks and input their parameters. 
 Conversely, **CustomTask** offers the flexibility to directly define a task, particularly when the desired task is not available in the list of predefined tasks.
 
+## Predefined Tasks
 
-## predefined Tasks
-
-**Pre-configured Pipeline Templates**: These are a variety of ready-to-use pipeline templates based on best practices for common CI/CD scenarios. 
-  They streamline the initial setup process and provide a quick start for users.
+Predefined tasks are a variety of ready-to-use pipeline templates based on best practices for common CI/CD scenarios. 
+They streamline the initial setup process and provide a quick start for users.
 
 ### Currently Supported predefined Tasks
 
@@ -86,7 +85,7 @@ Conversely, **CustomTask** offers the flexibility to directly define a task, par
 | `go-lint`      | Performs linting on Go source code, using golangci-lint. | Ensures coding style and common error checks. | - `package`, `context`, `flags`, `version`, `GOOS`, `GOARCH`, `GO111MODULE`, `GOCACHE`, `GOMODCACHE`, `GOLANGCI_LINT_CACHE` |
 | `build-and-push-image` | Builds and pushes a Docker image using Kaniko. | Enables building and storing Docker images. | - `IMAGE`, `DOCKERFILE`, `CONTEXT`, `EXTRA_ARGS`, `BUILDER_IMAGE` |
 
-### How to Configure predefined Tasks
+### Example of a Predefined Tasks 
 
 To configure a predefined Task, simply reference the task template in your pipeline definition, and provide any required parameters based on your specific requirements. 
 For example:
@@ -102,9 +101,7 @@ tasks:
 
 ## Custom Tasks
 
-### Introduction to Custom Tasks
-
-- **Customization of Tasks**: This feature enables users to tailor their pipelines by incorporating both common predefined CI tasks and custom tasks, catering to a broad range of needs and enhancing adaptability.
+Custom tasks enables users to tailor their pipelines by incorporating both common predefined CI tasks and custom tasks, catering to a broad range of needs and enhancing adaptability.
 
 ### Custom Task Configuration
 
@@ -122,7 +119,7 @@ A Custom Task allows for greater flexibility by defining tasks directly within t
 
 - `Script`: Contains the contents of an executable file to execute.
 
-Example of a Custom Task:
+### Example of a Custom Task
 
 ```yaml
 tasks:
