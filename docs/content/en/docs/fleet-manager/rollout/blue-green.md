@@ -17,7 +17,7 @@ The key benefit of Blue/Green Deployment is that if issues arise in the new vers
 
 By allowing users to deploy applications and their Blue/Green Deployment configurations in a single place, Kurator streamlines Blue/Green Deployment through automated GitOps workflows for unified deployment and validation.
 
-## prerequisites
+## Prerequisites
 
 In the subsequent sections, we'll guide you through a hands-on demonstration.
 
@@ -120,7 +120,7 @@ Before delving into the how to Perform a Unified Rollout, ensure you have succes
 You can initiate the process by deploying a application demo using the following command:
 
 ```console
-kubectl apply -f examples/rollout/blur_green.yaml
+kubectl apply -f examples/rollout/blue_green.yaml
 ```
 
 Review the results:
@@ -297,7 +297,7 @@ status:
 
 Given the output provided, let's dive deeper to understand the various elements and their implications:
 
-- Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization or helmrelease. It will establish and implement Blue/Green Deployment for these services according to the configuration defined here.
+- Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization. It will establish and implement Blue/Green Deployment for these services according to the configuration defined here.
 - The `workload` defines the target resource for the Blue/Green Deployment. The `kind` specifies the resource type, which can be either deployment or daemonset.
 - The `serviceName` and `port` specify the name of the service for the workload as well as the exposed port number.
 - The `trafficAnalysis` section defines the configuration for evaluating a new release version's health and readiness during a rollout process.
