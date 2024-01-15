@@ -13,11 +13,11 @@ It essentially involves a controlled experiment where users are randomly allocat
 The metrics from their usage are then analyzed to select the superior version based on the results. The A/B Testing can also be used to route selective users to the new version, allowing their real-world feedback on the new release to be gathered.
 
 - **Use Case**: There are two application services with identical backend functionality but different frontend UIs. It is now necessary to validate which UI design leads to a better user experience. In this scenario, A/B Testing should be used to deploy both versions of the service in a live environment. The UI that demonstrates superior user metrics and outcomes can then be selected for full release.
-- **Functionality**: Provides configuration of A/B Testing and triggers an A/B Testing on new release.
+- **Functionality**: Provide configuration of A/B Testing and trigger an A/B Testing on new release.
 
 By allowing users to deploy applications and their A/B Testing configurations in a single place, Kurator streamlines A/B Testing through automated GitOps workflows for unified deployment and validation.
 
-## prerequisites
+## Prerequisites
 
 In the subsequent sections, we'll guide you through a hands-on demonstration.
 
@@ -120,7 +120,7 @@ Before delving into the how to Perform a Unified Rollout, ensure you have succes
 You can initiate the process by deploying a application demo using the following command:
 
 ```console
-kubectl apply -f examples/rollout/acTesting.yaml
+kubectl apply -f examples/rollout/ab-testing.yaml
 ```
 
 Review the results:
@@ -304,7 +304,7 @@ status:
 
 Given the output provided, let's dive deeper to understand the various elements and their implications:
 
-- Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization or helmrelease. It will establish and implement A/B Testing for these services according to the configuration defined here.
+- Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization. It will establish and implement A/B Testing for these services according to the configuration defined here.
 - The `workload` defines the target resource for the A/B Testing. The `kind` specifies the resource type, which can be either deployment or daemonset.
 - The `serviceName` and `port` specify the name of the service for the workload as well as the exposed port number.
 - The `trafficAnalysis` section defines the configuration for evaluating a new release version's health and readiness during a rollout process.
@@ -314,7 +314,7 @@ Given the output provided, let's dive deeper to understand the various elements 
     - The `webhooks` provide an extensibility mechanism for the analysis procedures. In this configuration, webhooks communicate with the testloader to generate test traffic for the healthchecks.
 - The `trafficRouting` configuration specifies how traffic will be shifted to the A/B Testing during the rollout process.
     - The `analysisTimes` signifies the number of testing iterations that will be conducted.
-    - The `match` defines the criteria that an incoming request must satisfy in order to be routed to the new version. This includes header match definitions which specify rules for request headers. Other match dimensions like port, URL path etc. can also be configured. Please refer to [Application API Reference](https://kurator.dev/docs/references/app-api/#apps.kurator.dev/v1alpha1.TrafficRoutingConfig) for more details on directly setting the release and test traffic distributions.
+    - The `match` defines the criteria that an incoming request must satisfy in order to be routed to the new version. This includes header match definitions which specify rules for request headers. Other match dimensions like port, URL path etc. can also be configured. It's important to note that HTTP matching only takes effect during code analysis, and does not apply to normal usage afterwards. Please refer to [Application API Reference](https://kurator.dev/docs/references/app-api/#apps.kurator.dev/v1alpha1.TrafficRoutingConfig) for more details on directly setting the release and test traffic distributions.
     - The `gateways` and `host` represent the ingress points for external and internal service traffic, respectively.
 - The `rolloutStatus` section displays the actual processing status of rollout within the fleet.
 
