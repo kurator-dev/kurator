@@ -73,7 +73,7 @@ jobs:
         # if restricted > 0, CI will report an error.
         run: |
           result=$(make lint-licenses | awk '{print $7}')
-          if [ $result -eq 0 ]; then
+          if [ $result -gt 0 ]; then
             exit 1
           fi
   test:
