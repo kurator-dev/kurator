@@ -162,7 +162,7 @@ After the pipeline is triggered, the system will create individual pods for each
 You can view the current task execution status with a specific command.
 
 ```console
-$ kurator get pod -n kurator-pipeline | grep task-run
+$ kubectl get pod -n kurator-pipeline | grep task-run
 test-custom-task-run-dgx8d-cat-readme-pod          0/1     Completed   0          31m
 test-custom-task-run-dgx8d-git-clone-pod           0/1     Completed   0          31m
 test-predefined-task-run-ffzbd-git-clone-pod       0/1     Completed   0          31m
@@ -233,7 +233,7 @@ logs        Display aggregated logs from multiple tasks within kurator pipeline 
 To remove the pipeline examples used for testing, execute:
 
 ```console
-kurator delete pipelines.pipeline.kurator.dev  -n kurator-pipeline test-predefined-task test-custom-task
+kubectl delete pipelines.pipeline.kurator.dev  -n kurator-pipeline test-predefined-task test-custom-task
 ```
 
 > Please note: When the pipeline of Kurator is deleted, all the resources it created, including the pods of tasks and the services of event listener, will be deleted as well.
