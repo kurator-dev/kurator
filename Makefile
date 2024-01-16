@@ -98,10 +98,13 @@ mod-download-go:
 # https://github.com/golang/go/issues/43994
 	@find -name go.mod -execdir go mod tidy \;
 
-mirror-licenses: mod-download-go
-	@go install istio.io/tools/cmd/license-lint@latest
+.PHONY: mirror-licenses
+mirror-licenses: mod-download-go; \
+	@go install istio.io/tools/cmd/license-lint@latest; \
+	@rm -fr licenses; \
 	@license-lint --mirror
 
+.PHONY: lint-licenses
 lint-licenses:
 	@if test -d licenses; then license-lint --config common/config/license-lint.yaml; fi
 
@@ -158,7 +161,7 @@ gen: clean \
 	gen-prom \
 	gen-prom-thanos \
 	gen-thanos \
-	gen-chart
+	gen-chart 
 
 .PHONY: gen-check
 gen-check: gen

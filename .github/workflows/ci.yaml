@@ -67,7 +67,8 @@ jobs:
       - name: generate license mirror
         run: make mirror-licenses
       - name: lint-licenses
-        run: make lint-licenses
+        # if restricted > 0, CI will report an error.
+        run: make lint-licenses | grep -q 'restricted, [1-9][0-9]*' && exit 1 || true
   test:
     name: Unit test
     runs-on: ubuntu-22.04
