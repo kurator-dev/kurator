@@ -100,9 +100,9 @@ mod-download-go:
 
 .PHONY: mirror-licenses
 mirror-licenses: mod-download-go; \
-	@go install istio.io/tools/cmd/license-lint@latest; \
-	@rm -fr licenses; \
-	@license-lint --mirror
+	go install istio.io/tools/cmd/license-lint@latest; \
+	rm -fr licenses; \
+	license-lint --mirror
 
 .PHONY: lint-licenses
 lint-licenses:

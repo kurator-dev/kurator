@@ -64,11 +64,18 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.20.x
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: generate license mirror
-        run: make mirror-licenses
+        run: |
+          make mirror-licenses
       - name: lint-licenses
         # if restricted > 0, CI will report an error.
-        run: make lint-licenses | grep -q 'restricted, [1-9][0-9]*' && exit 1 || true
+        run: |
+          result=$(make lint-licenses | awk '{print $7}')
+          if [ $result -ne 0 ]; then 
+            exit 1 
+          fi
   test:
     name: Unit test
     runs-on: ubuntu-22.04
