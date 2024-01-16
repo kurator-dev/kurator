@@ -2,19 +2,20 @@
 
 Welcome to Kurator!
 
--   [Before you get started](#before-you-get-started)
-    -   [Code of Conduct](#code-of-conduct)
-    -   [Community Expectations](#community-expectations)
--   [Getting started](#getting-started)
--   [Your First Contribution](#your-first-contribution)
-    -   [Find something to work on](#find-something-to-work-on)
-        -   [Find a good first topic](#find-a-good-first-topic)
-        -   [Work on an Issue](#work-on-an-issue)
-        -   [File an Issue](#file-an-issue)
--   [Contributor Workflow](#contributor-workflow)
-    -   [Creating Pull Requests](#creating-pull-requests)
-    -   [Code Review](#code-review)
-    -   [Testing](#testing)
+- [Contributing](#contributing)
+- [Before you get started](#before-you-get-started)
+  - [Code of Conduct](#code-of-conduct)
+  - [Community Expectations](#community-expectations)
+  - [Licences restrictions](#licences-restrictions)
+- [Getting started](#getting-started)
+- [Your First Contribution](#your-first-contribution)
+  - [Find something to work on](#find-something-to-work-on)
+    - [Find a good first topic](#find-a-good-first-topic)
+      - [Work on an issue](#work-on-an-issue)
+    - [File an Issue](#file-an-issue)
+- [Contributor Workflow](#contributor-workflow)
+  - [Creating Pull Requests](#creating-pull-requests)
+  - [Code Review](#code-review)
 
 # Before you get started
 
@@ -30,6 +31,14 @@ Kurator aims to help users to build their own distributed cloud native infrastru
 
 Kurator aims to provide turnkey automation for multi-cluster application management in multi-cloud and hybrid cloud scenarios,
 and intended to realize multi-cloud centralized management, high availability, failure recovery and traffic scheduling.
+
+## Licences restrictions
+
+Please ensure that you have read the [license-lint](/common/config/license-lint.yaml)
+
+It specifies that licenses listed in the "restrictions" section cannot be used in the kurator project. Licenses in the "reciprocal_licenses" section can be used but modifications are not permitted.
+
+If you need to use a license that is not included in either section, please open a [Pull Requests](https://github.com/kurator-dev/kurator/pulls) for discussion.
 
 # Getting started
 
