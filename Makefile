@@ -99,7 +99,7 @@ mod-download-go:
 	@find -name go.mod -execdir go mod tidy \;
 
 mirror-licenses: mod-download-go
-	@rm -fr licenses
+	@go install istio.io/tools/cmd/license-lint@latest
 	@license-lint --mirror
 
 lint-licenses:
