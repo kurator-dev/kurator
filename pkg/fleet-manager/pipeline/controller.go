@@ -20,7 +20,6 @@ import (
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	apiserrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -304,7 +303,7 @@ func (p *PipelineManager) deleteAssociatedPods(ctx context.Context, namespace, p
 		// Delete the Pod using Foreground deletion policy.
 		// This ensures that all dependent resources like PVCs are also deleted before the Pod itself is deleted.
 		err := p.Client.Delete(ctx, &pod, client.PropagationPolicy(metav1.DeletePropagationForeground))
-		if err != nil && !apiserrors.IsNotFound(err) {
+		if err != nil && !apierrors.IsNotFound(err) {
 			// If the error is not a NotFound error, return the error.
 			return fmt.Errorf("error deleting pod %s: %v", pod.Name, err)
 		}
@@ -314,6 +313,7 @@ func (p *PipelineManager) deleteAssociatedPods(ctx context.Context, namespace, p
 }
 
 // getListenerServiceName get the name of event listener service name. This naming way is origin from tekton controller.
+// TODO: add associated link about tekton code for this naming
 func getListenerServiceName(pipeline *pipelineapi.Pipeline) *string {
 	serviceName := "el-" + pipeline.Name + "-listener"
 	return &serviceName
