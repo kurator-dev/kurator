@@ -325,7 +325,71 @@ If the status shows as `Initialized`, it means the initialization of rollout pro
 
 ### Trigger Rollout
 
+#### Automated Rollout
+
 A Blue/Green Deployment can be triggered by either updating the container image referenced in the git repository configuration, or directly updating the image of the deployment resource locally in the Kubernetes cluster.
+
+Review the results:
+
+```console
+kubectl get canary -n webapp -w --kubeconfig=/root/.kube/kurator-member1.config
+
+NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
+backend   Initialized   0        2024-01-16T08:53:40Z
+backend   Progressing   0        2024-01-16T08:55:10Z
+backend   Progressing   0        2024-01-16T08:56:40Z
+backend   Progressing   0        2024-01-16T08:58:10Z
+backend   Progressing   0        2024-01-16T08:59:40Z
+backend   Progressing   0        2024-01-16T09:01:10Z
+backend   Promoting     0        2024-01-16T09:02:40Z
+backend   Finalising    0        2024-01-16T09:04:10Z
+backend   Succeeded     0        2024-01-16T09:05:40Z
+```
+
+{{< image width="100%"
+link="./image/blue-green-successful.svg"
+>}}
+
+- As shown in the diagram, after triggering a Blue/Green Deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
+- The new version will then undergo multiple test iterations. During this testing period, all incoming requests will be routed to the new version. Various testing metrics will be evaluated to determine the health and stability of the new release.
+- Upon validating the new version through testing and confirming it is ready for release, Kurator will proceed to replace the old version with the new version across the entire cluster. And redirect all incoming traffic to the primary pod.
+- It will then remove the canary pod, completing the rollout process.
+
+```console
+kubectl get application rolllout-demo -oyaml
+
+rolloutStatus:
+      backupNameInCluster: backend
+      backupStatusInCluster:
+        canaryWeight: 0
+        conditions:
+        - lastTransitionTime: "2024-01-16T09:05:40Z"
+          lastUpdateTime: "2024-01-16T09:05:40Z"
+          message: Canary analysis completed successfully, promotion finished.
+          reason: Succeeded
+          status: "True"
+          type: Promoted
+        failedChecks: 1
+        iterations: 0
+        lastAppliedSpec: 7b779dcc48
+        lastPromotedSpec: 7b779dcc48
+        lastTransitionTime: "2024-01-16T09:05:40Z"
+        phase: Succeeded
+        trackedConfigs: {}
+      clusterName: kurator-member1
+```
+
+A Blue/Green Deployment is triggered by changes in any of the following objects:
+
+- Deployment PodSpec (container image, command, ports, env, resources, etc)
+- ConfigMaps mounted as volumes or mapped to environment variables
+- Secrets mounted as volumes or mapped to environment variables
+
+**Notes:** If you apply new changes to the deployment during the analysis, Kurator Rollout will restart the analysis.
+
+#### Automated Rollback
+
+If the new version fails testing during the blue/green deployment, Kurator will automatically roll back to the previous version to ensure continuous service operations.
 
 During the analysis you can generate HTTP 500 errors and high latency to test Kurator's rollback.
 
@@ -355,7 +419,7 @@ backend   Failed        0        2024-01-13T08:18:10Z
 ```
 
 {{< image width="100%"
-link="./image/blue-green.svg"
+link="./image/blue-green-failed.svg"
 >}}
 
 - As shown in the diagram, after triggering a Blue/Green Deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
@@ -387,14 +451,6 @@ rolloutStatus:
       clusterName: kurator-member1
 
 ```
-
-A Blue/Green Deployment is triggered by changes in any of the following objects:
-
-- Deployment PodSpec (container image, command, ports, env, resources, etc)
-- ConfigMaps mounted as volumes or mapped to environment variables
-- Secrets mounted as volumes or mapped to environment variables
-
-**Notes:** If you apply new changes to the deployment during the analysis, Kurator Rollout will restart the analysis.
 
 ## Cleanup
 
