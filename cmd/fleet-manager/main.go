@@ -37,6 +37,7 @@ import (
 	"kurator.dev/kurator/cmd/fleet-manager/application"
 	"kurator.dev/kurator/cmd/fleet-manager/backup"
 	"kurator.dev/kurator/cmd/fleet-manager/options"
+	"kurator.dev/kurator/cmd/fleet-manager/pipeline"
 	"kurator.dev/kurator/cmd/fleet-manager/scheme"
 	fleet "kurator.dev/kurator/pkg/fleet-manager"
 	"kurator.dev/kurator/pkg/fleet-manager/manifests"
@@ -144,6 +145,10 @@ func run(ctx context.Context, opts *options.Options) error {
 
 	if err = backup.InitControllers(ctx, opts, mgr); err != nil {
 		return fmt.Errorf("backup init controllers fail, %w", err)
+	}
+
+	if err = pipeline.InitControllers(ctx, opts, mgr); err != nil {
+		return fmt.Errorf("pipeline init controllers fail, %w", err)
 	}
 
 	log.Info("starting manager", "version", version.Get().String())
