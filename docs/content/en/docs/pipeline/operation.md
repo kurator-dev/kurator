@@ -177,6 +177,7 @@ Kurator's CLI provides a very convenient way to view the execution status of a p
 which user can directly list all the pipeline execution and access all task execution logs with a specific command.
 
 You can view the execution instance of the currently triggered pipeline using the following command.
+Note: You need to specify the kubeconfig file to use via the `--kubeconfig` flag in the command line, even if you are running the Kurator Pipeline in a single cluster environment.
 
 ```console
 $ kurator pipeline execution list  -n kurator-pipeline  --kubeconfig /root/.kube/kurator-host.config
