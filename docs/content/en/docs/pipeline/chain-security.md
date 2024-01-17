@@ -135,9 +135,9 @@ spec:
 
 Replace `<username>` with your GitHub username and `<image-name>` with your image name, like `kurator-test:0.4.1`.
 
-### Exposing Services
+### Exposing Service
 
-Similar to the previous pipeline, expose the services automatically created by this pipeline:
+Similar to the previous pipeline, expose the services automatically created by this pipeline, more details about this service can be found in [Setting Up Your Pipeline](https://kurator.dev/docs/pipeline/setting/).
 
 ```console
 kubectl port-forward --address 0.0.0.0 service/el-quick-start-listener 30002:8080 -n kurator-pipeline
@@ -162,8 +162,13 @@ Handling connection for 30002
 After the pipeline is triggered, individual pods will be created for each task in the pipeline, executing them sequentially. 
 You can view the status of each task's execution with specific commands.
 
-Similarly, after obtaining the pipeline execution name from the command `kurator pipeline execution list -n kurator-pipeline --kubeconfig /root/.kube/kurator-host.config`, 
-you can view the execution logs of each task in the pipeline using the following command:
+Similarly, after obtaining the pipeline execution name from the command:
+
+```console
+kurator pipeline execution list -n kurator-pipeline --kubeconfig /root/.kube/kurator-host.config
+```
+
+You can view the execution logs of each task in the pipeline using the following command:
 
 ```console
 $ kurator pipeline execution logs <pipeline-execution>  -n kurator-pipeline --tail 10 --kubeconfig /root/.kube/kurator-host.config
