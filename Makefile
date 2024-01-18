@@ -96,14 +96,22 @@ mod-download-go:
 	@-GOFLAGS="-mod=readonly" find -name go.mod -execdir go mod download \;
 # go mod tidy is needed with Golang 1.16+ as go mod download affects go.sum
 # https://github.com/golang/go/issues/43994
-	@find -name go.mod -execdir go mod tidy \;
+# exclude docs folder
+	@find . -path ./docs -prune -o -name go.mod -execdir go mod tidy \;
 
-mirror-licenses: mod-download-go
-	@rm -fr licenses
-	@license-lint --mirror
+.PHONY: mirror-licenses
+mirror-licenses: mod-download-go; \
+	go install istio.io/tools/cmd/license-lint@latest; \
+	rm -fr licenses; \
+	license-lint --mirror
 
+.PHONY: lint-licenses
 lint-licenses:
 	@if test -d licenses; then license-lint --config common/config/license-lint.yaml; fi
+
+.PHONY: licenses-check
+licenses-check: mirror-licenses; \
+    hack/gen-check.sh
 
 fix-copyright:
 	@${FINDFILES} \( -name '*.go' -o -name '*.cc' -o -name '*.h' -o -name '*.proto' -o -name '*.py' -o -name '*.sh' \) \( ! \( -name '*.gen.go' -o -name '*.pb.go' -o -name '*_pb2.py' \) \) -print0 |\
@@ -158,7 +166,7 @@ gen: clean \
 	gen-prom \
 	gen-prom-thanos \
 	gen-thanos \
-	gen-chart
+	gen-chart 
 
 .PHONY: gen-check
 gen-check: gen
