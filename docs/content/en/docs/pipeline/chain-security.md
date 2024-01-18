@@ -130,10 +130,10 @@ spec:
       predefinedTask:
         name: build-and-push-image
         params:
-          image: "ghcr.io/<username>/<image-name>"'| kubectl apply -f -
+          image: "<image uri>"'| kubectl apply -f -
 ```
 
-Replace `<username>` with your GitHub username and `<image-name>` with your image name, like `kurator-test:0.4.1`.
+Replace `<image uri>` with your image uniform resource identifier, like `ghcr.io/myName/kurator-test:0.4.1`.
 
 ### Exposing Service
 
@@ -184,7 +184,7 @@ INFO[2024-01-04 11:47:34] Logs from container 'step-clone':
 + RESULT_COMMITTER_DATE=1703581193
 + printf '%s' 1703581193
 + printf '%s' 1858f8e5129516d6e7d9ad993b1ec41cef922d18
-+ printf '%s' https://github.com/<>>/podinfo 
++ printf '%s' <image uri> 
 INFO[2024-01-04 11:47:34] Fetching logs for TaskRun: quick-start-run-frb7l-build-and-push-image 
 INFO[2024-01-04 11:47:34] Fetching logs for container 'step-build-and-push' in Pod 'quick-start-run-frb7l-build-and-push-image-pod' 
 INFO[2024-01-04 11:47:34] Logs from container 'step-build-and-push':
@@ -196,11 +196,11 @@ INFO[0161] Taking snapshot of full filesystem...
 INFO[0162] USER app                                     
 INFO[0162] Cmd: USER                                    
 INFO[0162] CMD ["./podinfo"]                            
-INFO[0162] Pushing image to ghcr.io/<username>/<image-name>
-INFO[0188] Pushed ghcr.io/<username>/<repository-name>@sha256:73c1ad5046233adb70aae2ee5df6e00f2c521e89cc980a954dc024d12add8daf  
+INFO[0162] Pushing image to <image uri>
+INFO[0188] Pushed <image uri>@sha256:73c1ad5046233adb70aae2ee5df6e00f2c521e89cc980a954dc024d12add8daf  
 INFO[2024-01-04 11:47:34] Fetching logs for container 'step-write-url' in Pod 'quick-start-run-frb7l-build-and-push-image-pod' 
 INFO[2024-01-04 11:47:34] Logs from container 'step-write-url':
-ghcr.io/<username>/<image-name>
+<image uri>
 INFO[2024-01-04 11:47:34] Fetching logs for TaskRun: quick-start-run-frb7l-cat-readme 
 INFO[2024-01-04 11:47:34] Fetching logs for container 'step-cat-readme-quick-start' in Pod 'quick-start-run-frb7l-cat-readme-pod' 
 INFO[2024-01-04 11:47:34] Logs from container 'step-cat-readme-quick-start':
@@ -259,8 +259,8 @@ After visiting the `ghcr.io` to view the images and corresponding `.sig` signatu
 we can verify the signatures using the public key (`cosign.pub`) created in the cosign process:
 
 ```console
-cosign verify --key cosign.pub ghcr.io/<username>/<repository-name>
-cosign verify-attestation --key cosign.pub --type slsaprovenance ghcr.io/<username>/<repository-name>
+cosign verify --key cosign.pub <image uri>
+cosign verify-attestation --key cosign.pub --type slsaprovenance <image uri>
 ```
 
 If verification fails, explicit error messages will be displayed (e.g., signature mismatch, invalid forepart). 
@@ -269,19 +269,19 @@ If successful, detailed information about the signature, including the docker im
 Here's an example of a successful verification output:
 
 ```console
-$ cosign verify --key cosign.pub ghcr.io/<username>/<repository-name>
-Verification for ghcr.io/<username>/<image-name> --
+$ cosign verify --key cosign.pub <image uri>
+Verification for <image uri> --
 The following checks were performed on each of these signatures:
   - The cosign claims were validated
   - The claims were present in the transparency log
   - The signatures were integrated into the transparency log when the certificate was valid
   - The signatures were verified against the specified public key
-[{"critical":{"identity":{"docker-reference":"ghcr.io/<username>/<repository-name>"},"image":{"docker-manifest-digest":"sha256:a4e1fb3e11f3c0ad167ed9868b7c6fcfffd7923a61e8bd15fbfdf8cda109cb58"},"type":"cosign container image signature"},"optional":null}]
+[{"critical":{"identity":{"docker-reference":"<image uri>"},"image":{"docker-manifest-digest":"sha256:a4e1fb3e11f3c0ad167ed9868b7c6fcfffd7923a61e8bd15fbfdf8cda109cb58"},"type":"cosign container image signature"},"optional":null}]
 ```
 
 ```console
-$ cosign verify-attestation --key cosign.pub --type slsaprovenance ghcr.io/<username>/<repository-name>
-Verification for ghcr.io/<username>/<image-name> --
+$ cosign verify-attestation --key cosign.pub --type slsaprovenance <image uri>
+Verification for <image uri> --
 The following checks were performed on each of these signatures:
 - The cosign claims were validated
 - The claims were present in the transparency log
@@ -290,7 +290,7 @@ The following checks were performed on each of these signatures:
   {"payloadType":"application/vnd.in-son","payload":"eyJfdHlwZSI...GJlOGE1In19XX19","signatures":[{"keyid":"SHA256:c7r0wGda2...ZO2hTTXTp+RkWI","sig":"MEQCICn0...6+ILoL4g=="}]}
 ```
 
-The payload above(`"payload":"eyJfdHlwZSI...GJlOGE1In19XX19"`) contains detailed information about the build process of the image `ghcr.io/<username>/<repository-name>`, 
+The payload above(`"payload":"eyJfdHlwZSI...GJlOGE1In19XX19"`) contains detailed information about the build process of the image `<image uri>`, 
 like the builder, the build steps, environments, parameters, and the start and end times of the build.
 
 This information is crucial for adhering to the SLSA security standards, as it provides complete build transparency, 
@@ -309,7 +309,7 @@ $ echo 'eyJfdHlwZSI...GJlOGE1In19XX19' | base64 --decode | jq
   "predicateType": "https://slsa.dev/provenance/v0.2",
   "subject": [
     {
-      "name": "ghcr.io/<username>/<repository-name>",
+      "name": "<image uri>",
       "digest": {
         "sha256": "a4e1fb3e11f3c0ad167ed9868b7c6fcfffd7923a61e8bd15fbfdf8cda109cb58"
       }
@@ -327,7 +327,7 @@ $ echo 'eyJfdHlwZSI...GJlOGE1In19XX19' | base64 --decode | jq
         "CONTEXT": "./",
         "DOCKERFILE": "./Dockerfile",
         "EXTRA_ARGS": "",
-        "IMAGE": "ghcr.io/<username>/<repository-name>"
+        "IMAGE": "<image uri>"
       },
       "environment": {
         "annotations": {
@@ -343,7 +343,7 @@ $ echo 'eyJfdHlwZSI...GJlOGE1In19XX19' | base64 --decode | jq
 }
 ```
 
-The resulting payload contains detailed information about the build process of the `ghcr.io/<username>/<repository-name>`, 
+The resulting payload contains detailed information about the build process of the `<image uri>`, 
 such as the builder used, build steps, environments and parameters used, and the start and end times of the build.
 
 ## Cleanup
