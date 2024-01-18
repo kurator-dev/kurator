@@ -27,6 +27,8 @@ Since the first task in a pipeline often involves pulling code from a Git reposi
 This can be done by creating a Kubernetes secret containing the authentication details. Use the following command to create this secret:
 
 ```console
+kubectl create ns kurator-pipeline
+
 kubectl create secret generic git-credentials \
   --namespace=kurator-pipeline \
   --from-literal=.gitconfig=$'[credential "https://github.com"]\n\thelper = store' \
