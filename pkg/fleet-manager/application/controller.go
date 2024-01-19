@@ -320,6 +320,7 @@ func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicati
 		return ctrl.Result{}, errors.Wrapf(err, "failed to delete rollout resource in cluster")
 	}
 
+	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
 	return ctrl.Result{}, nil
 }
 
