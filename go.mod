@@ -50,7 +50,6 @@ require (
 	github.com/vmware-tanzu/velero v1.11.1
 	golang.org/x/crypto v0.16.0
 	gopkg.in/square/go-jose.v2 v2.6.0
-	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.12.3
 	istio.io/api v0.0.0-20231006162241-350617755635
 	istio.io/istio v0.0.0-20231011021742-2dddcc9c9238
@@ -246,6 +245,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	istio.io/client-go v1.18.4-0.20231006163629-bd311827a565 // indirect
 	k8s.io/cluster-bootstrap v0.27.8 // indirect
 	k8s.io/gengo v0.0.0-20230306165830-ab3349d207d4 // indirect
