@@ -1,26 +1,64 @@
-- job_name: remote1
-  honor_timestamps: false
-  params:
+- BodySizeLimit: 0B
+  HTTPClientConfig:
+    enable_http2: true
+    follow_redirects: true
+    proxy_url: null
+    tls_config:
+      insecure_skip_verify: false
+  HonorLabels: false
+  HonorTimestamps: false
+  JobName: remote1
+  KeepDroppedTargets: 0
+  LabelLimit: 0
+  LabelNameLengthLimit: 0
+  LabelValueLengthLimit: 0
+  MetricRelabelConfigs: null
+  MetricsPath: /federate
+  NativeHistogramBucketLimit: 0
+  Params:
     match[]:
-        - '{__name__=~".+"}'
-  metrics_path: /federate
-  follow_redirects: true
-  enable_http2: true
-  static_configs:
-    - targets:
-        - remote1.cluster:9090
-      labels:
+    - '{__name__=~".+"}'
+  RelabelConfigs: null
+  SampleLimit: 0
+  Scheme: ""
+  ScrapeClassicHistograms: false
+  ScrapeInterval: 0s
+  ScrapeTimeout: 0s
+  ServiceDiscoveryConfigs:
+  - - labels:
         cluster: remote1
-- job_name: remote2
-  honor_timestamps: false
-  params:
+      targets:
+      - remote1.cluster:9090
+  TargetLimit: 0
+- BodySizeLimit: 0B
+  HTTPClientConfig:
+    enable_http2: true
+    follow_redirects: true
+    proxy_url: null
+    tls_config:
+      insecure_skip_verify: false
+  HonorLabels: false
+  HonorTimestamps: false
+  JobName: remote2
+  KeepDroppedTargets: 0
+  LabelLimit: 0
+  LabelNameLengthLimit: 0
+  LabelValueLengthLimit: 0
+  MetricRelabelConfigs: null
+  MetricsPath: /federate
+  NativeHistogramBucketLimit: 0
+  Params:
     match[]:
-        - '{__name__=~".+"}'
-  metrics_path: /federate
-  follow_redirects: true
-  enable_http2: true
-  static_configs:
-    - targets:
-        - remote2.cluster:9090
-      labels:
+    - '{__name__=~".+"}'
+  RelabelConfigs: null
+  SampleLimit: 0
+  Scheme: ""
+  ScrapeClassicHistograms: false
+  ScrapeInterval: 0s
+  ScrapeTimeout: 0s
+  ServiceDiscoveryConfigs:
+  - - labels:
         cluster: remote2
+      targets:
+      - remote2.cluster:9090
+  TargetLimit: 0
