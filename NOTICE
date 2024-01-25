@@ -1,0 +1,10 @@
+%% Kurator NOTICE
+===========================================
+Copyright (c) Kurator Authors
+Licensed under the Apache License, Version 2.0 (the "License")
+
+Downstream projects using code from Kurator must comply with the Apache-2.0 license.
+Code from this project shall not be used in downstream projects that have 
+conflicting licenses.
+===========================================
+END OF Kurator NOTICE 
