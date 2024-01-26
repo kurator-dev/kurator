@@ -68,7 +68,7 @@ func (g *Options) AddFlags(fs *pflag.FlagSet) {
 
 	fs.StringVar(&g.HomeDir, "home-dir", path.Join(homeDir, ".kurator"), "install path, default to $HOME/.kurator")
 
-	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", "/etc/karmada/karmada-apiserver.config", "path to the kubeconfig file, default to karmada apiserver config")
+	fs.StringVarP(&g.KubeConfig, "kubeconfig", "c", "/root/.kube/kurator-host.config", "path to the kubeconfig file, default to Kurator-host apiservice ")
 	fs.StringVar(&g.KubeContext, "context", "", "name of the kubeconfig context to use")
 
 	fs.BoolVar(&g.DryRun, "dry-run", false, "console/log output only, make no changes.")
