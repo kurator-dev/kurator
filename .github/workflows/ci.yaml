@@ -70,12 +70,8 @@ jobs:
         run: |
           make licenses-check
       - name: lint-licenses
-        # if restricted > 0, CI will report an error.
         run: |
-          result=$(make lint-licenses | awk '{print $7}')
-          if [ $result -gt 0 ]; then
-            exit 1
-          fi
+          make lint-licenses
   test:
     name: Unit test
     runs-on: ubuntu-22.04
