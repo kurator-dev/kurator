@@ -6,7 +6,7 @@ Welcome to Kurator!
 - [Before you get started](#before-you-get-started)
   - [Code of Conduct](#code-of-conduct)
   - [Community Expectations](#community-expectations)
-  - [Licences restrictions](#licences-restrictions)
+  - [Dependence Compliance](#dependence-compliance)
 - [Getting started](#getting-started)
 - [Your First Contribution](#your-first-contribution)
   - [Find something to work on](#find-something-to-work-on)
@@ -32,13 +32,10 @@ Kurator aims to help users to build their own distributed cloud native infrastru
 Kurator aims to provide turnkey automation for multi-cluster application management in multi-cloud and hybrid cloud scenarios,
 and intended to realize multi-cloud centralized management, high availability, failure recovery and traffic scheduling.
 
-## Licences restrictions
+## Dependence Compliance
 
-Please ensure that you have read the [license-lint](/common/config/license-lint.yaml)
-
-It specifies that licenses listed in the "restrictions" section cannot be used in the kurator project. Licenses in the "reciprocal_licenses" section can be used but modifications are not permitted.
-
-If you need to use a license that is not included in either section, please open a [Pull Requests](https://github.com/kurator-dev/kurator/pulls) for discussion.
+If your contribution involves changes to dependencies, please read [dependence-compliance](community/compliance/dependence-compliance.md) first.
+It outlines the guidelines for managing dependencies within the kurator project. Following these guidelines is important to ensure your changes can be properly reviewed and merged.
 
 # Getting started
 

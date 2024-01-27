@@ -74,7 +74,7 @@ Additionally:
 - If this is all good, approve, but don't LGTM, unless you also do code review
   or unless it is trivial (e.g. moving from k/k/pkg/utils -> k/utils).
 
-Licenses for dependencies are specified by the Kurator [allowed-licenses-list](/common/config/license-lint.yaml).
+Licenses for dependencies are specified by the Kurator [allowed-licenses-list](allowed-licenses-list.md).
 All new dependency licenses should be reviewed by @[kurator/dep-approvers] to ensure that they
 are compatible with the Kurator project license. It is also important to note
 and flag if a license has changed when updating a dependency, so that these can
@@ -85,7 +85,7 @@ an issue or send a message to the member of [kurator/dep-approvers].
 
 ## Licences restrictions
 
-In the Kurator project, there are compliance requirements for the licenses of dependencies used. We prohibit the use of dependencies with infectious licenses. You can check [allowed-licenses-list](/common/config/license-lint.yaml) to learn about Kurator project's specifications on license compliance.
+In the Kurator project, there are compliance requirements for the licenses of dependencies used. We prohibit the use of dependencies with infectious licenses. You can check [allowed-licenses-list](allowed-licenses-list.md) to learn about Kurator project's specifications on license compliance.
 
 It specifies that licenses listed in the "restrictions" section cannot be used in the kurator project. Licenses in the "reciprocal_licenses" section can be used but modifications are not permitted. Prohibition of licences in the "restricted_licenses" section.
 
