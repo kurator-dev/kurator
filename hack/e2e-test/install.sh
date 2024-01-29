@@ -17,6 +17,23 @@ VERSION=${VERSION} make docker
 kind load docker-image ghcr.io/kurator-dev/cluster-operator:${VERSION} --name kurator-host
 kind load docker-image ghcr.io/kurator-dev/fleet-manager:${VERSION} --name kurator-host
 
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+kubectl create namespace cert-manager
+helm install -n cert-manager cert-manager jetstack/cert-manager --set installCRDs=true
+
+helm repo add fluxcd-community https://fluxcd-community.github.io/helm-charts
+cat <<EOF | helm install fluxcd fluxcd-community/flux2 --version 2.7.0 -n fluxcd-system --create-namespace -f -
+imageAutomationController:
+  create: false
+imageReflectionController:
+  create: false
+notificationController:
+  create: false
+EOF
+
+sleep 5s
+
 VERSION=${VERSION} make gen-chart
 cd out/charts
 helm install --create-namespace kurator-cluster-operator cluster-operator-${VERSION}.tgz -n kurator-system
