@@ -1,0 +1,15 @@
+name: "Merge on lgtm label"
+on:
+  schedule:
+    - cron: "* * * * *"
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jpmcb/prow-github-actions@v1
+        with:
+          jobs: 'lgtm'
+          github-token: "${{ secrets.GH_MERGE }}"
+          # this is optional and defaults to 'merge'
+          merge-method: 'merge'
