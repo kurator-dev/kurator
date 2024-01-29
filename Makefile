@@ -75,6 +75,10 @@ docker-push: docker
 	docker push ${IMAGE_HUB}/cluster-operator:${IMAGE_TAG}
 	docker push ${IMAGE_HUB}/fleet-manager:${IMAGE_TAG}
 
+.PHONY: sign-image 
+sign-image:
+	./hack/image-sign.sh
+
 .PHONY: lint
 lint: golangci-lint lint-copyright lint-markdown lint-shellcheck
 
