@@ -5,7 +5,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: fleet.fleet.kurator.dev
+  name: fleets.fleet.kurator.dev
 spec:
   group: fleet.kurator.dev
   names:
@@ -13,7 +13,7 @@ spec:
     - kurator-dev
     kind: Fleet
     listKind: FleetList
-    plural: fleet
+    plural: fleets
     singular: fleet
   scope: Namespaced
   versions:
