@@ -30,4 +30,4 @@ jobs:
           hack/e2e-test/install.sh
       - name: fleet-clusters e2e test
         run: |
-          hack/e2e-test/fleet-clusters/e2e-run.sh
+          hack/e2e-test/run-e2e.sh
