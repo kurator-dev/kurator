@@ -18,6 +18,9 @@ KUBECONFIG_PATH=${KUBECONFIG_PATH:-"${HOME}/.kube"}
 MAIN_KUBECONFIG=${MAIN_KUBECONFIG:-"${KUBECONFIG_PATH}/kurator-host.config"}
 export KUBECONFIG=${MAIN_KUBECONFIG}
 
+# Install ginkgo
+GO111MODULE=on go install github.com/onsi/ginkgo/v2/ginkgo
+
 set +e
 ginkgo -v --race --trace --fail-fast -p ./e2e/
 TESTING_RESULT=$?

@@ -20,14 +20,14 @@ jobs:
           install_only: true
       - name: Set Up Clusters
         run: |
-          hack/local-dev-setup.sh
+          hack/e2e-test/build-clusters.sh
       - name: Install Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.10.1
       - name: Init kurator cluster
         run: |
-          hack/e2e-test/install.sh
+          hack/e2e-test/install-kurator.sh
       - name: fleet-clusters e2e test
         run: |
           hack/e2e-test/run-e2e.sh

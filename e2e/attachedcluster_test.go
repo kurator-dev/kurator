@@ -30,74 +30,49 @@ import (
 
 var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 	var (
-		namespace          string
-		fleetname          string
-		memberClusterName1 string
-		memberClusterName2 string
-		kubeconfig1Path    string
-		kubeconfig2Path    string
-		secret1            *corev1.Secret
-		secret2            *corev1.Secret
-		attachedcluster1   *clusterv1a1.AttachedCluster
-		attachedcluster2   *clusterv1a1.AttachedCluster
+		namespace         string
+		fleetname         string
+		memberClusterName string
+		kubeconfigPath    string
+		secret            *corev1.Secret
+		attachedcluster   *clusterv1a1.AttachedCluster
 	)
 
 	ginkgo.BeforeEach(func() {
 		namespace = "default"
 		fleetname = "e2etest"
-		memberClusterName1 = "kurator-member1"
-		memberClusterName2 = "kurator-member2"
-		kubeconfig1Path = "/root/.kube/kurator-member1.config"
-		kubeconfig2Path = "/root/.kube/kurator-member2.config"
+		memberClusterName = "kurator-member"
+		kubeconfigPath = "/root/.kube/kurator-member.config"
 
-		// build two secrets
-		kubeconfig1, readfileErr1 := os.ReadFile(kubeconfig1Path)
-		gomega.Expect(readfileErr1).ShouldNot(gomega.HaveOccurred())
-		data1 := make(map[string][]byte)
-		data1[memberClusterName1] = kubeconfig1
-		secret1 = resources.NewSecret(namespace, memberClusterName1, data1)
-
-		kubeconfig2, readfileErr2 := os.ReadFile(kubeconfig2Path)
-		gomega.Expect(readfileErr2).ShouldNot(gomega.HaveOccurred())
-		data2 := make(map[string][]byte)
-		data2[memberClusterName2] = kubeconfig2
-		secret2 = resources.NewSecret(namespace, memberClusterName2, data2)
+		// build secrets use member cluster kubeconfig
+		kubeconfig, readfileErr := os.ReadFile(kubeconfigPath)
+		gomega.Expect(readfileErr).ShouldNot(gomega.HaveOccurred())
+		data := make(map[string][]byte)
+		data[memberClusterName] = kubeconfig
+		secret = resources.NewSecret(namespace, memberClusterName, data)
 
 		// build two attachedclusters
-		secretKeyRef1 := clusterv1a1.SecretKeyRef{
-			Name: memberClusterName1,
-			Key:  memberClusterName1,
+		secretKeyRef := clusterv1a1.SecretKeyRef{
+			Name: memberClusterName,
+			Key:  memberClusterName,
 		}
-		secretKeyRef2 := clusterv1a1.SecretKeyRef{
-			Name: memberClusterName2,
-			Key:  memberClusterName2,
-		}
-		attachedcluster1 = resources.NewAttachedCluster(namespace, memberClusterName1, secretKeyRef1)
-		attachedcluster2 = resources.NewAttachedCluster(namespace, memberClusterName2, secretKeyRef2)
+		attachedcluster = resources.NewAttachedCluster(namespace, memberClusterName, secretKeyRef)
 	})
 
 	ginkgo.It("Create Fleet", func() {
 		// step 1.create secrets
-		secretCreateErr1 := resources.CreateSecret(kubeClient, secret1)
-		secretCreateErr2 := resources.CreateSecret(kubeClient, secret2)
-		gomega.Expect(secretCreateErr1).ShouldNot(gomega.HaveOccurred())
-		gomega.Expect(secretCreateErr2).ShouldNot(gomega.HaveOccurred())
+		secretCreateErr := resources.CreateSecret(kubeClient, secret)
+		gomega.Expect(secretCreateErr).ShouldNot(gomega.HaveOccurred())
 
 		// step 2.create attachedclusters
-		attachedCreateErr1 := resources.CreateAttachedCluster(kuratorClient, attachedcluster1)
-		attachedCreateErr2 := resources.CreateAttachedCluster(kuratorClient, attachedcluster2)
-		gomega.Expect(attachedCreateErr1).ShouldNot(gomega.HaveOccurred())
-		gomega.Expect(attachedCreateErr2).ShouldNot(gomega.HaveOccurred())
+		attachedCreateErr := resources.CreateAttachedCluster(kuratorClient, attachedcluster)
+		gomega.Expect(attachedCreateErr).ShouldNot(gomega.HaveOccurred())
 
 		time.Sleep(5 * time.Second)
 		// step 3.create fleet
 		clusters := []*corev1.ObjectReference{
 			{
-				Name: memberClusterName1,
-				Kind: "AttachedCluster",
-			},
-			{
-				Name: memberClusterName2,
+				Name: memberClusterName,
 				Kind: "AttachedCluster",
 			},
 		}
