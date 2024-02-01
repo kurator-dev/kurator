@@ -14,10 +14,6 @@ VERSION=$(echo "$COMMIT_ID" | grep -o '^[0-9]')
 
 sleep 5s
 
-VERSION=${VERSION} make docker
-kind load docker-image ghcr.io/kurator-dev/cluster-operator:${VERSION} --name kurator-host
-kind load docker-image ghcr.io/kurator-dev/fleet-manager:${VERSION} --name kurator-host
-
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
 kubectl create namespace cert-manager
@@ -34,6 +30,10 @@ notificationController:
 EOF
 
 sleep 5s
+
+VERSION=${VERSION} make docker
+kind load docker-image ghcr.io/kurator-dev/cluster-operator:${VERSION} --name kurator-host
+kind load docker-image ghcr.io/kurator-dev/fleet-manager:${VERSION} --name kurator-host
 
 VERSION=${VERSION} make gen-chart
 cd out/charts

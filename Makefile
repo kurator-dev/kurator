@@ -146,7 +146,8 @@ gen-chart: sync-crds
 
 .PHONY: test
 test: clean tidy
-	go test ./...
+	go test ./pkg/...
+	go test ./cmd/...
 
 .PHONY: clean
 clean:
