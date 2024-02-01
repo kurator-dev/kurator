@@ -49,7 +49,7 @@ const ControlplaneAnnotation = "fleet.kurator.dev/controlplane"
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:scope=Namespaced,categories=kurator-dev
+// +kubebuilder:resource:scope=Namespaced,categories=kurator-dev,path=fleets
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="Phase of the fleet"
 
