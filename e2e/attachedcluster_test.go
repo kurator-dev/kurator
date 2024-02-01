@@ -18,6 +18,7 @@ package e2e
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/onsi/ginkgo/v2"
@@ -42,7 +43,9 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		namespace = "default"
 		fleetname = "e2etest"
 		memberClusterName = "kurator-member"
-		kubeconfigPath = "/root/.kube/kurator-member.config"
+		homeDir, err := os.UserHomeDir()
+		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
+		kubeconfigPath = filepath.Join(homeDir, ".kube/kurator-member.config")
 
 		// build secrets use member cluster kubeconfig
 		kubeconfig, readfileErr := os.ReadFile(kubeconfigPath)
