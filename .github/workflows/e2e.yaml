@@ -16,7 +16,7 @@ jobs:
       - name: Build Clusters
         uses: helm/kind-action@v1.8.0
         with:
-          version: v0.18.0
+          version: v0.20.0
           install_only: true
       - name: Set Up Clusters
         run: |

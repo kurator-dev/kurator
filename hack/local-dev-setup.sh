@@ -14,7 +14,7 @@ ROOT_DIR=$(git rev-parse --show-toplevel)/hack
 KIND_CONFIGS_ROOT=${ROOT_DIR}/kind-configs
 source "${ROOT_DIR}"/util.sh
 
-KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.25.3"}
+KIND_VERSION=${KIND_VERSION:-"kindest/node:v1.27.3"}
 
 # variable define
 KUBECONFIG_PATH=${KUBECONFIG_PATH:-"${HOME}/.kube"}
