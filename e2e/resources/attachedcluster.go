@@ -63,3 +63,15 @@ func UpdateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a
 	}
 	return nil
 }
+
+func RemoveAttachedCluster(client kurator.Interface, namespace, name string) error {
+	err := client.ClusterV1alpha1().AttachedClusters(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			return err
+		}
+	}
+	return nil
+}

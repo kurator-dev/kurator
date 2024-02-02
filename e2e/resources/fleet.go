@@ -27,6 +27,7 @@ import (
 	kurator "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
 )
 
+// NewFleet will build a Fleet object.
 func NewFleet(namespace string, name string, clusters []*corev1.ObjectReference) *fleetv1a1.Fleet {
 	return &fleetv1a1.Fleet{
 		TypeMeta: metav1.TypeMeta{
@@ -61,6 +62,18 @@ func UpdateFleet(client kurator.Interface, fleet *fleetv1a1.Fleet) error {
 	_, err := client.FleetV1alpha1().Fleets(fleet.Namespace).Update(context.TODO(), fleet, metav1.UpdateOptions{})
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func RemoveFleet(client kurator.Interface, namespace, name string) error {
+	err := client.FleetV1alpha1().Fleets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			return err
+		}
 	}
 	return nil
 }

@@ -25,27 +25,20 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// NewSecret will build a secret object.
-func NewSecret(namespace string, name string, data map[string][]byte) *corev1.Secret {
-	return &corev1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "Secret",
-		},
+// NewNamespace will build a Namespace object.
+func NewNamespace(namespace string) *corev1.Namespace {
+	return &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
+			Name: namespace,
 		},
-		Data: data,
 	}
 }
 
-// CreateSecret create Secret.
-func CreateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
-	_, err := client.CoreV1().Secrets(secret.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{})
+func CreateNamespace(client kubernetes.Interface, namespace *corev1.Namespace) error {
+	_, err := client.CoreV1().Namespaces().Create(context.TODO(), namespace, metav1.CreateOptions{})
 	if err != nil {
 		if apierrors.IsAlreadyExists(err) {
-			return UpdateSecret(client, secret)
+			return nil
 		} else {
 			return err
 		}
@@ -53,17 +46,8 @@ func CreateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
 	return nil
 }
 
-// UpdateSecret update Secret
-func UpdateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
-	_, err := client.CoreV1().Secrets(secret.Namespace).Update(context.TODO(), secret, metav1.UpdateOptions{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func RemoveSecret(client kubernetes.Interface, namespace, name string) error {
-	err := client.CoreV1().Secrets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+func RemoveNamespace(client kubernetes.Interface, name string) error {
+	err := client.CoreV1().Namespaces().Delete(context.TODO(), name, metav1.DeleteOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil

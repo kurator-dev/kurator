@@ -17,6 +17,7 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"time"
@@ -24,9 +25,11 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"kurator.dev/kurator/e2e/resources"
 	clusterv1a1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
+	fleetv1a1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
@@ -40,12 +43,18 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 	)
 
 	ginkgo.BeforeEach(func() {
-		namespace = "default"
+		namespace = "e2e-test"
 		fleetname = "e2etest"
 		memberClusterName = "kurator-member"
 		homeDir, err := os.UserHomeDir()
 		gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 		kubeconfigPath = filepath.Join(homeDir, ".kube/kurator-member.config")
+
+		// create namespace for e2e test
+		e2eNamespace := resources.NewNamespace(namespace)
+		createNSErr := resources.CreateNamespace(kubeClient, e2eNamespace)
+		gomega.Expect(createNSErr).ShouldNot(gomega.HaveOccurred())
+		time.Sleep(3 * time.Second)
 
 		// build secrets use member cluster kubeconfig
 		kubeconfig, readfileErr := os.ReadFile(kubeconfigPath)
@@ -62,6 +71,20 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		attachedcluster = resources.NewAttachedCluster(namespace, memberClusterName, secretKeyRef)
 	})
 
+	ginkgo.AfterEach(func() {
+		fleerRemoveErr := resources.RemoveFleet(kuratorClient, namespace, fleetname)
+		gomega.Expect(fleerRemoveErr).ShouldNot(gomega.HaveOccurred())
+
+		attachedclusterRemoveErr := resources.RemoveAttachedCluster(kuratorClient, namespace, memberClusterName)
+		gomega.Expect(attachedclusterRemoveErr).ShouldNot(gomega.HaveOccurred())
+
+		secretRemoveErr := resources.RemoveSecret(kubeClient, namespace, memberClusterName)
+		gomega.Expect(secretRemoveErr).ShouldNot(gomega.HaveOccurred())
+
+		namespaceRemoveErr := resources.RemoveNamespace(kubeClient, namespace)
+		gomega.Expect(namespaceRemoveErr).ShouldNot(gomega.HaveOccurred())
+	})
+
 	ginkgo.It("Create Fleet", func() {
 		// step 1.create secrets
 		secretCreateErr := resources.CreateSecret(kubeClient, secret)
@@ -71,7 +94,7 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		attachedCreateErr := resources.CreateAttachedCluster(kuratorClient, attachedcluster)
 		gomega.Expect(attachedCreateErr).ShouldNot(gomega.HaveOccurred())
 
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 		// step 3.create fleet
 		clusters := []*corev1.ObjectReference{
 			{
@@ -82,5 +105,11 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		fleet := resources.NewFleet(namespace, fleetname, clusters)
 		fleetCreateErr := resources.CreateFleet(kuratorClient, fleet)
 		gomega.Expect(fleetCreateErr).ShouldNot(gomega.HaveOccurred())
+		time.Sleep(3 * time.Second)
+
+		// step 4.check fleet status
+		fleetPresentOnCluster, fleetGetErr := kuratorClient.FleetV1alpha1().Fleets(namespace).Get(context.TODO(), fleetname, metav1.GetOptions{})
+		gomega.Expect(fleetGetErr).ShouldNot(gomega.HaveOccurred())
+		gomega.Expect(fleetPresentOnCluster.Status.Phase).Should(gomega.Equal(fleetv1a1.ReadyPhase))
 	})
 })
