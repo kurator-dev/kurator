@@ -93,8 +93,10 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		// step 2.create attachedclusters
 		attachedCreateErr := resources.CreateAttachedCluster(kuratorClient, attachedcluster)
 		gomega.Expect(attachedCreateErr).ShouldNot(gomega.HaveOccurred())
+		resources.WaitAttachedClusterFitWith(kuratorClient, namespace, memberClusterName, func(attachedCluster *clusterv1a1.AttachedCluster) bool {
+			return attachedCluster.Status.Ready
+		})
 
-		time.Sleep(3 * time.Second)
 		// step 3.create fleet
 		clusters := []*corev1.ObjectReference{
 			{

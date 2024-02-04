@@ -19,6 +19,7 @@ package resources
 import (
 	"context"
 
+	"github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -74,4 +75,15 @@ func RemoveAttachedCluster(client kurator.Interface, namespace, name string) err
 		}
 	}
 	return nil
+}
+
+// WaitAttachedClusterFitWith wait AttachedCluster sync with fit func.
+func WaitAttachedClusterFitWith(client kurator.Interface, namespace, name string, fit func(attachedCluster *clusterv1a1.AttachedCluster) bool) {
+	gomega.Eventually(func() bool {
+		attachedClusterPresentOnCluster, err := client.ClusterV1alpha1().AttachedClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		if err != nil {
+			return false
+		}
+		return fit(attachedClusterPresentOnCluster)
+	}, pollTimeout, pollInterval).Should(gomega.Equal(true))
 }
