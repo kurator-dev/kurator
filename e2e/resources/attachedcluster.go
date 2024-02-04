@@ -77,7 +77,7 @@ func RemoveAttachedCluster(client kurator.Interface, namespace, name string) err
 	return nil
 }
 
-// WaitAttachedClusterFitWith wait AttachedCluster sync with fit func.
+// WaitAttachedClusterFitWith wait attachedCluster sync with fit func.
 func WaitAttachedClusterFitWith(client kurator.Interface, namespace, name string, fit func(attachedCluster *clusterv1a1.AttachedCluster) bool) {
 	gomega.Eventually(func() bool {
 		attachedClusterPresentOnCluster, err := client.ClusterV1alpha1().AttachedClusters(namespace).Get(context.TODO(), name, metav1.GetOptions{})
@@ -85,5 +85,5 @@ func WaitAttachedClusterFitWith(client kurator.Interface, namespace, name string
 			return false
 		}
 		return fit(attachedClusterPresentOnCluster)
-	}, pollTimeout, pollInterval).Should(gomega.Equal(true))
+	}, pollTimeout, pollIntervalInHostCluster).Should(gomega.Equal(true))
 }
