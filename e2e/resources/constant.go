@@ -19,8 +19,8 @@ package resources
 import "time"
 
 const (
-	// pollIntervalInHostCluster defines the interval time for a poll operation.
+	// pollIntervalInHostCluster defines the interval time for a poll operation in host cluster.
 	pollIntervalInHostCluster = 3 * time.Second
-	// pollTimeout defines the time after which the poll operation times out.
-	pollTimeout = 420 * time.Second
+	// pollTimeoutInHostCluster defines the time after which the poll operation times out in host cluster.
+	pollTimeoutInHostCluster = 90 * time.Second
 )
