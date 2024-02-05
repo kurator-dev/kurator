@@ -58,7 +58,13 @@ func CreateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a
 
 // UpdateAttachedCluster update AttachedCluster
 func UpdateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a1.AttachedCluster) error {
-	_, err := client.ClusterV1alpha1().AttachedClusters(attachedCluster.Namespace).Update(context.TODO(), attachedCluster, metav1.UpdateOptions{})
+	attachedClusterPresentOnCluster, attacattachedClusterGetErr := client.ClusterV1alpha1().AttachedClusters(attachedCluster.Namespace).Get(context.TODO(), attachedCluster.Name, metav1.GetOptions{})
+	if attacattachedClusterGetErr != nil {
+		return attacattachedClusterGetErr
+	}
+	DCattachedcluster := attachedClusterPresentOnCluster.DeepCopy()
+	DCattachedcluster.Spec = attachedCluster.Spec
+	_, err := client.ClusterV1alpha1().AttachedClusters(DCattachedcluster.Namespace).Update(context.TODO(), DCattachedcluster, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
@@ -85,5 +91,5 @@ func WaitAttachedClusterFitWith(client kurator.Interface, namespace, name string
 			return false
 		}
 		return fit(attachedClusterPresentOnCluster)
-	}, pollTimeout, pollIntervalInHostCluster).Should(gomega.Equal(true))
+	}, pollTimeoutInHostCluster, pollIntervalInHostCluster).Should(gomega.Equal(true))
 }

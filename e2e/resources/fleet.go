@@ -19,6 +19,7 @@ package resources
 import (
 	"context"
 
+	"github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,4 +77,15 @@ func RemoveFleet(client kurator.Interface, namespace, name string) error {
 		}
 	}
 	return nil
+}
+
+// WaitAttachedClusterFitWith wait fleet sync with fit func.
+func WaitFleetFitWith(client kurator.Interface, namespace, name string, fit func(fleeet *fleetv1a1.Fleet) bool) {
+	gomega.Eventually(func() bool {
+		fleetPresentOnCluster, err := client.FleetV1alpha1().Fleets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+		if err != nil {
+			return false
+		}
+		return fit(fleetPresentOnCluster)
+	}, pollTimeoutInHostCluster, pollIntervalInHostCluster).Should(gomega.Equal(true))
 }
