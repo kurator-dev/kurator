@@ -316,8 +316,20 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 }
 
 func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
-	if err := a.deleteResourcesInMemberClusters(ctx, app, fleet); err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to delete rollout resource in cluster")
+	log := ctrl.LoggerFrom(ctx)
+
+	fleetKey := generateFleetKey(app)
+	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("delete failed, fleet does not exist", "fleet", fleetKey)
+			return ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
+		}
+		log.Error(err, "delete failed, fleet does not found", "fleet", fleetKey)
+		return ctrl.Result{}, err
+	}
+
+	if deleteErr := a.deleteResourcesInMemberClusters(ctx, app, fleet); deleteErr != nil {
+		return ctrl.Result{}, errors.Wrapf(deleteErr, "failed to delete rollout resource in cluster")
 	}
 
 	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
