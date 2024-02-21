@@ -25,6 +25,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apiserver/pkg/storage/names"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1beta1"
 	controlplanev1 "sigs.k8s.io/cluster-api/controlplane/kubeadm/api/v1beta1"
 	"sigs.k8s.io/cluster-api/util/conditions"
@@ -234,7 +235,9 @@ func generateScaleUpHostsKey(customCluster *v1alpha1.CustomCluster) client.Objec
 }
 
 func generateScaleUpHostsName(customCluster *v1alpha1.CustomCluster) string {
-	return customCluster.Name + "-" + ClusterHostsName + "-scale-up"
+	scaleUpHostName := customCluster.Name + "-" + ClusterHostsName + "-scale-up"
+	scaleUpHostName = names.SimpleNameGenerator.GenerateName(scaleUpHostName)
+	return scaleUpHostName
 }
 
 // generateScaleDownManageCMD generate a kubespray cmd to delete the node from the list of nodesNeedDelete.

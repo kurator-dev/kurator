@@ -25,6 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apiserver/pkg/storage/names"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
@@ -45,6 +46,7 @@ func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetap
 	}
 	// TODO: generate a valid name
 	podName := fleet.Name + "-init"
+	podName = names.SimpleNameGenerator.GenerateName(podName)
 	namespace := fleet.Namespace
 
 	clusterKey := types.NamespacedName{Name: podName, Namespace: namespace}
@@ -155,6 +157,7 @@ func (f *FleetManager) deleteControlPlane(ctx context.Context, fleet *fleetapi.F
 		return nil
 	}
 	podName := fleet.Name + "-delete"
+	podName = names.SimpleNameGenerator.GenerateName(podName)
 	namespace := fleet.Namespace
 
 	clusterKey := types.NamespacedName{Name: podName, Namespace: namespace}
