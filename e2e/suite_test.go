@@ -40,6 +40,7 @@ var (
 	kuratorContext string
 
 	namespace         string
+	e2ePrefix         string
 	memberClusterName string
 	kubeconfigPath    string
 	secret            *corev1.Secret
@@ -67,6 +68,7 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())
 
 	namespace = "e2e-test"
+	e2ePrefix = "e2e-"
 	memberClusterName = "kurator-member"
 	homeDir, err := os.UserHomeDir()
 	gomega.Expect(err).ShouldNot(gomega.HaveOccurred())

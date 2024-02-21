@@ -17,6 +17,8 @@ limitations under the License.
 package e2e
 
 import (
+	"time"
+
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -27,11 +29,13 @@ import (
 
 var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 	var (
-		fleetname string
-		fleet     *fleetv1a1.Fleet
+		fleetNamespace string
+		fleetname      string
+		fleet          *fleetv1a1.Fleet
 	)
 
 	ginkgo.BeforeEach(func() {
+		fleetNamespace = e2ePrefix + resources.RandomNamespace(4)
 		fleetname = "e2e"
 		// build fleet
 		clusters := []*corev1.ObjectReference{
@@ -40,11 +44,11 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 				Kind: "AttachedCluster",
 			},
 		}
-		fleet = resources.NewFleet(namespace, fleetname, clusters)
+		fleet = resources.NewFleet(fleetNamespace, fleetname, clusters)
 	})
 
 	ginkgo.AfterEach(func() {
-		fleerRemoveErr := resources.RemoveFleet(kuratorClient, namespace, fleetname)
+		fleerRemoveErr := resources.RemoveFleet(kuratorClient, fleetNamespace, fleetname)
 		gomega.Expect(fleerRemoveErr).ShouldNot(gomega.HaveOccurred())
 
 		attachedclusterRemoveErr := resources.RemoveAttachedCluster(kuratorClient, namespace, memberClusterName)
@@ -53,15 +57,20 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		secretRemoveErr := resources.RemoveSecret(kubeClient, namespace, memberClusterName)
 		gomega.Expect(secretRemoveErr).ShouldNot(gomega.HaveOccurred())
 
-		namespaceRemoveErr := resources.RemoveNamespace(kubeClient, namespace)
+		namespaceRemoveErr := resources.RemoveNamespace(kubeClient, fleetNamespace)
 		gomega.Expect(namespaceRemoveErr).ShouldNot(gomega.HaveOccurred())
 	})
 
 	ginkgo.It("Create Fleet", func() {
+		// create a namespace for fleet e2e test
+		fleetNamespaceCfg := resources.NewNamespace(fleetNamespace)
+		createNSErr := resources.CreateNamespace(kubeClient, fleetNamespaceCfg)
+		gomega.Expect(createNSErr).ShouldNot(gomega.HaveOccurred())
+		time.Sleep(3 * time.Second)
 		// create fleet and checkout fleet status
 		fleetCreateErr := resources.CreateFleet(kuratorClient, fleet)
 		gomega.Expect(fleetCreateErr).ShouldNot(gomega.HaveOccurred())
-		resources.WaitFleetFitWith(kuratorClient, namespace, fleetname, func(fleet *fleetv1a1.Fleet) bool {
+		resources.WaitFleetFitWith(kuratorClient, fleetNamespace, fleetname, func(fleet *fleetv1a1.Fleet) bool {
 			return fleet.Status.Phase == fleetv1a1.ReadyPhase
 		})
 	})
