@@ -99,7 +99,7 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 
 	attachedCreateErr := resources.CreateAttachedCluster(kuratorClient, attachedcluster)
 	gomega.Expect(attachedCreateErr).ShouldNot(gomega.HaveOccurred())
-	resources.WaitAttachedClusterFitWith(kuratorClient, namespace, memberClusterName, func(attachedCluster *clusterv1a1.AttachedCluster) bool {
+	resources.WaitAttachedClusterReady(kuratorClient, namespace, memberClusterName, func(attachedCluster *clusterv1a1.AttachedCluster) bool {
 		return attachedCluster.Status.Ready
 	})
 })

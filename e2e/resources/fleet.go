@@ -80,7 +80,7 @@ func RemoveFleet(client kurator.Interface, namespace, name string) error {
 }
 
 // WaitAttachedClusterFitWith wait fleet sync with fit func.
-func WaitFleetFitWith(client kurator.Interface, namespace, name string, fit func(fleeet *fleetv1a1.Fleet) bool) {
+func WaitFleetReady(client kurator.Interface, namespace, name string, fit func(fleeet *fleetv1a1.Fleet) bool) {
 	gomega.Eventually(func() bool {
 		fleetPresentOnCluster, err := client.FleetV1alpha1().Fleets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 		if err != nil {
