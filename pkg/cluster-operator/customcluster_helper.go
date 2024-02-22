@@ -283,11 +283,15 @@ func generateClusterConfigKey(customCluster *v1alpha1.CustomCluster) client.Obje
 }
 
 func generateClusterHostsName(customCluster *v1alpha1.CustomCluster) string {
-	return customCluster.Name + "-" + ClusterHostsName
+	hostName := customCluster.Name + "-" + ClusterHostsName
+	hostName = names.SimpleNameGenerator.GenerateName(hostName)
+	return hostName
 }
 
 func generateClusterConfigName(customCluster *v1alpha1.CustomCluster) string {
-	return customCluster.Name + "-" + ClusterConfigName
+	configName := customCluster.Name + "-" + ClusterConfigName
+	configName = names.SimpleNameGenerator.GenerateName(configName)
+	return configName
 }
 
 func generateOwnerRefFromCustomCluster(customCluster *v1alpha1.CustomCluster) metav1.OwnerReference {
