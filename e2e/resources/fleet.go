@@ -46,7 +46,7 @@ func NewFleet(namespace string, name string, clusters []*corev1.ObjectReference)
 	}
 }
 
-// CreateAttachedCluster create AttachedCluster.
+// CreateAttachedCluster create or update Fleet.
 func CreateOrUpdateFleet(client kurator.Interface, fleet *fleetv1a1.Fleet) error {
 	_, createErr := client.FleetV1alpha1().Fleets(fleet.GetNamespace()).Create(context.TODO(), fleet, metav1.CreateOptions{})
 	if createErr != nil {

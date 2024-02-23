@@ -41,7 +41,7 @@ func NewSecret(namespace string, name string, data map[string][]byte) *corev1.Se
 	}
 }
 
-// CreateSecret create Secret.
+// CreateSecret create or update Secret.
 func CreateOrUpdateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
 	_, createErr := client.CoreV1().Secrets(secret.GetNamespace()).Create(context.TODO(), secret, metav1.CreateOptions{})
 	if createErr != nil {

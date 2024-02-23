@@ -44,7 +44,7 @@ func NewAttachedCluster(namespace string, name string, config clusterv1a1.Secret
 	}
 }
 
-// CreateAttachedCluster create AttachedCluster.
+// CreateAttachedCluster create or update AttachedCluster.
 func CreateOrUpdateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a1.AttachedCluster) error {
 	_, createErr := client.ClusterV1alpha1().AttachedClusters(attachedCluster.GetNamespace()).Create(context.TODO(), attachedCluster, metav1.CreateOptions{})
 	if createErr != nil {
