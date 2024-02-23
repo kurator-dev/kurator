@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	fleetv1a1 "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 	kurator "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
@@ -46,23 +47,25 @@ func NewFleet(namespace string, name string, clusters []*corev1.ObjectReference)
 }
 
 // CreateAttachedCluster create AttachedCluster.
-func CreateFleet(client kurator.Interface, fleet *fleetv1a1.Fleet) error {
-	_, err := client.FleetV1alpha1().Fleets(fleet.Namespace).Create(context.TODO(), fleet, metav1.CreateOptions{})
-	if err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			return UpdateFleet(client, fleet)
+func CreateOrUpdateFleet(client kurator.Interface, fleet *fleetv1a1.Fleet) error {
+	_, createErr := client.FleetV1alpha1().Fleets(fleet.GetNamespace()).Create(context.TODO(), fleet, metav1.CreateOptions{})
+	if createErr != nil {
+		if apierrors.IsAlreadyExists(createErr) {
+			originalFleet, getErr := client.FleetV1alpha1().Fleets(fleet.GetNamespace()).Get(context.TODO(), fleet.GetName(), metav1.GetOptions{})
+			if getErr != nil {
+				return getErr
+			}
+			fleet.ResourceVersion = originalFleet.ResourceVersion
+			fleetPatchData, createPatchErr := CreatePatchData(originalFleet, fleet)
+			if createPatchErr != nil {
+				return createPatchErr
+			}
+			if _, patchErr := client.FleetV1alpha1().Fleets(fleet.GetNamespace()).Patch(context.TODO(), fleet.GetName(), types.MergePatchType, fleetPatchData, metav1.PatchOptions{}); patchErr != nil {
+				return patchErr
+			}
 		} else {
-			return err
+			return createErr
 		}
-	}
-	return nil
-}
-
-// UpdateAttachedCluster update AttachedCluster
-func UpdateFleet(client kurator.Interface, fleet *fleetv1a1.Fleet) error {
-	_, err := client.FleetV1alpha1().Fleets(fleet.Namespace).Update(context.TODO(), fleet, metav1.UpdateOptions{})
-	if err != nil {
-		return err
 	}
 	return nil
 }

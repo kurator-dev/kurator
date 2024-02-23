@@ -22,6 +22,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -41,23 +42,26 @@ func NewSecret(namespace string, name string, data map[string][]byte) *corev1.Se
 }
 
 // CreateSecret create Secret.
-func CreateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
-	_, err := client.CoreV1().Secrets(secret.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{})
-	if err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			return UpdateSecret(client, secret)
+func CreateOrUpdateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
+	_, createErr := client.CoreV1().Secrets(secret.GetNamespace()).Create(context.TODO(), secret, metav1.CreateOptions{})
+	if createErr != nil {
+		if apierrors.IsAlreadyExists(createErr) {
+			originalSecret, getErr := client.CoreV1().Secrets(secret.GetNamespace()).Get(context.TODO(), secret.GetName(), metav1.GetOptions{})
+			if getErr != nil {
+				return getErr
+			}
+			secret.ResourceVersion = originalSecret.ResourceVersion
+			secretPatchData, createPatchErr := CreatePatchData(originalSecret, secret)
+			if createPatchErr != nil {
+				return createPatchErr
+			}
+			_, patchErr := client.CoreV1().Secrets(secret.GetNamespace()).Patch(context.TODO(), secret.GetName(), types.StrategicMergePatchType, secretPatchData, metav1.PatchOptions{})
+			if patchErr != nil {
+				return patchErr
+			}
 		} else {
-			return err
+			return createErr
 		}
-	}
-	return nil
-}
-
-// UpdateSecret update Secret
-func UpdateSecret(client kubernetes.Interface, secret *corev1.Secret) error {
-	_, err := client.CoreV1().Secrets(secret.Namespace).Update(context.TODO(), secret, metav1.UpdateOptions{})
-	if err != nil {
-		return err
 	}
 	return nil
 }
