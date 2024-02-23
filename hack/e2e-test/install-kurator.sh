@@ -10,9 +10,7 @@ KUBECONFIG_PATH=${KUBECONFIG_PATH:-"${HOME}/.kube"}
 MAIN_KUBECONFIG=${MAIN_KUBECONFIG:-"${KUBECONFIG_PATH}/kurator-host.config"}
 export KUBECONFIG=${MAIN_KUBECONFIG}
 COMMIT_ID=$(git rev-parse --short HEAD)
-VERSION=$(echo "$COMMIT_ID" | grep -o '^[0-9]')
-
-sleep 10s 
+VERSION=$(echo "$COMMIT_ID" | sed 's/[^0-9]//g') 
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
