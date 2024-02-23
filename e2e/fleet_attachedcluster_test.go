@@ -70,7 +70,7 @@ var _ = ginkgo.Describe("[AttachedClusters] AttachedClusters testing", func() {
 		// create fleet and checkout fleet status
 		fleetCreateErr := resources.CreateFleet(kuratorClient, fleet)
 		gomega.Expect(fleetCreateErr).ShouldNot(gomega.HaveOccurred())
-		resources.WaitFleetFitWith(kuratorClient, fleetNamespace, fleetname, func(fleet *fleetv1a1.Fleet) bool {
+		resources.WaitFleetReady(kuratorClient, fleetNamespace, fleetname, func(fleet *fleetv1a1.Fleet) bool {
 			return fleet.Status.Phase == fleetv1a1.ReadyPhase
 		})
 	})
