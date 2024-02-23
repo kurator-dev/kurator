@@ -12,7 +12,7 @@ export KUBECONFIG=${MAIN_KUBECONFIG}
 COMMIT_ID=$(git rev-parse --short HEAD)
 VERSION=$(echo "$COMMIT_ID" | grep -o '^[0-9]')
 
-sleep 5s
+sleep 10s 
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
