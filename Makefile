@@ -105,7 +105,7 @@ mod-download-go:
 
 .PHONY: mirror-licenses
 mirror-licenses: mod-download-go; \
-	go install istio.io/tools/cmd/license-lint@latest; \
+	go install istio.io/tools/cmd/license-lint@v0.0.0-20240221165422-57f6bfb4cd73;  \
 	rm -fr licenses; \
 	license-lint --mirror
 
