@@ -50,8 +50,16 @@ func CreateOrUpdateSecret(client kubernetes.Interface, secret *corev1.Secret) er
 			if getErr != nil {
 				return getErr
 			}
-			secret.ResourceVersion = originalSecret.ResourceVersion
-			secretPatchData, createPatchErr := CreatePatchData(originalSecret, secret)
+			modifiedObjectMeta := ModifiedObjectMeta(originalSecret.ObjectMeta, secret.ObjectMeta)
+			oldSecret := corev1.Secret{
+				ObjectMeta: originalSecret.ObjectMeta,
+				Data:       originalSecret.Data,
+			}
+			modSecret := corev1.Secret{
+				ObjectMeta: modifiedObjectMeta,
+				Data:       secret.Data,
+			}
+			secretPatchData, createPatchErr := CreatePatchData(oldSecret, modSecret)
 			if createPatchErr != nil {
 				return createPatchErr
 			}

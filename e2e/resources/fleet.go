@@ -55,8 +55,16 @@ func CreateOrUpdateFleet(client kurator.Interface, fleet *fleetv1a1.Fleet) error
 			if getErr != nil {
 				return getErr
 			}
-			fleet.ResourceVersion = originalFleet.ResourceVersion
-			fleetPatchData, createPatchErr := CreatePatchData(originalFleet, fleet)
+			modifiedObjectMeta := ModifiedObjectMeta(originalFleet.ObjectMeta, fleet.ObjectMeta)
+			oldFleet := fleetv1a1.Fleet{
+				ObjectMeta: originalFleet.ObjectMeta,
+				Spec:       originalFleet.Spec,
+			}
+			modFleet := fleetv1a1.Fleet{
+				ObjectMeta: modifiedObjectMeta,
+				Spec:       fleet.Spec,
+			}
+			fleetPatchData, createPatchErr := CreatePatchData(oldFleet, modFleet)
 			if createPatchErr != nil {
 				return createPatchErr
 			}

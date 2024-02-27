@@ -53,8 +53,16 @@ func CreateOrUpdateAttachedCluster(client kurator.Interface, attachedCluster *cl
 			if getErr != nil {
 				return getErr
 			}
-			attachedCluster.ResourceVersion = originalAttachedCluster.ResourceVersion
-			attachedClusterPatchData, createPatchErr := CreatePatchData(originalAttachedCluster, attachedCluster)
+			modifiedObjectMeta := ModifiedObjectMeta(originalAttachedCluster.ObjectMeta, attachedCluster.ObjectMeta)
+			oldAttachedCluster := clusterv1a1.AttachedCluster{
+				ObjectMeta: originalAttachedCluster.ObjectMeta,
+				Spec:       originalAttachedCluster.Spec,
+			}
+			modAttachedCluster := clusterv1a1.AttachedCluster{
+				ObjectMeta: modifiedObjectMeta,
+				Spec:       attachedCluster.Spec,
+			}
+			attachedClusterPatchData, createPatchErr := CreatePatchData(oldAttachedCluster, modAttachedCluster)
 			if createPatchErr != nil {
 				return createPatchErr
 			}

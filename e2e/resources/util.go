@@ -20,14 +20,15 @@ import (
 	"encoding/json"
 
 	jsonpatch "github.com/evanphx/json-patch"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func CreatePatchData(originalAttachedCluster, modifiedAttachedCluster interface{}) ([]byte, error) {
-	originalData, originalErr := json.Marshal(originalAttachedCluster)
+func CreatePatchData(original, modified interface{}) ([]byte, error) {
+	originalData, originalErr := json.Marshal(original)
 	if originalErr != nil {
 		return nil, originalErr
 	}
-	modifiedData, modifiedErr := json.Marshal(modifiedAttachedCluster)
+	modifiedData, modifiedErr := json.Marshal(modified)
 	if modifiedErr != nil {
 		return nil, modifiedErr
 	}
@@ -36,4 +37,34 @@ func CreatePatchData(originalAttachedCluster, modifiedAttachedCluster interface{
 		return nil, createErr
 	}
 	return patchData, nil
+}
+
+func ModifiedObjectMeta(original, modified metav1.ObjectMeta) metav1.ObjectMeta {
+	if modified.Labels == nil {
+		modified.Labels = original.Labels
+	} else {
+		for k, v := range original.Labels {
+			if modified.Labels[k] == "" {
+				modified.Labels[k] = v
+			}
+		}
+	}
+
+	if modified.Annotations == nil {
+		modified.Annotations = original.Annotations
+	} else {
+		for k, v := range original.Annotations {
+			if modified.Annotations[k] == "" {
+				modified.Annotations[k] = v
+			}
+		}
+	}
+
+	if modified.Finalizers == nil {
+		modified.Finalizers = original.Finalizers
+	}
+	if modified.ResourceVersion == "" {
+		modified.ResourceVersion = original.ResourceVersion
+	}
+	return modified
 }
