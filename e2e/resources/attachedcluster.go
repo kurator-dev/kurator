@@ -22,6 +22,7 @@ import (
 	"github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	clusterv1a1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	kurator "kurator.dev/kurator/pkg/client-go/generated/clientset/versioned"
@@ -43,30 +44,35 @@ func NewAttachedCluster(namespace string, name string, config clusterv1a1.Secret
 	}
 }
 
-// CreateAttachedCluster create AttachedCluster.
-func CreateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a1.AttachedCluster) error {
-	_, err := client.ClusterV1alpha1().AttachedClusters(attachedCluster.Namespace).Create(context.TODO(), attachedCluster, metav1.CreateOptions{})
-	if err != nil {
-		if apierrors.IsAlreadyExists(err) {
-			return UpdateAttachedCluster(client, attachedCluster)
+// CreateAttachedCluster create or update AttachedCluster.
+func CreateOrUpdateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a1.AttachedCluster) error {
+	_, createErr := client.ClusterV1alpha1().AttachedClusters(attachedCluster.GetNamespace()).Create(context.TODO(), attachedCluster, metav1.CreateOptions{})
+	if createErr != nil {
+		if apierrors.IsAlreadyExists(createErr) {
+			originalAttachedCluster, getErr := client.ClusterV1alpha1().AttachedClusters(attachedCluster.GetNamespace()).Get(context.TODO(), attachedCluster.GetName(), metav1.GetOptions{})
+			if getErr != nil {
+				return getErr
+			}
+			modifiedObjectMeta := ModifiedObjectMeta(originalAttachedCluster.ObjectMeta, attachedCluster.ObjectMeta)
+			oldAttachedCluster := clusterv1a1.AttachedCluster{
+				ObjectMeta: originalAttachedCluster.ObjectMeta,
+				Spec:       originalAttachedCluster.Spec,
+			}
+			modAttachedCluster := clusterv1a1.AttachedCluster{
+				ObjectMeta: modifiedObjectMeta,
+				Spec:       attachedCluster.Spec,
+			}
+			attachedClusterPatchData, createPatchErr := CreatePatchData(oldAttachedCluster, modAttachedCluster)
+			if createPatchErr != nil {
+				return createPatchErr
+			}
+			_, patchErr := client.ClusterV1alpha1().AttachedClusters(attachedCluster.GetNamespace()).Patch(context.TODO(), attachedCluster.GetName(), types.MergePatchType, attachedClusterPatchData, metav1.PatchOptions{})
+			if patchErr != nil {
+				return patchErr
+			}
 		} else {
-			return err
+			return createErr
 		}
-	}
-	return nil
-}
-
-// UpdateAttachedCluster update AttachedCluster
-func UpdateAttachedCluster(client kurator.Interface, attachedCluster *clusterv1a1.AttachedCluster) error {
-	attachedClusterPresentOnCluster, attacattachedClusterGetErr := client.ClusterV1alpha1().AttachedClusters(attachedCluster.Namespace).Get(context.TODO(), attachedCluster.Name, metav1.GetOptions{})
-	if attacattachedClusterGetErr != nil {
-		return attacattachedClusterGetErr
-	}
-	DCattachedcluster := attachedClusterPresentOnCluster.DeepCopy()
-	DCattachedcluster.Spec = attachedCluster.Spec
-	_, err := client.ClusterV1alpha1().AttachedClusters(DCattachedcluster.Namespace).Update(context.TODO(), DCattachedcluster, metav1.UpdateOptions{})
-	if err != nil {
-		return err
 	}
 	return nil
 }
