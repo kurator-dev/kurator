@@ -328,7 +328,10 @@ func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicati
 	fleetKey := generateFleetKey(app)
 	fleet := &fleetapi.Fleet{}
 	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
-		log.Error(err, "failed to find fleet", "fleet", fleetKey)
+		if apierrors.IsNotFound(err) {
+			log.Info("fleet does not exist", "fleet", fleetKey)
+		}
+		log.Info("failed to get fleet", "fleet", fleetKey, "error", err)
 	} else {
 		if deleteErr := a.deleteResourcesInMemberClusters(ctx, app, fleet); deleteErr != nil {
 			return ctrl.Result{}, errors.Wrapf(deleteErr, "failed to delete rollout resource in member clusters")
