@@ -71,6 +71,10 @@ func main() {
 	clusterApiVersion := env("CLUSTER_API_PROVIDER_VERSION", "v1.2.5")
 	awsProviderVersion := env("AWS_PROVIDER_VERSION", "v2.0.0")
 
+	if err := os.MkdirAll(crdOutputDir, 0755); err != nil {
+		log.Fatalf("MkdirAll %s got error %+v", crdOutputDir, err)
+	}
+
 	genCapiCore(crdOutputDir, clusterApiVersion)
 	genCapiBootstrap(crdOutputDir, clusterApiVersion)
 	genCapiControlplane(crdOutputDir, clusterApiVersion)
