@@ -41,8 +41,11 @@ util::create_cluster "${MEMBER_CLUSTER_1_NAME}" "${MEMBER_CLUSTER_1_KUBECONFIG}"
 util::create_cluster "${MEMBER_CLUSTER_2_NAME}" "${MEMBER_CLUSTER_2_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member2.yaml
 
 util::check_clusters_ready "${MAIN_KUBECONFIG}" "${HOST_CLUSTER_NAME}"
+sleep 5
 util::check_clusters_ready "${MEMBER_CLUSTER_1_KUBECONFIG}" "${MEMBER_CLUSTER_1_NAME}"
+sleep 5
 util::check_clusters_ready "${MEMBER_CLUSTER_2_KUBECONFIG}" "${MEMBER_CLUSTER_2_NAME}"
+sleep 5
 
 # connecting networks between primary, remote1 and remote2 clusters
 echo "connect remote1 <-> remote2"
