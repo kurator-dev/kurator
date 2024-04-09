@@ -354,3 +354,12 @@ EOF
     sleep 3
   done
 }
+
+# https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux
+function util::sed_in_place() {
+    local regx=${1}
+    local files=${2}
+    for f in $files; do
+      sed -i'.bak' "$regx" "$f" && rm -f "$f.bak"
+    done
+}

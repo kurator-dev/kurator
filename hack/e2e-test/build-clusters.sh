@@ -38,9 +38,7 @@ util::create_cluster "${HOST_CLUSTER_NAME}" "${MAIN_KUBECONFIG}" "${KIND_VERSION
 util::create_cluster "${MEMBER_CLUSTER_NAME}" "${MEMBER_CLUSTER_KUBECONFIG}" "${KIND_VERSION}" "${TEMP_PATH}" "${TEMP_PATH}"/member1.yaml
 
 util::check_clusters_ready "${MAIN_KUBECONFIG}" "${HOST_CLUSTER_NAME}"
-sleep 5s
 util::check_clusters_ready "${MEMBER_CLUSTER_KUBECONFIG}" "${MEMBER_CLUSTER_NAME}"
-sleep 10s
 
 # connecting networks between primary, remote clusters
 echo "connect primary <-> remote"
