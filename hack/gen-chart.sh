@@ -8,6 +8,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 
 OUT_BASE_PATH=${REPO_ROOT}/out
 CHART_OUT_PATH=${OUT_BASE_PATH}/charts
+HELM_CHART_NAME=${HELM_CHART_NAME:-}
 
 rm -rf "${OUT_BASE_PATH}"/charts
 mkdir -p "${OUT_BASE_PATH}"/charts
