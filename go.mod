@@ -33,7 +33,7 @@ require (
 	github.com/go-logr/logr v1.3.0
 	github.com/gosuri/uitable v0.0.4
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/karmada-io/karmada v1.4.2
+	github.com/karmada-io/karmada v1.8.0
 	github.com/onsi/ginkgo/v2 v2.15.0
 	github.com/onsi/gomega v1.30.0
 	github.com/pkg/errors v0.9.1
@@ -56,7 +56,7 @@ require (
 	istio.io/istio v0.0.0-20231011021742-2dddcc9c9238
 	istio.io/pkg v0.0.0-20230524020242-1015535057be
 	k8s.io/api v0.27.8
-	k8s.io/apiextensions-apiserver v0.27.3
+	k8s.io/apiextensions-apiserver v0.27.8
 	k8s.io/apimachinery v0.28.3
 	k8s.io/apiserver v0.27.8
 	k8s.io/cli-runtime v0.27.8
