@@ -49,7 +49,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tektoncd/pipeline v0.55.0
 	github.com/vmware-tanzu/velero v1.11.1
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	helm.sh/helm/v3 v3.12.3
 	istio.io/api v0.0.0-20231006162241-350617755635
