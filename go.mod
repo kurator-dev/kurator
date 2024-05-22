@@ -23,6 +23,7 @@ require (
 	github.com/awslabs/goformation/v4 v4.19.5
 	github.com/cert-manager/cert-manager v1.10.0
 	github.com/coreos/go-semver v0.3.0
+	github.com/evanphx/json-patch v5.6.0+incompatible
 	github.com/fluxcd/flagger v1.34.0
 	github.com/fluxcd/helm-controller/api v0.32.2
 	github.com/fluxcd/kustomize-controller/api v1.0.0-rc.1
@@ -117,7 +118,6 @@ require (
 	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
 	github.com/envoyproxy/go-control-plane v0.11.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.2 // indirect
-	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect

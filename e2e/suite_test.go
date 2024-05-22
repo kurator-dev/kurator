@@ -94,10 +94,10 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 	}
 	attachedcluster = resources.NewAttachedCluster(namespace, memberClusterName, secretKeyRef)
 
-	secretCreateErr := resources.CreateSecret(kubeClient, secret)
+	secretCreateErr := resources.CreateOrUpdateSecret(kubeClient, secret)
 	gomega.Expect(secretCreateErr).ShouldNot(gomega.HaveOccurred())
 
-	attachedCreateErr := resources.CreateAttachedCluster(kuratorClient, attachedcluster)
+	attachedCreateErr := resources.CreateOrUpdateAttachedCluster(kuratorClient, attachedcluster)
 	gomega.Expect(attachedCreateErr).ShouldNot(gomega.HaveOccurred())
 	resources.WaitAttachedClusterReady(kuratorClient, namespace, memberClusterName, func(attachedCluster *clusterv1a1.AttachedCluster) bool {
 		return attachedCluster.Status.Ready
