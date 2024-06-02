@@ -381,7 +381,7 @@ func RenderClusterStorage(
 	})
 }
 
-func RendeFlagger(
+func RenderFlagger(
 	fsys fs.FS,
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
@@ -412,7 +412,7 @@ func RendeFlagger(
 	})
 }
 
-func RendeRolloutTestloader(
+func RenderRolloutTestloader(
 	fsys fs.FS,
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
