@@ -55,3 +55,7 @@ You should see output resembling:
   "platform": "linux/amd64"
 }
 ```
+
+## Playground
+
+Kurator uses killercoda to provide [Kurator install demo](https://killercoda.com/965010e0-4f60-4a28-bf27-597d3kurator/scenario/install-kurator), allowing users to experience hands-on operations.
