@@ -47,7 +47,7 @@ func (f *FleetManager) reconcileFlaggerPlugin(ctx context.Context, fleet *fleeta
 	var resources kube.ResourceList
 
 	for key, cluster := range fleetClusters {
-		b, err := plugin.RendeFlagger(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
+		b, err := plugin.RenderFlagger(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
@@ -65,7 +65,7 @@ func (f *FleetManager) reconcileFlaggerPlugin(ctx context.Context, fleet *fleeta
 
 		// install public testloader if needed
 		if flaggerCfg.PublicTestloader {
-			b, err := plugin.RendeRolloutTestloader(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
+			b, err := plugin.RenderRolloutTestloader(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 				Name:       key.Name,
 				SecretName: cluster.Secret,
 				SecretKey:  cluster.SecretKey,

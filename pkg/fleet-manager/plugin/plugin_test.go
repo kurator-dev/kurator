@@ -587,7 +587,7 @@ func TestRendeFlagger(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RendeFlagger(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+			got, err := RenderFlagger(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
@@ -630,7 +630,7 @@ func TestRendeRolloutTestloader(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := RendeRolloutTestloader(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+			got, err := RenderRolloutTestloader(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
