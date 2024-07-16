@@ -172,14 +172,14 @@ func (a *ApplicationManager) reconcileRolloutSyncStatus(ctx context.Context,
 	fleet *fleetapi.Fleet,
 	syncPolicy *applicationapi.ApplicationSyncPolicy,
 	policyName string,
-) (map[string]*applicationapi.RolloutStatus, ctrl.Result, error) {
+) (map[string]*applicationapi.RolloutStatus, error) {
 	log := ctrl.LoggerFrom(ctx)
 
 	// depend on fleet and cluster selector get destination clusters
 	destinationClusters, err := a.fetchRolloutClusters(ctx, app, a.Client, fleet, syncPolicy)
 	if err != nil {
 		log.Error(err, "failed to fetch destination clusters for syncPolicy")
-		return nil, ctrl.Result{}, err
+		return nil, err
 	}
 
 	rolloutStatus := map[string]*applicationapi.RolloutStatus{}
@@ -194,7 +194,7 @@ func (a *ApplicationManager) reconcileRolloutSyncStatus(ctx context.Context,
 		}
 		// Use the client of the target cluster to get the status of Flagger canary resources
 		if err := fleetClusterClient.Get(ctx, canaryNamespacedName, canary); err != nil {
-			return nil, ctrl.Result{}, errors.Wrapf(err, "failed to get canary %s in %s", canaryNamespacedName.Name, clusterKey.Name)
+			return nil, errors.Wrapf(err, "failed to get canary %s in %s", canaryNamespacedName.Name, clusterKey.Name)
 		}
 
 		if status, exists := rolloutStatus[name]; exists {
@@ -211,7 +211,7 @@ func (a *ApplicationManager) reconcileRolloutSyncStatus(ctx context.Context,
 	}
 
 	log.Info("finish get rollout status")
-	return rolloutStatus, ctrl.Result{RequeueAfter: StatusSyncInterval}, nil
+	return rolloutStatus, nil
 }
 
 func (a *ApplicationManager) deleteResourcesInMemberClusters(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) error {
@@ -274,7 +274,11 @@ func enableIstioSidecarInjection(ctx context.Context, kubeClient client.Client, 
 			if createErr := kubeClient.Create(ctx, ns); createErr != nil {
 				return errors.Wrapf(createErr, "failed to create namespace %s", namespacedName.Namespace)
 			}
+		} else {
+			log.Error(err, "failed to get namespace %s", namespacedName.Namespace)
+			return err
 		}
+	} else {
 		ns := addLabels(ns, sidecarInject, "enabled")
 		if updateErr := kubeClient.Update(ctx, ns); updateErr != nil {
 			return errors.Wrapf(updateErr, "failed to update namespace %s", namespacedName.Namespace)
