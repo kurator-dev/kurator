@@ -14,7 +14,7 @@ creation-date: 2024-07-23
 
 ### Summary
 
-Kurator's release feature currently relies on the Istio gateway plugin to manage traffic distribution. To provide users with more options, we aim to extend Kurator's release feature to support additional common gateway plugins such as NGINX and Kuma.
+Kurator's rollout feature currently relies on the Istio gateway plugin to manage traffic distribution. To provide users with more options, we aim to extend Kurator's rollout feature to support additional common gateway plugins such as NGINX and Kuma.
 
 ### Motivation
 
@@ -22,7 +22,7 @@ By enhancing this feature, we can offer users more gateway options, simplify the
 
 #### Goals
 
-1. Extend the gateway plugins supported by Kurator's release feature, initially including NGINX and Kuma.
+1. Extend the gateway plugins supported by Kurator's rollout feature, initially including NGINX and Kuma.
 2. Simplify user configuration and provide more options for traffic routing.
 
 ### Proposal
@@ -42,7 +42,7 @@ We will delve into the API design required to support these configurations. The 
 type TrafficRoutingConfig struct {
 	...
 	// for NGINX
-	// 默认创建的ingress如下,(replace app.example.com with your own domain,并根据需求更改路径匹配规则)
+	// The default created ingress is as follows, (replace app.example.com with your own domain, and change the path matching rules as needed)
 	// apiVersion: networking.k8s.io/v1
 	// kind: Ingress
 	// metadata:
@@ -64,9 +64,11 @@ type TrafficRoutingConfig struct {
 	//                 name: application.syncPolicies.rollout.name
 	//                 port:
 	//                   number: 80	
-	Ingress ingressv1.IngressRule `json:"ingress,omitempty"`
+	// +optional
+	Ingress *ingressv1.IngressRule `json:"ingress,omitempty"`
 	// for Kuma
 	// Defaults to http
+	// +optional
 	Protocol string `json:"protocol,omitempty"`
 }
 ```
@@ -79,6 +81,7 @@ The `ProviderConfig` field is used for users to customize the selection of versi
 type FlaggerConfig struct {
 	...
 	// ProviderConfig defines the configuration for the TrafficRoutingProvider.
+	// +optional
 	ProviderConfig   *Config   `json:"Config,omitempty"`
 }
 
