@@ -13,7 +13,7 @@ creation-date: 2024-07-24
 
 ### Summary
 
-This proposal aims to modify the application API to allow setting the application's destination to a cluster, reducing the operational steps required for Kurator in a single-cluster environment and increasing Kurator's flexibility.
+This proposal aims to allow setting the application's destination to a cluster, reducing the operational steps and enabling users to seamlessly use Kurator in a single-cluster, thereby increasing Kurator's flexibility.
 
 ### Motivation
 
@@ -21,47 +21,25 @@ Kurator leverages Fleet for multi-cluster management. However, this has resulted
 
 #### Goals
 
-- Modify the application API to support setting the application's destination to a cluster.
-- Simplify the deployment process for single-cluster environments by eliminating the need for Fleet.
+- Add a new feature to support setting the application's destination to a cluster.
+- Enable users to seamlessly use Kurator in a single-cluster environment, thus eliminating the need for Fleet.
 
 ### Proposal
 
-Currently, the application registration is handled in the fleet-manager. The proposal is to move the application registration to the cluster-operator to support setting the application's destination to a cluster.
-
-### Design Details
-
-We will delve into the API design required to support setting the application's destination to a cluster. The following are the specific changes to the application:
-
-```go
-// ApplicationDestination defines the configuration to dispatch an artifact to a fleet or specific clusters.
-// Fleet and cluster are mutually exclusive.
-type ApplicationDestination struct {
-	// Fleet defines the fleet to dispatch the artifact.
-	// +optional
-	Fleet *FleetInfo `json:"fleetInfo,omitempty"`
-
-	// Cluster specifies a cluster to dispatch the artifact to.
-	// +optional
-	Cluster *corev1.ObjectReference `json:"clusters,omitempty"`
-}
-
-type FleetInfo struct {
-	// Name identifies the name of the fleet.
-	// +required
-	Name string `json:"name"`
-	// ClusterSelector specifies the selectors to select the clusters within the fleet.
-	// If unspecified, all clusters in the fleet will be selected.
-	// +optional
-	ClusterSelector *ClusterSelector `json:"clusterSelector,omitempty"`
-}
-```
+Currently, the application registration is handled in the fleet-manager. The proposal is to add a new feature to deploy the application directly to the current host cluster when ApplicationDestination is not specified.
 
 The preliminary discussion results are as follows:
 
-- The destination can only be either a fleet or a cluster. The `ApplicationWebhook.validate()` will check if only one of fleet or cluster is specified.
+- If `ApplicationDestination` is not specified, the `application` is deployed directly under the current host cluster, otherwise it is deployed in `ApplicationDestination.fleet`
 - When updating the destination configuration, no actions will be taken on applications deployed in the old clusters (no deletion).
 
-In the specific code, replace all `fleet *fleetapi.Fleet` type parameters in the `Reconcile` method with `destinationObject interface{}`. In functions like `fetchClusterList` (previously `fetchFleetClusterList`) that need to parse `destinationObject`, use a `switch destinationObject.(type)` statement for different logical processing to improve code reusability.
+
+
+### Design Details
+
+This proposal does not involve API modification, and supports new functions in code logic.
+In the specific code, if `ApplicationDestination` is empty, `handleSyncPolicyByKind` directly on the current cluster client to create Kustomization or HelmRelease resources.
+
 
 #### Test Plan
 
