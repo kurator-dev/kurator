@@ -18,6 +18,8 @@ cd kurator
 hack/local-dev-setup.sh
 ```
 
+> `fs.inotify.max_user_watches` and `fs.inotify.max_user_instances` may need to be adjusted as described [here](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
+
 ### Deploy Karmada
 
 Compile `kurator` from source
@@ -39,7 +41,7 @@ kurator install karmada --kubeconfig=/root/.kube/config
 karmada installation parameters can be set with `--set`, e.g.
 
 ```bash
-kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --kubeconfig .kube/config
+kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --kubeconfig ~/.kube/config
 ```
 
 ### Add kubernetes cluster to karmada control plane
@@ -56,7 +58,7 @@ kurator join karmada member2 \
     --cluster-context=kurator-member2
 ```
 
-Show members of karmada 
+Show members of karmada
 
 ```bash
 kubectl --kubeconfig /etc/karmada/karmada-apiserver.config get clusters
