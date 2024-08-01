@@ -41,7 +41,7 @@ kurator install karmada --kubeconfig=/root/.kube/config
 karmada installation parameters can be set with `--set`, e.g.
 
 ```bash
-kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --kubeconfig /root/.kube/config
+kurator install karmada --set karmada-data=/etc/Karmada-test --set port=32222 --kubeconfig ~/.kube/config
 ```
 
 ### Add kubernetes cluster to karmada control plane
