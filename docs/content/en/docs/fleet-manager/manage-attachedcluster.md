@@ -30,7 +30,7 @@ kubectl create secret generic kurator-member1 --from-file=kurator-member1.config
 kubectl create secret generic kurator-member2 --from-file=kurator-member2.config=/root/.kube/kurator-member2.config
 ```
 
-Please note, here we have named the secrets as `kurator-member1` and `kurator-member2` respectively, and set the key to save the kubeconfig in the secret as `kurator-member1.config` and `kurator-member1.config` respectively.
+Please note, here we have named the secrets as `kurator-member1` and `kurator-member2` respectively, and set the key to save the kubeconfig in the secret as `kurator-member1.config` and `kurator-member2.config` respectively.
 You can modify these two elements according to your needs.
 
 ## Create attachedCluster resources
