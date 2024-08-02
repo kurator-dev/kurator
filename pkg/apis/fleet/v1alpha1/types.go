@@ -87,6 +87,8 @@ type PluginConfig struct {
 	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
 	// Flagger defines the configuretion for the kurator rollout engine.
 	Flagger *FlaggerConfig `json:"flagger,omitempty"`
+	// SubMariner defines the configuration for the kurator network management.
+	SubMariner *SubMarinerConfig `json:"submariner,omitempty"`
 }
 
 type MetricConfig struct {
@@ -567,6 +569,34 @@ type FlaggerConfig struct {
 	// In addition to the public testloader you can configure here,
 	// you can also specify a private testloader in the Application.Spec.SyncPolicies.Rollout.TestLoader
 	PublicTestloader bool `json:"publicTestloader,omitempty"`
+}
+
+type SubMarinerConfig struct {
+	// Chart defines the helm chart config of the submariner.
+	// default value is
+	//
+	// ```yaml
+	// chart:
+	//   repository: https://submariner-io.github.io/submariner-charts/charts
+	//   name: submariner
+	//   version: 0.18.0
+	//   targetNamespace: submariner
+	// ```
+	//
+
+	// ```yaml
+	// extraArgs:
+	//   operator:
+	//			image:
+	//     		pullPolicy: "IfNotPresent"
+	// ```
+
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
+	// ExtraArgs is the set of extra arguments for submariner, and example will be provided in the future.
+	//
+	// +optional
+	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
 
 // Provider only can be istio now.

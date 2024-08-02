@@ -644,3 +644,81 @@ func TestRendeRolloutTestloader(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderSubmarinerBroker(t *testing.T) {
+	cases := []struct {
+		name   string
+		fleet  types.NamespacedName
+		ref    *metav1.OwnerReference
+		config *v1alpha1.SubMarinerConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.SubMarinerConfig{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderSubmarinerBroker(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.config)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("submariner-broker", tc.name)
+			assert.NoError(t, err)
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
+func TestRenderSubmarinerOperator(t *testing.T) {
+	cases := []struct {
+		name   string
+		fleet  types.NamespacedName
+		ref    *metav1.OwnerReference
+		config *v1alpha1.SubMarinerConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.SubMarinerConfig{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderSubmarinerOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.config)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("submariner-operator", tc.name)
+			assert.NoError(t, err)
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}

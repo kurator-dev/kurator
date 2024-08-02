@@ -32,25 +32,29 @@ import (
 )
 
 const (
-	MetricPluginName          = "metric"
-	GrafanaPluginName         = "grafana"
-	KyvernoPluginName         = "kyverno"
-	BackupPluginName          = "backup"
-	StorageOperatorPluginName = "storage-operator"
-	ClusterStoragePluginName  = "cluster-storage"
-	FlaggerPluginName         = "flagger"
-	PublicTestloaderName      = "testloader"
+	MetricPluginName             = "metric"
+	GrafanaPluginName            = "grafana"
+	KyvernoPluginName            = "kyverno"
+	BackupPluginName             = "backup"
+	StorageOperatorPluginName    = "storage-operator"
+	ClusterStoragePluginName     = "cluster-storage"
+	FlaggerPluginName            = "flagger"
+	PublicTestloaderName         = "testloader"
+	SubMarinerBrokerPluginName   = "submariner-k8s-broker"
+	SubMarinerOperatorPluginName = "submariner-operator"
 
-	ThanosComponentName        = "thanos"
-	PrometheusComponentName    = "prometheus"
-	GrafanaComponentName       = "grafana"
-	KyvernoComponentName       = "kyverno"
-	KyvernoPolicyComponentName = "kyverno-policies"
-	VeleroComponentName        = "velero"
-	RookOperatorComponentName  = "rook"
-	RookClusterComponentName   = "rook-ceph"
-	FlaggerComponentName       = "flagger"
-	TestloaderComponentName    = "testloader"
+	ThanosComponentName             = "thanos"
+	PrometheusComponentName         = "prometheus"
+	GrafanaComponentName            = "grafana"
+	KyvernoComponentName            = "kyverno"
+	KyvernoPolicyComponentName      = "kyverno-policies"
+	VeleroComponentName             = "velero"
+	RookOperatorComponentName       = "rook"
+	RookClusterComponentName        = "rook-ceph"
+	FlaggerComponentName            = "flagger"
+	TestloaderComponentName         = "testloader"
+	SubMarinerBrokerComponentName   = "submariner-k8s-broker"
+	SubMarinerOperatorComponentName = "submariner-operator"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -436,6 +440,68 @@ func RenderRolloutTestloader(
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           PublicTestloaderName,
 		Component:      TestloaderComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RenderSubmarinerBroker(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+	subMarinerConfig *fleetv1a1.SubMarinerConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, SubMarinerBrokerComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, subMarinerConfig.Chart)
+	c.TargetNamespace = fleetNN.Namespace // submariner chart is fleet scoped
+
+	values, err := toMap(subMarinerConfig.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           SubMarinerBrokerPluginName,
+		Component:      SubMarinerBrokerComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RenderSubmarinerOperator(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+	subMarinerConfig *fleetv1a1.SubMarinerConfig,
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, SubMarinerOperatorComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, subMarinerConfig.Chart)
+	c.TargetNamespace = fleetNN.Namespace // submariner chart is fleet scoped
+
+	values, err := toMap(subMarinerConfig.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           SubMarinerOperatorPluginName,
+		Component:      SubMarinerOperatorComponentName,
 		Fleet:          fleetNN,
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,
