@@ -202,7 +202,7 @@ gen-crd: init-codegen ## Generate WebhookConfiguration, ClusterRole and CustomRe
 	hack/update-crdgen.sh
 
 
-PACKAGE					    := kurator.dev
+PACKAGE					    := kurator.dev/kurator
 GOPATH_SHIM                 := ${PWD}/.gopath
 PACKAGE_SHIM                := $(GOPATH_SHIM)/src/$(PACKAGE)
 
