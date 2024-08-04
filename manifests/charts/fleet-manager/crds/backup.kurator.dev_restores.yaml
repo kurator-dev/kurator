@@ -3,8 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: restores.backup.kurator.dev
 spec:
   group: backup.kurator.dev
@@ -28,14 +27,19 @@ spec:
         description: Restore is the schema for the Restore's API.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
             type: string
           metadata:
             type: object
@@ -46,160 +50,156 @@ spec:
                   operation is based.
                 type: string
               destination:
-                description: Destination indicates the clusters where restore should
-                  be performed. if not set, all the clusters from Backup.spec.destination
-                  will perform restore.
+                description: |-
+                  Destination indicates the clusters where restore should be performed.
+                  if not set, all the clusters from Backup.spec.destination will perform restore.
                 properties:
                   clusters:
-                    description: Clusters allows users to specify a subset of clusters
-                      within the selected fleet for targeted operations. If not set,
-                      it implies that the operation is targeted at all clusters within
-                      the specified fleet.
+                    description: |-
+                      Clusters allows users to specify a subset of clusters within the selected fleet for targeted operations.
+                      If not set, it implies that the operation is targeted at all clusters within the specified fleet.
                     items:
-                      description: "ObjectReference contains enough information to
-                        let you inspect or modify the referred object. --- New uses
-                        of this type are discouraged because of difficulty describing
-                        its usage when embedded in APIs. 1. Ignored fields.  It includes
-                        many fields which are not generally honored.  For instance,
-                        ResourceVersion and FieldPath are both very rarely valid in
-                        actual usage. 2. Invalid usage help.  It is impossible to
-                        add specific help for individual usage.  In most embedded
-                        usages, there are particular restrictions like, \"must refer
-                        only to types A and B\" or \"UID not honored\" or \"name must
-                        be restricted\". Those cannot be well described when embedded.
-                        3. Inconsistent validation.  Because the usages are different,
-                        the validation rules are different by usage, which makes it
-                        hard for users to predict what will happen. 4. The fields
-                        are both imprecise and overly precise.  Kind is not a precise
-                        mapping to a URL. This can produce ambiguity during interpretation
-                        and require a REST mapping.  In most cases, the dependency
-                        is on the group,resource tuple and the version of the actual
-                        struct is irrelevant. 5. We cannot easily change it.  Because
-                        this type is embedded in many locations, updates to this type
-                        will affect numerous schemas.  Don't make new APIs embed an
-                        underspecified API type they do not control. \n Instead of
-                        using this type, create a locally provided and used type that
-                        is well-focused on your reference. For example, ServiceReferences
-                        for admission registration: https://github.com/kubernetes/api/blob/release-1.17/admissionregistration/v1/types.go#L533
-                        ."
+                      description: |-
+                        ObjectReference contains enough information to let you inspect or modify the referred object.
+                        ---
+                        New uses of this type are discouraged because of difficulty describing its usage when embedded in APIs.
+                         1. Ignored fields.  It includes many fields which are not generally honored.  For instance, ResourceVersion and FieldPath are both very rarely valid in actual usage.
+                         2. Invalid usage help.  It is impossible to add specific help for individual usage.  In most embedded usages, there are particular
+                            restrictions like, "must refer only to types A and B" or "UID not honored" or "name must be restricted".
+                            Those cannot be well described when embedded.
+                         3. Inconsistent validation.  Because the usages are different, the validation rules are different by usage, which makes it hard for users to predict what will happen.
+                         4. The fields are both imprecise and overly precise.  Kind is not a precise mapping to a URL. This can produce ambiguity
+                            during interpretation and require a REST mapping.  In most cases, the dependency is on the group,resource tuple
+                            and the version of the actual struct is irrelevant.
+                         5. We cannot easily change it.  Because this type is embedded in many locations, updates to this type
+                            will affect numerous schemas.  Don't make new APIs embed an underspecified API type they do not control.
+
+
+                        Instead of using this type, create a locally provided and used type that is well-focused on your reference.
+                        For example, ServiceReferences for admission registration: https://github.com/kubernetes/api/blob/release-1.17/admissionregistration/v1/types.go#L533 .
                       properties:
                         apiVersion:
                           description: API version of the referent.
                           type: string
                         fieldPath:
-                          description: 'If referring to a piece of an object instead
-                            of an entire object, this string should contain a valid
-                            JSON/Go field access statement, such as desiredState.manifest.containers[2].
-                            For example, if the object reference is to a container
-                            within a pod, this would take on a value like: "spec.containers{name}"
-                            (where "name" refers to the name of the container that
-                            triggered the event) or if no container name is specified
-                            "spec.containers[2]" (container with index 2 in this pod).
-                            This syntax is chosen only to have some well-defined way
-                            of referencing a part of an object. TODO: this design
-                            is not final and this field is subject to change in the
-                            future.'
+                          description: |-
+                            If referring to a piece of an object instead of an entire object, this string
+                            should contain a valid JSON/Go field access statement, such as desiredState.manifest.containers[2].
+                            For example, if the object reference is to a container within a pod, this would take on a value like:
+                            "spec.containers{name}" (where "name" refers to the name of the container that triggered
+                            the event) or if no container name is specified "spec.containers[2]" (container with
+                            index 2 in this pod). This syntax is chosen only to have some well-defined way of
+                            referencing a part of an object.
+                            TODO: this design is not final and this field is subject to change in the future.
                           type: string
                         kind:
-                          description: 'Kind of the referent. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                          description: |-
+                            Kind of the referent.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
                           type: string
                         name:
-                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
+                          description: |-
+                            Name of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
                           type: string
                         namespace:
-                          description: 'Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/'
+                          description: |-
+                            Namespace of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
                           type: string
                         resourceVersion:
-                          description: 'Specific resourceVersion to which this reference
-                            is made, if any. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency'
+                          description: |-
+                            Specific resourceVersion to which this reference is made, if any.
+                            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
                           type: string
                         uid:
-                          description: 'UID of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids'
+                          description: |-
+                            UID of the referent.
+                            More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
                           type: string
                       type: object
+                      x-kubernetes-map-type: atomic
                     type: array
                   fleet:
-                    description: Fleet represents the name of a fleet which determines
-                      a set of target clusters within the namespace. This field is
-                      required to identify the context for cluster selection.
+                    description: |-
+                      Fleet represents the name of a fleet which determines a set of target clusters within the namespace.
+                      This field is required to identify the context for cluster selection.
                     type: string
                 required:
                 - fleet
                 type: object
               policy:
-                description: Policy defines the customization rules for the restore.
+                description: |-
+                  Policy defines the customization rules for the restore.
                   If null, the backup will be fully restored using default settings.
                 properties:
                   namespaceMapping:
                     additionalProperties:
                       type: string
-                    description: NamespaceMapping is a map of source namespace names
-                      to target namespace names to restore into. Any source namespaces
-                      not included in the map will be restored into namespaces of
-                      the same name.
+                    description: |-
+                      NamespaceMapping is a map of source namespace names
+                      to target namespace names to restore into.
+                      Any source namespaces not included in the map will be restored into
+                      namespaces of the same name.
                     type: object
                   preserveNodePorts:
-                    description: PreserveNodePorts specifies whether to restore old
-                      nodePorts from backup. If not specified, default to false.
+                    description: |-
+                      PreserveNodePorts specifies whether to restore old nodePorts from backup.
+                      If not specified, default to false.
                     nullable: true
                     type: boolean
                   preserveStatus:
-                    description: PreserveStatus specifies which resources we should
-                      restore the status field. If unset, no status will be restored.
+                    description: |-
+                      PreserveStatus specifies which resources we should restore the status field.
+                      If unset, no status will be restored.
                     nullable: true
                     properties:
                       excludedResources:
-                        description: 'ExcludedResources lists out the resources that
-                          will NOT have their status restored. By default, if this
-                          list is empty, it means the status for NO resources will
-                          be excluded from restoration. For instance: - If you want
-                          to prevent restoring the status for pods and configmaps,
-                          set: excludedResources: ["pods", "configmaps"] - If you
-                          leave it empty, no resources are excluded, and all will
-                          have their status restored (unless specified otherwise in
-                          IncludedResources). Note: Exclusions listed here take precedence
-                          over inclusions. So, if a resource is listed in both, its
-                          status will NOT be restored.'
+                        description: |-
+                          ExcludedResources lists out the resources that will NOT have their status restored.
+                          By default, if this list is empty, it means the status for NO resources will be excluded from restoration.
+                          For instance:
+                          - If you want to prevent restoring the status for pods and configmaps, set:
+                            excludedResources: ["pods", "configmaps"]
+                          - If you leave it empty, no resources are excluded, and all will have their status restored (unless specified otherwise in IncludedResources).
+                          Note: Exclusions listed here take precedence over inclusions. So, if a resource is listed in both, its status will NOT be restored.
                         items:
                           type: string
                         nullable: true
                         type: array
                       includedResources:
-                        description: 'IncludedResources determines which resources
-                          will have their status restored. By default, if this list
-                          is empty, it means the status for ALL resources will be
-                          restored. For example: - If you want to restore the status
-                          only for deployments and services, set: includedResources:
-                          ["deployments", "services"] - If you leave it empty, the
-                          status for all resources will be restored. Note: If a resource
-                          is listed in both IncludedResources and ExcludedResources,
-                          the exclusion takes precedence.'
+                        description: |-
+                          IncludedResources determines which resources will have their status restored.
+                          By default, if this list is empty, it means the status for ALL resources will be restored.
+                          For example:
+                          - If you want to restore the status only for deployments and services, set:
+                            includedResources: ["deployments", "services"]
+                          - If you leave it empty, the status for all resources will be restored.
+                          Note: If a resource is listed in both IncludedResources and ExcludedResources, the exclusion takes precedence.
                         items:
                           type: string
                         nullable: true
                         type: array
                     type: object
                   resourceFilter:
-                    description: ResourceFilter is the filter for the resources to
-                      be restored. If not set, all resources from the backup will
-                      be restored.
+                    description: |-
+                      ResourceFilter is the filter for the resources to be restored.
+                      If not set, all resources from the backup will be restored.
                     properties:
                       excludedClusterScopedResources:
-                        description: ExcludedClusterScopedResources is a slice of
-                          cluster-scoped resource type names to exclude from the backup.
-                          If set to "*", all cluster-scoped resource types are excluded.
-                          The default value is empty. Cannot work with IncludedResources,
-                          ExcludedResources and IncludeClusterResources.
+                        description: |-
+                          ExcludedClusterScopedResources is a slice of cluster-scoped resource type names to exclude from the backup.
+                          If set to "*", all cluster-scoped resource types are excluded. The default value is empty.
+                          Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
                         items:
                           type: string
                         nullable: true
                         type: array
                       excludedNamespaceScopedResources:
-                        description: ExcludedNamespaceScopedResources is a slice of
-                          namespace-scoped resource type names to exclude from the
-                          backup. If set to "*", all namespace-scoped resource types
-                          are excluded. The default value is empty. Cannot work with
-                          IncludedResources, ExcludedResources and IncludeClusterResources.
+                        description: |-
+                          ExcludedNamespaceScopedResources is a slice of namespace-scoped resource type names to exclude from the backup.
+                          If set to "*", all namespace-scoped resource types are excluded. The default value is empty.
+                          Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
                         items:
                           type: string
                         nullable: true
@@ -212,77 +212,70 @@ spec:
                         nullable: true
                         type: array
                       excludedResources:
-                        description: ExcludedResources is a slice of resource names
-                          that are not included in the backup. Cannot work with IncludedClusterScopedResources,
-                          ExcludedClusterScopedResources, IncludedNamespaceScopedResources
-                          and ExcludedNamespaceScopedResources.
+                        description: |-
+                          ExcludedResources is a slice of resource names that are not included in the backup.
+                          Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
                         items:
                           type: string
                         nullable: true
                         type: array
                       includeClusterResources:
-                        description: IncludeClusterResources specifies whether cluster-scoped
-                          resources should be included for consideration in the backup.
-                          Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources,
-                          IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
+                        description: |-
+                          IncludeClusterResources specifies whether cluster-scoped resources should be included for consideration in the backup.
+                          Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
                         nullable: true
                         type: boolean
                       includedClusterScopedResources:
-                        description: IncludedClusterScopedResources is a slice of
-                          cluster-scoped resource type names to include in the backup.
-                          For example, we can populate this string array with ["storageclasses",
-                          "clusterroles"], then we will select all resources of type
-                          storageclasses and clusterroles, If set to "*", all cluster-scoped
-                          resource types are included. The default value is empty,
-                          which means only related cluster-scoped resources are included.
-                          Cannot work with IncludedResources, ExcludedResources and
-                          IncludeClusterResources.
+                        description: |-
+                          IncludedClusterScopedResources is a slice of cluster-scoped resource type names to include in the backup.
+                          For example, we can populate this string array with ["storageclasses", "clusterroles"], then we will select all resources of type storageclasses and clusterroles,
+                          If set to "*", all cluster-scoped resource types are included.
+                          The default value is empty, which means only related cluster-scoped resources are included.
+                          Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
                         items:
                           type: string
                         nullable: true
                         type: array
                       includedNamespaceScopedResources:
-                        description: IncludedNamespaceScopedResources is a slice of
-                          namespace-scoped resource type names to include in the backup.
-                          For example, we can populate this string array with ["deployments",
-                          "configmaps"], then we will select all resources of type
-                          deployments and configmaps, The default value is "*". Cannot
-                          work with IncludedResources, ExcludedResources and IncludeClusterResources.
+                        description: |-
+                          IncludedNamespaceScopedResources is a slice of namespace-scoped resource type names to include in the backup.
+                          For example, we can populate this string array with ["deployments", "configmaps"], then we will select all resources of type deployments and configmaps,
+                          The default value is "*".
+                          Cannot work with IncludedResources, ExcludedResources and IncludeClusterResources.
                         items:
                           type: string
                         nullable: true
                         type: array
                       includedNamespaces:
-                        description: IncludedNamespaces is a list of namespace names
-                          to include objects from. If empty, all namespaces are included.
+                        description: |-
+                          IncludedNamespaces is a list of namespace names to include objects from.
+                          If empty, all namespaces are included.
                         items:
                           type: string
                         nullable: true
                         type: array
                       includedResources:
-                        description: IncludedResources is a slice of API resource
-                          names to include in the backup. For example, we can populate
-                          this string array with ["deployments", "configmaps","clusterroles","storageclasses"],
-                          then we will select all resources of type deployments and
-                          configmaps. If empty, all API resources are included. Cannot
-                          work with IncludedClusterScopedResources, ExcludedClusterScopedResources,
-                          IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
+                        description: |-
+                          IncludedResources is a slice of API resource names to include in the backup.
+                          For example, we can populate this string array with ["deployments", "configmaps","clusterroles","storageclasses"], then we will select all resources of type deployments and configmaps.
+                          If empty, all API resources are included.
+                          Cannot work with IncludedClusterScopedResources, ExcludedClusterScopedResources, IncludedNamespaceScopedResources and ExcludedNamespaceScopedResources.
                         items:
                           type: string
                         nullable: true
                         type: array
                       labelSelector:
-                        description: LabelSelector is a metav1.LabelSelector to filter
-                          with when adding individual objects to the backup. If empty
-                          or nil, all objects are included. Optional.
+                        description: |-
+                          LabelSelector is a metav1.LabelSelector to filter with when adding individual objects to the backup.
+                          If empty or nil, all objects are included. Optional.
                         nullable: true
                         properties:
                           matchExpressions:
                             description: matchExpressions is a list of label selector
                               requirements. The requirements are ANDed.
                             items:
-                              description: A label selector requirement is a selector
-                                that contains values, a key, and an operator that
+                              description: |-
+                                A label selector requirement is a selector that contains values, a key, and an operator that
                                 relates the key and values.
                               properties:
                                 key:
@@ -290,17 +283,16 @@ spec:
                                     applies to.
                                   type: string
                                 operator:
-                                  description: operator represents a key's relationship
-                                    to a set of values. Valid operators are In, NotIn,
-                                    Exists and DoesNotExist.
+                                  description: |-
+                                    operator represents a key's relationship to a set of values.
+                                    Valid operators are In, NotIn, Exists and DoesNotExist.
                                   type: string
                                 values:
-                                  description: values is an array of string values.
-                                    If the operator is In or NotIn, the values array
-                                    must be non-empty. If the operator is Exists or
-                                    DoesNotExist, the values array must be empty.
-                                    This array is replaced during a strategic merge
-                                    patch.
+                                  description: |-
+                                    values is an array of string values. If the operator is In or NotIn,
+                                    the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                    the values array must be empty. This array is replaced during a strategic
+                                    merge patch.
                                   items:
                                     type: string
                                   type: array
@@ -312,31 +304,30 @@ spec:
                           matchLabels:
                             additionalProperties:
                               type: string
-                            description: matchLabels is a map of {key,value} pairs.
-                              A single {key,value} in the matchLabels map is equivalent
-                              to an element of matchExpressions, whose key field is
-                              "key", the operator is "In", and the values array contains
-                              only "value". The requirements are ANDed.
+                            description: |-
+                              matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                              map is equivalent to an element of matchExpressions, whose key field is "key", the
+                              operator is "In", and the values array contains only "value". The requirements are ANDed.
                             type: object
                         type: object
+                        x-kubernetes-map-type: atomic
                       orLabelSelectors:
-                        description: OrLabelSelectors is list of metav1.LabelSelector
-                          to filter with when adding individual objects to the backup.
+                        description: |-
+                          OrLabelSelectors is list of metav1.LabelSelector to filter with when adding individual objects to the backup.
                           If multiple provided they will be joined by the OR operator.
-                          LabelSelector as well as OrLabelSelectors cannot co-exist
-                          in backup request, only one of them can be used.
+                          LabelSelector as well as OrLabelSelectors cannot co-exist in backup request, only one of them can be used.
                         items:
-                          description: A label selector is a label query over a set
-                            of resources. The result of matchLabels and matchExpressions
-                            are ANDed. An empty label selector matches all objects.
-                            A null label selector matches no objects.
+                          description: |-
+                            A label selector is a label query over a set of resources. The result of matchLabels and
+                            matchExpressions are ANDed. An empty label selector matches all objects. A null
+                            label selector matches no objects.
                           properties:
                             matchExpressions:
                               description: matchExpressions is a list of label selector
                                 requirements. The requirements are ANDed.
                               items:
-                                description: A label selector requirement is a selector
-                                  that contains values, a key, and an operator that
+                                description: |-
+                                  A label selector requirement is a selector that contains values, a key, and an operator that
                                   relates the key and values.
                                 properties:
                                   key:
@@ -344,17 +335,16 @@ spec:
                                       applies to.
                                     type: string
                                   operator:
-                                    description: operator represents a key's relationship
-                                      to a set of values. Valid operators are In,
-                                      NotIn, Exists and DoesNotExist.
+                                    description: |-
+                                      operator represents a key's relationship to a set of values.
+                                      Valid operators are In, NotIn, Exists and DoesNotExist.
                                     type: string
                                   values:
-                                    description: values is an array of string values.
-                                      If the operator is In or NotIn, the values array
-                                      must be non-empty. If the operator is Exists
-                                      or DoesNotExist, the values array must be empty.
-                                      This array is replaced during a strategic merge
-                                      patch.
+                                    description: |-
+                                      values is an array of string values. If the operator is In or NotIn,
+                                      the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                      the values array must be empty. This array is replaced during a strategic
+                                      merge patch.
                                     items:
                                       type: string
                                     type: array
@@ -366,13 +356,13 @@ spec:
                             matchLabels:
                               additionalProperties:
                                 type: string
-                              description: matchLabels is a map of {key,value} pairs.
-                                A single {key,value} in the matchLabels map is equivalent
-                                to an element of matchExpressions, whose key field
-                                is "key", the operator is "In", and the values array
-                                contains only "value". The requirements are ANDed.
+                              description: |-
+                                matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                operator is "In", and the values array contains only "value". The requirements are ANDed.
                               type: object
                           type: object
+                          x-kubernetes-map-type: atomic
                         nullable: true
                         type: array
                     type: object
@@ -390,37 +380,37 @@ spec:
                     operational state.
                   properties:
                     lastTransitionTime:
-                      description: Last time the condition transitioned from one status
-                        to another. This should be when the underlying condition changed.
-                        If that is not known, then using the time when the API field
-                        changed is acceptable.
+                      description: |-
+                        Last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed. If that is not known, then using the time when
+                        the API field changed is acceptable.
                       format: date-time
                       type: string
                     message:
-                      description: A human readable message indicating details about
-                        the transition. This field may be empty.
+                      description: |-
+                        A human readable message indicating details about the transition.
+                        This field may be empty.
                       type: string
                     reason:
-                      description: The reason for the condition's last transition
-                        in CamelCase. The specific API may choose whether or not this
-                        field is considered a guaranteed API. This field may not be
-                        empty.
+                      description: |-
+                        The reason for the condition's last transition in CamelCase.
+                        The specific API may choose whether or not this field is considered a guaranteed API.
+                        This field may not be empty.
                       type: string
                     severity:
-                      description: Severity provides an explicit classification of
-                        Reason code, so the users or machines can immediately understand
-                        the current situation and act accordingly. The Severity field
-                        MUST be set only when Status=False.
+                      description: |-
+                        Severity provides an explicit classification of Reason code, so the users or machines can immediately
+                        understand the current situation and act accordingly.
+                        The Severity field MUST be set only when Status=False.
                       type: string
                     status:
                       description: Status of the condition, one of True, False, Unknown.
                       type: string
                     type:
-                      description: Type of condition in CamelCase or in foo.example.com/CamelCase.
-                        Many .condition.type values are consistent across resources
-                        like Available, but because arbitrary conditions can be useful
-                        (see .node.status.conditions), the ability to deconflict is
-                        important.
+                      description: |-
+                        Type of condition in CamelCase or in foo.example.com/CamelCase.
+                        Many .condition.type values are consistent across resources like Available, but because arbitrary conditions
+                        can be useful (see .node.status.conditions), the ability to deconflict is important.
                       type: string
                   required:
                   - lastTransitionTime
@@ -445,25 +435,26 @@ spec:
                         restore is being performed.
                       type: string
                     restoreNameInCluster:
-                      description: RestoreNameInCluster is the name of the restore
-                        being performed within this cluster. This RestoreNameInCluster
-                        is unique in Storage.
+                      description: |-
+                        RestoreNameInCluster is the name of the restore being performed within this cluster.
+                        This RestoreNameInCluster is unique in Storage.
                       type: string
                     restoreStatusInCluster:
                       description: RestoreStatusInCluster is the current status of
                         the restore performed within this cluster.
                       properties:
                         completionTimestamp:
-                          description: CompletionTimestamp records the time the restore
-                            operation was completed. Completion time is recorded even
-                            on failed restore. The server's time is used for StartTimestamps
+                          description: |-
+                            CompletionTimestamp records the time the restore operation was completed.
+                            Completion time is recorded even on failed restore.
+                            The server's time is used for StartTimestamps
                           format: date-time
                           nullable: true
                           type: string
                         errors:
-                          description: Errors is a count of all error messages that
-                            were generated during execution of the restore. The actual
-                            errors are stored in object storage.
+                          description: |-
+                            Errors is a count of all error messages that were generated during
+                            execution of the restore. The actual errors are stored in object storage.
                           type: integer
                         failureReason:
                           description: FailureReason is an error that caused the entire
@@ -482,10 +473,10 @@ spec:
                           - Failed
                           type: string
                         progress:
-                          description: Progress contains information about the restore's
-                            execution progress. Note that this information is best-effort
-                            only -- if Velero fails to update it during a restore
-                            for any reason, it may be inaccurate/stale.
+                          description: |-
+                            Progress contains information about the restore's execution progress. Note
+                            that this information is best-effort only -- if Velero fails to update it
+                            during a restore for any reason, it may be inaccurate/stale.
                           nullable: true
                           properties:
                             itemsRestored:
@@ -493,44 +484,46 @@ spec:
                                 have actually been restored so far
                               type: integer
                             totalItems:
-                              description: TotalItems is the total number of items
-                                to be restored. This number may change throughout
-                                the execution of the restore due to plugins that return
-                                additional related items to restore
+                              description: |-
+                                TotalItems is the total number of items to be restored. This number may change
+                                throughout the execution of the restore due to plugins that return additional related
+                                items to restore
                               type: integer
                           type: object
                         restoreItemOperationsAttempted:
-                          description: RestoreItemOperationsAttempted is the total
-                            number of attempted async RestoreItemAction operations
-                            for this restore.
+                          description: |-
+                            RestoreItemOperationsAttempted is the total number of attempted
+                            async RestoreItemAction operations for this restore.
                           type: integer
                         restoreItemOperationsCompleted:
-                          description: RestoreItemOperationsCompleted is the total
-                            number of successfully completed async RestoreItemAction
-                            operations for this restore.
+                          description: |-
+                            RestoreItemOperationsCompleted is the total number of successfully completed
+                            async RestoreItemAction operations for this restore.
                           type: integer
                         restoreItemOperationsFailed:
-                          description: RestoreItemOperationsFailed is the total number
-                            of async RestoreItemAction operations for this restore
-                            which ended with an error.
+                          description: |-
+                            RestoreItemOperationsFailed is the total number of async
+                            RestoreItemAction operations for this restore which ended with an error.
                           type: integer
                         startTimestamp:
-                          description: StartTimestamp records the time the restore
-                            operation was started. The server's time is used for StartTimestamps
+                          description: |-
+                            StartTimestamp records the time the restore operation was started.
+                            The server's time is used for StartTimestamps
                           format: date-time
                           nullable: true
                           type: string
                         validationErrors:
-                          description: ValidationErrors is a slice of all validation
-                            errors (if applicable)
+                          description: |-
+                            ValidationErrors is a slice of all validation errors (if
+                            applicable)
                           items:
                             type: string
                           nullable: true
                           type: array
                         warnings:
-                          description: Warnings is a count of all warning messages
-                            that were generated during execution of the restore. The
-                            actual warnings are stored in object storage.
+                          description: |-
+                            Warnings is a count of all warning messages that were generated during
+                            execution of the restore. The actual warnings are stored in object storage.
                           type: integer
                       type: object
                   type: object
@@ -541,9 +534,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
