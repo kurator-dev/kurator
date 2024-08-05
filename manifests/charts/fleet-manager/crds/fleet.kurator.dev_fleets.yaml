@@ -2782,6 +2782,33 @@ spec:
                             type: object
                         type: object
                     type: object
+                  submariner:
+                    description: SubMariner defines the configuration for the kurator
+                      network management.
+                    properties:
+                      chart:
+                        properties:
+                          name:
+                            description: |-
+                              Name defines the name of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          repository:
+                            description: |-
+                              Repository defines the repository of chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          version:
+                            description: |-
+                              Version defines the version of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                        type: object
+                      extraArgs:
+                        description: ExtraArgs is the set of extra arguments for submariner,
+                          and example will be provided in the future.
+                        x-kubernetes-preserve-unknown-fields: true
+                    type: object
                 type: object
             type: object
           status:

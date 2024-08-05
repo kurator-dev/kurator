@@ -343,6 +343,7 @@ map[string]string
 <a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.SubMarinerConfig">SubMarinerConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
 </p>
 <div class="md-typeset__scrollwrap">
@@ -1433,6 +1434,19 @@ FlaggerConfig
 <p>Flagger defines the configuretion for the kurator rollout engine.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>submariner</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.SubMarinerConfig">
+SubMarinerConfig
+</a>
+</em>
+</td>
+<td>
+<p>SubMariner defines the configuration for the kurator network management.</p>
+</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1749,6 +1763,53 @@ StorageDeviceSelection
 (Members of <code>StorageDeviceSelection</code> are embedded into this type.)
 </p>
 <p>Select device information used by osd. For more information see the design of the selection below.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.SubMarinerConfig">SubMarinerConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.PluginConfig">PluginConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for submariner, and example will be provided in the future.</p>
 </td>
 </tr>
 </tbody>
