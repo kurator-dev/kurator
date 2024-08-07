@@ -52,8 +52,8 @@ spec:
   interval: 1m0s
   install:
     createNamespace: true
-  targetNamespace: "default"
-  storageNamespace: "default"
+  targetNamespace: "submariner"
+  storageNamespace: "submariner"
   timeout: 15m0s
   kubeConfig:
     secretRef:

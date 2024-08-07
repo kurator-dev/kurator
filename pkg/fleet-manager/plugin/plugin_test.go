@@ -677,7 +677,7 @@ func TestRenderSubmarinerBroker(t *testing.T) {
 			}, tc.config)
 			assert.NoError(t, err)
 
-			getExpected, err := getExpected("submariner-broker", tc.name)
+			getExpected, err := getExpected("submariner-k8s-broker", tc.name)
 			assert.NoError(t, err)
 			assert.Equal(t, string(getExpected), string(got))
 		})

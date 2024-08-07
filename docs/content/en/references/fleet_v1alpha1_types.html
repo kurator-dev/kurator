@@ -1796,6 +1796,14 @@ ChartConfig
 </td>
 <td>
 <em>(Optional)</em>
+<p>Chart defines the helm chart config of the submariner.
+default value is</p>
+<pre><code class="language-yaml">chart:
+repository: https://submariner-io.github.io/submariner-charts/charts
+name: submariner
+version: 0.18.0
+targetNamespace: submariner
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -1810,6 +1818,11 @@ Kubernetes /apiextensions/v1.JSON
 <td>
 <em>(Optional)</em>
 <p>ExtraArgs is the set of extra arguments for submariner, and example will be provided in the future.</p>
+<pre><code class="language-yaml">extraArgs:
+operator:
+image:
+pullPolicy: &quot;IfNotPresent&quot;
+</code></pre>
 </td>
 </tr>
 </tbody>

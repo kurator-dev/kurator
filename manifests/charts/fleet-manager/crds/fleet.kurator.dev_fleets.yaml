@@ -2787,6 +2787,18 @@ spec:
                       network management.
                     properties:
                       chart:
+                        description: |-
+                          Chart defines the helm chart config of the submariner.
+                          default value is
+
+
+                          ```yaml
+                          chart:
+                            repository: https://submariner-io.github.io/submariner-charts/charts
+                            name: submariner
+                            version: 0.18.0
+                            targetNamespace: submariner
+                          ```
                         properties:
                           name:
                             description: |-
@@ -2805,8 +2817,9 @@ spec:
                             type: string
                         type: object
                       extraArgs:
-                        description: ExtraArgs is the set of extra arguments for submariner,
-                          and example will be provided in the future.
+                        description: "ExtraArgs is the set of extra arguments for
+                          submariner, and example will be provided in the future.\n\n\n```yaml\nextraArgs:\n
+                          \ operator:\n\t\t\timage:\n    \t\tpullPolicy: \"IfNotPresent\"\n```"
                         x-kubernetes-preserve-unknown-fields: true
                     type: object
                 type: object

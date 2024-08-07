@@ -15,6 +15,7 @@ package fleet
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"helm.sh/helm/v3/pkg/kube"
@@ -45,46 +46,32 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 
 	fleetOwnerRef := ownerReference(fleet)
 	var resources kube.ResourceList
-	var b []byte
-	var err error
 
-	exist_broker := false
+	// At least two member required
+	if len(fleetClusters) < 2 {
+		return nil, ctrl.Result{}, errors.New("fleetClusters number < 2")
+	}
+	// Install broker in the first member cluster
 	for key, cluster := range fleetClusters {
-		if !exist_broker {
-			b, err = plugin.RenderSubmarinerBroker(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
-				Name:       key.Name,
-				SecretName: cluster.Secret,
-				SecretKey:  cluster.SecretKey,
-			}, submarinerCfg)
-			exist_broker = true
-			if err != nil {
-				return nil, ctrl.Result{}, err
-			}
-
-			submarinerResources, err := util.PatchResources(b)
-			if err != nil {
-				return nil, ctrl.Result{}, err
-			}
-			resources = append(resources, submarinerResources...)
-		}
-		b, err = plugin.RenderSubmarinerOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
+		b, err := plugin.RenderSubmarinerBroker(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
 		}, submarinerCfg)
-
 		if err != nil {
 			return nil, ctrl.Result{}, err
 		}
 
-		submarinerResources, err := util.PatchResources(b)
+		brokerResources, err := util.PatchResources(b)
 		if err != nil {
 			return nil, ctrl.Result{}, err
 		}
-		resources = append(resources, submarinerResources...)
+		resources = append(resources, brokerResources...)
+		log.V(0).Info("broker will be installed in " + key.Name)
+		// break
 	}
 
-	log.V(4).Info("wait for submariner helm release to be reconciled")
+	log.V(0).Info("wait for submariner broker helm release to be reconciled")
 	if !f.helmReleaseReady(ctx, fleet, resources) {
 		// wait for HelmRelease to be ready
 		return nil, ctrl.Result{
@@ -93,5 +80,34 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 		}, nil
 	}
 
+	// Install operator in all member clusters
+	// for key, cluster := range fleetClusters {
+	// 	b, err := plugin.RenderSubmarinerOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
+	// 		Name:       key.Name,
+	// 		SecretName: cluster.Secret,
+	// 		SecretKey:  cluster.SecretKey,
+	// 	}, submarinerCfg)
+	// 	if err != nil {
+	// 		log.V(0).Error(err, "failed to render submariner operator")
+	// 		return nil, ctrl.Result{}, err
+	// 	}
+
+	// 	operatorResources, err := util.PatchResources(b)
+	// 	if err != nil {
+	// 		log.V(0).Error(err, "failed to render submariner operator")
+	// 		return nil, ctrl.Result{}, err
+	// 	}
+	// 	resources = append(resources, operatorResources...)
+	// }
+
+	// log.V(0).Info("wait for submariner operator helm release to be reconciled")
+	// if !f.helmReleaseReady(ctx, fleet, resources) {
+	// 	// wait for HelmRelease to be ready
+	// 	return nil, ctrl.Result{
+	// 		// HelmRelease check interval is 1m, so we set 30s here
+	// 		RequeueAfter: 30 * time.Second,
+	// 	}, nil
+	// }
+	log.V(0).Info("submariner helm release is ready!!!")
 	return resources, ctrl.Result{}, nil
 }

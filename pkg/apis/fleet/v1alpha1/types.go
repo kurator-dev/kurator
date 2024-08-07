@@ -583,17 +583,17 @@ type SubMarinerConfig struct {
 	//   targetNamespace: submariner
 	// ```
 	//
+	// +optional
+	Chart *ChartConfig `json:"chart,omitempty"`
 
+	// ExtraArgs is the set of extra arguments for submariner, and example will be provided in the future.
+	//
 	// ```yaml
 	// extraArgs:
 	//   operator:
 	//			image:
 	//     		pullPolicy: "IfNotPresent"
 	// ```
-
-	// +optional
-	Chart *ChartConfig `json:"chart,omitempty"`
-	// ExtraArgs is the set of extra arguments for submariner, and example will be provided in the future.
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`

@@ -4,9 +4,9 @@ name: submariner-k8s-broker
 version: 0.18.0
 targetNamespace: submariner
 values:
-  crd:
-    create: true
   rbac:
+    create: true
+  crd:
     create: true
   serviceAccounts:
     client:

@@ -461,12 +461,11 @@ func RenderSubmarinerBroker(
 		return nil, err
 	}
 	mergeChartConfig(c, subMarinerConfig.Chart)
-	c.TargetNamespace = fleetNN.Namespace // submariner chart is fleet scoped
 
-	values, err := toMap(subMarinerConfig.ExtraArgs)
-	if err != nil {
-		return nil, err
-	}
+	// values, err := toMap(subMarinerConfig.ExtraArgs)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           SubMarinerBrokerPluginName,
@@ -475,7 +474,7 @@ func RenderSubmarinerBroker(
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,
 		Chart:          *c,
-		Values:         values,
+		// Values:         values,
 	})
 }
 
@@ -492,7 +491,6 @@ func RenderSubmarinerOperator(
 		return nil, err
 	}
 	mergeChartConfig(c, subMarinerConfig.Chart)
-	c.TargetNamespace = fleetNN.Namespace // submariner chart is fleet scoped
 
 	values, err := toMap(subMarinerConfig.ExtraArgs)
 	if err != nil {

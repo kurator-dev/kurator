@@ -36,4 +36,4 @@ spec:
           image:
             pullPolicy: "IfNotPresent"
         submariner:
-          natEnabled: true
+          natEnabled: false
