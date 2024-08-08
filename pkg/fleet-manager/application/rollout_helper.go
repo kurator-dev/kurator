@@ -45,6 +45,9 @@ const (
 
 	// StatusSyncInterval specifies the interval for requeueing when synchronizing status. It determines how frequently the status should be checked and updated.
 	StatusSyncInterval = 30 * time.Second
+
+	currentClusterKind = "currentCluster"
+	currentClusterName = "host"
 )
 
 func (a *ApplicationManager) fetchRolloutClusters(ctx context.Context,
@@ -54,24 +57,36 @@ func (a *ApplicationManager) fetchRolloutClusters(ctx context.Context,
 	syncPolicy *applicationapi.ApplicationSyncPolicy,
 ) (map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, error) {
 	log := ctrl.LoggerFrom(ctx)
-	destination := getPolicyDestination(app, syncPolicy)
-	ClusterInterfaceList, result, err := a.fetchFleetClusterList(ctx, fleet, destination.ClusterSelector)
-	if err != nil || result.RequeueAfter > 0 {
-		return nil, err
-	}
-
-	fleetclusters := make(map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, len(ClusterInterfaceList))
-	for _, cluster := range ClusterInterfaceList {
-		kclient, err := fleetmanager.ClientForCluster(kubeClient, fleet.Namespace, cluster)
+	var fleetclusters map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster
+	if fleet == nil {
+		fleetclusters = make(map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, 1)
+		client, err := fleetmanager.WrapClient(a.Client)
 		if err != nil {
+			return nil, errors.Wrapf(err, "failed to wrap client")
+		}
+		fleetclusters[fleetmanager.ClusterKey{Kind: currentClusterKind, Name: currentClusterName}] = &fleetmanager.FleetCluster{
+			Client: client,
+		}
+	} else {
+		destination := getPolicyDestination(app, syncPolicy)
+		ClusterInterfaceList, result, err := a.fetchFleetClusterList(ctx, fleet, destination.ClusterSelector)
+		if err != nil || result.RequeueAfter > 0 {
 			return nil, err
 		}
 
-		kind := cluster.GetObject().GetObjectKind().GroupVersionKind().Kind
-		fleetclusters[fleetmanager.ClusterKey{Kind: kind, Name: cluster.GetObject().GetName()}] = &fleetmanager.FleetCluster{
-			Secret:    cluster.GetSecretName(),
-			SecretKey: cluster.GetSecretKey(),
-			Client:    kclient,
+		fleetclusters = make(map[fleetmanager.ClusterKey]*fleetmanager.FleetCluster, len(ClusterInterfaceList))
+		for _, cluster := range ClusterInterfaceList {
+			kclient, err := fleetmanager.ClientForCluster(kubeClient, fleet.Namespace, cluster)
+			if err != nil {
+				return nil, err
+			}
+
+			kind := cluster.GetObject().GetObjectKind().GroupVersionKind().Kind
+			fleetclusters[fleetmanager.ClusterKey{Kind: kind, Name: cluster.GetObject().GetName()}] = &fleetmanager.FleetCluster{
+				Secret:    cluster.GetSecretName(),
+				SecretKey: cluster.GetSecretKey(),
+				Client:    kclient,
+			}
 		}
 	}
 	log.Info("Successful to fetch destination clusters for Rollout")

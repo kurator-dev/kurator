@@ -136,16 +136,19 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 
 	// there only one fleet, so pre-fetch it here.
 	fleetKey := generateFleetKey(app)
-	fleet := &fleetapi.Fleet{}
-	// Retrieve fleet object based on the defined fleet key
-	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
-		if apierrors.IsNotFound(err) {
-			log.Info("fleet does not exist", "fleet", fleetKey)
-			return ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
+	var fleet *fleetapi.Fleet
+	if fleetKey.Name != "" {
+		fleet = &fleetapi.Fleet{}
+		// Retrieve fleet object based on the defined fleet key
+		if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
+			if apierrors.IsNotFound(err) {
+				log.Info("fleet does not exist", "fleet", fleetKey)
+				return ctrl.Result{RequeueAfter: fleetmanager.RequeueAfter}, nil
+			}
+			// Log error and requeue request if error occurred during fleet retrieval
+			log.Error(err, "failed to find fleet", "fleet", fleetKey)
+			return ctrl.Result{}, err
 		}
-		// Log error and requeue request if error occurred during fleet retrieval
-		log.Error(err, "failed to find fleet", "fleet", fleetKey)
-		return ctrl.Result{}, err
 	}
 
 	// Handle deletion reconciliation loop.

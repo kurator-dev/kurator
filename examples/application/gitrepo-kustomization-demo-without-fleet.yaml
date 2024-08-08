@@ -1,0 +1,25 @@
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: rollout-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
+  syncPolicies:
+    - kustomization:
+        interval: 0s
+        path: ./deploy/webapp
+        prune: true
+        timeout: 2m0s
+    - kustomization:
+        targetNamespace: default
+        interval: 5m0s
+        path: ./kustomize
+        prune: true
+        timeout: 2m0s

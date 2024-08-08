@@ -44,20 +44,26 @@ func (a *ApplicationManager) syncPolicyResource(ctx context.Context, app *applic
 	log := ctrl.LoggerFrom(ctx)
 
 	policyKind := getSyncPolicyKind(syncPolicy)
-	destination := getPolicyDestination(app, syncPolicy)
+	if fleet != nil {
+		destination := getPolicyDestination(app, syncPolicy)
 
-	// fetch fleet cluster list that recorded in fleet and matches the destination's cluster selector
-	fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet, destination.ClusterSelector)
-	if err != nil || result.RequeueAfter > 0 {
-		return result, err
-	}
-	// Iterate through all clusters, and create/update kustomization/helmRelease for each of them.
-	for _, currentFleetCluster := range fleetClusterList {
-		// fetch kubeconfig for each cluster.
-		kubeconfig := a.generateKubeConfig(currentFleetCluster)
+		// fetch fleet cluster list that recorded in fleet and matches the destination's cluster selector
+		fleetClusterList, result, err := a.fetchFleetClusterList(ctx, fleet, destination.ClusterSelector)
+		if err != nil || result.RequeueAfter > 0 {
+			return result, err
+		}
+		// Iterate through all clusters, and create/update kustomization/helmRelease for each of them.
+		for _, currentFleetCluster := range fleetClusterList {
+			// fetch kubeconfig for each cluster.
+			kubeconfig := a.generateKubeConfig(currentFleetCluster)
 
-		if result, err1 := a.handleSyncPolicyByKind(ctx, app, policyKind, syncPolicy, policyName, currentFleetCluster, kubeconfig); err1 != nil || result.RequeueAfter > 0 {
-			return result, errors.Wrapf(err1, "failed to handleSyncPolicyByKind currentFleetCluster=%s", currentFleetCluster.GetObject().GetName())
+			if result, err1 := a.handleSyncPolicyByKind(ctx, app, policyKind, syncPolicy, policyName, &currentFleetCluster, kubeconfig); err1 != nil || result.RequeueAfter > 0 {
+				return result, errors.Wrapf(err1, "failed to handleSyncPolicyByKind currentFleetCluster=%s", currentFleetCluster.GetObject().GetName())
+			}
+		}
+	} else {
+		if result, err1 := a.handleSyncPolicyByKind(ctx, app, policyKind, syncPolicy, policyName, nil, nil); err1 != nil || result.RequeueAfter > 0 {
+			return result, errors.Wrapf(err1, "failed to handleSyncPolicyByKind in currentCluster")
 		}
 	}
 
@@ -156,10 +162,15 @@ func (a *ApplicationManager) handleSyncPolicyByKind(
 	policyKind string,
 	syncPolicy *applicationapi.ApplicationSyncPolicy,
 	policyName string,
-	fleetCluster fleetmanager.ClusterInterface,
+	fleetCluster *fleetmanager.ClusterInterface,
 	kubeConfig *fluxmeta.KubeConfigReference,
 ) (ctrl.Result, error) {
-	policyResourceName := generatePolicyResourceName(policyName, fleetCluster.GetObject().GetObjectKind().GroupVersionKind().Kind, fleetCluster.GetObject().GetName())
+	var policyResourceName string
+	if kubeConfig != nil && fleetCluster != nil {
+		policyResourceName = generatePolicyResourceName(policyName, (*fleetCluster).GetObject().GetObjectKind().GroupVersionKind().Kind, (*fleetCluster).GetObject().GetName())
+	} else {
+		policyResourceName = generatePolicyResourceName(policyName, currentClusterKind, currentClusterName)
+	}
 	// handle kustomization
 	if policyKind == KustomizationKind {
 		kustomization := syncPolicy.Kustomization
