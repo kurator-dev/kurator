@@ -90,12 +90,13 @@ func validateFleet(in *v1alpha1.Application) field.ErrorList {
 		var (
 			firstPolicyFleet string
 			isFirst          = true
+			isNil            = false
 		)
 		for i, policy := range in.Spec.SyncPolicies {
 			// if individual policy fleet is not set, return err
 			if policy.Destination == nil || policy.Destination.Fleet == "" {
-				allErrs = append(allErrs, field.Required(field.NewPath("spec", "syncPolicies").Index(i).Child("destination", "fleet"), "must be set when application.spec.destination.fleet is not set"))
-				return allErrs
+				isNil = true
+				continue
 			}
 			if isFirst {
 				firstPolicyFleet = policy.Destination.Fleet
@@ -104,6 +105,9 @@ func validateFleet(in *v1alpha1.Application) field.ErrorList {
 			if !isFirst && firstPolicyFleet != policy.Destination.Fleet {
 				allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "syncPolicies").Index(i).Child("destination", "fleet"), policy.Destination.Fleet, fmt.Sprintf("must be same as firstPolicyFleet:%v, because fleet must be consistent throughout the application", firstPolicyFleet)))
 			}
+		}
+		if isNil && !isFirst {
+			allErrs = append(allErrs, field.Required(field.NewPath("spec", "syncPolicies").Child("destination", "fleet"), "must be set when application.spec.destination.fleet is not set"))
 		}
 	}
 
