@@ -47,6 +47,7 @@ type ApplicationSpec struct {
 	SyncPolicies []*ApplicationSyncPolicy `json:"syncPolicies"`
 	// Destination defines the destination clusters where the artifacts will be synced.
 	// It can be overridden by the syncPolicies' destination.
+	// And if both the current field and syncPolicies' destination are empty, the application will be deployed directly in the current cluster.
 	// +optional
 	Destination *ApplicationDestination `json:"destination,omitempty"`
 }

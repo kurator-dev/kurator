@@ -33,17 +33,7 @@ import (
 func TestValidApplicationValidation(t *testing.T) {
 	// read configuration from examples directory to test valid application configuration
 	r := path.Join("../../examples", "application")
-	caseNames := make([]string, 0)
-	err := filepath.WalkDir(r, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
-		}
-
-		caseNames = append(caseNames, path)
-
-		return nil
-	})
-	assert.NoError(t, err)
+	caseNames := getCase(t, r)
 
 	wh := &ApplicationWebhook{}
 	for _, tt := range caseNames {
@@ -60,17 +50,7 @@ func TestValidApplicationValidation(t *testing.T) {
 
 func TestInvalidApplicationValidation(t *testing.T) {
 	r := path.Join("testdata", "application")
-	caseNames := make([]string, 0)
-	err := filepath.WalkDir(r, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() {
-			return nil
-		}
-
-		caseNames = append(caseNames, path)
-
-		return nil
-	})
-	assert.NoError(t, err)
+	caseNames := getCase(t, r)
 
 	wh := &ApplicationWebhook{}
 	for _, tt := range caseNames {
@@ -84,6 +64,26 @@ func TestInvalidApplicationValidation(t *testing.T) {
 			t.Logf("%v", err)
 		})
 	}
+}
+
+func getCase(t *testing.T, r string) []string {
+	caseNames := make([]string, 0)
+	err := filepath.WalkDir(r, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if path == r {
+				return nil
+			} else {
+				return filepath.SkipDir
+			}
+		}
+		caseNames = append(caseNames, path)
+		return nil
+	})
+	assert.NoError(t, err)
+	return caseNames
 }
 
 func readApplication(filename string) (*v1alpha1.Application, error) {
