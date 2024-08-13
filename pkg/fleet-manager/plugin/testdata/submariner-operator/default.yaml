@@ -1,13 +1,13 @@
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
-  name: "submariner-operator-cluster1"
+  name: "sm-operator-cluster1"
   namespace: "default"
   labels:
     app.kubernetes.io/managed-by: fleet-manager
     fleet.kurator.dev/name: "fleet-1"
     fleet.kurator.dev/plugin: "submariner-operator"
-    fleet.kurator.dev/component: "submariner-operator"
+    fleet.kurator.dev/component: "sm-operator"
   ownerReferences:
   - apiVersion: "fleet.kurator.dev/v1alpha1"
     kind: "Fleet"
@@ -21,13 +21,13 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: "submariner-operator-cluster1"
+  name: "sm-operator-cluster1"
   namespace: "default"
   labels:
     app.kubernetes.io/managed-by: fleet-manager
     fleet.kurator.dev/name: "fleet-1"
     fleet.kurator.dev/plugin: "submariner-operator"
-    fleet.kurator.dev/component: "submariner-operator"
+    fleet.kurator.dev/component: "sm-operator"
   ownerReferences:
   - apiVersion: "fleet.kurator.dev/v1alpha1"
     kind: "Fleet"
@@ -40,20 +40,31 @@ spec:
       version: "0.18.0"
       sourceRef:
         kind: HelmRepository
-        name: "submariner-operator-cluster1"
+        name: "sm-operator-cluster1"
   values:
-    operator:
-      image:
-        tag: 0.14.0
-    rbac:
-      create: true
+    broker:
+      ca: ca-xxx
+      globalnet: true
+      server: server-xxx
+      token: token-xxx
+    serviceAccounts:
+      globalnet:
+        create: true
+      lighthouseAgent:
+        create: true
+      lighthouseCoreDns:
+        create: true
     submariner:
+      cableDriver: libreswan
+      clusterId: cluster1
+      globalCidr: 242.0.0.0/8
       natEnabled: false
+      serviceDiscovery: true
   interval: 1m0s
   install:
     createNamespace: true
-  targetNamespace: "submariner"
-  storageNamespace: "submariner"
+  targetNamespace: "submariner-operator"
+  storageNamespace: "submariner-operator"
   timeout: 15m0s
   kubeConfig:
     secretRef:

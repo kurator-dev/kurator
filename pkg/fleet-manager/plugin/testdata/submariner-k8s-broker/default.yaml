@@ -1,13 +1,13 @@
 apiVersion: source.toolkit.fluxcd.io/v1beta2
 kind: HelmRepository
 metadata:
-  name: "submariner-k8s-broker-cluster1"
+  name: "sm-broker-cluster1"
   namespace: "default"
   labels:
     app.kubernetes.io/managed-by: fleet-manager
     fleet.kurator.dev/name: "fleet-1"
-    fleet.kurator.dev/plugin: "submariner-k8s-broker"
-    fleet.kurator.dev/component: "submariner-k8s-broker"
+    fleet.kurator.dev/plugin: "submariner-broker"
+    fleet.kurator.dev/component: "sm-broker"
   ownerReferences:
   - apiVersion: "fleet.kurator.dev/v1alpha1"
     kind: "Fleet"
@@ -21,13 +21,13 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: "submariner-k8s-broker-cluster1"
+  name: "sm-broker-cluster1"
   namespace: "default"
   labels:
     app.kubernetes.io/managed-by: fleet-manager
     fleet.kurator.dev/name: "fleet-1"
-    fleet.kurator.dev/plugin: "submariner-k8s-broker"
-    fleet.kurator.dev/component: "submariner-k8s-broker"
+    fleet.kurator.dev/plugin: "submariner-broker"
+    fleet.kurator.dev/component: "sm-broker"
   ownerReferences:
   - apiVersion: "fleet.kurator.dev/v1alpha1"
     kind: "Fleet"
@@ -40,7 +40,7 @@ spec:
       version: "0.18.0"
       sourceRef:
         kind: HelmRepository
-        name: "submariner-k8s-broker-cluster1"
+        name: "sm-broker-cluster1"
   values:
     crd:
       create: true
@@ -52,8 +52,8 @@ spec:
   interval: 1m0s
   install:
     createNamespace: true
-  targetNamespace: "submariner"
-  storageNamespace: "submariner"
+  targetNamespace: "submariner-k8s-broker"
+  storageNamespace: "submariner-k8s-broker"
   timeout: 15m0s
   kubeConfig:
     secretRef:

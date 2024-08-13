@@ -32,8 +32,10 @@ spec:
   plugin:
     submariner:
       extraArgs:
-        operator:
-          image:
-            pullPolicy: "IfNotPresent"
+        ipsec:
+          psk: $SUBMARINER_PSK
+        broker:
+          namespace: "submariner"
         submariner:
-          natEnabled: false
+          clusterCidr: "10.244.0.0/24"
+          serviceCidr: "10.96.0.0/16"

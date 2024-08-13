@@ -1,0 +1,20 @@
+type: default
+repo: https://submariner-io.github.io/submariner-charts/charts
+name: submariner-operator
+version: 0.18.0
+targetNamespace: submariner-operator
+values:
+  broker:
+    globalnet: true
+  submariner:
+    serviceDiscovery: true
+    cableDriver: "libreswan"
+    globalCidr: "242.0.0.0/8"
+    natEnabled: false
+  serviceAccounts:
+    globalnet:
+      create: true
+    lighthouseAgent:
+      create: true
+    lighthouseCoreDns:
+      create: true

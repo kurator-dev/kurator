@@ -40,7 +40,7 @@ const (
 	ClusterStoragePluginName     = "cluster-storage"
 	FlaggerPluginName            = "flagger"
 	PublicTestloaderName         = "testloader"
-	SubMarinerBrokerPluginName   = "submariner-k8s-broker"
+	SubMarinerBrokerPluginName   = "submariner-broker"
 	SubMarinerOperatorPluginName = "submariner-operator"
 
 	ThanosComponentName             = "thanos"
@@ -53,8 +53,8 @@ const (
 	RookClusterComponentName        = "rook-ceph"
 	FlaggerComponentName            = "flagger"
 	TestloaderComponentName         = "testloader"
-	SubMarinerBrokerComponentName   = "submariner-k8s-broker"
-	SubMarinerOperatorComponentName = "submariner-operator"
+	SubMarinerBrokerComponentName   = "sm-broker"
+	SubMarinerOperatorComponentName = "sm-operator"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -484,6 +484,7 @@ func RenderSubmarinerOperator(
 	fleetRef *metav1.OwnerReference,
 	cluster KubeConfigSecretRef,
 	subMarinerConfig *fleetv1a1.SubMarinerConfig,
+	brokerConfig map[string]interface{},
 ) ([]byte, error) {
 	// get and merge the chart config
 	c, err := getFleetPluginChart(fsys, SubMarinerOperatorComponentName)
@@ -496,6 +497,13 @@ func RenderSubmarinerOperator(
 	if err != nil {
 		return nil, err
 	}
+
+	values = transform.MergeMaps(values, map[string]interface{}{
+		"broker": brokerConfig,
+		"submariner": map[string]interface{}{
+			"clusterId": cluster.Name,
+		},
+	})
 
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           SubMarinerOperatorPluginName,

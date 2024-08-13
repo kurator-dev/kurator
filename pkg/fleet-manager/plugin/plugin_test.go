@@ -709,11 +709,17 @@ func TestRenderSubmarinerOperator(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			broker_cfg := map[string]interface{}{
+				"ca":     "ca-xxx",
+				"token":  "token-xxx",
+				"server": "server-xxx",
+			}
+
 			got, err := RenderSubmarinerOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.config)
+			}, tc.config, broker_cfg)
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("submariner-operator", tc.name)
