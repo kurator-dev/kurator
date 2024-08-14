@@ -9,7 +9,6 @@ values:
   submariner:
     serviceDiscovery: true
     cableDriver: "libreswan"
-    globalCidr: "242.0.0.0/8"
     natEnabled: false
   serviceAccounts:
     globalnet:

@@ -462,11 +462,6 @@ func RenderSubmarinerBroker(
 	}
 	mergeChartConfig(c, subMarinerConfig.Chart)
 
-	// values, err := toMap(subMarinerConfig.ExtraArgs)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           SubMarinerBrokerPluginName,
 		Component:      SubMarinerBrokerComponentName,
@@ -485,6 +480,7 @@ func RenderSubmarinerOperator(
 	cluster KubeConfigSecretRef,
 	subMarinerConfig *fleetv1a1.SubMarinerConfig,
 	brokerConfig map[string]interface{},
+	appConfig map[string]interface{},
 ) ([]byte, error) {
 	// get and merge the chart config
 	c, err := getFleetPluginChart(fsys, SubMarinerOperatorComponentName)
@@ -499,10 +495,8 @@ func RenderSubmarinerOperator(
 	}
 
 	values = transform.MergeMaps(values, map[string]interface{}{
-		"broker": brokerConfig,
-		"submariner": map[string]interface{}{
-			"clusterId": cluster.Name,
-		},
+		"broker":     brokerConfig,
+		"submariner": appConfig,
 	})
 
 	return renderFleetPlugin(fsys, FleetPluginConfig{

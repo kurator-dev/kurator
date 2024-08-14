@@ -677,7 +677,7 @@ func TestRenderSubmarinerBroker(t *testing.T) {
 			}, tc.config)
 			assert.NoError(t, err)
 
-			getExpected, err := getExpected("submariner-k8s-broker", tc.name)
+			getExpected, err := getExpected("sm-broker", tc.name)
 			assert.NoError(t, err)
 			assert.Equal(t, string(getExpected), string(got))
 		})
@@ -709,20 +709,25 @@ func TestRenderSubmarinerOperator(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			broker_cfg := map[string]interface{}{
+			brokerCfg := map[string]interface{}{
 				"ca":     "ca-xxx",
 				"token":  "token-xxx",
 				"server": "server-xxx",
+			}
+
+			appCfg := map[string]interface{}{
+				"clusterId":  "cluster1",
+				"globalCidr": "242.0.0.0/8",
 			}
 
 			got, err := RenderSubmarinerOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.config, broker_cfg)
+			}, tc.config, brokerCfg, appCfg)
 			assert.NoError(t, err)
 
-			getExpected, err := getExpected("submariner-operator", tc.name)
+			getExpected, err := getExpected("sm-operator", tc.name)
 			assert.NoError(t, err)
 			assert.Equal(t, string(getExpected), string(got))
 		})

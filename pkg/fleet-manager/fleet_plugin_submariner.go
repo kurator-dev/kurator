@@ -30,7 +30,8 @@ import (
 	"kurator.dev/kurator/pkg/infra/util"
 )
 
-var BROKER_NS string = "submariner-k8s-broker"
+// Must match the namespace in pkg/fleet-manager/manifests/plugins/sm-broker.yaml
+const BROKER_NS string = "submariner-k8s-broker"
 
 func getBrokerConfig(ctx context.Context, key ClusterKey, cluster *FleetCluster) (map[string]interface{}, error) {
 	defer func() {
@@ -45,15 +46,12 @@ func getBrokerConfig(ctx context.Context, key ClusterKey, cluster *FleetCluster)
 		return nil, err
 	}
 
-	broker_ca := base64.StdEncoding.EncodeToString(sts.Data["ca.crt"])
-	broker_token := string(sts.Data["token"])
-
-	endpoints, err := cluster.Client.KubeClient().CoreV1().Endpoints("default").Get(context.TODO(), "kubernetes", metav1.GetOptions{})
+	endpoints, err := cluster.Client.KubeClient().CoreV1().Endpoints("default").Get(ctx, "kubernetes", metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	broker_url := ""
+	var broker_url string
 	for _, subset := range endpoints.Subsets {
 		for _, addr := range subset.Addresses {
 			for _, port := range subset.Ports {
@@ -68,12 +66,13 @@ func getBrokerConfig(ctx context.Context, key ClusterKey, cluster *FleetCluster)
 		return nil, errors.New("broker url not found")
 	}
 
-	broker_cfg := map[string]interface{}{
-		"ca":     broker_ca,
-		"token":  broker_token,
-		"server": broker_url,
+	brokerCfg := map[string]interface{}{
+		"ca":        base64.StdEncoding.EncodeToString(sts.Data["ca.crt"]),
+		"token":     string(sts.Data["token"]),
+		"server":    broker_url,
+		"namespace": BROKER_NS,
 	}
-	return broker_cfg, nil
+	return brokerCfg, nil
 }
 
 // reconcileSubmarinerPlugin reconciles the Submariner plugin.
@@ -107,7 +106,7 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 	}
 
 	// Install broker in the first member cluster
-	log.V(0).Info("broker will be installed in " + brokerClusterKey.Name)
+	log.V(4).Info("broker will be installed in " + brokerClusterKey.Name)
 	brokerCluster := fleetClusters[brokerClusterKey]
 	b, err := plugin.RenderSubmarinerBroker(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 		Name:       brokerClusterKey.Name,
@@ -124,7 +123,7 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 	}
 	resources = append(resources, brokerResources...)
 
-	log.V(0).Info("wait for submariner broker helm release to be reconciled")
+	log.V(4).Info("wait for submariner broker helm release to be reconciled")
 	if !f.helmReleaseReady(ctx, fleet, resources) {
 		// wait for HelmRelease to be ready
 		return nil, ctrl.Result{
@@ -132,34 +131,42 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 			RequeueAfter: 30 * time.Second,
 		}, nil
 	}
+	log.V(4).Info(fmt.Sprintf("Submariner broker helm release is ready in %s", brokerClusterKey.Name))
 
-	broker_cfg, err := getBrokerConfig(ctx, brokerClusterKey, brokerCluster)
+	brokerCfg, err := getBrokerConfig(ctx, brokerClusterKey, brokerCluster)
 	if err != nil {
-		log.V(0).Error(err, "failed to get broker info")
+		log.V(4).Error(err, "failed to get broker info")
 		return nil, ctrl.Result{}, err
 	}
 
 	// Install operator in all member clusters
+	cidrPivot := 0
 	for key, cluster := range fleetClusters {
+		cidrPivot++
+		appCfg := map[string]interface{}{
+			"clusterId":  key.Name,
+			"globalCidr": fmt.Sprintf("242.%d.0.0/16", cidrPivot),
+		}
+
 		b, err := plugin.RenderSubmarinerOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
-		}, submarinerCfg, broker_cfg)
+		}, submarinerCfg, brokerCfg, appCfg)
 		if err != nil {
-			log.V(0).Error(err, "failed to render submariner operator")
+			log.V(4).Error(err, "failed to render submariner operator")
 			return nil, ctrl.Result{}, err
 		}
 
 		operatorResources, err := util.PatchResources(b)
 		if err != nil {
-			log.V(0).Error(err, "failed to render submariner operator")
+			log.V(4).Error(err, "failed to render submariner operator")
 			return nil, ctrl.Result{}, err
 		}
 		resources = append(resources, operatorResources...)
 	}
 
-	log.V(0).Info("wait for submariner operator helm release to be reconciled")
+	log.V(4).Info("wait for submariner operator helm release to be reconciled")
 	if !f.helmReleaseReady(ctx, fleet, resources) {
 		// wait for HelmRelease to be ready
 		return nil, ctrl.Result{
@@ -167,6 +174,6 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 			RequeueAfter: 30 * time.Second,
 		}, nil
 	}
-	log.V(0).Info("Submariner helm release is ready!")
+	log.V(4).Info("Submariner helm release is ready!")
 	return resources, ctrl.Result{}, nil
 }
