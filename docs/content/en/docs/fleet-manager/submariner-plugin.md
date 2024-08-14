@@ -15,8 +15,13 @@ In this tutorial we’ll cover the basics of how to use [Fleet](https://kurator.
 2. Running the following command to create two secrets to access attached clusters.
 
 ```bash
+# Create secrets for the attached clusters
 kubectl create secret generic kurator-member1 --from-file=kurator-member1.config=/root/.kube/kurator-member1.config
 kubectl create secret generic kurator-member2 --from-file=kurator-member2.config=/root/.kube/kurator-member2.config
+
+# Label a gateway node for each attached cluster
+kubectl label node kurator-member1-control-plane submariner.io/gateway=true --kubeconfig=/root/.kube/kurator-member1.config
+kubectl label node kurator-member2-control-plane submariner.io/gateway=true --kubeconfig=/root/.kube/kurator-member2.config
 ```
 
 ### Create a fleet with metric plugin enabled
@@ -44,6 +49,23 @@ Run the following commands:
 ```bash
 kubectl get pod -n submariner-operator --kubeconfig=/root/.kube/kurator-member1.config
 kubectl get pod -n submariner-operator --kubeconfig=/root/.kube/kurator-member2.config
+```
+
+More detailed verification steps can be done as follows:
+
+> `subctl` needs to be installed to perform checks, please refer to the [Install subctl](https://submariner.io/operations/deployment/helm/#install-subctl).
+
+- Diagnostic checks:
+
+```bash
+subctl diagnose all --kubeconfig /root/.kube/kurator-member1.config
+subctl diagnose all --kubeconfig /root/.kube/kurator-member2.config
+```
+
+- Verify the connectivity between the clusters:
+
+```bash
+KUBECONFIG=/root/.kube/kurator-member1.config:/root/.kube/kurator-member2.config subctl verify --context kurator-member2 --tocontext kurator-member1
 ```
 
 ## Cleanup
