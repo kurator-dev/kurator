@@ -480,7 +480,7 @@ func RenderSubmarinerOperator(
 	cluster KubeConfigSecretRef,
 	subMarinerConfig *fleetv1a1.SubMarinerConfig,
 	brokerConfig map[string]interface{},
-	appConfig map[string]interface{},
+	globalCidr string,
 ) ([]byte, error) {
 	// get and merge the chart config
 	c, err := getFleetPluginChart(fsys, SubMarinerOperatorComponentName)
@@ -494,9 +494,23 @@ func RenderSubmarinerOperator(
 		return nil, err
 	}
 
+	globalnet := false
+	if globalCidr != "" {
+		globalnet = true
+	}
+	brokerConfig["globalnet"] = globalnet
+
 	values = transform.MergeMaps(values, map[string]interface{}{
-		"broker":     brokerConfig,
-		"submariner": appConfig,
+		"broker": brokerConfig,
+		"serviceAccounts": map[string]interface{}{
+			"globalnet": map[string]interface{}{
+				"create": globalnet,
+			},
+		},
+		"submariner": map[string]interface{}{
+			"clusterId":  cluster.Name,
+			"globalCidr": globalCidr,
+		},
 	})
 
 	return renderFleetPlugin(fsys, FleetPluginConfig{

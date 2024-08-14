@@ -2786,6 +2786,11 @@ spec:
                     description: SubMariner defines the configuration for the kurator
                       network management.
                     properties:
+                      brokerCluster:
+                        description: |-
+                          BrokerCluster is the name of the broker cluster.
+                          If the broker cluster is not specified, the first cluster in the fleet will be used as the broker cluster.
+                        type: string
                       chart:
                         description: |-
                           Chart defines the helm chart config of the submariner.
@@ -2821,6 +2826,14 @@ spec:
                           submariner, and example will be provided in the future.\n\n\n```yaml\nextraArgs:\n
                           \ operator:\n\t\t\timage:\n    \t\tpullPolicy: \"IfNotPresent\"\n```"
                         x-kubernetes-preserve-unknown-fields: true
+                      globalcidrs:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Globalcidrs is the global cidr of the submariner.
+                          Globalcidr of a cluster should not overlap with the globalcidr of other clusters.
+                          If the globalcidr is not specified, globalnet will be disabled.
+                        type: object
                     type: object
                 type: object
             type: object

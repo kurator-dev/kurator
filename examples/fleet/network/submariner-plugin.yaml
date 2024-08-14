@@ -31,6 +31,10 @@ spec:
       kind: AttachedCluster
   plugin:
     submariner:
+      brokerCluster: kurator-member1
+      globalcidrs:
+        kurator-member1: "242.1.0.0/16"
+        kurator-member2: "242.2.0.0/16"
       extraArgs:
         ipsec:
           psk: $SUBMARINER_PSK

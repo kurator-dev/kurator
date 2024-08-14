@@ -779,6 +779,13 @@ func (in *SubMarinerConfig) DeepCopyInto(out *SubMarinerConfig) {
 		**out = **in
 	}
 	in.ExtraArgs.DeepCopyInto(&out.ExtraArgs)
+	if in.Globalcidrs != nil {
+		in, out := &in.Globalcidrs, &out.Globalcidrs
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 

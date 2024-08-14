@@ -597,6 +597,16 @@ type SubMarinerConfig struct {
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
+
+	// BrokerCluster is the name of the broker cluster.
+	// If the broker cluster is not specified, the first cluster in the fleet will be used as the broker cluster.
+	// +optional
+	BrokerCluster string `json:"brokerCluster,omitempty"`
+	// Globalcidrs is the global cidr of the submariner.
+	// Globalcidr of a cluster should not overlap with the globalcidr of other clusters.
+	// If the globalcidr is not specified, globalnet will be disabled.
+	// +optional
+	Globalcidrs map[string]string `json:"globalcidrs"`
 }
 
 // Provider only can be istio now.

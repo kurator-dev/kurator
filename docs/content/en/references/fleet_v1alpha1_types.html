@@ -1825,6 +1825,33 @@ pullPolicy: &quot;IfNotPresent&quot;
 </code></pre>
 </td>
 </tr>
+<tr>
+<td>
+<code>brokerCluster</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>BrokerCluster is the name of the broker cluster.
+If the broker cluster is not specified, the first cluster in the fleet will be used as the broker cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>globalcidrs</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Globalcidrs is the global cidr of the submariner.
+Globalcidr of a cluster should not overlap with the globalcidr of other clusters.
+If the globalcidr is not specified, globalnet will be disabled.</p>
+</td>
+</tr>
 </tbody>
 </table>
 </div>

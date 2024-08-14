@@ -715,16 +715,12 @@ func TestRenderSubmarinerOperator(t *testing.T) {
 				"server": "server-xxx",
 			}
 
-			appCfg := map[string]interface{}{
-				"clusterId":  "cluster1",
-				"globalCidr": "242.0.0.0/8",
-			}
-
+			globalCidr := "242.0.0.0/8"
 			got, err := RenderSubmarinerOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.config, brokerCfg, appCfg)
+			}, tc.config, brokerCfg, globalCidr)
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("sm-operator", tc.name)
