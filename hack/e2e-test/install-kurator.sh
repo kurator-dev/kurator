@@ -17,7 +17,7 @@ VERSION=$(echo "$VERSION" | sed 's/^0*//')
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
 kubectl create namespace cert-manager
-helm install -n cert-manager cert-manager jetstack/cert-manager --set installCRDs=true
+helm install -n cert-manager cert-manager jetstack/cert-manager --set crds.enabled=true
 
 helm repo add fluxcd-community https://fluxcd-community.github.io/helm-charts
 cat <<EOF | helm install fluxcd fluxcd-community/flux2 --version 2.7.0 -n fluxcd-system --create-namespace -f -

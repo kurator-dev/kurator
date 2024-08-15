@@ -16,7 +16,7 @@ kind load docker-image ghcr.io/kurator-dev/cluster-operator:0.3-dev --name <your
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
 kubectl create namespace cert-manager
-helm install -n cert-manager cert-manager jetstack/cert-manager --set installCRDs=true
+helm install -n cert-manager cert-manager jetstack/cert-manager --set crds.enabled=true
 ```
 
 - Install cluster operator
