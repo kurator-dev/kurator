@@ -5,6 +5,7 @@ version: 0.18.0
 targetNamespace: submariner-operator
 values:
   broker:
+    namespace: submariner-k8s-broker
     globalnet: true
   submariner:
     serviceDiscovery: true

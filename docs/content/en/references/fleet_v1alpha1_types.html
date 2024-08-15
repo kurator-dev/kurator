@@ -343,7 +343,7 @@ map[string]string
 <a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.KyvernoConfig">KyvernoConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.PrometheusConfig">PrometheusConfig</a>, 
-<a href="#fleet.kurator.dev/v1alpha1.SubMarinerConfig">SubMarinerConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.SubMarinerOperatorConfig">SubMarinerOperatorConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.ThanosConfig">ThanosConfig</a>)
 </p>
 <div class="md-typeset__scrollwrap">
@@ -1438,13 +1438,13 @@ FlaggerConfig
 <td>
 <code>submariner</code><br>
 <em>
-<a href="#fleet.kurator.dev/v1alpha1.SubMarinerConfig">
-SubMarinerConfig
+<a href="#fleet.kurator.dev/v1alpha1.SubMarinerOperatorConfig">
+SubMarinerOperatorConfig
 </a>
 </em>
 </td>
 <td>
-<p>SubMariner defines the configuration for the kurator network management.</p>
+<p>SubMarinerOperator defines the configuration for the kurator network management.</p>
 </td>
 </tr>
 </tbody>
@@ -1769,7 +1769,7 @@ StorageDeviceSelection
 </table>
 </div>
 </div>
-<h3 id="fleet.kurator.dev/v1alpha1.SubMarinerConfig">SubMarinerConfig
+<h3 id="fleet.kurator.dev/v1alpha1.SubMarinerOperatorConfig">SubMarinerOperatorConfig
 </h3>
 <p>
 (<em>Appears on:</em>
@@ -1796,13 +1796,13 @@ ChartConfig
 </td>
 <td>
 <em>(Optional)</em>
-<p>Chart defines the helm chart config of the submariner.
-default value is</p>
+<p>Chart defines the helm chart configuration of the submariner operator.
+The default value is</p>
 <pre><code class="language-yaml">chart:
 repository: https://submariner-io.github.io/submariner-charts/charts
-name: submariner
+name: submariner-operator
 version: 0.18.0
-targetNamespace: submariner
+targetNamespace: submariner-operator
 </code></pre>
 </td>
 </tr>
@@ -1819,9 +1819,11 @@ Kubernetes /apiextensions/v1.JSON
 <em>(Optional)</em>
 <p>ExtraArgs is the set of extra arguments for submariner, and example will be provided in the future.</p>
 <pre><code class="language-yaml">extraArgs:
-operator:
-image:
-pullPolicy: &quot;IfNotPresent&quot;
+broker:
+globalnet: true
+submariner:
+serviceDiscovery: true
+natEnabled: false
 </code></pre>
 </td>
 </tr>
@@ -1834,8 +1836,30 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>BrokerCluster is the name of the broker cluster.
+<p>BrokerCluster is the name of cluster in which the broker will be installed.
 If the broker cluster is not specified, the first cluster in the fleet will be used as the broker cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>clusterCidrs</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>ClusterCidrs records the clustercidr of each cluster.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceCidrs</code><br>
+<em>
+map[string]string
+</em>
+</td>
+<td>
+<p>ServiceCidrs records the servicecidr of each cluster.</p>
 </td>
 </tr>
 <tr>
@@ -1847,9 +1871,9 @@ map[string]string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Globalcidrs is the global cidr of the submariner.
-Globalcidr of a cluster should not overlap with the globalcidr of other clusters.
-If the globalcidr is not specified, globalnet will be disabled.</p>
+<p>Globalcidrs records the globalcidr of each cluster in a virtual network Globalnet.
+Each cluster must use distinct globalCidr that don’t conflict or overlap with any other cluster
+If the globalcidr is not specified, Globalnet will be disabled.</p>
 </td>
 </tr>
 </tbody>

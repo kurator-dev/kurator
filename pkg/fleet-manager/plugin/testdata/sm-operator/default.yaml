@@ -45,6 +45,7 @@ spec:
     broker:
       ca: ca-xxx
       globalnet: true
+      namespace: submariner-k8s-broker
       server: server-xxx
       token: token-xxx
     serviceAccounts:
@@ -56,9 +57,11 @@ spec:
         create: true
     submariner:
       cableDriver: libreswan
+      clusterCidr: 10.244.0.0/24
       clusterId: cluster1
-      globalCidr: 242.0.0.0/8
+      globalCidr: 242.0.0.0/24
       natEnabled: false
+      serviceCidr: 10.96.0.0/16
       serviceDiscovery: true
   interval: 1m0s
   install:

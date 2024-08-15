@@ -74,9 +74,9 @@ func getBrokerConfig(ctx context.Context, clusterName string, cluster *FleetClus
 func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*FleetCluster) (kube.ResourceList, ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx)
 
-	submarinerCfg := fleet.Spec.Plugin.SubMariner
+	smOperatorCfg := fleet.Spec.Plugin.SubMarinerOperator
 
-	if submarinerCfg == nil {
+	if smOperatorCfg == nil {
 		// reconcilePluginResources will delete all resources if plugin is nil
 		return nil, ctrl.Result{}, nil
 	}
@@ -94,10 +94,10 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 		return nil, ctrl.Result{}, errors.New("fleetClusters number < 2")
 	}
 
-	var brokerClusterName string = submarinerCfg.BrokerCluster
+	var brokerClusterName string = smOperatorCfg.BrokerCluster
 	var brokerCluster *FleetCluster
 
-	if submarinerCfg.BrokerCluster == "" {
+	if smOperatorCfg.BrokerCluster == "" {
 		// Install broker in the first member cluster
 		brokerClusterName = fleet.Spec.Clusters[0].Name
 		log.V(4).Info("broker cluster not specified, using the first member cluster", "brokerClusterName", brokerClusterName)
@@ -110,7 +110,7 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 				Name:       brokerClusterName,
 				SecretName: brokerCluster.Secret,
 				SecretKey:  brokerCluster.SecretKey,
-			}, submarinerCfg)
+			})
 			if err != nil {
 				return nil, ctrl.Result{}, err
 			}
@@ -143,15 +143,11 @@ func (f *FleetManager) reconcileSubmarinerPlugin(ctx context.Context, fleet *fle
 
 	// Install operator in all member clusters
 	for key, cluster := range fleetClusters {
-		globalcidr, ok := submarinerCfg.Globalcidrs[key.Name]
-		if !ok {
-			globalcidr = ""
-		}
 		b, err := plugin.RenderSubmarinerOperator(f.Manifests, fleetNN, fleetOwnerRef, plugin.KubeConfigSecretRef{
 			Name:       key.Name,
 			SecretName: cluster.Secret,
 			SecretKey:  cluster.SecretKey,
-		}, submarinerCfg, brokerCfg, globalcidr)
+		}, smOperatorCfg, brokerCfg)
 		if err != nil {
 			log.V(4).Error(err, "failed to render submariner operator")
 			return nil, ctrl.Result{}, err

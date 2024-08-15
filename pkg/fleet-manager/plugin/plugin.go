@@ -453,14 +453,11 @@ func RenderSubmarinerBroker(
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
 	cluster KubeConfigSecretRef,
-	subMarinerConfig *fleetv1a1.SubMarinerConfig,
 ) ([]byte, error) {
-	// get and merge the chart config
 	c, err := getFleetPluginChart(fsys, SubMarinerBrokerComponentName)
 	if err != nil {
 		return nil, err
 	}
-	mergeChartConfig(c, subMarinerConfig.Chart)
 
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           SubMarinerBrokerPluginName,
@@ -469,7 +466,6 @@ func RenderSubmarinerBroker(
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,
 		Chart:          *c,
-		// Values:         values,
 	})
 }
 
@@ -478,26 +474,26 @@ func RenderSubmarinerOperator(
 	fleetNN types.NamespacedName,
 	fleetRef *metav1.OwnerReference,
 	cluster KubeConfigSecretRef,
-	subMarinerConfig *fleetv1a1.SubMarinerConfig,
+	subMarinerOperatorConfig *fleetv1a1.SubMarinerOperatorConfig,
 	brokerConfig map[string]interface{},
-	globalCidr string,
 ) ([]byte, error) {
 	// get and merge the chart config
 	c, err := getFleetPluginChart(fsys, SubMarinerOperatorComponentName)
 	if err != nil {
 		return nil, err
 	}
-	mergeChartConfig(c, subMarinerConfig.Chart)
+	mergeChartConfig(c, subMarinerOperatorConfig.Chart)
 
-	values, err := toMap(subMarinerConfig.ExtraArgs)
+	values, err := toMap(subMarinerOperatorConfig.ExtraArgs)
 	if err != nil {
 		return nil, err
 	}
-
 	globalnet := false
-	if globalCidr != "" {
+	globalCidr, ok := subMarinerOperatorConfig.Globalcidrs[cluster.Name]
+	if ok && globalCidr != "" {
 		globalnet = true
 	}
+
 	brokerConfig["globalnet"] = globalnet
 
 	values = transform.MergeMaps(values, map[string]interface{}{
@@ -508,8 +504,10 @@ func RenderSubmarinerOperator(
 			},
 		},
 		"submariner": map[string]interface{}{
-			"clusterId":  cluster.Name,
-			"globalCidr": globalCidr,
+			"clusterId":   cluster.Name,
+			"clusterCidr": subMarinerOperatorConfig.ClusterCidrs[cluster.Name],
+			"serviceCidr": subMarinerOperatorConfig.ServiceCidrs[cluster.Name],
+			"globalCidr":  globalCidr,
 		},
 	})
 

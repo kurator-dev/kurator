@@ -87,8 +87,8 @@ type PluginConfig struct {
 	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
 	// Flagger defines the configuretion for the kurator rollout engine.
 	Flagger *FlaggerConfig `json:"flagger,omitempty"`
-	// SubMariner defines the configuration for the kurator network management.
-	SubMariner *SubMarinerConfig `json:"submariner,omitempty"`
+	// SubMarinerOperator defines the configuration for the kurator network management.
+	SubMarinerOperator *SubMarinerOperatorConfig `json:"submariner,omitempty"`
 }
 
 type MetricConfig struct {
@@ -571,16 +571,16 @@ type FlaggerConfig struct {
 	PublicTestloader bool `json:"publicTestloader,omitempty"`
 }
 
-type SubMarinerConfig struct {
-	// Chart defines the helm chart config of the submariner.
-	// default value is
+type SubMarinerOperatorConfig struct {
+	// Chart defines the helm chart configuration of the submariner operator.
+	// The default value is
 	//
 	// ```yaml
 	// chart:
 	//   repository: https://submariner-io.github.io/submariner-charts/charts
-	//   name: submariner
+	//   name: submariner-operator
 	//   version: 0.18.0
-	//   targetNamespace: submariner
+	//   targetNamespace: submariner-operator
 	// ```
 	//
 	// +optional
@@ -590,23 +590,32 @@ type SubMarinerConfig struct {
 	//
 	// ```yaml
 	// extraArgs:
-	//   operator:
-	//			image:
-	//     		pullPolicy: "IfNotPresent"
+	//   broker:
+	//   		globalnet: true
+	// 	 submariner:
+	//  		serviceDiscovery: true
+	//      natEnabled: false
 	// ```
 	//
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 
-	// BrokerCluster is the name of the broker cluster.
+	// BrokerCluster is the name of cluster in which the broker will be installed.
 	// If the broker cluster is not specified, the first cluster in the fleet will be used as the broker cluster.
 	// +optional
 	BrokerCluster string `json:"brokerCluster,omitempty"`
-	// Globalcidrs is the global cidr of the submariner.
-	// Globalcidr of a cluster should not overlap with the globalcidr of other clusters.
-	// If the globalcidr is not specified, globalnet will be disabled.
+
+	// ClusterCidrs records the clustercidr of each cluster.
+	ClusterCidrs map[string]string `json:"clusterCidrs"`
+
+	// ServiceCidrs records the servicecidr of each cluster.
+	ServiceCidrs map[string]string `json:"serviceCidrs"`
+
+	// Globalcidrs records the globalcidr of each cluster in a virtual network Globalnet.
+	// Each cluster must use distinct globalCidr that don’t conflict or overlap with any other cluster
+	// If the globalcidr is not specified, Globalnet will be disabled.
 	// +optional
-	Globalcidrs map[string]string `json:"globalcidrs"`
+	Globalcidrs map[string]string `json:"globalcidrs,omitempty"`
 }
 
 // Provider only can be istio now.

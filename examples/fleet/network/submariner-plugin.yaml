@@ -32,14 +32,15 @@ spec:
   plugin:
     submariner:
       brokerCluster: kurator-member1
+      clusterCidrs:
+        kurator-member1: 10.10.0.0/24
+        kurator-member2: 10.12.0.0/24
+      serviceCidrs:
+        kurator-member1: 10.96.0.0/16
+        kurator-member2: 10.96.0.0/16
       globalcidrs:
-        kurator-member1: "242.1.0.0/16"
-        kurator-member2: "242.2.0.0/16"
+        kurator-member1: 242.1.0.0/16
+        kurator-member2: 242.2.0.0/16
       extraArgs:
         ipsec:
           psk: $SUBMARINER_PSK
-        broker:
-          namespace: "submariner"
-        submariner:
-          clusterCidr: "10.244.0.0/24"
-          serviceCidr: "10.96.0.0/16"

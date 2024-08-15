@@ -650,7 +650,7 @@ func TestRenderSubmarinerBroker(t *testing.T) {
 		name   string
 		fleet  types.NamespacedName
 		ref    *metav1.OwnerReference
-		config *v1alpha1.SubMarinerConfig
+		config *v1alpha1.SubMarinerOperatorConfig
 	}{
 		{
 			name: "default",
@@ -664,7 +664,7 @@ func TestRenderSubmarinerBroker(t *testing.T) {
 				Name:       "fleet-1",
 				UID:        "xxxxxx",
 			},
-			config: &v1alpha1.SubMarinerConfig{},
+			config: &v1alpha1.SubMarinerOperatorConfig{},
 		},
 	}
 
@@ -674,7 +674,7 @@ func TestRenderSubmarinerBroker(t *testing.T) {
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.config)
+			})
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("sm-broker", tc.name)
@@ -689,7 +689,7 @@ func TestRenderSubmarinerOperator(t *testing.T) {
 		name   string
 		fleet  types.NamespacedName
 		ref    *metav1.OwnerReference
-		config *v1alpha1.SubMarinerConfig
+		config *v1alpha1.SubMarinerOperatorConfig
 	}{
 		{
 			name: "default",
@@ -703,7 +703,18 @@ func TestRenderSubmarinerOperator(t *testing.T) {
 				Name:       "fleet-1",
 				UID:        "xxxxxx",
 			},
-			config: &v1alpha1.SubMarinerConfig{},
+			config: &v1alpha1.SubMarinerOperatorConfig{
+				BrokerCluster: "cluster1",
+				ClusterCidrs: map[string]string{
+					"cluster1": "10.244.0.0/24",
+				},
+				ServiceCidrs: map[string]string{
+					"cluster1": "10.96.0.0/16",
+				},
+				Globalcidrs: map[string]string{
+					"cluster1": "242.0.0.0/24",
+				},
+			},
 		},
 	}
 
@@ -715,12 +726,11 @@ func TestRenderSubmarinerOperator(t *testing.T) {
 				"server": "server-xxx",
 			}
 
-			globalCidr := "242.0.0.0/8"
 			got, err := RenderSubmarinerOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
 				Name:       "cluster1",
 				SecretName: "cluster1",
 				SecretKey:  "kubeconfig.yaml",
-			}, tc.config, brokerCfg, globalCidr)
+			}, tc.config, brokerCfg)
 			assert.NoError(t, err)
 
 			getExpected, err := getExpected("sm-operator", tc.name)
