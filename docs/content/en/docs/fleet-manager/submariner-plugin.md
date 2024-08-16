@@ -57,24 +57,39 @@ More detailed verification steps can be done as follows:
 
 - Diagnostic checks:
 
+Perform `subctl diagnose` on each cluster:
+
 ```bash
 subctl diagnose all --kubeconfig /root/.kube/kurator-member1.config
-subctl diagnose all --kubeconfig /root/.kube/kurator-member2.config
 ```
 
 - Verify the connectivity between the clusters:
 
 ```bash
-KUBECONFIG=/root/.kube/kurator-member1.config:/root/.kube/kurator-member2.config subctl verify --context kurator-member2 --tocontext kurator-member1
+export KUBECONFIG=/root/.kube/kurator-member1.config:/root/.kube/kurator-member2.config
+subctl verify --context kurator-member1 --tocontext kurator-member2
+subctl verify --context kurator-member2 --tocontext kurator-member1
 ```
 
 ## Cleanup
 
-Delete the fleet created
+Guides for you to clean up the fleets and plugins.
+
+### 1. Cleanup the Submariner Plugin
+
+Tutorial for manual uninstallation can be found in Sumariner Documatation [here](https://submariner.io/operations/cleanup/#manual-uninstall).
+
+> Deleting the cluster to start from scratch is **recommended** because potential crd dependencies conflicts and some hard-to-find legacy resources or settings.
+
+### 2. Cleanup the Fleet
+
+When the fleet is deleted, all associated plugins will also be removed:
 
 ```bash
 kubectl delete fleet quickstart
 ```
+
+### 3. Cleanup the Infrastructure
 
 Uninstall fleet manager:
 
