@@ -29,7 +29,7 @@ const (
 	PendingPhase FleetPhase = "Pending"
 	// RunningPhase is the phase when fleet control plane is being installed.
 	RunningPhase FleetPhase = "Running"
-	// FailedPhase is the phase when fleet control plane installation installed.
+	// FailedPhase is the phase when fleet control plane installation failed.
 	FailedPhase FleetPhase = "Failed"
 	// ReadyPhase is the phase when fleet control plane installation finished successfully.
 	ReadyPhase FleetPhase = "Ready"
@@ -237,7 +237,7 @@ type KyvernoConfig struct {
 	// PodSecurity defines the pod security configuration for the kyverno.
 	// +optional
 	PodSecurity *PodSecurityPolicy `json:"podSecurity,omitempty"`
-	// ExtraArgs is the set of extra arguments for Grafana chart.
+	// ExtraArgs is the set of extra arguments for Kyverno chart.
 	// For Example, using following configuration to change image pull policy.
 	//
 	// ```yaml

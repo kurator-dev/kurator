@@ -34,13 +34,6 @@ type Destination struct {
 	Clusters []*corev1.ObjectReference `json:"clusters,omitempty"`
 }
 
-type ClusterSelector struct {
-	// MatchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value".
-	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
-	// +optional
-	MatchLabels map[string]string `json:"matchLabels,omitempty"`
-}
-
 // Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
 type ResourceFilter struct {
 	// IncludedNamespaces is a list of namespace names to include objects from.
