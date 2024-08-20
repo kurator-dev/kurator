@@ -2737,7 +2737,7 @@ spec:
                             type: object
                           extraArgs:
                             description: |-
-                              ExtraArgs is the set of extra arguments for Grafana chart.
+                              ExtraArgs is the set of extra arguments for Kyverno chart.
                               For Example, using following configuration to change image pull policy.
 
 
