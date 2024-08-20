@@ -49,7 +49,7 @@ istioctl manifest install --set profile=default
 Review the results:
 
 ```console
-kubeclt get po -n istio-system --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get po -n istio-system --kubeconfig=/root/.kube/kurator-member1.config
 
 istio-system         istio-ingressgateway-65b5c9f9bb-8w5ml                   1/1     Running   0          37s
 istio-system         istiod-657f7686cf-hshwp                                 1/1     Running   0          2m5s
@@ -68,7 +68,7 @@ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.20/samp
 Review the results:
 
 ```console
-Kubectl get po -n istio-system --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get po -n istio-system --kubeconfig=/root/.kube/kurator-member1.config
 
 istio-system         prometheus-5d5d6d6fc-5hxbh                              2/2     Running   0          91s
 ```
@@ -104,14 +104,14 @@ EOF
 Review the results:
 
 ```console
-Kubectl get gateway -n istio-system --kubeconfig=/root/.kube/kurator-member1.config
+kubectl get gateway -n istio-system --kubeconfig=/root/.kube/kurator-member1.config
 
 istio-system   public-gateway   17s
 ```
 
 ### Kurator Rollout Plugin
 
-Before delving into the how to Perform a Unified Rollout, ensure you have successfully installed the Rollout plugin as outlined in the  [Rollout plugin installation guide](rollout-plugin.md).
+Before delving into the how to Perform a Unified Rollout, ensure you have successfully installed the Rollout plugin as outlined in the  [Rollout plugin installation guide](/docs/fleet-manager/rollout/rollout-plugin/).
 
 ## How to Perform a Unified Rollout
 
