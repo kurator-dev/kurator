@@ -424,7 +424,7 @@ func (p *IstioPlugin) installRemotes(remotePilotAddress string) error {
 		}
 
 		if err := p.createIstioRemoteSecret(currentRemote); err != nil {
-			return nil
+			return err
 		}
 
 		if err := p.createRemoteIstioOperator(currentRemote, remotePilotAddress); err != nil {
