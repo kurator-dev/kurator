@@ -322,7 +322,7 @@ func (p *Plugin) createAdditionalScrapeConfigs() error {
 		return err
 	}
 	if promCfg.Namespace == "" {
-		return fmt.Errorf("get prom faild, %+v", promCfg)
+		return fmt.Errorf("get prom failed, %+v", promCfg)
 	}
 	op := &policyv1alpha1.OverridePolicy{
 		TypeMeta: typemeta.OverridePolicy,

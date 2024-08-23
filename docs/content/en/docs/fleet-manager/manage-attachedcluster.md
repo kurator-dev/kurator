@@ -15,7 +15,7 @@ This guide will walk you through the process of creating AttachedCluster resourc
 
 ### Cluster operator
 
-As the AttachedCluster object is controlled by the cluster-operator, you need to first go to [Install cluser operator](/docs/setup/install-cluster-operator) page to create clusters using `hack/local-dev-setup.sh` and install cluster operator.
+As the AttachedCluster object is controlled by the cluster-operator, you need to first go to [Install cluster operator](/docs/setup/install-cluster-operator) page to create clusters using `hack/local-dev-setup.sh` and install cluster operator.
 
 ### AttachedCluster secrets
 

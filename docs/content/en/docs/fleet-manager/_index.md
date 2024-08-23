@@ -31,4 +31,4 @@ The overall architecture of Kurator fleet manager is shown as below:
     >}}
 
 
-The Kurator Fleet Manager runs as a kubernetes operator, it is in charge of fleet control plane lifecycle management and also responsible for cluster registeration and un registration.
+The Kurator Fleet Manager runs as a kubernetes operator, it is in charge of fleet control plane lifecycle management and also responsible for cluster registration and un registration.

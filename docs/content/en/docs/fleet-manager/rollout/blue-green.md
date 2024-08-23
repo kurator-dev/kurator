@@ -459,7 +459,7 @@ rolloutStatus:
 If you only need to remove the Rollout Policy, simply edit the current application and remove the corresponding description:
 
 ```console
-kubectl edit applicaiton blue-green-demo
+kubectl edit application blue-green-demo
 ```
 
 To check the results of the deletion, you can observe that the rollout-related pods have been removed:
@@ -473,7 +473,7 @@ If you want to configure a Blue/Green Deployment for it again, you can simply ed
 
 ### 2.Cleanup the Application
 
-When the application is delete, all associated resources will also be reomved:
+When the application is delete, all associated resources will also be removed:
 
 ```console
 kubectl delete application abtesting-demo

@@ -152,10 +152,10 @@ func (p *IstioPlugin) createIstioCacerts() error {
 		return util.ApplyPropagationPolicy(p.Client, p.allClusters(), s)
 	}
 	// err can be divided into two types:
-	// 1 Unexpect, return directly
+	// 1 Unexpected, return directly
 	// 2 IsNotFound, to create Istio Cacerts
 	if !apierrors.IsNotFound(err) {
-		return fmt.Errorf("unexpect error when get secret %s, %w", caSecret, err)
+		return fmt.Errorf("unexpected error when get secret %s, %w", caSecret, err)
 	}
 
 	var gen istiocert.Generator

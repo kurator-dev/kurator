@@ -84,7 +84,7 @@ spec:
               awsLaunchTemplate:
                 description: AWSLaunchTemplate specifies the launch template to use
                   to create the managed node group. If AWSLaunchTemplate is specified,
-                  certain node group configuraions outside of launch template are
+                  certain node group configurations outside of launch template are
                   prohibited (https://docs.aws.amazon.com/eks/latest/userguide/launch-templates.html).
                 properties:
                   additionalSecurityGroups:

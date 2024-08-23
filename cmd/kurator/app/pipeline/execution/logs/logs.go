@@ -41,8 +41,8 @@ func NewCmd(opts *generic.Options) *cobra.Command {
 
 			PipelineList, err := logs.NewPipelineLogs(opts, &Args, pipelineExecutionName)
 			if err != nil {
-				logrus.Errorf("pipeline excution logs init error: %v", err)
-				return fmt.Errorf("pipeline excution logs init error: %v", err)
+				logrus.Errorf("pipeline execution logs init error: %v", err)
+				return fmt.Errorf("pipeline execution logs init error: %v", err)
 			}
 
 			logrus.Debugf("start logs pipeline execution obj, Global: %+v ", opts)

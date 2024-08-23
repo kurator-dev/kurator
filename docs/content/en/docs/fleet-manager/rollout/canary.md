@@ -397,7 +397,7 @@ A canary deployment is triggered by changes in any of the following objects:
 If you only need to remove the Rollout Policy, simply edit the current application and remove the corresponding description:
 
 ```console
-kubectl edit applicaiton rollout-demo
+kubectl edit application rollout-demo
 ```
 
 To check the results of the deletion, you can observe that the rollout-related pods have been removed:
@@ -411,7 +411,7 @@ If you want to configure a canary deployment for it again, you can simply edit t
 
 ### 2.Cleanup the Application
 
-When the application is delete, all associated resources will also be reomved:
+When the application is delete, all associated resources will also be removed:
 
 ```console
 kubectl delete application rollout-demo

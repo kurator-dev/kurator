@@ -158,7 +158,7 @@ func (p *Plugin) volcanoManifest() (string, error) {
 	case "arm64":
 		manifestName = "installer/volcano-development-arm64.yaml"
 	default:
-		return "", fmt.Errorf("os arch %s is not supportted", runtime.GOARCH)
+		return "", fmt.Errorf("os arch %s is not supported", runtime.GOARCH)
 	}
 	url, _ := util.JoinUrlPath(volcano.ReleaseURLPrefix, ver, manifestName)
 	yaml, err := util.DownloadResource(url, "")

@@ -45,4 +45,4 @@ kurator install istio --primary member1 --remote member2
 ### Next steps
 
 <!-- provider a simple way with kurator -->
-Now, you can [verify the installion](https://istio.io/latest/docs/setup/install/multicluster/verify)
+Now, you can [verify the installation](https://istio.io/latest/docs/setup/install/multicluster/verify)

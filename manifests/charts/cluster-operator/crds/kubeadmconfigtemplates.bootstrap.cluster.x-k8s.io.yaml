@@ -456,7 +456,7 @@ spec:
                                     caution. Default is 'false'.
                                   type: boolean
                                 tableType:
-                                  description: 'TableType specifies the tupe of partition
+                                  description: 'TableType specifies the type of partition
                                     table. The following are supported: ''mbr'': default
                                     and setups a MS-DOS partition table ''gpt'': setups
                                     a GPT partition table'
@@ -655,7 +655,7 @@ spec:
                               criSocket:
                                 description: CRISocket is used to retrieve container
                                   runtime info. This information will be annotated
-                                  to the Node API object, for later re-use
+                                  to the Node API object, for later reuse
                                 type: string
                               ignorePreflightErrors:
                                 description: IgnorePreflightErrors provides a slice
@@ -769,7 +769,7 @@ spec:
                             type: string
                           caCertPath:
                             description: 'CACertPath is the path to the SSL certificate
-                              authority used to secure comunications between node
+                              authority used to secure communications between node
                               and control-plane. Defaults to "/etc/kubernetes/pki/ca.crt".
                               TODO: revisit when there is defaulting from k/k'
                             type: string
@@ -881,7 +881,7 @@ spec:
                               criSocket:
                                 description: CRISocket is used to retrieve container
                                   runtime info. This information will be annotated
-                                  to the Node API object, for later re-use
+                                  to the Node API object, for later reuse
                                 type: string
                               ignorePreflightErrors:
                                 description: IgnorePreflightErrors provides a slice

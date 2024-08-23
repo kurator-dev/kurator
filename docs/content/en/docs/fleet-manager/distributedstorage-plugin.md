@@ -125,7 +125,7 @@ rook-ceph-rgw-ceph-objectstore-a-5c4df48bbb-bf6jn                   2/2     Runn
 
 ## Persistent Volume Use Guide
 
-After rook opeartor and rook ceph cluster are installed, this chapter provides examples of using Block Storage, Filesystem Storage and Object Storage.
+After rook operator and rook ceph cluster are installed, this chapter provides examples of using Block Storage, Filesystem Storage and Object Storage.
 
 ### Block Storage Class Configuration
 
@@ -168,8 +168,8 @@ allowVolumeExpansion: true
 There are a few things to note in the above block storage class configuration:
 
 - provisioner is configured in the format (operator-namespace).rbd.csi.ceph.com. Change "rook-ceph" provisioner prefix to match the operator namespace if needed.
-- `parametes.clusterID` is the namespace where the rook cluster is running.
-- `parametes.pool` is the `CephBlockPool` created before.
+- `parameters.clusterID` is the namespace where the rook cluster is running.
+- `parameters.pool` is the `CephBlockPool` created before.
 
 ### FileSystem Storage Class Configuration
 
@@ -289,7 +289,7 @@ There are a few things to note in the above filesystem storage class configurati
 
 ### Use Block Storage
 
-After creating the storagec class for block, file and object storage, it's time to actually use this storage class. We can ues Kurator application to create Persistent Volume Claim and Pod that consume it.
+After creating the storagec class for block, file and object storage, it's time to actually use this storage class. We can use Kurator application to create Persistent Volume Claim and Pod that consume it.
 
 ```console
 kubectl apply -f - <<EOF
@@ -327,7 +327,7 @@ block-pvc     Bound      pvc-n6w5hd42-sx7w-f996-7bdc-l7d4c78b74b8    1Gi        
 
 ### Use Filesystem Storage
 
-Filesystem storage is similar to block storage, we also can ues Kurator application to create Persistent Volume Claim and Pod that consume it.
+Filesystem storage is similar to block storage, we also can use Kurator application to create Persistent Volume Claim and Pod that consume it.
 
 ```console
 kubectl apply -f - <<EOF
@@ -367,7 +367,7 @@ cephfs-pvc    Bound      filesystem-volume    1Gi           RWO             1h
 
 In a rook-ceph cluster, the use of object storage is different from the use of block storage and filesystem storage. `ObjectBucketClaim` is used instead of PersistentVolumeClaim. And the application needs secret and configmap to access the objectbucket. When Pod use object storage, they don't mount PVC like block storage and filesystem storage, but instead uniquely specify the ObjectBucketClaim with secret and configmap.
 
-We stil can can ues Kurator application to create ObjectBucketClaim and Pod that consume it, but there will be some changes to the configuration.
+We can still use Kurator application to create ObjectBucketClaim and Pod that consume it, but there will be some changes to the configuration.
 
 ```console
 kubectl apply -f - <<EOF

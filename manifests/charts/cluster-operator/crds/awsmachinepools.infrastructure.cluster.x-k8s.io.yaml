@@ -32,11 +32,11 @@ spec:
       jsonPath: .status.replicas
       name: Replicas
       type: integer
-    - description: Minimum instanes in ASG
+    - description: Minimum instances in ASG
       jsonPath: .spec.minSize
       name: MinSize
       type: integer
-    - description: Maximum instanes in ASG
+    - description: Maximum instances in ASG
       jsonPath: .spec.maxSize
       name: MaxSize
       type: integer

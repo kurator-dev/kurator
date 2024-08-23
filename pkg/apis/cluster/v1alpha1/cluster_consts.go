@@ -41,7 +41,7 @@ const (
 	ProvisioningReason = "Provisioning"
 	// DeletingReason (Severity=Info) documents that the cluster is being deleted.
 	DeletingReason = "Deleting"
-	// ProviderInitializeFailedReason (Severity=Error) documents that the cluster infrastructure provider initilize failed, probabily a wrong credential.
+	// ProviderInitializeFailedReason (Severity=Error) documents that the cluster infrastructure provider initialize failed, probably a wrong credential.
 
 	ProviderInitializeFailedReason = "ProviderInitializeFailed"
 	// ClusterResourceSetProvisionFailedReason (Severity=Error) documents that the additional Cluster API resources (ClusterResourceSet etc.) provisioning failed.

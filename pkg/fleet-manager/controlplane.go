@@ -37,7 +37,7 @@ const FleetWorkerClusterRoleBindingName = "fleet-worker"
 func (f *FleetManager) reconcileControlPlane(ctx context.Context, fleet *fleetapi.Fleet) error {
 	controlplane := fleet.Annotations[fleetapi.ControlplaneAnnotation]
 	// if no controlplane is specified, do nothing
-	// we donot support annotation update yet
+	// we do not support annotation update yet
 	if controlplane == "" {
 		fleet.Status.Phase = fleetapi.ReadyPhase
 		fleet.Status.CredentialSecret = nil

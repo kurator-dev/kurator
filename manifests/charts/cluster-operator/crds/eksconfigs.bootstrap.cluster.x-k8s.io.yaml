@@ -129,7 +129,7 @@ spec:
                             is found on the device. Use with caution. Default is 'false'.
                           type: boolean
                         tableType:
-                          description: 'TableType specifies the tupe of partition
+                          description: 'TableType specifies the type of partition
                             table. The following are supported: ''mbr'': default and
                             setups a MS-DOS partition table ''gpt'': setups a GPT
                             partition table'
