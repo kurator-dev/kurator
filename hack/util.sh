@@ -12,34 +12,33 @@ set -o pipefail
 #  - $1: package name, such as "sigs.k8s.io/controller-tools/cmd/controller-gen"
 #  - $2: package version, such as "v0.4.1"
 function util::install_tools() {
-	local package="$1"
-	local version="$2"
-	echo "go install ${package}@${version}"
-	GO111MODULE=on go install "${package}"@"${version}"
+  local package="$1"
+  local version="$2"
+  echo "go install ${package}@${version}"
+  GO111MODULE=on go install "${package}"@"${version}"
 }
-
 
 # util::install_kubectl will install the given version kubectl
 function util::install_kubectl {
-    local KUBECTL_VERSION=${1}
-    local ARCH=${2}
-    local OS=${3:-linux}
-    if [ -z "$KUBECTL_VERSION" ]; then
-      KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
-    fi
-    echo "Installing 'kubectl ${KUBECTL_VERSION}' for you"
-    curl --retry 5 -sSLo ./kubectl -w "%{http_code}" https://dl.k8s.io/release/"$KUBECTL_VERSION"/bin/"$OS"/"$ARCH"/kubectl | grep '200' > /dev/null
-    ret=$?
-    if [ ${ret} -eq 0 ]; then
-        chmod +x ./kubectl
-        mkdir -p ~/.local/bin/
-        mv ./kubectl ~/.local/bin/kubectl
+  local KUBECTL_VERSION=${1}
+  local ARCH=${2}
+  local OS=${3:-linux}
+  if [ -z "$KUBECTL_VERSION" ]; then
+    KUBECTL_VERSION=$(curl -L -s https://dl.k8s.io/release/stable.txt)
+  fi
+  echo "Installing 'kubectl ${KUBECTL_VERSION}' for you"
+  curl --retry 5 -sSLo ./kubectl -w "%{http_code}" https://dl.k8s.io/release/"$KUBECTL_VERSION"/bin/"$OS"/"$ARCH"/kubectl | grep '200' >/dev/null
+  ret=$?
+  if [ ${ret} -eq 0 ]; then
+    chmod +x ./kubectl
+    mkdir -p ~/.local/bin/
+    mv ./kubectl ~/.local/bin/kubectl
 
-        export PATH=$PATH:~/.local/bin
-    else
-        echo "Failed to install kubectl, can not download the binary file at https://dl.k8s.io/release/$KUBECTL_VERSION/bin/$OS/$ARCH/kubectl"
-        exit 1
-    fi
+    export PATH=$PATH:~/.local/bin
+  else
+    echo "Failed to install kubectl, can not download the binary file at https://dl.k8s.io/release/$KUBECTL_VERSION/bin/$OS/$ARCH/kubectl"
+    exit 1
+  fi
 }
 
 # util::wait_for_condition blocks until the provided condition becomes true
@@ -84,17 +83,17 @@ function util::wait_for_condition() {
 
 # util::wait_file_exist checks if a file exists, if not, wait until timeout
 function util::wait_file_exist() {
-    local file_path=${1}
-    local timeout=${2}
-    local error_msg="[ERROR] Timeout waiting for file exist ${file_path}"
-    for ((time=0; time<${timeout}; time++)); do
-        if [[ -e ${file_path} ]]; then
-            return 0
-        fi
-        sleep 1
-    done
-    echo -e "\n${error_msg}"
-    return 1
+  local file_path=${1}
+  local timeout=${2}
+  local error_msg="[ERROR] Timeout waiting for file exist ${file_path}"
+  for ((time = 0; time < ${timeout}; time++)); do
+    if [[ -e ${file_path} ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+  echo -e "\n${error_msg}"
+  return 1
 }
 
 # util::wait_pod_ready waits for pod state becomes ready until timeout.
@@ -103,21 +102,21 @@ function util::wait_file_exist() {
 #  - $2: pod namespace, such as "karmada-system"
 #  - $3: time out, such as "200s"
 function util::wait_pod_ready() {
-    local pod_label=$1
-    local pod_namespace=$2
+  local pod_label=$1
+  local pod_namespace=$2
 
-    echo "wait the $pod_label ready..."
-    set +e
-    util::kubectl_with_retry wait --for=condition=Ready --timeout=30s pods -l app=${pod_label} -n ${pod_namespace}
-    ret=$?
-    set -e
-    if [ $ret -ne 0 ];then
-      echo "kubectl describe info:"
-      kubectl describe pod -l app=${pod_label} -n ${pod_namespace}
-      echo "kubectl logs info:"
-      kubectl logs -l app=${pod_label} -n ${pod_namespace}
-    fi
-    return ${ret}
+  echo "wait the $pod_label ready..."
+  set +e
+  util::kubectl_with_retry wait --for=condition=Ready --timeout=30s pods -l app=${pod_label} -n ${pod_namespace}
+  ret=$?
+  set -e
+  if [ $ret -ne 0 ]; then
+    echo "kubectl describe info:"
+    kubectl describe pod -l app=${pod_label} -n ${pod_namespace}
+    echo "kubectl logs info:"
+    kubectl logs -l app=${pod_label} -n ${pod_namespace}
+  fi
+  return ${ret}
 }
 
 # util::wait_apiservice_ready waits for apiservice state becomes Available until timeout.
@@ -125,18 +124,18 @@ function util::wait_pod_ready() {
 #  - $1: apiservice label, such as "app=etcd"
 #  - $3: time out, such as "200s"
 function util::wait_apiservice_ready() {
-    local apiservice_label=$1
+  local apiservice_label=$1
 
-    echo "wait the $apiservice_label Available..."
-    set +e
-    util::kubectl_with_retry wait --for=condition=Available --timeout=30s apiservices -l app=${apiservice_label}
-    ret=$?
-    set -e
-    if [ $ret -ne 0 ];then
-      echo "kubectl describe info:"
-      kubectl describe apiservices -l app=${apiservice_label}
-    fi
-    return ${ret}
+  echo "wait the $apiservice_label Available..."
+  set +e
+  util::kubectl_with_retry wait --for=condition=Available --timeout=30s apiservices -l app=${apiservice_label}
+  ret=$?
+  set -e
+  if [ $ret -ne 0 ]; then
+    echo "kubectl describe info:"
+    kubectl describe apiservices -l app=${apiservice_label}
+  fi
+  return ${ret}
 }
 
 # util::create_cluster creates a kubernetes cluster
@@ -156,7 +155,7 @@ function util::create_cluster() {
   mkdir -p ${log_path}
   rm -rf "${log_path}/${cluster_name}.log"
   rm -f "${kubeconfig}"
-  nohup kind delete cluster --name="${cluster_name}" >> "${log_path}"/"${cluster_name}".log 2>&1 && kind create cluster --name "${cluster_name}" --kubeconfig="${kubeconfig}" --image="${kind_image}" --config="${cluster_config}" >> "${log_path}"/"${cluster_name}".log 2>&1 &
+  nohup kind delete cluster --name="${cluster_name}" >>"${log_path}"/"${cluster_name}".log 2>&1 && sleep 2 && kind create cluster --name "${cluster_name}" --kubeconfig="${kubeconfig}" --image="${kind_image}" --config="${cluster_config}" >>"${log_path}"/"${cluster_name}".log 2>&1 &
   echo "Creating cluster ${cluster_name} and the log file is in ${log_path}/${cluster_name}.log"
 }
 
@@ -164,7 +163,7 @@ function util::create_cluster() {
 # Parameters:
 #  - $1: docker instance name
 
-function util::get_docker_native_ipaddress(){
+function util::get_docker_native_ipaddress() {
   local container_name=$1
   docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${container_name}"
 }
@@ -176,7 +175,7 @@ function util::get_docker_native_ipaddress(){
 #   Use for getting host IP and port for cluster
 #   "6443/tcp" assumes that API server port is 6443 and protocol is TCP
 
-function util::get_docker_host_ip_port(){
+function util::get_docker_host_ip_port() {
   local container_name=$1
   docker inspect --format='{{range $key, $value := index .NetworkSettings.Ports "6443/tcp"}}{{if eq $key 0}}{{$value.HostIp}}:{{$value.HostPort}}{{end}}{{end}}' "${container_name}"
 }
@@ -196,19 +195,21 @@ function util::check_clusters_ready() {
   os_name=$(go env GOOS)
   local container_ip_port
   case $os_name in
-    linux) container_ip_port=$(util::get_docker_native_ipaddress "${context_name}-control-plane")":6443"
+  linux)
+    container_ip_port=$(util::get_docker_native_ipaddress "${context_name}-control-plane")":6443"
     ;;
-    darwin) container_ip_port=$(util::get_docker_host_ip_port "${context_name}-control-plane")
+  darwin)
+    container_ip_port=$(util::get_docker_host_ip_port "${context_name}-control-plane")
     ;;
-    *)
-        echo "OS ${os_name} does NOT support for getting container ip in installation script"
-        exit 1
+  *)
+    echo "OS ${os_name} does NOT support for getting container ip in installation script"
+    exit 1
+    ;;
   esac
   kubectl config set-cluster "kind-${context_name}" --server="https://${container_ip_port}" --kubeconfig="${kubeconfig_path}"
 
   util::wait_for_condition 'ok' "kubectl --kubeconfig ${kubeconfig_path} --context ${context_name} get --raw=/healthz &> /dev/null" 300
 }
-
 
 # util::add_routes will add routes for given kind cluster
 # Parameters:
@@ -229,7 +230,6 @@ function util::add_routes() {
   done
   unset IFS
 }
-
 
 function util::connect_kind_clusters() {
   C1="${1}"
@@ -267,9 +267,9 @@ function util::wait_pods() {
   lb=$2
   waittime=$3
   # Wait for the pods to be ready in the given namespace with lable
-  while : ; do
+  while :; do
     res=$(kubectl wait --kubeconfig="$4" --context "$5" -n "${ns}" pod \
-      -l "${lb}" --for=condition=Ready --timeout="${waittime}s" 2>/dev/null ||true)
+      -l "${lb}" --for=condition=Ready --timeout="${waittime}s" 2>/dev/null || true)
     if [[ "${res}" == *"condition met"* ]]; then
       break
     fi
@@ -277,7 +277,6 @@ function util::wait_pods() {
     sleep "${waittime}"
   done
 }
-
 
 # util::install_metallb will install metallb for given kind cluster
 # Parameters:
@@ -296,12 +295,12 @@ function util::install_metallb() {
 
   # Get both ipv4 and ipv6 gateway for the cluster
   gatewaystr=$(docker network inspect -f '{{range .IPAM.Config }}{{ .Gateway }} {{end}}' kind | cut -f1,2)
-  read -r -a gateways <<< "${gatewaystr}"
+  read -r -a gateways <<<"${gatewaystr}"
   for gateway in "${gateways[@]}"; do
     if [[ "$gateway" == *"."* ]]; then
-      ipv4Prefix=$(echo "${gateway}" |cut -d'.' -f1,2)
+      ipv4Prefix=$(echo "${gateway}" | cut -d'.' -f1,2)
     else
-      ipv6Prefix=$(echo "${gateway}" |cut -d':' -f1,2,3,4)
+      ipv6Prefix=$(echo "${gateway}" | cut -d':' -f1,2,3,4)
     fi
   done
 
@@ -317,11 +316,11 @@ function util::install_metallb() {
     ipv4Range="- ${ipv4Prefix}.$IPSPACE.200-${ipv4Prefix}.$IPSPACE.240"
     ipv6Range="- ${ipv6Prefix}::$IPSPACE:200-${ipv6Prefix}::$IPSPACE:240"
   fi
-  
+
   util::wait_pods metallb-system app=metallb 10 "$1" "$2"
-  
+
   # Now configure the loadbalancer public IP range
-cat <<EOF | kubectl apply --kubeconfig="$1" --context="$2" -f -
+  cat <<EOF | kubectl apply --kubeconfig="$1" --context="$2" -f -
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
 metadata:
@@ -340,7 +339,7 @@ metadata:
 EOF
 
   # Wait for the public IP address to become available.
-  while : ; do
+  while :; do
     ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.'${addrName}'}}{{end}}' "$2"-control-plane)
     if [[ -n "${ip}" ]]; then
       #Change the kubeconfig file not to use the loopback IP
@@ -357,9 +356,9 @@ EOF
 
 # https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux
 function util::sed_in_place() {
-    local regx=${1}
-    local files=${2}
-    for f in $files; do
-      sed -i'.bak' "$regx" "$f" && rm -f "$f.bak"
-    done
+  local regx=${1}
+  local files=${2}
+  for f in $files; do
+    sed -i'.bak' "$regx" "$f" && rm -f "$f.bak"
+  done
 }
