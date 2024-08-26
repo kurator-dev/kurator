@@ -1616,7 +1616,8 @@ MetricName
 </td>
 <td>
 <p>Name of the metric.
-Currently supported metric are <code>request-success-rate</code> and <code>request-duration</code>.</p>
+Currently supported metric are <code>request-success-rate</code> and <code>request-duration</code>.
+When Name is not <code>request-success-rate</code> or <code>request-duration</code>, you need to define the metric rule in CustomMetric.</p>
 </td>
 </tr>
 <tr>
@@ -1644,6 +1645,18 @@ CanaryThresholdRange
 <em>(Optional)</em>
 <p>ThresholdRange defines valid value accepted for this metric.
 If no thresholdRange are set, Kurator will default every check is successful.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>customMetric</code><br>
+<em>
+github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1.MetricTemplateSpec
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CustomMetric defines the metric template to be used for this metric.</p>
 </td>
 </tr>
 </tbody>

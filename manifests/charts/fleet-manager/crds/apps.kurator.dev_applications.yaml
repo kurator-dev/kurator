@@ -1315,6 +1315,45 @@ spec:
                                     If you want use custom checks, you can refer to https://docs.flagger.app/usage/metrics#custom-metrics.
                                   items:
                                     properties:
+                                      customMetric:
+                                        description: CustomMetric defines the metric
+                                          template to be used for this metric.
+                                        properties:
+                                          provider:
+                                            description: Provider of this metric
+                                            properties:
+                                              address:
+                                                description: HTTP(S) address of this
+                                                  provider
+                                                type: string
+                                              insecureSkipVerify:
+                                                description: InsecureSkipVerify disables
+                                                  certificate verification for the
+                                                  provider
+                                                type: boolean
+                                              region:
+                                                description: Region of the provider
+                                                type: string
+                                              secretRef:
+                                                description: Secret reference containing
+                                                  the provider credentials
+                                                properties:
+                                                  name:
+                                                    description: |-
+                                                      Name of the referent.
+                                                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                                      TODO: Add other useful fields. apiVersion, kind, uid?
+                                                    type: string
+                                                type: object
+                                                x-kubernetes-map-type: atomic
+                                              type:
+                                                description: Type of provider
+                                                type: string
+                                            type: object
+                                          query:
+                                            description: Query template for this metric
+                                            type: string
+                                        type: object
                                       intervalSeconds:
                                         description: |-
                                           IntervalSeconds defines metrics query interval.
@@ -1324,6 +1363,7 @@ spec:
                                         description: |-
                                           Name of the metric.
                                           Currently supported metric are `request-success-rate` and `request-duration`.
+                                          When Name is not `request-success-rate` or `request-duration`, you need to define the metric rule in CustomMetric.
                                         type: string
                                       thresholdRange:
                                         description: |-

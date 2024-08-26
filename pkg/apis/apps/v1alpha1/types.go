@@ -340,6 +340,7 @@ type TrafficAnalysis struct {
 type Metric struct {
 	// Name of the metric.
 	// Currently supported metric are `request-success-rate` and `request-duration`.
+	// When Name is not `request-success-rate` or `request-duration`, you need to define the metric rule in CustomMetric.
 	Name MetricName `json:"name"`
 
 	// IntervalSeconds defines metrics query interval.
@@ -350,6 +351,10 @@ type Metric struct {
 	// If no thresholdRange are set, Kurator will default every check is successful.
 	// +optional
 	ThresholdRange *CanaryThresholdRange `json:"thresholdRange,omitempty"`
+
+	// CustomMetric defines the metric template to be used for this metric.
+	// +optional
+	CustomMetric *flaggerv1b1.MetricTemplateSpec `json:"customMetric,omitempty"`
 }
 
 type MetricName string
