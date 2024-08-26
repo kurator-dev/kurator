@@ -207,10 +207,10 @@ func (f *FleetManager) syncObjStoreSecret(ctx context.Context, fleetCluster *Fle
 			},
 		}, metav1.CreateOptions{})
 		if err != nil {
-			return nil
+			return err
 		}
 	} else if err != nil {
-		return nil
+		return err
 	}
 
 	s, err := fleetCluster.Client.KubeClient().CoreV1().Secrets(secret.Namespace).Get(ctx, secret.Name, metav1.GetOptions{})

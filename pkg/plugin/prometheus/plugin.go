@@ -196,7 +196,7 @@ func (p *Plugin) runInstall() error {
 func (p *Plugin) exposePrometheus() error {
 	s, err := p.KubeClient().CoreV1().Services(monitoringNamespace).Get(context.TODO(), promSvcName, metav1.GetOptions{})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// 2. create elb service for prometheus
