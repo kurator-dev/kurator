@@ -133,7 +133,7 @@ spec:
                                     caution. Default is 'false'.
                                   type: boolean
                                 tableType:
-                                  description: 'TableType specifies the type of partition
+                                  description: 'TableType specifies the tupe of partition
                                     table. The following are supported: ''mbr'': default
                                     and setups a MS-DOS partition table ''gpt'': setups
                                     a GPT partition table'

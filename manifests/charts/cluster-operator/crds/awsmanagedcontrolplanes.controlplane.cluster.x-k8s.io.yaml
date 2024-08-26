@@ -1063,7 +1063,7 @@ spec:
                         is suitable for use by control plane machines.
                       type: boolean
                   type: object
-                description: FailureDomains specifies a list of available availability
+                description: FailureDomains specifies a list fo available availability
                   zones that can be used
                 type: object
               failureMessage:

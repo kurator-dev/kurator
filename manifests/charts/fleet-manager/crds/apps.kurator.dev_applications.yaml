@@ -729,7 +729,7 @@ spec:
                               type: object
                             replace:
                               description: |-
-                                Replace tells the Helm install action to reuse the 'ReleaseName', but only
+                                Replace tells the Helm install action to re-use the 'ReleaseName', but only
                                 if that name is a deleted release which remains in the history.
                               type: boolean
                             skipCRDs:

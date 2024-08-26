@@ -2801,7 +2801,7 @@ spec:
                           conditions:
                             description: Current Condition of persistent volume claim. If underlying persistent volume is being resized then the Condition will be set to 'ResizeStarted'.
                             items:
-                              description: PersistentVolumeClaimCondition contains details about state of pvc
+                              description: PersistentVolumeClaimCondition contails details about state of pvc
                               properties:
                                 lastProbeTime:
                                   description: Last time we probed the condition.
