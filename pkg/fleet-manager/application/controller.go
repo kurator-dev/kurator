@@ -295,7 +295,7 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 	for index, syncPolicy := range app.Spec.SyncPolicies {
 		if syncPolicy.Rollout != nil {
 			policyName := generatePolicyName(app, index)
-			status, err := a.reconcileRolloutSyncStatus(ctx, app, fleet, syncPolicy, policyName) //需要返回这个result重新入队吧
+			status, err := a.reconcileRolloutSyncStatus(ctx, app, fleet, syncPolicy, policyName)
 			if err != nil {
 				return ctrl.Result{}, errors.Wrapf(err, "failed to reconcil rollout status")
 			}
