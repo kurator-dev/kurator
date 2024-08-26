@@ -430,7 +430,7 @@ type CrossNamespaceObjectReference struct {
 // e.g.
 // webhooks:
 //   - timeoutSeconds: 15
-//     commend:
+//     command:
 //       - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
 // The above example means that during trafficAnalysis, the cmd of "http://flagger-loadtester.test/" is invoked 
 // to execute the command "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
@@ -439,7 +439,7 @@ type Webhook struct {
     // Defaults to 60
     TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
-    // Command defines to commends that executed by webhook.
+    // Command defines to commands that executed by webhook.
     // +optional
     Command []string `json:"command,omitempty"`
 }

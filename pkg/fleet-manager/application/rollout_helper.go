@@ -338,7 +338,7 @@ func installPrivateTestloader(ctx context.Context, namespacedName types.Namespac
 func deleteResourceCreatedByKurator(ctx context.Context, namespaceName types.NamespacedName, kubeClient client.Client, obj client.Object) error {
 	if err := kubeClient.Get(ctx, namespaceName, obj); err != nil {
 		if !apierrors.IsNotFound(err) {
-			return errors.Wrapf(err, "falied to get resource %s in %s", namespaceName.Name, namespaceName.Namespace)
+			return errors.Wrapf(err, "failed to get resource %s in %s", namespaceName.Name, namespaceName.Namespace)
 		}
 	} else {
 		// verify if the deployment were created by kurator

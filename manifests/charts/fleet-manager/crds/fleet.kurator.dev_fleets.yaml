@@ -2462,7 +2462,7 @@ spec:
                     - storage
                     type: object
                   flagger:
-                    description: Flagger defines the configuretion for the kurator
+                    description: Flagger defines the configuration for the kurator
                       rollout engine.
                     properties:
                       chart:

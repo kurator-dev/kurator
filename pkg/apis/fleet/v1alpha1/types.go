@@ -85,7 +85,7 @@ type PluginConfig struct {
 	Backup *BackupConfig `json:"backup,omitempty"`
 	// DistributedStorage define the configuration for the distributed storage(Implemented with Rook)
 	DistributedStorage *DistributedStorageConfig `json:"distributedStorage,omitempty"`
-	// Flagger defines the configuretion for the kurator rollout engine.
+	// Flagger defines the configuration for the kurator rollout engine.
 	Flagger *FlaggerConfig `json:"flagger,omitempty"`
 }
 

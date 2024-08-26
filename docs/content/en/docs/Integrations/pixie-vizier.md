@@ -39,8 +39,8 @@ Create a deployment key following the directions [here](https://docs.pixielabs.a
 
 Kurator provides a very simple command to install Pixie vizier to all clusters joined to karmada.
 
-- `--cloud-addr` sepcifies the address of the Pixie cloud instance that the vizier should be connected to.
-- `--deploy-key` sepcifies the deploy key is used to link the deployed vizier to a specific user/project.
+- `--cloud-addr` specifies the address of the Pixie cloud instance that the vizier should be connected to.
+- `--deploy-key` specifies the deploy key is used to link the deployed vizier to a specific user/project.
 
 ```bash
 kurator install pixie vizier --deploy-key=<your_deploy_key>

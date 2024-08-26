@@ -46,7 +46,7 @@ type ApplicationSpec struct {
 	// SyncPolicies controls how the artifact will be customized and where it will be synced.
 	SyncPolicies []*ApplicationSyncPolicy `json:"syncPolicies"`
 	// Destination defines the destination clusters where the artifacts will be synced.
-	// It can be overriden by the syncPolicies' destination.
+	// It can be overridden by the syncPolicies' destination.
 	// +optional
 	Destination *ApplicationDestination `json:"destination,omitempty"`
 }
@@ -399,7 +399,7 @@ type CrossNamespaceObjectReference struct {
 // ```yaml
 // webhooks:
 //   - timeoutSeconds: 15
-//     commend:
+//     command:
 //   - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
 //
 // ```
@@ -411,7 +411,7 @@ type Webhook struct {
 	// Defaults to 60
 	TimeoutSeconds *int `json:"timeoutSeconds,omitempty"`
 
-	// Commands define to commends that executed by webhook.
+	// Commands define to commands that executed by webhook.
 	// +optional
 	Commands []string `json:"command,omitempty"`
 }

@@ -32,7 +32,7 @@ import (
 
 var _ service.PodIdentity = &AWSPodIdentity{}
 
-// AWSPodIdentity is a service for creating AWS pod identity folow the guide: https://github.com/aws/amazon-eks-pod-identity-webhook/blob/master/SELF_HOSTED_SETUP.md
+// AWSPodIdentity is a service for creating AWS pod identity follow the guide: https://github.com/aws/amazon-eks-pod-identity-webhook/blob/master/SELF_HOSTED_SETUP.md
 // It will create a S3 bucket and put the OIDC files(pubicl access) and certs(private access) to the bucket, then create a OpenID connect provider.
 type AWSPodIdentity struct {
 	bucketName string

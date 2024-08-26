@@ -400,7 +400,7 @@ An A/B Testing is triggered by changes in any of the following objects:
 If you only need to remove the Rollout Policy, simply edit the current application and remove the corresponding description:
 
 ```console
-kubectl edit applicaiton abtesting-demo
+kubectl edit application abtesting-demo
 ```
 
 To check the results of the deletion, you can observe that the rollout-related pods have been removed:
@@ -414,7 +414,7 @@ If you want to configure an A/B Testing for it again, you can simply edit the ap
 
 ### 2.Cleanup the Application
 
-When the application is delete, all associated resources will also be reomved:
+When the application is delete, all associated resources will also be removed:
 
 ```console
 kubectl delete application abtesting-demo

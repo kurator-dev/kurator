@@ -45,7 +45,7 @@ spec:
               destination:
                 description: |-
                   Destination defines the destination clusters where the artifacts will be synced.
-                  It can be overriden by the syncPolicies' destination.
+                  It can be overridden by the syncPolicies' destination.
                 properties:
                   clusterSelector:
                     description: |-
@@ -1360,7 +1360,7 @@ spec:
                                   description: Webhook list for this traffic analysis
                                   properties:
                                     command:
-                                      description: Commands define to commends that
+                                      description: Commands define to commands that
                                         executed by webhook.
                                       items:
                                         type: string

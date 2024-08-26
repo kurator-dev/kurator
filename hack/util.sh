@@ -97,7 +97,7 @@ function util::wait_file_exist() {
 }
 
 # util::wait_pod_ready waits for pod state becomes ready until timeout.
-# Parmeters:
+# Parameters:
 #  - $1: pod label, such as "app=etcd"
 #  - $2: pod namespace, such as "karmada-system"
 #  - $3: time out, such as "200s"
@@ -120,7 +120,7 @@ function util::wait_pod_ready() {
 }
 
 # util::wait_apiservice_ready waits for apiservice state becomes Available until timeout.
-# Parmeters:
+# Parameters:
 #  - $1: apiservice label, such as "app=etcd"
 #  - $3: time out, such as "200s"
 function util::wait_apiservice_ready() {
@@ -140,7 +140,7 @@ function util::wait_apiservice_ready() {
 
 # util::create_cluster creates a kubernetes cluster
 # util::create_cluster creates a kind cluster and don't wait for control plane node to be ready.
-# Parmeters:
+# Parameters:
 #  - $1: cluster name, such as "host"
 #  - $2: KUBECONFIG file, such as "/var/run/host.config"
 #  - $3: node docker image to use for booting the cluster, such as "kindest/node:v1.19.1"
@@ -266,8 +266,8 @@ function util::wait_pods() {
   ns=$1
   lb=$2
   waittime=$3
-  # Wait for the pods to be ready in the given namespace with lable
-  while :; do
+  # Wait for the pods to be ready in the given namespace with label
+  while : ; do
     res=$(kubectl wait --kubeconfig="$4" --context "$5" -n "${ns}" pod \
       -l "${lb}" --for=condition=Ready --timeout="${waittime}s" 2>/dev/null || true)
     if [[ "${res}" == *"condition met"* ]]; then

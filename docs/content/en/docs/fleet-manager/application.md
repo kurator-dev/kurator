@@ -247,7 +247,7 @@ kubectl get po -A --kubeconfig=/root/.kube/kurator-member2.config
 
 Upon examining the respective clusters, you'll find that applications originating from the same source configuration have been distributed to different clusters based on their respective policy selector labels.
 
-## Playgroud
+## Playground
 
 Kurator uses killercoda to provide [applications demo](https://killercoda.com/965010e0-4f60-4a28-bf27-597d3kurator/scenario/application-example), allowing users to experience hands-on operations.
 

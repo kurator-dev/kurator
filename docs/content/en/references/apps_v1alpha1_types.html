@@ -103,7 +103,7 @@ ApplicationDestination
 <td>
 <em>(Optional)</em>
 <p>Destination defines the destination clusters where the artifacts will be synced.
-It can be overriden by the syncPolicies&rsquo; destination.</p>
+It can be overridden by the syncPolicies&rsquo; destination.</p>
 </td>
 </tr>
 </table>
@@ -346,7 +346,7 @@ ApplicationDestination
 <td>
 <em>(Optional)</em>
 <p>Destination defines the destination clusters where the artifacts will be synced.
-It can be overriden by the syncPolicies&rsquo; destination.</p>
+It can be overridden by the syncPolicies&rsquo; destination.</p>
 </td>
 </tr>
 </tbody>
@@ -2270,7 +2270,7 @@ Traffic that doesn&rsquo;t meet the match will go to the primary service and pre
 e.g.</p>
 <pre><code class="language-yaml">webhooks:
 - timeoutSeconds: 15
-commend:
+command:
 - &quot;hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/&quot;
 </code></pre>
 <p>The above example means that during trafficAnalysis, the cmd of &ldquo;<a href="http://flagger-loadtester.test/&quot;">http://flagger-loadtester.test/&rdquo;</a> is invoked
@@ -2306,7 +2306,7 @@ Defaults to 60</p>
 </td>
 <td>
 <em>(Optional)</em>
-<p>Commands define to commends that executed by webhook.</p>
+<p>Commands define to commands that executed by webhook.</p>
 </td>
 </tr>
 </tbody>

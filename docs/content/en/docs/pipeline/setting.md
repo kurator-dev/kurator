@@ -14,7 +14,7 @@ This document provides a step-by-step guide to setting up your pipeline using Ku
 
 In the following guild, we use [Kind](https://kind.sigs.k8s.io/) clusters as examples.
 
-You need to first go to [Install cluser operator](/docs/setup/install-cluster-operator) page to create clusters using `hack/local-dev-setup.sh` and install cluster operator.
+You need to first go to [Install cluster operator](/docs/setup/install-cluster-operator) page to create clusters using `hack/local-dev-setup.sh` and install cluster operator.
 We use the host cluster `kurator-host`, where kubeconfig is located in `/root/.kube/kurator-host.config`
 Besides, you need setup Fleet manager by following the instructions in the [installation guide](/docs/setup/install-fleet-manager/).
 
