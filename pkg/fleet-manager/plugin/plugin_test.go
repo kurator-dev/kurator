@@ -644,3 +644,98 @@ func TestRendeRolloutTestloader(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderSubmarinerBroker(t *testing.T) {
+	cases := []struct {
+		name   string
+		fleet  types.NamespacedName
+		ref    *metav1.OwnerReference
+		config *v1alpha1.SubMarinerOperatorConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.SubMarinerOperatorConfig{},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := RenderSubmarinerBroker(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			})
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("sm-broker", tc.name)
+			assert.NoError(t, err)
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}
+
+func TestRenderSubmarinerOperator(t *testing.T) {
+	cases := []struct {
+		name   string
+		fleet  types.NamespacedName
+		ref    *metav1.OwnerReference
+		config *v1alpha1.SubMarinerOperatorConfig
+	}{
+		{
+			name: "default",
+			fleet: types.NamespacedName{
+				Name:      "fleet-1",
+				Namespace: "default",
+			},
+			ref: &metav1.OwnerReference{
+				APIVersion: v1alpha1.GroupVersion.String(),
+				Kind:       "Fleet",
+				Name:       "fleet-1",
+				UID:        "xxxxxx",
+			},
+			config: &v1alpha1.SubMarinerOperatorConfig{
+				BrokerCluster: "cluster1",
+				ClusterCidrs: map[string]string{
+					"cluster1": "10.244.0.0/24",
+				},
+				ServiceCidrs: map[string]string{
+					"cluster1": "10.96.0.0/16",
+				},
+				Globalcidrs: map[string]string{
+					"cluster1": "242.0.0.0/24",
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			brokerCfg := map[string]interface{}{
+				"ca":     "ca-xxx",
+				"token":  "token-xxx",
+				"server": "server-xxx",
+			}
+
+			got, err := RenderSubmarinerOperator(manifestFS, tc.fleet, tc.ref, KubeConfigSecretRef{
+				Name:       "cluster1",
+				SecretName: "cluster1",
+				SecretKey:  "kubeconfig.yaml",
+			}, tc.config, brokerCfg)
+			assert.NoError(t, err)
+
+			getExpected, err := getExpected("sm-operator", tc.name)
+			assert.NoError(t, err)
+			assert.Equal(t, string(getExpected), string(got))
+		})
+	}
+}

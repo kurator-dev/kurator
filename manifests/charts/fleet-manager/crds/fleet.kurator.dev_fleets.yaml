@@ -2782,6 +2782,75 @@ spec:
                             type: object
                         type: object
                     type: object
+                  submariner:
+                    description: SubMarinerOperator defines the configuration for
+                      the kurator network management.
+                    properties:
+                      brokerCluster:
+                        description: |-
+                          BrokerCluster is the name of cluster in which the broker will be installed.
+                          If the broker cluster is not specified, the first cluster in the fleet will be used as the broker cluster.
+                        type: string
+                      chart:
+                        description: |-
+                          Chart defines the helm chart configuration of the submariner operator.
+                          The default value is
+
+
+                          ```yaml
+                          chart:
+                            repository: https://submariner-io.github.io/submariner-charts/charts
+                            name: submariner-operator
+                            version: 0.18.0
+                            targetNamespace: submariner-operator
+                          ```
+                        properties:
+                          name:
+                            description: |-
+                              Name defines the name of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          repository:
+                            description: |-
+                              Repository defines the repository of chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          version:
+                            description: |-
+                              Version defines the version of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                        type: object
+                      clusterCidrs:
+                        additionalProperties:
+                          type: string
+                        description: ClusterCidrs records the clustercidr of each
+                          cluster.
+                        type: object
+                      extraArgs:
+                        description: "ExtraArgs is the set of extra arguments for
+                          submariner, and example will be provided in the future.\n\n\n```yaml\nextraArgs:\n
+                          \ broker:\n  \t\tglobalnet: true\n\t submariner:\n \t\tserviceDiscovery:
+                          true\n     natEnabled: false\n```"
+                        x-kubernetes-preserve-unknown-fields: true
+                      globalcidrs:
+                        additionalProperties:
+                          type: string
+                        description: |-
+                          Globalcidrs records the globalcidr of each cluster in a virtual network Globalnet.
+                          Each cluster must use distinct globalCidr that don’t conflict or overlap with any other cluster
+                          If the globalcidr is not specified, Globalnet will be disabled.
+                        type: object
+                      serviceCidrs:
+                        additionalProperties:
+                          type: string
+                        description: ServiceCidrs records the servicecidr of each
+                          cluster.
+                        type: object
+                    required:
+                    - clusterCidrs
+                    - serviceCidrs
+                    type: object
                 type: object
             type: object
           status:

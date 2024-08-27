@@ -32,25 +32,29 @@ import (
 )
 
 const (
-	MetricPluginName          = "metric"
-	GrafanaPluginName         = "grafana"
-	KyvernoPluginName         = "kyverno"
-	BackupPluginName          = "backup"
-	StorageOperatorPluginName = "storage-operator"
-	ClusterStoragePluginName  = "cluster-storage"
-	FlaggerPluginName         = "flagger"
-	PublicTestloaderName      = "testloader"
+	MetricPluginName             = "metric"
+	GrafanaPluginName            = "grafana"
+	KyvernoPluginName            = "kyverno"
+	BackupPluginName             = "backup"
+	StorageOperatorPluginName    = "storage-operator"
+	ClusterStoragePluginName     = "cluster-storage"
+	FlaggerPluginName            = "flagger"
+	PublicTestloaderName         = "testloader"
+	SubMarinerBrokerPluginName   = "submariner-broker"
+	SubMarinerOperatorPluginName = "submariner-operator"
 
-	ThanosComponentName        = "thanos"
-	PrometheusComponentName    = "prometheus"
-	GrafanaComponentName       = "grafana"
-	KyvernoComponentName       = "kyverno"
-	KyvernoPolicyComponentName = "kyverno-policies"
-	VeleroComponentName        = "velero"
-	RookOperatorComponentName  = "rook"
-	RookClusterComponentName   = "rook-ceph"
-	FlaggerComponentName       = "flagger"
-	TestloaderComponentName    = "testloader"
+	ThanosComponentName             = "thanos"
+	PrometheusComponentName         = "prometheus"
+	GrafanaComponentName            = "grafana"
+	KyvernoComponentName            = "kyverno"
+	KyvernoPolicyComponentName      = "kyverno-policies"
+	VeleroComponentName             = "velero"
+	RookOperatorComponentName       = "rook"
+	RookClusterComponentName        = "rook-ceph"
+	FlaggerComponentName            = "flagger"
+	TestloaderComponentName         = "testloader"
+	SubMarinerBrokerComponentName   = "sm-broker"
+	SubMarinerOperatorComponentName = "sm-operator"
 
 	OCIReposiotryPrefix = "oci://"
 )
@@ -436,6 +440,80 @@ func RenderRolloutTestloader(
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           PublicTestloaderName,
 		Component:      TestloaderComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RenderSubmarinerBroker(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+) ([]byte, error) {
+	c, err := getFleetPluginChart(fsys, SubMarinerBrokerComponentName)
+	if err != nil {
+		return nil, err
+	}
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           SubMarinerBrokerPluginName,
+		Component:      SubMarinerBrokerComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+	})
+}
+
+func RenderSubmarinerOperator(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+	subMarinerOperatorConfig *fleetv1a1.SubMarinerOperatorConfig,
+	brokerConfig map[string]interface{},
+) ([]byte, error) {
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, SubMarinerOperatorComponentName)
+	if err != nil {
+		return nil, err
+	}
+	mergeChartConfig(c, subMarinerOperatorConfig.Chart)
+
+	values, err := toMap(subMarinerOperatorConfig.ExtraArgs)
+	if err != nil {
+		return nil, err
+	}
+	globalnet := false
+	globalCidr, ok := subMarinerOperatorConfig.Globalcidrs[cluster.Name]
+	if ok && globalCidr != "" {
+		globalnet = true
+	}
+
+	brokerConfig["globalnet"] = globalnet
+
+	values = transform.MergeMaps(values, map[string]interface{}{
+		"broker": brokerConfig,
+		"serviceAccounts": map[string]interface{}{
+			"globalnet": map[string]interface{}{
+				"create": globalnet,
+			},
+		},
+		"submariner": map[string]interface{}{
+			"clusterId":   cluster.Name,
+			"clusterCidr": subMarinerOperatorConfig.ClusterCidrs[cluster.Name],
+			"serviceCidr": subMarinerOperatorConfig.ServiceCidrs[cluster.Name],
+			"globalCidr":  globalCidr,
+		},
+	})
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           SubMarinerOperatorPluginName,
+		Component:      SubMarinerOperatorComponentName,
 		Fleet:          fleetNN,
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,

@@ -1,0 +1,13 @@
+type: default
+repo: https://submariner-io.github.io/submariner-charts/charts
+name: submariner-k8s-broker
+version: 0.18.0
+targetNamespace: submariner-k8s-broker
+values:
+  rbac:
+    create: true
+  crd:
+    create: true
+  serviceAccounts:
+    client:
+      create: true
