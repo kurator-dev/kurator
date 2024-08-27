@@ -339,8 +339,9 @@ type TrafficAnalysis struct {
 
 type Metric struct {
 	// Name of the metric.
-	// Currently supported metric are `request-success-rate` and `request-duration`.
-	// When Name is not `request-success-rate` or `request-duration`, you need to define the metric rule in CustomMetric.
+	// Currently internally supported metric are `request-success-rate` and `request-duration`.
+	// And you can use the metrics that come with the gateway.
+	// When you define a metric rule in `CustomMetric`, fill in the custom name in this field.
 	Name MetricName `json:"name"`
 
 	// IntervalSeconds defines metrics query interval.
