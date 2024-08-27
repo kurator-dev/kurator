@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	clusterv1alpha1 "kurator.dev/kurator/pkg/apis/cluster/v1alpha1"
 	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
@@ -109,6 +110,13 @@ func ClientForCluster(client client.Client, ns string, cluster ClusterInterface)
 		return nil, err
 	}
 
+	return kclient.NewClient(kclient.NewRESTClientGetter(rest))
+}
+func WrapClient(client client.Client) (*kclient.Client, error) {
+	rest, err := config.GetConfig()
+	if err != nil {
+		return nil, err
+	}
 	return kclient.NewClient(kclient.NewRESTClientGetter(rest))
 }
 
