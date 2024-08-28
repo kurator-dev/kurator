@@ -213,7 +213,7 @@ Labels such as `env=dev` can be assigned to clusters, and the same selectors can
 
 Please note the following considerations:
 
-1. You have the option to set a default selector for all policies under `application.spec.destination`, or to configure it within individual policies. Kurator gives precedence to the policy-level setting - it resorts to the default setting only when the destination within the policy is not set.
+1. You have the option to set a default selector for all policies under `application.spec.destination`, or to configure it within individual policies. Kurator gives precedence to the policy-level setting - it resorts to the default setting only when the destination within the policy is not set.And when both `application.spec.destination` and `application.spec.destination[].destination` are empty, it will be [deployed directly in the cluster where kurator resides](/docs/fleet-manager/application/#deployment-application-in-single-cluster).
 
 1. To ensure that the policy functions as expected, selectors should be added to the cluster prior to running the application.
 
@@ -246,6 +246,60 @@ kubectl get po -A --kubeconfig=/root/.kube/kurator-member2.config
 ```
 
 Upon examining the respective clusters, you'll find that applications originating from the same source configuration have been distributed to different clusters based on their respective policy selector labels.
+
+## Deployment Application in Single Cluster
+
+Use the following command to deploy the example application that doesn't specify an `ApplicationDestination` for Fleet. This configuration allows the application to be deployed directly on the  cluster  where kurator resides, offering a simpler deployment approach for scenarios where multi-cluster management is unnecessary.
+
+```bash
+kubectl apply -f examples/application/gitrepo-kustomization-demo-without-fleet.yaml
+```
+
+Here is the configuration of the example application. This YAML outlines the source and synchronization policies without `destination`, allowing for deployment in a single cluster.
+
+```yaml
+apiVersion: apps.kurator.dev/v1alpha1
+kind: Application
+metadata:
+  name: without-fleet-demo
+  namespace: default
+spec:
+  source:
+    gitRepository:
+      interval: 3m0s
+      ref:
+        branch: master
+      timeout: 1m0s
+      url: https://github.com/stefanprodan/podinfo
+  syncPolicies:
+    - kustomization:
+        interval: 0s
+        path: ./deploy/webapp
+        prune: true
+        timeout: 2m0s
+    - kustomization:
+        targetNamespace: default
+        interval: 5m0s
+        path: ./kustomize
+        prune: true
+        timeout: 2m0s
+```
+
+Verify that the resources are running in the cluster by using the following command:
+
+```bash
+kubectl get po -A
+```
+
+This command lists all the pods running in the cluster. You should see the pods specified in your application's configuration.
+
+Currently, when you edit the destination configuration to change the application deployment to fleet, the resources deployed to the cluster where kurator is located will not be deleted.
+
+Before deploying a new application with a destination, Use the following command to remove the application and its related resources:
+
+```bash
+kubectl delete applications.apps.kurator.dev without-fleet-demo
+```
 
 ## Playground
 
