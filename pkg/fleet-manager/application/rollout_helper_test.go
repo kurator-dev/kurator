@@ -31,7 +31,7 @@ import (
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
 )
 
-func generateRolloutPloicy(installPrivateTestloader *bool) applicationapi.RolloutConfig {
+func generateRolloutPolicy(installPrivateTestloader *bool) applicationapi.RolloutConfig {
 	timeout := 50
 	RolloutTimeoutSeconds := int32(50)
 	min := 99.0
@@ -138,6 +138,134 @@ func generateRolloutPloicy(installPrivateTestloader *bool) applicationapi.Rollou
 	return rolloutPolicy
 }
 
+func generateRolloutPolicyWithCustomMetric() applicationapi.RolloutConfig {
+	timeout := 50
+	RolloutTimeoutSeconds := int32(50)
+	min := 99.0
+	max := 500.0
+	flag := false
+
+	rolloutPolicy := applicationapi.RolloutConfig{
+		TestLoader:             &flag,
+		TrafficRoutingProvider: "istio",
+		Workload: &applicationapi.CrossNamespaceObjectReference{
+			APIVersion: "appv1/deployment",
+			Kind:       "Deployment",
+			Name:       "podinfo",
+			Namespace:  "test",
+		},
+		ServiceName: "podinfo-service",
+		Port:        80,
+		RolloutPolicy: &applicationapi.RolloutPolicy{
+			TrafficRouting: &applicationapi.TrafficRoutingConfig{
+				TimeoutSeconds: 50,
+				Gateways: []string{
+					"istio-system/public-gateway",
+				},
+				Hosts: []string{
+					"app.example.com",
+				},
+				Retries: &istiov1alpha3.HTTPRetry{
+					Attempts:      10,
+					PerTryTimeout: "40s",
+					RetryOn:       "gateway-error, connect-failure, refused-stream",
+				},
+				Headers: &istiov1alpha3.Headers{
+					Request: &istiov1alpha3.HeaderOperations{
+						Add: map[string]string{
+							"x-some-header": "value",
+						},
+					},
+				},
+				CorsPolicy: &istiov1alpha3.CorsPolicy{
+					AllowOrigin:      []string{"example"},
+					AllowMethods:     []string{"GET"},
+					AllowCredentials: false,
+					AllowHeaders:     []string{"x-some-header"},
+					MaxAge:           "24h",
+				},
+				CanaryStrategy: &applicationapi.CanaryConfig{
+					MaxWeight:  50,
+					StepWeight: 10,
+					StepWeights: []int{
+						1, 20, 40, 80,
+					},
+					StepWeightPromotion: 30,
+				},
+				AnalysisTimes: 5,
+				Match: []istiov1alpha3.HTTPMatchRequest{
+					{
+						Headers: map[string]v1alpha1.StringMatch{
+							"user-agent": {
+								Regex: ".*Firefox.*",
+							},
+							"cookie": {
+								Regex: "^(.*?;)?(type=insider)(;.*)?$",
+							},
+						},
+					},
+				},
+			},
+			TrafficAnalysis: &applicationapi.TrafficAnalysis{
+				CheckIntervalSeconds: &timeout,
+				CheckFailedTimes:     &timeout,
+				Metrics: []applicationapi.Metric{
+					{
+						Name:            "request-success-rate",
+						IntervalSeconds: &timeout,
+						ThresholdRange: &applicationapi.CanaryThresholdRange{
+							Min: &min,
+						},
+					},
+					{
+						Name:            "my-metric",
+						IntervalSeconds: &timeout,
+						ThresholdRange: &applicationapi.CanaryThresholdRange{
+							Max: &max,
+						},
+						CustomMetric: &flaggerv1b1.MetricTemplateSpec{
+							Provider: flaggerv1b1.MetricTemplateProvider{
+								Type:    "prometheus",
+								Address: "http://flagger-prometheus.ingress-nginx:9090",
+							},
+							Query: `
+                			   sum(
+                			     rate(
+                			       http_requests_total{
+                			         status!~"5.*"
+                			       }[{{ interval }}]
+                			     )
+                			   )
+                			   /
+                			   sum(
+                			     rate(
+                			       http_requests_total[{{ interval }}]
+                			     )
+                			   ) * 100`,
+						},
+					},
+				},
+				Webhooks: applicationapi.Webhook{
+					TimeoutSeconds: &timeout,
+					Commands: []string{
+						"hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/",
+						"curl -sd 'test' http://podinfo-canary:9898/token | grep token",
+					},
+				},
+				SessionAffinity: &applicationapi.SessionAffinity{
+					CookieName: "User",
+					MaxAge:     24,
+				},
+			},
+			RolloutTimeoutSeconds: &RolloutTimeoutSeconds,
+			SkipTrafficAnalysis:   false,
+			RevertOnDeletion:      false,
+			Suspend:               false,
+		},
+	}
+	return rolloutPolicy
+}
+
 func Test_renderCanary(t *testing.T) {
 	int32Time := int32(50)
 	sign := true
@@ -152,7 +280,7 @@ func Test_renderCanary(t *testing.T) {
 		{
 			name: "functional test",
 			args: args{
-				rolloutPolicy: generateRolloutPloicy(&sign),
+				rolloutPolicy: generateRolloutPolicy(&sign),
 			},
 			want: &flaggerv1b1.Canary{
 				ObjectMeta: metav1.ObjectMeta{
@@ -189,7 +317,7 @@ func Test_renderCanary(t *testing.T) {
 
 func Test_renderCanaryService(t *testing.T) {
 	sign := true
-	rolloutPolicy := generateRolloutPloicy(&sign)
+	rolloutPolicy := generateRolloutPolicy(&sign)
 	type args struct {
 		rolloutPolicy applicationapi.RolloutConfig
 		service       *corev1.Service
@@ -252,8 +380,9 @@ func Test_renderCanaryAnalysis(t *testing.T) {
 	sign := true
 	wantFalse := false
 	timeout := 50
-	rolloutPolicy := generateRolloutPloicy(&sign)
-	wantPublicTestloaderRolloutPolicy := generateRolloutPloicy(&wantFalse)
+	rolloutPolicy := generateRolloutPolicy(&sign)
+	wantPublicTestloaderRolloutPolicy := generateRolloutPolicy(&wantFalse)
+	rolloutPolicyWithCustomMetric := generateRolloutPolicyWithCustomMetric()
 	type args struct {
 		rolloutPolicy applicationapi.RolloutConfig
 	}
@@ -362,6 +491,72 @@ func Test_renderCanaryAnalysis(t *testing.T) {
 						Name:           "request-duration",
 						Interval:       "50s",
 						ThresholdRange: (*flaggerv1b1.CanaryThresholdRange)(rolloutPolicy.RolloutPolicy.TrafficAnalysis.Metrics[1].ThresholdRange),
+					},
+				},
+				Webhooks: []flaggerv1b1.CanaryWebhook{
+					{
+						Name:    "generated-testload-0",
+						Timeout: "50s",
+						URL:     "http://istio-system-testloader-kurator-member-loadtester.istio-system/",
+						Metadata: &map[string]string{
+							"type": "cmd",
+							"cmd":  "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/",
+						},
+					},
+					{
+						Name:    "generated-testload-1",
+						Timeout: "50s",
+						URL:     "http://istio-system-testloader-kurator-member-loadtester.istio-system/",
+						Metadata: &map[string]string{
+							"type": "cmd",
+							"cmd":  "curl -sd 'test' http://podinfo-canary:9898/token | grep token",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Custom Metric Template",
+			args: args{
+				rolloutPolicy: rolloutPolicyWithCustomMetric,
+			},
+			want: &flaggerv1b1.CanaryAnalysis{
+				Interval:   "50s",
+				Iterations: 5,
+				MaxWeight:  50,
+				StepWeight: 10,
+				StepWeights: []int{
+					1, 20, 40, 80,
+				},
+				StepWeightPromotion: 30,
+				Threshold:           timeout,
+				Match: []istiov1alpha3.HTTPMatchRequest{
+					{
+						Headers: map[string]v1alpha1.StringMatch{
+							"user-agent": {
+								Regex: ".*Firefox.*",
+							},
+							"cookie": {
+								Regex: "^(.*?;)?(type=insider)(;.*)?$",
+							},
+						},
+					},
+				},
+				SessionAffinity: (*flaggerv1b1.SessionAffinity)(rolloutPolicy.RolloutPolicy.TrafficAnalysis.SessionAffinity),
+				Metrics: []flaggerv1b1.CanaryMetric{
+					{
+						Name:           "request-success-rate",
+						Interval:       "50s",
+						ThresholdRange: (*flaggerv1b1.CanaryThresholdRange)(rolloutPolicy.RolloutPolicy.TrafficAnalysis.Metrics[0].ThresholdRange),
+					},
+					{
+						Name:           "my-metric",
+						Interval:       "50s",
+						ThresholdRange: (*flaggerv1b1.CanaryThresholdRange)(rolloutPolicy.RolloutPolicy.TrafficAnalysis.Metrics[1].ThresholdRange),
+						TemplateRef: &flaggerv1b1.CrossNamespaceObjectReference{
+							Name:      "my-metric",
+							Namespace: rolloutPolicyWithCustomMetric.Workload.Namespace,
+						},
 					},
 				},
 				Webhooks: []flaggerv1b1.CanaryWebhook{

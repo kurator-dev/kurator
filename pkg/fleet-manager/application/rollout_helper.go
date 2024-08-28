@@ -26,9 +26,11 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
@@ -163,6 +165,9 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		} else {
 			canaryInCluster.Spec.Service = *canaryService
 		}
+		if err := applyMetricTemplate(ctx, fleetClusterClient, rolloutPolicy.RolloutPolicy.TrafficAnalysis.Metrics, rolloutPolicy.Workload.Namespace, policyName); err != nil {
+			return ctrl.Result{}, err
+		}
 		canaryInCluster.Spec.Analysis = renderCanaryAnalysis(*rolloutPolicy, clusterKey.Name)
 		// Set up annotations to make sure it's a resource created by kurator
 		canaryInCluster.SetAnnotations(annotation)
@@ -247,6 +252,18 @@ func (a *ApplicationManager) deleteResourcesInMemberClusters(ctx context.Context
 			Namespace: rolloutPolicy.Workload.Namespace,
 			Name:      rolloutPolicy.ServiceName,
 		}
+
+		allMetricTemplateNamespaceName := make([]types.NamespacedName, 0, len(rolloutPolicy.RolloutPolicy.TrafficAnalysis.Metrics))
+		for _, metric := range rolloutPolicy.RolloutPolicy.TrafficAnalysis.Metrics {
+			if metric.CustomMetric != nil {
+				metricTemplateNamespaceName := types.NamespacedName{
+					Name:      string(metric.Name),
+					Namespace: rolloutPolicy.Workload.Namespace,
+				}
+				allMetricTemplateNamespaceName = append(allMetricTemplateNamespaceName, metricTemplateNamespaceName)
+			}
+		}
+
 		testloaderNamespaceName := types.NamespacedName{
 			Namespace: rolloutPolicy.Workload.Namespace,
 			Name:      rolloutPolicy.Workload.Name + "-testloader",
@@ -260,6 +277,9 @@ func (a *ApplicationManager) deleteResourcesInMemberClusters(ctx context.Context
 			testloaderSvc := &corev1.Service{}
 			if err := deleteResourceCreatedByKurator(ctx, testloaderNamespaceName, newClient, testloaderSvc); err != nil {
 				return errors.Wrapf(err, "failed to delete testloader service")
+			}
+			if err := deleteMetricTemplateName(ctx, allMetricTemplateNamespaceName, newClient); err != nil {
+				return err
 			}
 			canary := &flaggerv1b1.Canary{}
 			if err := deleteResourceCreatedByKurator(ctx, serviceNamespaceName, newClient, canary); err != nil {
@@ -350,6 +370,16 @@ func installPrivateTestloader(ctx context.Context, namespacedName types.Namespac
 	return nil
 }
 
+func deleteMetricTemplateName(ctx context.Context, allNamespaceName []types.NamespacedName, kubeClient client.Client) error {
+	metricTemplate := &flaggerv1b1.MetricTemplate{}
+	for _, namespaceName := range allNamespaceName {
+		if err := deleteResourceCreatedByKurator(ctx, namespaceName, kubeClient, metricTemplate); err != nil {
+			return errors.Wrapf(err, "failed to delete MetricTemplate")
+		}
+	}
+	return nil
+}
+
 func deleteResourceCreatedByKurator(ctx context.Context, namespaceName types.NamespacedName, kubeClient client.Client, obj client.Object) error {
 	if err := kubeClient.Get(ctx, namespaceName, obj); err != nil {
 		if !apierrors.IsNotFound(err) {
@@ -419,6 +449,31 @@ func renderCanaryService(rolloutPolicy applicationapi.RolloutConfig, service *co
 	return canaryService, nil
 }
 
+func applyMetricTemplate(ctx context.Context, fleetClusterClient client.Client, metrics []applicationapi.Metric, namespace, policyName string) error {
+	log := ctrl.LoggerFrom(ctx)
+	for _, metric := range metrics {
+		if metric.CustomMetric != nil {
+			metricTemplate := &flaggerv1b1.MetricTemplate{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:        string(metric.Name),
+					Namespace:   namespace,
+					Annotations: map[string]string{RolloutIdentifier: policyName},
+				},
+			}
+			res, err := controllerutil.CreateOrUpdate(ctx, fleetClusterClient, metricTemplate, func() error {
+				metricTemplate.Spec = *metric.CustomMetric
+				return nil
+			})
+
+			if err != nil {
+				return errors.Wrapf(err, "error apply MetricTemplate %s for canary", metric.Name)
+			}
+			log.Info("success apply", "MetricTemplate:", metric.Name, "result:", res)
+		}
+	}
+	return nil
+}
+
 func renderCanaryAnalysis(rolloutPolicy applicationapi.RolloutConfig, clusterName string) *flaggerv1b1.CanaryAnalysis {
 	canaryAnalysis := flaggerv1b1.CanaryAnalysis{
 		Iterations:      rolloutPolicy.RolloutPolicy.TrafficRouting.AnalysisTimes,
@@ -444,6 +499,12 @@ func renderCanaryAnalysis(rolloutPolicy applicationapi.RolloutConfig, clusterNam
 			Name:           string(metric.Name),
 			Interval:       metricInterval,
 			ThresholdRange: (*flaggerv1b1.CanaryThresholdRange)(metric.ThresholdRange),
+		}
+		if metric.Name != applicationapi.RequestSuccessRate && metric.Name != applicationapi.RequestDuration {
+			templateMetric.TemplateRef = &flaggerv1b1.CrossNamespaceObjectReference{
+				Name:      string(metric.Name),
+				Namespace: rolloutPolicy.Workload.Namespace,
+			}
 		}
 		canaryMetric = append(canaryMetric, templateMetric)
 	}

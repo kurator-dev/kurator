@@ -669,6 +669,11 @@ func (in *Metric) DeepCopyInto(out *Metric) {
 		*out = new(CanaryThresholdRange)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.CustomMetric != nil {
+		in, out := &in.CustomMetric, &out.CustomMetric
+		*out = new(v1beta1.MetricTemplateSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
