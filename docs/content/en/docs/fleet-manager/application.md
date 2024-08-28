@@ -247,9 +247,9 @@ kubectl get po -A --kubeconfig=/root/.kube/kurator-member2.config
 
 Upon examining the respective clusters, you'll find that applications originating from the same source configuration have been distributed to different clusters based on their respective policy selector labels.
 
-## Deployment Application in Single Cluster
+## Deploy Application in Host Cluster
 
-Use the following command to deploy the example application that doesn't specify an `ApplicationDestination` for Fleet. This configuration allows the application to be deployed directly on the  cluster  where kurator resides, offering a simpler deployment approach for scenarios where multi-cluster management is unnecessary.
+Use the following command to deploy the example application that doesn't specify an `ApplicationDestination`. This configuration allows the application to be deployed directly in the cluster where kurator resides, providing a simpler deployment approach for scenarios where multi-cluster management is unnecessary.
 
 ```bash
 kubectl apply -f examples/application/gitrepo-kustomization-demo-without-fleet.yaml
