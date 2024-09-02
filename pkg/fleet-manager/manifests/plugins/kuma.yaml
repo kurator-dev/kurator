@@ -1,0 +1,5 @@
+type: default
+repo: https://kumahq.github.io/charts
+name: kuma
+version: 2.7.3
+targetNamespace: kuma-system
