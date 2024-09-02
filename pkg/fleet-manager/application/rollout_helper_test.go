@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	applicationapi "kurator.dev/kurator/pkg/apis/apps/v1alpha1"
+	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 func generateRolloutPolicy(installPrivateTestloader *bool) applicationapi.RolloutConfig {
@@ -39,7 +40,7 @@ func generateRolloutPolicy(installPrivateTestloader *bool) applicationapi.Rollou
 
 	rolloutPolicy := applicationapi.RolloutConfig{
 		TestLoader:             installPrivateTestloader,
-		TrafficRoutingProvider: "istio",
+		TrafficRoutingProvider: fleetapi.Istio,
 		Workload: &applicationapi.CrossNamespaceObjectReference{
 			APIVersion: "appv1/deployment",
 			Kind:       "Deployment",

@@ -42,31 +42,34 @@ We will delve into the API design required to support these configurations. The 
 type TrafficRoutingConfig struct {
 	...
 	// for NGINX
-	// The default created ingress is as follows, (replace app.example.com with your own domain, and change the path matching rules as needed)
+	// The default created ingress is as follows, (Fill in `host` with your own domain)
+	// ```yaml
 	// apiVersion: networking.k8s.io/v1
 	// kind: Ingress
 	// metadata:
-	//   name: application.syncPolicies.rollout.name
-	//   namespace: application.syncPolicies.rollout.namespace
+	//   name: nginx
+	//   namespace: application.syncPolicies.rollout.workload.namespace
 	//   labels:
-	//     app: application.syncPolicies.rollout.name
+	//     app: application.syncPolicies.rollout.ServiceName
 	//   annotations:
 	//     kubernetes.io/ingress.class: "nginx"
 	// spec:
 	//   rules:
-	//     - host: "app.example.com"
+	//     - host: ""
 	//       http:
 	//         paths:
 	//           - pathType: Prefix
 	//             path: "/"
 	//             backend:
 	//               service:
-	//                 name: application.syncPolicies.rollout.name
+	//                 name: application.syncPolicies.rollout.ServiceName
 	//                 port:
-	//                   number: 80	
+	//                   number: application.syncPolicies.rollout.port
+	// ```
 	// +optional
-	Ingress *ingressv1.IngressRule `json:"ingress,omitempty"`
-	// for Kuma
+	Host string `json:"host,omitempty"`
+
+	// for kuma
 	// Defaults to http
 	// +optional
 	Protocol string `json:"protocol,omitempty"`

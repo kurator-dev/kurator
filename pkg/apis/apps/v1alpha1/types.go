@@ -23,6 +23,7 @@ import (
 	kustomizev1beta2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	sourcev1beta2 "github.com/fluxcd/source-controller/api/v1beta2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 // +genclient
@@ -117,10 +118,9 @@ type RolloutConfig struct {
 	TestLoader *bool `json:"testLoader,omitempty"`
 
 	// TrafficRoutingProvider defines traffic routing provider.
-	// Kurator only supports istio for now.
+	// Kurator supports istio,kuma,nginx for now.
 	// Other provider will be added later.
-	// +optional
-	TrafficRoutingProvider string `json:"trafficRoutingProvider,omitempty"`
+	TrafficRoutingProvider fleetapi.Provider `json:"trafficRoutingProvider"`
 
 	// Workload specifies what workload to deploy the test to.
 	// Workload of type Deployment or DaemonSet.
@@ -238,6 +238,39 @@ type TrafficRoutingConfig struct {
 	//
 	// +optional
 	CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
+
+	// for NGINX
+	// The default created ingress is as follows, (Fill in `host` with your own domain)
+	// ```yaml
+	// apiVersion: networking.k8s.io/v1
+	// kind: Ingress
+	// metadata:
+	//   name: nginx
+	//   namespace: application.syncPolicies.rollout.workload.namespace
+	//   labels:
+	//     app: application.syncPolicies.rollout.ServiceName
+	//   annotations:
+	//     kubernetes.io/ingress.class: "nginx"
+	// spec:
+	//   rules:
+	//     - host: ""
+	//       http:
+	//         paths:
+	//           - pathType: Prefix
+	//             path: "/"
+	//             backend:
+	//               service:
+	//                 name: application.syncPolicies.rollout.ServiceName
+	//                 port:
+	//                   number: application.syncPolicies.rollout.port
+	// ```
+	// +optional
+	Host string `json:"host,omitempty"`
+
+	// for kuma
+	// Defaults to http
+	// +optional
+	Protocol string `json:"protocol,omitempty"`
 
 	// CanaryStrategy defines parameters for Canary Deployment.
 	// Note: Kurator determines A/B Testing, Blue/Green Deployment, or Canary Deployment
