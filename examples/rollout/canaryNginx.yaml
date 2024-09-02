@@ -1,7 +1,7 @@
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: CustomMetric-demo
+  name: rollout-demo
   namespace: default
 spec:
   source:
@@ -21,7 +21,7 @@ spec:
         timeout: 2m0s
       rollout:
         testLoader: true
-        trafficRoutingProvider: istio
+        trafficRoutingProvider: nginx
         workload:
           apiVersion: apps/v1
           name: backend
@@ -32,29 +32,22 @@ spec:
         rolloutPolicy:
           trafficRouting:
             timeoutSeconds: 60
-            gateways:
-            - istio-system/public-gateway
-            hosts:
-            - backend.webapp
             canaryStrategy:
               maxWeight: 50
               stepWeight: 10
+            host: "app.example.com"
           trafficAnalysis:
              checkIntervalSeconds: 90
              checkFailedTimes: 2
              metrics:
-             - name: request-success-rate
-               intervalSeconds: 90
-               thresholdRange:
-                 min: 99
              - name: my-metric
                intervalSeconds: 90
                thresholdRange:
-                 max: 99
+                 min: 99
                customMetric: 
                  provider: 
                    type: prometheus
-                   address: http://prometheus.istio-system:9090
+                   address: http://ingress-nginx-flagger-kurator-member-prometheus.ingress-nginx:9090
                  query: |
                    sum(
                      rate(
@@ -72,7 +65,7 @@ spec:
              webhooks:
                  timeoutSeconds: 60
                  command:
-                 - "hey -z 1m -q 10 -c 2 http://backend-canary.webapp:9898/"
+                 - "hey -z 1m -q 10 -c 2 http://app.example.com/"
           rolloutTimeoutSeconds: 600
     - destination:
         fleet: quickstart
