@@ -167,7 +167,6 @@ gen: clean \
 	gen-api-doc \
 	tidy \
 	fix-copyright \
-	gen-thanos \
 	gen-prom \
 	gen-prom-thanos \
 	gen-thanos \
