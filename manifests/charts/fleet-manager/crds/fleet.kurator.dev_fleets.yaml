@@ -2465,7 +2465,36 @@ spec:
                     description: Flagger defines the configuration for the kurator
                       rollout engine.
                     properties:
-                      Config:
+                      chart:
+                        description: |-
+                          Chart defines the helm chart config of the flagger.
+                          default value is
+
+
+                          ```yaml
+                          chart:
+                            repository: oci://ghcr.io/fluxcd/charts
+                            name: flagger
+                            version: 1.x
+                          ```
+                        properties:
+                          name:
+                            description: |-
+                              Name defines the name of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          repository:
+                            description: |-
+                              Repository defines the repository of chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                          version:
+                            description: |-
+                              Version defines the version of the chart.
+                              Default value depends on the kind of the component.
+                            type: string
+                        type: object
+                      config:
                         description: ProviderConfig defines the configuration for
                           the TrafficRoutingProvider.
                         properties:
@@ -2495,35 +2524,6 @@ spec:
                               ExtraArgs is the set of extra arguments for TrafficRoutingProvider's chart.
                               You can pass in values according to your needs.
                             x-kubernetes-preserve-unknown-fields: true
-                        type: object
-                      chart:
-                        description: |-
-                          Chart defines the helm chart config of the flagger.
-                          default value is
-
-
-                          ```yaml
-                          chart:
-                            repository: oci://ghcr.io/fluxcd/charts
-                            name: flagger
-                            version: 1.x
-                          ```
-                        properties:
-                          name:
-                            description: |-
-                              Name defines the name of the chart.
-                              Default value depends on the kind of the component.
-                            type: string
-                          repository:
-                            description: |-
-                              Repository defines the repository of chart.
-                              Default value depends on the kind of the component.
-                            type: string
-                          version:
-                            description: |-
-                              Version defines the version of the chart.
-                              Default value depends on the kind of the component.
-                            type: string
                         type: object
                       extraArgs:
                         description: |-

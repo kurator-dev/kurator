@@ -179,5 +179,6 @@ func defaultSyncPolicies(ctx context.Context, SyncPolicies []*v1alpha1.Applicati
 			}
 		}
 	}
+	log.Info("set SyncPolicies default success")
 	return nil
 }

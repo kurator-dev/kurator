@@ -572,7 +572,7 @@ type FlaggerConfig struct {
 	PublicTestloader bool `json:"publicTestloader,omitempty"`
 	// ProviderConfig defines the configuration for the TrafficRoutingProvider.
 	// +optional
-	ProviderConfig *Config `json:"Config,omitempty"`
+	ProviderConfig *Config `json:"config,omitempty"`
 }
 
 type Config struct {

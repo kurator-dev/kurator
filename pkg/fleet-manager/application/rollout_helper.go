@@ -494,7 +494,6 @@ func deleteIngressCreatedByKurator(ctx context.Context, kubeClient client.Client
 
 // create/update ingress configuration
 func renderIngress(ingress *ingressv1.Ingress, rollout *applicationapi.RolloutConfig) {
-
 	if labels := ingress.GetLabels(); labels == nil || labels[ingressLabelKey] == "" {
 		ingress.SetLabels(map[string]string{ingressLabelKey: rollout.ServiceName})
 	} else {
