@@ -136,7 +136,7 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		case fleetapi.Istio, fleetapi.Kuma:
 			err := enableSidecarInjection(ctx, fleetClusterClient, rolloutPolicy.Workload.Namespace, provider, annotation)
 			if err != nil {
-				return ctrl.Result{}, errors.Wrapf(err, "failed to set namespace %s %s's Inject enable", rolloutPolicy.Workload.Namespace, provider)
+				return ctrl.Result{}, errors.Wrapf(err, "failed to set namespace %s %s's sidecar inject enable", rolloutPolicy.Workload.Namespace, provider)
 			}
 		case fleetapi.Nginx:
 			// Canaries in the same namespace reference the same ingress
@@ -159,7 +159,6 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 		default:
 			return ctrl.Result{}, errors.Errorf("unknown provider type %s", provider)
 		}
-		log.Info("pre-operation of operating canary success")
 		// if delete private testloader when rollout polity has changed
 		if rolloutPolicy.TestLoader == nil || !*rolloutPolicy.TestLoader {
 			testloaderDeploy := &appsv1.Deployment{}
@@ -281,10 +280,6 @@ func (a *ApplicationManager) deleteResourcesInMemberClusters(ctx context.Context
 			return errors.Wrapf(err, "failed to fetch destination clusters when delete rollout resource")
 		}
 
-		namespacedName := types.NamespacedName{
-			Namespace: rolloutPolicy.Workload.Namespace,
-			Name:      rolloutPolicy.Workload.Namespace,
-		}
 		serviceNamespaceName := types.NamespacedName{
 			Namespace: rolloutPolicy.Workload.Namespace,
 			Name:      rolloutPolicy.ServiceName,
@@ -308,12 +303,8 @@ func (a *ApplicationManager) deleteResourcesInMemberClusters(ctx context.Context
 		for _, cluster := range destinationClusters {
 			newClient := cluster.Client.CtrlRuntimeClient()
 
-			ns := &corev1.Namespace{}
-			if err := deleteResourceCreatedByKurator(ctx, namespacedName, newClient, ns); err != nil {
-				return errors.Wrapf(err, "failed to delete namespace")
-			}
 			if err := deleteIngressCreatedByKurator(ctx, newClient, rolloutPolicy); err != nil {
-				return errors.Wrapf(err, "failed to delete ingress")
+				return err
 			}
 			testloaderDeploy := &appsv1.Deployment{}
 			if err := deleteResourceCreatedByKurator(ctx, testloaderNamespaceName, newClient, testloaderDeploy); err != nil {
@@ -366,7 +357,9 @@ func enableSidecarInjection(ctx context.Context, kubeClient client.Client, names
 		var newNs client.Object
 		switch provider {
 		case fleetapi.Kuma:
-			newNs = addAnnotations(ns, kumaInject, "enabled")
+			newNs = addAnnotations(ns, map[string]string{
+				kumaInject: "enabled",
+			})
 		case fleetapi.Istio:
 			newNs = addLabels(ns, istioInject, "enabled")
 		}
@@ -500,7 +493,9 @@ func renderIngress(ingress *ingressv1.Ingress, rollout *applicationapi.RolloutCo
 		labels[ingressLabelKey] = strings.Join(sets.New(strings.Split(labels[ingressLabelKey], ",")...).Insert(rollout.ServiceName).UnsortedList(), ",")
 		ingress.SetLabels(labels)
 	}
-	addAnnotations(ingress, ingressAnnotationKey, ingressAnnotationValue)
+	addAnnotations(ingress, map[string]string{
+		ingressAnnotationKey: ingressAnnotationValue,
+	})
 	Prefix := ingressv1.PathTypePrefix
 	rule := ingressv1.IngressRule{
 		Host: rollout.RolloutPolicy.TrafficRouting.Host,
@@ -710,20 +705,16 @@ func addLabels(obj client.Object, key, value string) client.Object {
 	return obj
 }
 
-func addAnnotations(obj client.Object, keysAndValues ...string) client.Object {
+func addAnnotations(obj client.Object, ann map[string]string) client.Object {
 	annotations := obj.GetAnnotations()
-	// prevent nil pointer panic
 	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	for i := 0; i < len(keysAndValues); i += 2 {
-		if i+1 < len(keysAndValues) {
-			annotations[keysAndValues[i]] = keysAndValues[i+1]
-		} else {
-			annotations[keysAndValues[i]] = ""
+		obj.SetAnnotations(ann)
+	} else {
+		for k, v := range ann {
+			annotations[k] = v
 		}
+		obj.SetAnnotations(annotations)
 	}
-	obj.SetAnnotations(annotations)
 	return obj
 }
 

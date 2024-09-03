@@ -239,8 +239,10 @@ type TrafficRoutingConfig struct {
 	// +optional
 	CorsPolicy *istiov1alpha3.CorsPolicy `json:"corsPolicy,omitempty"`
 
-	// for NGINX
-	// The default created ingress is as follows, (Fill in `host` with your own domain)
+	// Host defines the domain name you specify.
+	// Only for NGINX
+	// Fill in the host field with your own domain as the host of the Ingress.
+	// The actual created Ingress is as follows:
 	// ```yaml
 	// apiVersion: networking.k8s.io/v1
 	// kind: Ingress
@@ -267,7 +269,8 @@ type TrafficRoutingConfig struct {
 	// +optional
 	Host string `json:"host,omitempty"`
 
-	// for kuma
+	// Protocol defines the protocol used by Kuma
+	// Only for kuma
 	// Defaults to http
 	// +optional
 	Protocol string `json:"protocol,omitempty"`

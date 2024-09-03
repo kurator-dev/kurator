@@ -570,18 +570,32 @@ type FlaggerConfig struct {
 	// In addition to the public testloader you can configure here,
 	// you can also specify a private testloader in the Application.Spec.SyncPolicies.Rollout.TestLoader
 	PublicTestloader bool `json:"publicTestloader,omitempty"`
-	// ProviderConfig defines the configuration for the TrafficRoutingProvider.
+	// ProviderConfig defines the helm configuration for the TrafficRoutingProvider.
+	// You can pass in a custom helm configuration to install the TrafficRoutingProvider
+	// And default value is in `./pkg/fleet-manager/manifests/plugins/`
+	// Currently only used for Kuma and Nginx
 	// +optional
 	ProviderConfig *Config `json:"config,omitempty"`
 }
 
 type Config struct {
 	// Chart defines the helm chart config of the TrafficRoutingProvider.
-	// default value is in ./pkg/fleet-manager/manifests/plugins/
+	// For Example, using the following configuration to change the version of nginx installed.
+	// ```yaml
+	// repo: https://kubernetes.github.io/ingress-nginx
+	// version: 4.10.0
+	// ```
 	// +optional
 	Chart *ChartConfig `json:"chart,omitempty"`
 	// ExtraArgs is the set of extra arguments for TrafficRoutingProvider's chart.
 	// You can pass in values according to your needs.
+	// For Example, using the following configuration to change the port that Prometheus uses to scrape metrics.
+	// ```yaml
+	// values:
+	// 	controller:
+	// 	  podAnnotations:
+	// 		prometheus.io/port: 10378
+	// ```
 	// +optional
 	ExtraArgs apiextensionsv1.JSON `json:"extraArgs,omitempty"`
 }
