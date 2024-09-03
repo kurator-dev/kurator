@@ -39,7 +39,7 @@ spec:
              checkIntervalSeconds: 90
              checkFailedTimes: 2
              metrics:
-             - name: my-metric
+             - name: kuma-request-success-rate
                intervalSeconds: 90
                thresholdRange:
                  min: 99

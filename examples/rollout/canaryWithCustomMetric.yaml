@@ -47,7 +47,7 @@ spec:
                intervalSeconds: 90
                thresholdRange:
                  min: 99
-             - name: my-metric
+             - name: istio-request-success-rate
                intervalSeconds: 90
                thresholdRange:
                  max: 99
