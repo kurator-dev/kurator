@@ -2219,8 +2219,10 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>for NGINX
-The default created ingress is as follows, (Fill in <code>host</code> with your own domain)</p>
+<p>Host defines the domain name you specify.
+Only for NGINX
+Fill in the host field with your own domain as the host of the Ingress.
+The actual created Ingress is as follows:</p>
 <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -2254,7 +2256,8 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>for kuma
+<p>Protocol defines the protocol used by Kuma
+Only for kuma
 Defaults to http</p>
 </td>
 </tr>

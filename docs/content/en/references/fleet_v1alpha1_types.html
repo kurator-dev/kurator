@@ -428,7 +428,10 @@ ChartConfig
 <td>
 <em>(Optional)</em>
 <p>Chart defines the helm chart config of the TrafficRoutingProvider.
-default value is in ./pkg/fleet-manager/manifests/plugins/</p>
+For Example, using the following configuration to change the version of nginx installed.</p>
+<pre><code class="language-yaml">repo: https://kubernetes.github.io/ingress-nginx
+version: 4.10.0
+</code></pre>
 </td>
 </tr>
 <tr>
@@ -443,7 +446,13 @@ Kubernetes /apiextensions/v1.JSON
 <td>
 <em>(Optional)</em>
 <p>ExtraArgs is the set of extra arguments for TrafficRoutingProvider&rsquo;s chart.
-You can pass in values according to your needs.</p>
+You can pass in values according to your needs.
+For Example, using the following configuration to change the port that Prometheus uses to scrape metrics.</p>
+<pre><code class="language-yaml">values:
+controller:
+podAnnotations:
+prometheus.io/port: 10378
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -748,7 +757,10 @@ Config
 </td>
 <td>
 <em>(Optional)</em>
-<p>ProviderConfig defines the configuration for the TrafficRoutingProvider.</p>
+<p>ProviderConfig defines the helm configuration for the TrafficRoutingProvider.
+You can pass in a custom helm configuration to install the TrafficRoutingProvider
+And default value is in <code>./pkg/fleet-manager/manifests/plugins/</code>
+Currently only used for Kuma and Nginx</p>
 </td>
 </tr>
 </tbody>

@@ -1620,8 +1620,10 @@ spec:
                                   type: object
                                 host:
                                   description: |-
-                                    for NGINX
-                                    The default created ingress is as follows, (Fill in `host` with your own domain)
+                                    Host defines the domain name you specify.
+                                    Only for NGINX
+                                    Fill in the host field with your own domain as the host of the Ingress.
+                                    The actual created Ingress is as follows:
                                     ```yaml
                                     apiVersion: networking.k8s.io/v1
                                     kind: Ingress
@@ -1953,7 +1955,8 @@ spec:
                                   type: array
                                 protocol:
                                   description: |-
-                                    for kuma
+                                    Protocol defines the protocol used by Kuma
+                                    Only for kuma
                                     Defaults to http
                                   type: string
                                 retries:

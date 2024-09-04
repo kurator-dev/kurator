@@ -2495,13 +2495,20 @@ spec:
                             type: string
                         type: object
                       config:
-                        description: ProviderConfig defines the configuration for
-                          the TrafficRoutingProvider.
+                        description: |-
+                          ProviderConfig defines the helm configuration for the TrafficRoutingProvider.
+                          You can pass in a custom helm configuration to install the TrafficRoutingProvider
+                          And default value is in `./pkg/fleet-manager/manifests/plugins/`
+                          Currently only used for Kuma and Nginx
                         properties:
                           chart:
                             description: |-
                               Chart defines the helm chart config of the TrafficRoutingProvider.
-                              default value is in ./pkg/fleet-manager/manifests/plugins/
+                              For Example, using the following configuration to change the version of nginx installed.
+                              ```yaml
+                              repo: https://kubernetes.github.io/ingress-nginx
+                              version: 4.10.0
+                              ```
                             properties:
                               name:
                                 description: |-
@@ -2520,9 +2527,12 @@ spec:
                                 type: string
                             type: object
                           extraArgs:
-                            description: |-
-                              ExtraArgs is the set of extra arguments for TrafficRoutingProvider's chart.
-                              You can pass in values according to your needs.
+                            description: "ExtraArgs is the set of extra arguments
+                              for TrafficRoutingProvider's chart.\nYou can pass in
+                              values according to your needs.\nFor Example, using
+                              the following configuration to change the port that
+                              Prometheus uses to scrape metrics.\n```yaml\nvalues:\n\tcontroller:\n\t
+                              \ podAnnotations:\n\t\tprometheus.io/port: 10378\n```"
                             x-kubernetes-preserve-unknown-fields: true
                         type: object
                       extraArgs:
