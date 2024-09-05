@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/instance: thanos
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: kube-prometheus
-    app.kubernetes.io/version: 2.32.1
+    app.kubernetes.io/version: 2.41.0
   name: thanos
   namespace: monitoring
 spec:
@@ -21,7 +21,7 @@ spec:
       app.kubernetes.io/instance: thanos
       app.kubernetes.io/name: prometheus
       app.kubernetes.io/part-of: kube-prometheus
-      app.kubernetes.io/version: 2.32.1
+      app.kubernetes.io/version: 2.41.0
   podMonitorNamespaceSelector: {}
   podMonitorSelector: {}
   probeNamespaceSelector: {}
@@ -44,4 +44,4 @@ spec:
       key: thanos.yaml
       name: thanos-objstore-config
     version: v0.8.1
-  version: 2.32.1
+  version: 2.41.0
