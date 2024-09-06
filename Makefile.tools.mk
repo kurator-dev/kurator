@@ -29,7 +29,7 @@ register-gen@v  	:= k8s.io/code-generator/cmd/register-gen@v0.25.2
 deepcopy-gen@v  	:= k8s.io/code-generator/cmd/deepcopy-gen@v0.25.2
 controller-gen@v 	:= sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0
 kustomize@v       	:= sigs.k8s.io/kustomize/kustomize/v4@v4.5.5
-jb@v                := github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@v0.5.1
+jb@v                := github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb@v0.6.0
 gojsontoyaml@v      := github.com/brancz/gojsontoyaml@v0.1.0
 jsonnet@v           := github.com/google/go-jsonnet/cmd/jsonnet@v0.18.0
 
