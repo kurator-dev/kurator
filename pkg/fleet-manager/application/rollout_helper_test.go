@@ -595,8 +595,7 @@ func Test_renderCanaryAnalysis(t *testing.T) {
 func Test_addLables(t *testing.T) {
 	type args struct {
 		obj   client.Object
-		key   string
-		value string
+		label map[string]string
 	}
 	tests := []struct {
 		name string
@@ -618,8 +617,9 @@ func Test_addLables(t *testing.T) {
 						},
 					},
 				},
-				key:   "istio-injection",
-				value: "ebabled",
+				label: map[string]string{
+					"istio-injection": "enabled",
+				},
 			},
 			want: &corev1.Namespace{
 				TypeMeta: metav1.TypeMeta{
@@ -630,7 +630,7 @@ func Test_addLables(t *testing.T) {
 					Name: "webapp",
 					Labels: map[string]string{
 						"xxx":             "abc",
-						"istio-injection": "ebabled",
+						"istio-injection": "enabled",
 					},
 				},
 			},
@@ -647,8 +647,7 @@ func Test_addLables(t *testing.T) {
 						Name: "webapp",
 					},
 				},
-				key:   "XXX",
-				value: "abc",
+				label: map[string]string{"XXX": "abc"},
 			},
 			want: &corev1.Namespace{
 				TypeMeta: metav1.TypeMeta{
@@ -666,7 +665,7 @@ func Test_addLables(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := addLabels(tt.args.obj, tt.args.key, tt.args.value); !reflect.DeepEqual(got, tt.want) {
+			if got, _ := addLabels(tt.args.obj, tt.args.label); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addLablesOrAnnotaions() = %v, want %v", got, tt.want)
 			}
 		})

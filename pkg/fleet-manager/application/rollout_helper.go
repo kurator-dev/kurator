@@ -148,8 +148,7 @@ func (a *ApplicationManager) syncRolloutPolicyForCluster(ctx context.Context,
 			}
 			result, err := controllerutil.CreateOrUpdate(ctx, fleetClusterClient, ingress, func() error {
 				ingress.SetAnnotations(annotation)
-				renderIngress(ingress, rolloutPolicy)
-				return nil
+				return renderNginxIngress(ingress, rolloutPolicy)
 			})
 			if err != nil {
 				return ctrl.Result{}, errors.Wrapf(err, "failed to operate ingress")
@@ -357,11 +356,16 @@ func enableSidecarInjection(ctx context.Context, kubeClient client.Client, names
 		var newNs client.Object
 		switch provider {
 		case fleetapi.Kuma:
-			newNs = addAnnotations(ns, map[string]string{
+			newNs, err = addAnnotations(ns, map[string]string{
 				kumaInject: "enabled",
 			})
+			if err != nil {
+				return err
+			}
 		case fleetapi.Istio:
-			newNs = addLabels(ns, istioInject, "enabled")
+			if newNs, err = addLabels(ns, map[string]string{istioInject: "enabled"}); err != nil {
+				return err
+			}
 		}
 		if updateErr := kubeClient.Update(ctx, newNs); updateErr != nil {
 			return errors.Wrapf(updateErr, "failed to update namespace %s", namespacedName.Namespace)
@@ -462,21 +466,13 @@ func deleteIngressCreatedByKurator(ctx context.Context, kubeClient client.Client
 			labels := ingress.GetLabels()
 			if set := sets.New(strings.Split(labels[ingressLabelKey], ",")...); set.Contains(rollout.ServiceName) {
 				if set.Len() == 1 {
-					if deleteErr := kubeClient.Delete(ctx, ingress); deleteErr != nil && !apierrors.IsNotFound(deleteErr) {
+					if deleteErr := kubeClient.Delete(ctx, ingress); deleteErr != nil {
 						return errors.Wrapf(deleteErr, "failed to Delete ingress %s in %s", namespaceName.Name, namespaceName.Namespace)
 					}
 				} else {
-					newRules := make([]ingressv1.IngressRule, 0)
-					for _, rule := range ingress.Spec.Rules {
-						if rule.Host != rollout.RolloutPolicy.TrafficRouting.Host {
-							newRules = append(newRules, rule)
-						}
-					}
-					ingress.Spec.Rules = newRules
-					labels[ingressLabelKey] = strings.Join(set.Delete(rollout.ServiceName).UnsortedList(), ",")
-					ingress.SetLabels(labels)
-					if err := kubeClient.Update(ctx, ingress); err != nil {
-						return errors.Wrapf(err, "failed to Update ingress %s in %s", namespaceName.Name, namespaceName.Namespace)
+					// There are still other canaries using this ingress
+					if err := updateIngressRulesAndLabels(ctx, kubeClient, ingress, rollout, namespaceName, set); err != nil {
+						return err
 					}
 				}
 			}
@@ -485,17 +481,38 @@ func deleteIngressCreatedByKurator(ctx context.Context, kubeClient client.Client
 	return nil
 }
 
+func updateIngressRulesAndLabels(ctx context.Context, kubeClient client.Client, ingress *ingressv1.Ingress, rollout *applicationapi.RolloutConfig, namespaceName types.NamespacedName, set sets.Set[string]) error {
+	newRules := make([]ingressv1.IngressRule, 0)
+	for _, rule := range ingress.Spec.Rules {
+		if rule.Host != rollout.RolloutPolicy.TrafficRouting.Host {
+			newRules = append(newRules, rule)
+		}
+	}
+	ingress.Spec.Rules = newRules
+
+	labels := ingress.GetLabels()
+	labels[ingressLabelKey] = strings.Join(set.Delete(rollout.ServiceName).UnsortedList(), ",")
+	ingress.SetLabels(labels)
+
+	if err := kubeClient.Update(ctx, ingress); err != nil {
+		return errors.Wrapf(err, "failed to Update ingress %s in %s", namespaceName.Name, namespaceName.Namespace)
+	}
+	return nil
+}
+
 // create/update ingress configuration
-func renderIngress(ingress *ingressv1.Ingress, rollout *applicationapi.RolloutConfig) {
+func renderNginxIngress(ingress *ingressv1.Ingress, rollout *applicationapi.RolloutConfig) error {
 	if labels := ingress.GetLabels(); labels == nil || labels[ingressLabelKey] == "" {
 		ingress.SetLabels(map[string]string{ingressLabelKey: rollout.ServiceName})
 	} else {
 		labels[ingressLabelKey] = strings.Join(sets.New(strings.Split(labels[ingressLabelKey], ",")...).Insert(rollout.ServiceName).UnsortedList(), ",")
 		ingress.SetLabels(labels)
 	}
-	addAnnotations(ingress, map[string]string{
+	if _, err := addAnnotations(ingress, map[string]string{
 		ingressAnnotationKey: ingressAnnotationValue,
-	})
+	}); err != nil {
+		return err
+	}
 	Prefix := ingressv1.PathTypePrefix
 	rule := ingressv1.IngressRule{
 		Host: rollout.RolloutPolicy.TrafficRouting.Host,
@@ -517,6 +534,7 @@ func renderIngress(ingress *ingressv1.Ingress, rollout *applicationapi.RolloutCo
 		},
 	}
 	ingress.Spec.Rules = append(ingress.Spec.Rules, rule)
+	return nil
 }
 
 // create/update canary configuration
@@ -691,31 +709,41 @@ func generateWebhookUrl(name, namespace string) string {
 	return url
 }
 
-func addLabels(obj client.Object, key, value string) client.Object {
-	labels := obj.GetLabels()
-	// prevent nil pointer panic
-	if labels == nil {
-		obj.SetLabels(map[string]string{
-			key: value,
-		})
-		return obj
+func addLabels(obj client.Object, labels map[string]string) (client.Object, error) {
+	existingLabels := obj.GetLabels()
+	if existingLabels == nil {
+		obj.SetLabels(labels)
+	} else {
+		for k, v := range labels {
+			if value, exists := existingLabels[k]; exists {
+				if value != v {
+					return nil, errors.New("label key conflict")
+				}
+			} else {
+				existingLabels[k] = v
+			}
+		}
+		obj.SetLabels(existingLabels)
 	}
-	labels[key] = value
-	obj.SetLabels(labels)
-	return obj
+	return obj, nil
 }
-
-func addAnnotations(obj client.Object, ann map[string]string) client.Object {
+func addAnnotations(obj client.Object, ann map[string]string) (client.Object, error) {
 	annotations := obj.GetAnnotations()
 	if annotations == nil {
 		obj.SetAnnotations(ann)
 	} else {
 		for k, v := range ann {
-			annotations[k] = v
+			if value, exists := annotations[k]; exists {
+				if value != v {
+					return nil, errors.New("annotation key conflict")
+				}
+			} else {
+				annotations[k] = v
+			}
 		}
 		obj.SetAnnotations(annotations)
 	}
-	return obj
+	return obj, nil
 }
 
 func mergeMap(map1, map2 map[string]*applicationapi.RolloutStatus) map[string]*applicationapi.RolloutStatus {
