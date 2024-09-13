@@ -1,7 +1,7 @@
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: rollout-demo
+  name: rollout-kuma-demo
   namespace: default
 spec:
   source:
@@ -64,7 +64,7 @@ spec:
              webhooks:
                  timeoutSeconds: 60
                  command:
-                 - "hey -z 1m -q 10 -c 2 http://app.example.com/"
+                 - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
           rolloutTimeoutSeconds: 600
     - destination:
         fleet: quickstart

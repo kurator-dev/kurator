@@ -1,7 +1,7 @@
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: abtesting-nginx-demo
+  name: blue-green-nginx-demo
   namespace: default
 spec:
   source:
