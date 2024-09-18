@@ -33,6 +33,7 @@ import (
 	helmclient "helm.sh/helm/v3/pkg/kube"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	ingressv1 "k8s.io/api/networking/v1"
 	crdclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -86,6 +87,9 @@ func NewClient(rest genericclioptions.RESTClientGetter) (*Client, error) {
 	// TODO: add commonly used resources for k8s
 	if err := appsv1.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("failed to add appv1 api to scheme: %v", err)
+	}
+	if err := ingressv1.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("failed to add ingress api to scheme: %v", err)
 	}
 	// create controller-runtime client with scheme
 	ctrlRuntimeClient, err := client.New(c, client.Options{Scheme: scheme})

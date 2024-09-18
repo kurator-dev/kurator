@@ -40,6 +40,8 @@ const (
 )
 
 func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fleet, fleetClusters map[ClusterKey]*FleetCluster) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+	log = log.WithValues("fleet", types.NamespacedName{Name: fleet.Name, Namespace: fleet.Namespace})
 	var resources kube.ResourceList
 
 	if fleet.Spec.Plugin != nil {
@@ -59,6 +61,7 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 			f.reconcileDistributedStoragePlugin,
 			f.reconcileFlaggerPlugin,
 			f.reconcileSubmarinerPlugin,
+			f.reconcileProviderPlugin,
 		}
 
 		resultsChannel := make(chan reconcileResult, len(funcs))
@@ -102,6 +105,7 @@ func (f *FleetManager) reconcilePlugins(ctx context.Context, fleet *fleetapi.Fle
 		}
 	}
 
+	log.Info("All plugin Resources succeed")
 	return f.reconcilePluginResources(ctx, fleet, resources)
 }
 

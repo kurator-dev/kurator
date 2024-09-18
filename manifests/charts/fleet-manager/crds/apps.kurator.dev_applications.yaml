@@ -1618,6 +1618,36 @@ spec:
                                           type: object
                                       type: object
                                   type: object
+                                host:
+                                  description: |-
+                                    Host defines the domain name you specify.
+                                    Only for NGINX
+                                    Fill in the host field with your own domain as the host of the Ingress.
+                                    The actual created Ingress is as follows:
+                                    ```yaml
+                                    apiVersion: networking.k8s.io/v1
+                                    kind: Ingress
+                                    metadata:
+                                      name: nginx
+                                      namespace: application.syncPolicies.rollout.workload.namespace
+                                      labels:
+                                        app: application.syncPolicies.rollout.ServiceName
+                                      annotations:
+                                        kubernetes.io/ingress.class: "nginx"
+                                    spec:
+                                      rules:
+                                        - host: ""
+                                          http:
+                                            paths:
+                                              - pathType: Prefix
+                                                path: "/"
+                                                backend:
+                                                  service:
+                                                    name: application.syncPolicies.rollout.ServiceName
+                                                    port:
+                                                      number: application.syncPolicies.rollout.port
+                                    ```
+                                  type: string
                                 hosts:
                                   description: Defaults to the RolloutConfig.ServiceName
                                   items:
@@ -1923,6 +1953,12 @@ spec:
                                         type: object
                                     type: object
                                   type: array
+                                protocol:
+                                  description: |-
+                                    Protocol defines the protocol used by Kuma
+                                    Only for kuma
+                                    Defaults to http
+                                  type: string
                                 retries:
                                   description: |-
                                     Retries describes the retry policy to use when a HTTP request fails.
@@ -1978,7 +2014,7 @@ spec:
                         trafficRoutingProvider:
                           description: |-
                             TrafficRoutingProvider defines traffic routing provider.
-                            Kurator only supports istio for now.
+                            Kurator supports istio,kuma,nginx for now.
                             Other provider will be added later.
                           type: string
                         workload:
@@ -2005,6 +2041,7 @@ spec:
                       - port
                       - rolloutPolicy
                       - serviceName
+                      - trafficRoutingProvider
                       - workload
                       type: object
                   type: object

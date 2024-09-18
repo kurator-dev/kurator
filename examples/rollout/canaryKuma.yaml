@@ -1,7 +1,7 @@
 apiVersion: apps.kurator.dev/v1alpha1
 kind: Application
 metadata:
-  name: CustomMetric-demo
+  name: rollout-kuma-demo
   namespace: default
 spec:
   source:
@@ -21,7 +21,7 @@ spec:
         timeout: 2m0s
       rollout:
         testLoader: true
-        trafficRoutingProvider: istio
+        trafficRoutingProvider: kuma
         workload:
           apiVersion: apps/v1
           name: backend
@@ -32,10 +32,6 @@ spec:
         rolloutPolicy:
           trafficRouting:
             timeoutSeconds: 60
-            gateways:
-            - istio-system/public-gateway
-            hosts:
-            - backend.webapp
             canaryStrategy:
               maxWeight: 50
               stepWeight: 10
@@ -43,18 +39,14 @@ spec:
              checkIntervalSeconds: 90
              checkFailedTimes: 2
              metrics:
-             - name: request-success-rate
+             - name: kuma-request-success-rate
                intervalSeconds: 90
                thresholdRange:
                  min: 99
-             - name: istio-request-success-rate
-               intervalSeconds: 90
-               thresholdRange:
-                 max: 99
                customMetric: 
                  provider: 
                    type: prometheus
-                   address: http://prometheus.istio-system:9090
+                   address: http://prometheus-server.mesh-observability:80
                  query: |
                    sum(
                      rate(
@@ -72,7 +64,7 @@ spec:
              webhooks:
                  timeoutSeconds: 60
                  command:
-                 - "hey -z 1m -q 10 -c 2 http://backend-canary.webapp:9898/"
+                 - "hey -z 1m -q 10 -c 2 http://podinfo-canary.test:9898/"
           rolloutTimeoutSeconds: 600
     - destination:
         fleet: quickstart

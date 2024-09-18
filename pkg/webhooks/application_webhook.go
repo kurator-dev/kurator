@@ -22,6 +22,7 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -29,9 +30,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	"kurator.dev/kurator/pkg/apis/apps/v1alpha1"
+	fleetapi "kurator.dev/kurator/pkg/apis/fleet/v1alpha1"
 )
 
 var _ webhook.CustomValidator = &ApplicationWebhook{}
+var _ webhook.CustomDefaulter = &ApplicationWebhook{}
 
 type ApplicationWebhook struct {
 	Client client.Reader
@@ -41,11 +44,14 @@ func (wh *ApplicationWebhook) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(&v1alpha1.Application{}).
 		WithValidator(wh).
+		WithDefaulter(wh).
 		Complete()
 }
 
-func (wh *ApplicationWebhook) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+func (wh *ApplicationWebhook) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	in, ok := obj.(*v1alpha1.Application)
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("All field Validate succeed")
 	if !ok {
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", obj))
 	}
@@ -130,4 +136,49 @@ func (wh *ApplicationWebhook) ValidateUpdate(_ context.Context, oldObj, newObj r
 
 func (wh *ApplicationWebhook) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	return nil, nil
+}
+
+func (wh *ApplicationWebhook) Default(ctx context.Context, obj runtime.Object) error {
+	log := ctrl.LoggerFrom(ctx)
+	log.Info("setting default")
+	app, ok := obj.(*v1alpha1.Application)
+	if !ok {
+		return apierrors.NewBadRequest(fmt.Sprintf("expected a Application but got a %T", obj))
+	}
+	if err := defaultApp(ctx, app); err != nil {
+		return err
+	}
+	return nil
+}
+
+func defaultApp(ctx context.Context, app *v1alpha1.Application) error {
+	log := ctrl.LoggerFrom(ctx)
+	log = log.WithValues("application", types.NamespacedName{Name: app.Name, Namespace: app.Namespace})
+	if err := defaultSyncPolicies(ctx, app.Spec.SyncPolicies); err != nil {
+		return err
+	}
+	log.Info("All field set default")
+	return nil
+}
+
+func defaultSyncPolicies(ctx context.Context, SyncPolicies []*v1alpha1.ApplicationSyncPolicy) error {
+	log := ctrl.LoggerFrom(ctx)
+	log = log.WithValues("application")
+	for i, syncPoliciy := range SyncPolicies {
+		if syncPoliciy.Rollout == nil {
+			continue
+		}
+		switch syncPoliciy.Rollout.TrafficRoutingProvider {
+		case fleetapi.Nginx:
+			if syncPoliciy.Rollout.RolloutPolicy.TrafficRouting.Host == "" {
+				return apierrors.NewBadRequest(fmt.Sprintf("expected application.syncPolicies.Rollout.RolloutPolicy.TrafficRouting.Host in index %d", i))
+			}
+		case fleetapi.Kuma:
+			if syncPoliciy.Rollout.RolloutPolicy.TrafficRouting.Protocol == "" {
+				syncPoliciy.Rollout.RolloutPolicy.TrafficRouting.Protocol = "http"
+			}
+		}
+	}
+	log.Info("set SyncPolicies default success")
+	return nil
 }

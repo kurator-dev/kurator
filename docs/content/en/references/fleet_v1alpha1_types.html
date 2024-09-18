@@ -338,6 +338,7 @@ map[string]string
 <p>
 (<em>Appears on:</em>
 <a href="#fleet.kurator.dev/v1alpha1.BackupConfig">BackupConfig</a>, 
+<a href="#fleet.kurator.dev/v1alpha1.Config">Config</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.DistributedStorageConfig">DistributedStorageConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.FlaggerConfig">FlaggerConfig</a>, 
 <a href="#fleet.kurator.dev/v1alpha1.GrafanaConfig">GrafanaConfig</a>, 
@@ -393,6 +394,65 @@ string
 <em>(Optional)</em>
 <p>Version defines the version of the chart.
 Default value depends on the kind of the component.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<h3 id="fleet.kurator.dev/v1alpha1.Config">Config
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#fleet.kurator.dev/v1alpha1.FlaggerConfig">FlaggerConfig</a>)
+</p>
+<div class="md-typeset__scrollwrap">
+<div class="md-typeset__table td-content">
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>chart</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.ChartConfig">
+ChartConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Chart defines the helm chart config of the TrafficRoutingProvider.
+For Example, using the following configuration to change the version of nginx installed.</p>
+<pre><code class="language-yaml">repo: https://kubernetes.github.io/ingress-nginx
+version: 4.10.0
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<code>extraArgs</code><br>
+<em>
+<a href="https://pkg.go.dev/k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1?tab=doc#JSON">
+Kubernetes /apiextensions/v1.JSON
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ExtraArgs is the set of extra arguments for TrafficRoutingProvider&rsquo;s chart.
+You can pass in values according to your needs.
+For Example, using the following configuration to change the port that Prometheus uses to scrape metrics.</p>
+<pre><code class="language-yaml">values:
+controller:
+podAnnotations:
+prometheus.io/port: 10378
+</code></pre>
 </td>
 </tr>
 </tbody>
@@ -665,10 +725,11 @@ Provider
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>TrafficRoutingProvider defines traffic routing provider.
 And Kurator will install flagger in trafficRoutingProvider&rsquo;s namespace
 For example, If you use <code>istio</code> as a provider, flager will be installed in istio&rsquo;s namespace <code>istio-system</code>.
+And if you use <code>istio</code> as a provider, you need to install it manually.
+Otherwise, you can configure it in ProviderConfig (or use the default configuration) and Kurator will automatically deploy it.
 Other provider will be added later.</p>
 </td>
 </tr>
@@ -683,6 +744,23 @@ bool
 <p>PublicTestloader defines whether to install the publictestloader or not.
 In addition to the public testloader you can configure here,
 you can also specify a private testloader in the Application.Spec.SyncPolicies.Rollout.TestLoader</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>config</code><br>
+<em>
+<a href="#fleet.kurator.dev/v1alpha1.Config">
+Config
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ProviderConfig defines the helm configuration for the TrafficRoutingProvider.
+You can pass in a custom helm configuration to install the TrafficRoutingProvider
+And default value is in <code>./pkg/fleet-manager/manifests/plugins/</code>
+Currently only used for Kuma and Nginx</p>
 </td>
 </tr>
 </tbody>

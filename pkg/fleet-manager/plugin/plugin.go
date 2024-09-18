@@ -61,6 +61,8 @@ const (
 
 var ProviderNamespace = map[fleetv1a1.Provider]string{
 	"istio": "istio-system",
+	"kuma":  "kuma-system",
+	"nginx": "ingress-nginx",
 }
 
 type GrafanaDataSource struct {
@@ -401,6 +403,14 @@ func RenderFlagger(
 	c.TargetNamespace = ProviderNamespace[flaggerConfig.TrafficRoutingProvider]
 
 	values, err := toMap(flaggerConfig.ExtraArgs)
+	if flaggerConfig.TrafficRoutingProvider == fleetv1a1.Nginx {
+		values = transform.MergeMaps(values, map[string]interface{}{
+			"prometheus": map[string]interface{}{
+				"install": true,
+			},
+			"meshProvider": "nginx",
+		})
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -408,6 +418,41 @@ func RenderFlagger(
 	return renderFleetPlugin(fsys, FleetPluginConfig{
 		Name:           FlaggerPluginName,
 		Component:      FlaggerComponentName,
+		Fleet:          fleetNN,
+		Cluster:        &cluster,
+		OwnerReference: fleetRef,
+		Chart:          *c,
+		Values:         values,
+	})
+}
+
+func RenderProvider(
+	fsys fs.FS,
+	fleetNN types.NamespacedName,
+	fleetRef *metav1.OwnerReference,
+	cluster KubeConfigSecretRef,
+	flaggerConfig *fleetv1a1.FlaggerConfig,
+) ([]byte, error) {
+	name := string(flaggerConfig.TrafficRoutingProvider)
+	// get and merge the chart config
+	c, err := getFleetPluginChart(fsys, name)
+	if err != nil {
+		return nil, err
+	}
+
+	values := map[string]interface{}{}
+	if providerConfig := flaggerConfig.ProviderConfig; providerConfig != nil {
+		mergeChartConfig(c, providerConfig.Chart)
+		values, err = toMap(providerConfig.ExtraArgs)
+		if err != nil {
+			return nil, err
+		}
+	}
+	c.TargetNamespace = ProviderNamespace[flaggerConfig.TrafficRoutingProvider]
+
+	return renderFleetPlugin(fsys, FleetPluginConfig{
+		Name:           name,
+		Component:      name,
 		Fleet:          fleetNN,
 		Cluster:        &cluster,
 		OwnerReference: fleetRef,

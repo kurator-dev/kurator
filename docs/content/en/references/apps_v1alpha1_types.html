@@ -1707,13 +1707,12 @@ If set it to true, Kurator will install a private testloader dedicated to reques
 <td>
 <code>trafficRoutingProvider</code><br>
 <em>
-string
+Kurator fleet/v1alpha1.Provider
 </em>
 </td>
 <td>
-<em>(Optional)</em>
 <p>TrafficRoutingProvider defines traffic routing provider.
-Kurator only supports istio for now.
+Kurator supports istio,kuma,nginx for now.
 Other provider will be added later.</p>
 </td>
 </tr>
@@ -2209,6 +2208,57 @@ allowOrigin:
 - example.com
 maxAge: 24h
 </code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<code>host</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Host defines the domain name you specify.
+Only for NGINX
+Fill in the host field with your own domain as the host of the Ingress.
+The actual created Ingress is as follows:</p>
+<pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+name: nginx
+namespace: application.syncPolicies.rollout.workload.namespace
+labels:
+app: application.syncPolicies.rollout.ServiceName
+annotations:
+kubernetes.io/ingress.class: &quot;nginx&quot;
+spec:
+rules:
+- host: &quot;&quot;
+http:
+paths:
+- pathType: Prefix
+path: &quot;/&quot;
+backend:
+service:
+name: application.syncPolicies.rollout.ServiceName
+port:
+number: application.syncPolicies.rollout.port
+</code></pre>
+</td>
+</tr>
+<tr>
+<td>
+<code>protocol</code><br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Protocol defines the protocol used by Kuma
+Only for kuma
+Defaults to http</p>
 </td>
 </tr>
 <tr>
