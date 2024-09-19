@@ -1,21 +1,10 @@
 ---
-title: "A/B Testing"
-linkTitle: "A/B Testing"
-weight: 30
+title: "Istio Blue/Green Deployment"
+linkTitle: "Istio Blue/Green Deployment"
+weight: 20
 description: >
-  A comprehensive guide on Kurator's A/B Testing, providing an overview and quick start guide.
+  A comprehensive guide on Kurator's Blue/Green Deployment uses Istio as ingress, providing an overview and quick start guide.
 ---
-
-## Introduction
-
-A/B Testing is a method of comparing two versions of an application to validate which performs better.
-It essentially involves a controlled experiment where users are randomly allocated into groups at the same time, with each group experiencing a different version of the application.
-The metrics from their usage are then analyzed to select the superior version based on the results. The A/B Testing can also be used to route selective users to the new version, allowing their real-world feedback on the new release to be gathered.
-
-- **Use Case**: There are two application services with identical backend functionality but different frontend UIs. It is now necessary to validate which UI design leads to a better user experience. In this scenario, A/B Testing should be used to deploy both versions of the service in a live environment. The UI that demonstrates superior user metrics and outcomes can then be selected for full release.
-- **Functionality**: Provide configuration of A/B Testing and trigger an A/B Testing on new release.
-
-By allowing users to deploy applications and their A/B Testing configurations in a single place, Kurator streamlines A/B Testing through automated GitOps workflows for unified deployment and validation.
 
 ## Prerequisites
 
@@ -120,13 +109,13 @@ Before delving into the how to Perform a Unified Rollout, ensure you have succes
 You can initiate the process by deploying a application demo using the following command:
 
 ```console
-kubectl apply -f examples/rollout/ab-testing.yaml
+kubectl apply -f examples/rollout/blue_green.yaml
 ```
 
 Review the results:
 
 ```console
-kubectl get application abtesting-demo -oyaml
+kubectl get application blue-green-demo -oyaml
 ```
 
 The expected result should be:
@@ -137,20 +126,20 @@ kind: Application
 metadata:
   annotations:
     kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"apps.kurator.dev/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"abtesting-demo","namespace":"default"},"spec":{"source":{"gitRepository":{"interval":"25m0s","ref":{"branch":"master"},"timeout":"1m0s","url":"https://github.com/stefanprodan/podinfo"}},"syncPolicies":[{"destination":{"fleet":"quickstart"},"kustomization":{"interval":"0s","path":"./deploy/webapp","prune":true,"timeout":"2m0s"},"rollout":{"port":9898,"rolloutPolicy":{"rolloutTimeoutSeconds":600,"trafficAnalysis":{"checkFailedTimes":2,"checkIntervalSeconds":90,"metrics":[{"intervalSeconds":90,"name":"request-success-rate","thresholdRange":{"min":99}},{"intervalSeconds":90,"name":"request-duration","thresholdRange":{"max":500}}],"webhooks":{"command":["hey -z 1m -q 10 -c 2 http://backend-canary.webapp:9898/"],"timeoutSeconds":60}},"trafficRouting":{"analysisTimes":3,"gateways":["istio-system/public-gateway"],"hosts":["backend.webapp"],"match":[{"headers":{"user-agent":{"regex":".*Firefox.*"}}},{"headers":{"cookie":{"regex":"^(.*?;)?(type=insider)(;.*)?$"}}}],"timeoutSeconds":60}},"serviceName":"backend","testLoader":true,"trafficRoutingProvider":"istio","workload":{"apiVersion":"apps/v1","kind":"Deployment","name":"backend","namespace":"webapp"}}},{"destination":{"fleet":"quickstart"},"kustomization":{"interval":"5m0s","path":"./kustomize","prune":true,"targetNamespace":"default","timeout":"2m0s"}}]}}
-  creationTimestamp: "2024-01-12T08:52:05Z"
+      {"apiVersion":"apps.kurator.dev/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"blue-green-demo","namespace":"default"},"spec":{"source":{"gitRepository":{"interval":"3m0s","ref":{"branch":"master"},"timeout":"1m0s","url":"https://github.com/stefanprodan/podinfo"}},"syncPolicies":[{"destination":{"fleet":"quickstart"},"kustomization":{"interval":"0s","path":"./deploy/webapp","prune":true,"timeout":"2m0s"},"rollout":{"port":9898,"rolloutPolicy":{"rolloutTimeoutSeconds":600,"trafficAnalysis":{"checkFailedTimes":2,"checkIntervalSeconds":90,"metrics":[{"intervalSeconds":90,"name":"request-success-rate","thresholdRange":{"min":99}},{"intervalSeconds":90,"name":"request-duration","thresholdRange":{"max":500}}],"webhooks":{"command":["hey -z 1m -q 10 -c 2 http://backend-canary.webapp:9898/"],"timeoutSeconds":60}},"trafficRouting":{"analysisTimes":3,"gateways":["istio-system/public-gateway"],"hosts":["backend.webapp"],"timeoutSeconds":60}},"serviceName":"backend","testLoader":true,"trafficRoutingProvider":"istio","workload":{"apiVersion":"apps/v1","kind":"Deployment","name":"backend","namespace":"webapp"}}},{"destination":{"fleet":"quickstart"},"kustomization":{"interval":"5m0s","path":"./kustomize","prune":true,"targetNamespace":"default","timeout":"2m0s"}}]}}
+  creationTimestamp: "2024-01-13T07:46:34Z"
   finalizers:
   - apps.kurator.dev
   generation: 1
-  name: abtesting-demo
+  name: blue-green-demo
   namespace: default
-  resourceVersion: "580416"
-  uid: 5cc19ce4-2a47-45b3-be6d-ce8ca1ab6a63
+  resourceVersion: "594030"
+  uid: 10d99ada-e40c-47d9-9b7c-269d3ec5638b
 spec:
   source:
     gitRepository:
       gitImplementation: go-git
-      interval: 25m0s
+      interval: 3m0s
       ref:
         branch: master
       timeout: 1m0s
@@ -190,13 +179,6 @@ spec:
           - istio-system/public-gateway
           hosts:
           - backend.webapp
-          match:
-          - headers:
-              user-agent:
-                regex: .*Firefox.*
-          - headers:
-              cookie:
-                regex: ^(.*?;)?(type=insider)(;.*)?$
           timeoutSeconds: 60
       serviceName: backend
       testLoader: true
@@ -220,30 +202,30 @@ status:
     gitRepoStatus:
       artifact:
         digest: sha256:8d86ecbdb528263637786ff0ad07491b4f78781626695ffa8bd9649032699636
-        lastUpdateTime: "2024-01-12T08:52:07Z"
-        path: gitrepository/default/abtesting-demo/dc830d02a6e0bcbf63bcc387e8bde57d5627aec2.tar.gz
+        lastUpdateTime: "2024-01-13T07:46:36Z"
+        path: gitrepository/default/blue-green-demo/dc830d02a6e0bcbf63bcc387e8bde57d5627aec2.tar.gz
         revision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2
         size: 282288
-        url: http://source-controller.fluxcd-system.svc.cluster.local./gitrepository/default/abtesting-demo/dc830d02a6e0bcbf63bcc387e8bde57d5627aec2.tar.gz
+        url: http://source-controller.fluxcd-system.svc.cluster.local./gitrepository/default/blue-green-demo/dc830d02a6e0bcbf63bcc387e8bde57d5627aec2.tar.gz
       conditions:
-      - lastTransitionTime: "2024-01-12T08:52:07Z"
+      - lastTransitionTime: "2024-01-13T07:46:36Z"
         message: stored artifact for revision 'master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2'
         observedGeneration: 1
         reason: Succeeded
         status: "True"
         type: Ready
-      - lastTransitionTime: "2024-01-12T08:52:07Z"
+      - lastTransitionTime: "2024-01-13T07:46:36Z"
         message: stored artifact for revision 'master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2'
         observedGeneration: 1
         reason: Succeeded
         status: "True"
         type: ArtifactInStorage
       observedGeneration: 1
-      url: http://source-controller.fluxcd-system.svc.cluster.local./gitrepository/default/abtesting-demo/latest.tar.gz
+      url: http://source-controller.fluxcd-system.svc.cluster.local./gitrepository/default/blue-green-demo/latest.tar.gz
   syncStatus:
   - kustomizationStatus:
       conditions:
-      - lastTransitionTime: "2024-01-13T06:47:52Z"
+      - lastTransitionTime: "2024-01-13T08:01:38Z"
         message: 'Applied revision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2'
         observedGeneration: 1
         reason: ReconciliationSucceeded
@@ -260,29 +242,29 @@ status:
       lastAppliedRevision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2
       lastAttemptedRevision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2
       observedGeneration: 1
-    name: abtesting-demo-0-attachedcluster-kurator-member1
+    name: blue-green-demo-0-attachedcluster-kurator-member1
     rolloutStatus:
       backupNameInCluster: backend
       backupStatusInCluster:
         canaryWeight: 0
         conditions:
-        - lastTransitionTime: "2024-01-12T09:05:40Z"
-          lastUpdateTime: "2024-01-12T09:05:40Z"
-          message: Deployment initialization completed.
+        - lastTransitionTime: "2024-01-13T07:54:10Z"
+          lastUpdateTime: "2024-01-13T07:54:10Z"
+         message: Deployment initialization completed.
           reason: Initialized
           status: "True"
           type: Promoted
         failedChecks: 0
         iterations: 0
         lastAppliedSpec: 7b779dcc48
-        lastPromotedSpec: 7b779dcc48
-        lastTransitionTime: "2024-01-12T09:05:40Z"
+        lastPromotedSpec: 79d699c99
+        lastTransitionTime: "2024-01-13T08:00:10Z"
         phase: Initialized
         trackedConfigs: {}
       clusterName: kurator-member1
   - kustomizationStatus:
       conditions:
-      - lastTransitionTime: "2024-01-13T06:47:52Z"
+      - lastTransitionTime: "2024-01-13T08:01:38Z"
         message: 'Applied revision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2'
         observedGeneration: 1
         reason: ReconciliationSucceeded
@@ -299,22 +281,21 @@ status:
       lastAppliedRevision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2
       lastAttemptedRevision: master@sha1:dc830d02a6e0bcbf63bcc387e8bde57d5627aec2
       observedGeneration: 1
-    name: abtesting-demo-1-attachedcluster-kurator-member1
+    name: blue-green-demo-1-attachedcluster-kurator-member1
 ```
 
 Given the output provided, let's dive deeper to understand the various elements and their implications:
 
-- Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization. It will establish and implement A/B Testing for these services according to the configuration defined here.
-- The `workload` defines the target resource for the A/B Testing. The `kind` specifies the resource type, which can be either deployment or daemonset.
+- Kurator allows customizing Rollout strategies under the `Spec.syncPolicies.rollout` section for services deployed via kustomization. It will establish and implement Blue/Green Deployment for these services according to the configuration defined here.
+- The `workload` defines the target resource for the Blue/Green Deployment. The `kind` specifies the resource type, which can be either deployment or daemonset.
 - The `serviceName` and `port` specify the name of the service for the workload as well as the exposed port number.
 - The `trafficAnalysis` section defines the configuration for evaluating a new release version's health and readiness during a rollout process.
-    - The `checkFailedTimes` parameter specifies the maximum number of failed check results allowed throughout the A/B Testing lifecycle.
+    - The `checkFailedTimes` parameter specifies the maximum number of failed check results allowed throughout the Blue/Green Deployment lifecycle.
     - `checkIntervalSeconds` denotes the time interval between consecutive health evaluation checks.
     - The `metrics` identify the metrics that will be monitored to determine the deployment's health status. Currently, only `request-success-rate` and `request-duration` two built-in metric types are supported.
     - The `webhooks` provide an extensibility mechanism for the analysis procedures. In this configuration, webhooks communicate with the testloader to generate test traffic for the healthchecks.
-- The `trafficRouting` configuration specifies how traffic will be shifted to the A/B Testing during the rollout process.
+- The `trafficRouting` configuration specifies how traffic will be shifted to the Blue/Green Deployment during the rollout process.
     - The `analysisTimes` signifies the number of testing iterations that will be conducted.
-    - The `match` defines the criteria that an incoming request must satisfy in order to be routed to the new version. This includes header match definitions which specify rules for request headers. Other match dimensions like port, URL path etc. can also be configured. It's important to note that HTTP matching only takes effect during code analysis, and does not apply to normal usage afterwards. Please refer to [Application API Reference](https://kurator.dev/docs/references/app-api/#apps.kurator.dev/v1alpha1.TrafficRoutingConfig) for more details on directly setting the release and test traffic distributions.
     - The `gateways` and `host` represent the ingress points for external and internal service traffic, respectively.
 - The `rolloutStatus` section displays the actual processing status of rollout within the fleet.
 
@@ -324,7 +305,7 @@ About a minute after submitting this configuration, you can check the rollout st
 kubectl get canary -n webapp --kubeconfig=/root/.kube/kurator-member1.config
 
 NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
-backend   Initialized   0        2024-01-12T08:53:40Z
+backend   Initialized   0        2024-01-13T07:48:10Z
 ```
 
 If the status shows as `Initialized`, it means the initialization of rollout process has completed successfully.
@@ -333,7 +314,9 @@ If the status shows as `Initialized`, it means the initialization of rollout pro
 
 ### Trigger Rollout
 
-An A/B Testing can be triggered by either updating the container image referenced in the git repository configuration, or directly updating the image of the deployment resource locally in the Kubernetes cluster.
+#### Automated Rollout
+
+A Blue/Green Deployment can be triggered by either updating the container image referenced in the git repository configuration, or directly updating the image of the deployment resource locally in the Kubernetes cluster.
 
 Review the results:
 
@@ -341,24 +324,24 @@ Review the results:
 kubectl get canary -n webapp -w --kubeconfig=/root/.kube/kurator-member1.config
 
 NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
-backend   Initialized   0        2024-01-12T08:53:40Z
-backend   Progressing   0        2024-01-12T08:55:10Z
-backend   Progressing   0        2024-01-12T08:56:40Z
-backend   Progressing   0        2024-01-12T08:58:10Z
-backend   Progressing   0        2024-01-12T08:59:40Z
-backend   Progressing   0        2024-01-12T09:01:10Z
-backend   Promoting     0        2024-01-12T09:02:40Z
-backend   Finalising    0        2024-01-12T09:04:10Z
-backend   Succeeded     0        2024-01-12T09:05:40Z
+backend   Initialized   0        2024-01-16T08:53:40Z
+backend   Progressing   0        2024-01-16T08:55:10Z
+backend   Progressing   0        2024-01-16T08:56:40Z
+backend   Progressing   0        2024-01-16T08:58:10Z
+backend   Progressing   0        2024-01-16T08:59:40Z
+backend   Progressing   0        2024-01-16T09:01:10Z
+backend   Promoting     0        2024-01-16T09:02:40Z
+backend   Finalising    0        2024-01-16T09:04:10Z
+backend   Succeeded     0        2024-01-16T09:05:40Z
 ```
 
 {{< image width="100%"
-link="./image/abtesting.svg"
+link="./image/blue-green-successful.svg"
 >}}
 
-- As shown in the diagram, after triggering an A/B Testing, the Kurator Rollout Plugin will first create pod(s) for the new version.
-- The new version will then undergo multiple test iterations. During this testing period, incoming requests matching the defined criteria will be routed to the new version. Various testing metrics will be evaluated to determine the health and stability of the new release.
-- Upon validating the new version through testing and confirming it is ready for release, Kurator will proceed to replace the old version with the new version across the entire cluster.
+- As shown in the diagram, after triggering a Blue/Green Deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
+- The new version will then undergo multiple test iterations. During this testing period, all incoming requests will be routed to the new version. Various testing metrics will be evaluated to determine the health and stability of the new release.
+- Upon validating the new version through testing and confirming it is ready for release, Kurator will proceed to replace the old version with the new version across the entire cluster. And redirect all incoming traffic to the primary pod.
 - It will then remove the canary pod, completing the rollout process.
 
 ```console
@@ -369,8 +352,8 @@ rolloutStatus:
       backupStatusInCluster:
         canaryWeight: 0
         conditions:
-        - lastTransitionTime: "2024-01-12T09:05:40Z"
-          lastUpdateTime: "2024-01-12T09:05:40Z"
+        - lastTransitionTime: "2024-01-16T09:05:40Z"
+          lastUpdateTime: "2024-01-16T09:05:40Z"
           message: Canary analysis completed successfully, promotion finished.
           reason: Succeeded
           status: "True"
@@ -379,19 +362,84 @@ rolloutStatus:
         iterations: 0
         lastAppliedSpec: 7b779dcc48
         lastPromotedSpec: 7b779dcc48
-        lastTransitionTime: "2024-01-12T09:05:40Z"
+        lastTransitionTime: "2024-01-16T09:05:40Z"
         phase: Succeeded
         trackedConfigs: {}
       clusterName: kurator-member1
 ```
 
-An A/B Testing is triggered by changes in any of the following objects:
+A Blue/Green Deployment is triggered by changes in any of the following objects:
 
 - Deployment PodSpec (container image, command, ports, env, resources, etc)
 - ConfigMaps mounted as volumes or mapped to environment variables
 - Secrets mounted as volumes or mapped to environment variables
 
 **Notes:** If you apply new changes to the deployment during the analysis, Kurator Rollout will restart the analysis.
+
+#### Automated Rollback
+
+If the new version fails testing during the blue/green deployment, Kurator will automatically roll back to the previous version to ensure continuous service operations.
+
+During the analysis you can generate HTTP 500 errors and high latency to test Kurator's rollback.
+
+Exec into the testlaoder pod to generate HTTP 500 errors and Generate latency.
+
+```console
+kubectl -n webapp exec -it backend-testloader-5f7bcd85bb-6bgdd sh
+
+watch curl http://backend-canary.webapp:9898/status/500
+
+watch curl http://backend-canary.webapp:9898/delay/1
+```
+
+Review the results:
+
+```console
+kubectl get canary -n webapp -w --kubeconfig=/root/.kube/kurator-member1.config
+
+NAME      STATUS        WEIGHT   LASTTRANSITIONTIME
+backend   Initialized   0        2024-01-13T08:06:10Z
+backend   Progressing   0        2024-01-13T08:10:40Z
+backend   Progressing   0        2024-01-13T08:12:10Z
+backend   Progressing   0        2024-01-13T08:13:40Z
+backend   Progressing   0        2024-01-13T08:15:10Z
+backend   Failed        0        2024-01-13T08:16:40Z
+backend   Failed        0        2024-01-13T08:18:10Z
+```
+
+{{< image width="100%"
+link="./image/blue-green-failed.svg"
+>}}
+
+- As shown in the diagram, after triggering a Blue/Green Deployment, the Kurator Rollout Plugin will first create pod(s) for the new version.
+- During the testing period, all traffic will be incrementally routed to the Green version. A variety of testing metrics will be collected from this live environment validation.
+- If the number of errors or failures encountered during testing exceeds the `checkFailedTimes`, all traffic will automatically be rerouted back to the original stable version.
+- It will then remove the canary pod, completing the rollback process.
+
+```console
+kubectl get application rolllout-demo -oyaml
+
+rolloutStatus:
+      backupNameInCluster: backend
+      backupStatusInCluster:
+        canaryWeight: 0
+        conditions:
+        - lastTransitionTime: "2024-01-13T08:16:40Z"
+          lastUpdateTime: "2024-01-13T08:16:40Z"
+          message: Canary analysis failed, Deployment scaled to zero.
+          reason: Failed
+          status: "False"
+          type: Promoted
+        failedChecks: 0
+        iterations: 0
+        lastAppliedSpec: 79d699c99
+        lastPromotedSpec: 7b779dcc48
+        lastTransitionTime: "2024-01-13T08:40:40Z"
+        phase: Failed
+        trackedConfigs: {}
+      clusterName: kurator-member1
+
+```
 
 ## Cleanup
 
@@ -400,7 +448,7 @@ An A/B Testing is triggered by changes in any of the following objects:
 If you only need to remove the Rollout Policy, simply edit the current application and remove the corresponding description:
 
 ```console
-kubectl edit application abtesting-demo
+kubectl edit application blue-green-demo
 ```
 
 To check the results of the deletion, you can observe that the rollout-related pods have been removed:
@@ -410,7 +458,7 @@ kubectl get po -A --kubeconfig=/root/.kube/kurator-member1.config
 kubectl get po -A --kubeconfig=/root/.kube/kurator-member2.config
 ```
 
-If you want to configure an A/B Testing for it again, you can simply edit the application and add the necessary configurations.
+If you want to configure a Blue/Green Deployment for it again, you can simply edit the application and add the necessary configurations.
 
 ### 2.Cleanup the Application
 
