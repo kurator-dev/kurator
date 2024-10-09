@@ -183,7 +183,7 @@ spec:
         timeout: 2m0s
 ```
 
-**Notes:**There is a problem with the metric provided by the current flagger, so `customMetric` is used.Here is the detailed [API](/docs/references/app-api/#apps.kurator.dev/v1alpha1.Metric).
+**Notes:** There is a problem with the metric provided by the current flagger, so `customMetric` is used.Here is the detailed [API](/docs/references/app-api/#apps.kurator.dev/v1alpha1.Metric).
 
 To use Kuma, you need to provide the `protocol` it uses. If you do not specify the protocol, Kurator will use `http` by default. 
 

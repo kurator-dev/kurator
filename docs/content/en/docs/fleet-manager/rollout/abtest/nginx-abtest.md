@@ -139,7 +139,7 @@ spec:
         timeout: 2m0s
 ```
 
-**Notes:**There is a problem with the metric provided by the current flagger, so `customMetric` is used.Here is the detailed [API](/docs/references/app-api/#apps.kurator.dev/v1alpha1.Metric).
+**Notes:** There is a problem with the metric provided by the current flagger, so `customMetric` is used.Here is the detailed [API](/docs/references/app-api/#apps.kurator.dev/v1alpha1.Metric).
 
 To use Nginx, you need to provide the `host` it uses. Kurator will generate an ingress resource based on this field. Here is the [specific configuration generated](/docs/references/app-api/#apps.kurator.dev/v1alpha1.TrafficRoutingConfig). Other configurations are as follow.
 
