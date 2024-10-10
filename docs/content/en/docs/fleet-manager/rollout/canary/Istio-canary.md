@@ -294,7 +294,7 @@ Given the output provided, let's dive deeper to understand the various elements 
 - The `trafficAnalysis` section defines the configuration for evaluating a new release version's health and readiness during a rollout process.
     - The `checkFailedTimes` parameter specifies the maximum number of failed check results allowed throughout the Canary Deployment lifecycle.
     - `checkIntervalSeconds` denotes the time interval between consecutive health evaluation checks.
-    - The `metrics` identify the metrics that will be monitored to determine the deployment's health status. Currently, only `request-success-rate` and `request-duration` two built-in metric types are supported.
+    - The `metrics` identify the metrics that will be monitored to determine the deployment's health status. You can choose between the two built-in metric types `request-success-rate` and `request-duration` or write your own metric
     - The `webhooks` provide an extensibility mechanism for the analysis procedures. In this configuration, webhooks communicate with the testloader to generate test traffic for the healthchecks.
 - The `trafficRouting` configuration specifies how traffic will be shifted to the canary deployment during the rollout process.
     - The `maxWeight` parameter defines the maximum percentage of traffic that can be routed to the canary before promotion.

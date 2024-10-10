@@ -75,7 +75,7 @@ Let's delve into the `spec` section of the above Fleet:
 - `plugin`: The `flagger` indicates the description of a Rollout plugin. It contains configurations for whether to install `publicTestloader` and `trafficRoutingProvider`.
   
     - `publicTestloader`: Indicates whether to install a common test loader to generate test traffic for application services.
-    - `trafficRoutingProvider`: Traffic Routing Provider. Currently it only supports Istio, in the future it will add support for other service meshes or ingress controllers. For example, Linkerd, Gloo, Nginx etc.
+    - `trafficRoutingProvider`: Traffic Routing Provider. Currently it supports Istio,Kuma and Nginx , in the future it will add support for other service meshes or ingress controllers. For example, Linkerd, Gloo, etc.
 
 For more configuration information, please refer to the [Fleet API](https://kurator.dev/docs/references/fleet-api/).
 
