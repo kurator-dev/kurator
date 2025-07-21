@@ -64,7 +64,10 @@ type BackupSpec struct {
 	Policy *BackupPolicy `json:"policy,omitempty"`
 }
 
-// Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
+// Note: This code partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
+// Refer to: vmware-tanzu/velero
+// Original license: Apache-2.0
+// Copyright: Copyright (c) 2017-2023 velero, Inc. All Rights Reserved.
 // BackupPolicy defines the specification for a backup policy.
 type BackupPolicy struct {
 	// ResourceFilter specifies which resources should be included in the backup.
