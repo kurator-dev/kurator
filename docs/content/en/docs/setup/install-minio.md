@@ -8,7 +8,7 @@ description: >
 
 ## Install Minio with Helm
 
-Kurator use helm chart from bitnami, more details can be found [here](https://github.com/bitnami/charts).
+Kurator use helm chart from bitnami, more [details](https://github.com/bitnami/charts) can be found here.
 
 Setup [Minio](https://min.io/) with following command:
 

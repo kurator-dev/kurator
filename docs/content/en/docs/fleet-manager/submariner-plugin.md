@@ -26,7 +26,7 @@ kubectl label node kurator-member2-control-plane submariner.io/gateway=true --ku
 
 ### Create a fleet with metric plugin enabled
 
-`SUBMARINER_PSK` needs to be set as described in [here](https://submariner.io/operations/deployment/helm/).
+`SUBMARINER_PSK` needs to be set as [described](https://submariner.io/operations/deployment/helm/).
 
 ```bash
 export SUBMARINER_PSK=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 64 | head -n 1)
@@ -77,7 +77,7 @@ Guides for you to clean up the fleets and plugins.
 
 ### 1. Cleanup the Submariner Plugin
 
-Tutorial for manual uninstallation can be found in Sumariner Documatation [here](https://submariner.io/operations/cleanup/#manual-uninstall).
+Tutorial for manual uninstallation can be found in [Sumariner Documatation](https://submariner.io/operations/cleanup/#manual-uninstall).
 
 > Deleting the cluster to start from scratch is **recommended** because potential crd dependencies conflicts and some hard-to-find legacy resources or settings.
 

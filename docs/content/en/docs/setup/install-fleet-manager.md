@@ -12,7 +12,7 @@ Fleet manager depends on cluster operator, so refer to [Cluster operator install
 
 ## Install FluxCD with Helm
 
-Fleet manager depends on [Fluxcd](https://fluxcd.io/flux/), Kurator use helm chart from fluxcd community, more details can be found [here](https://github.com/fluxcd-community/helm-charts).
+Fleet manager depends on [Fluxcd](https://fluxcd.io/flux/), Kurator use helm chart from fluxcd community, more [details](https://github.com/fluxcd-community/helm-charts) can be found.
 
 Setup with following command:
 

@@ -33,7 +33,7 @@ After sign in, visit [pixie admin page](https://work.withpixie.ai/admin) for nex
 
 ## Create deployment key
 
-Create a deployment key following the directions [here](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-live-ui).
+Create a deployment key following the [direction](https://docs.pixielabs.ai/reference/admin/deploy-keys/#create-a-deploy-key-using-the-live-ui).
 
 ## Install Pixie Vizier
 

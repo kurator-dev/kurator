@@ -20,7 +20,7 @@ Kurator provides a very simple command to install Thanos and add karmada-apiserv
     
 - `--kubeconfig` and `--context` specifies the cluster where Karmada Apiserver, Kurator use Karmada to orchestrate Thanos application.
 - `--host-kubeconfig` and `--host-context` specifies the cluster where to deploy Thanos itself, it is the host cluster that hold Thanos.
-- `--object-store-config` specifies the object store configuration used by Thanos, more details can be found [here](https://prometheus-operator.dev/docs/operator/thanos/#configuring-thanos-object-storage).
+- `--object-store-config` specifies the object store configuration used by Thanos, more details can be found in [Thanos docs](https://prometheus-operator.dev/docs/operator/thanos/#configuring-thanos-object-storage).
 
 ```bash
 kurator install thanos --host-kubeconfig /root/.kube/kurator-host.config --host-context kurator-host --object-store-config /root/thanos/thanos-config.yaml
