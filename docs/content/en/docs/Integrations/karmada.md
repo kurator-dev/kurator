@@ -18,7 +18,7 @@ cd kurator
 hack/local-dev-setup.sh
 ```
 
-> `fs.inotify.max_user_watches` and `fs.inotify.max_user_instances` may need to be adjusted as described [here](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
+> `fs.inotify.max_user_watches` and `fs.inotify.max_user_instances` may need to be adjusted as [described](https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files)
 
 ### Deploy Karmada
 

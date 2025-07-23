@@ -79,7 +79,7 @@ ssh-privatekey:  2590 bytes
 
 ### Customize your cluster configuration
 
-You can find custom cluster examples [here](https://github.com/kurator-dev/kurator/tree/main/examples/infra/customcluster).
+You can find custom cluster [examples](https://github.com/kurator-dev/kurator/tree/main/examples/infra/customcluster).
 
 Here are the four types of resources needed for on-premise Kubernetes cluster provision：
 
