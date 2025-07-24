@@ -10,7 +10,7 @@ In this tutorial we’ll cover the basics of how to use [Cluster API](https://gi
 
 ## Setup a cluster on AWS with IRSA enabled
 
-IRSA(IAM roles for service accounts) allows applications in a pod's containers can use an AWS SDK or the AWS CLI to make API requests to AWS services using AWS Identity and Access Management (IAM) permissions. More details can be found [here](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html).
+IRSA(IAM roles for service accounts) allows applications in a pod's containers can use an AWS SDK or the AWS CLI to make API requests to AWS services using AWS Identity and Access Management (IAM) permissions. More details can be found [EKS IAM roles for service accounts documentatio](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html).
 
 ### Setup cluster
 
