@@ -53,6 +53,7 @@ type RestoreSpec struct {
 }
 
 // Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/restore_types.go
+// Refer to: vmware-tanzu/velero
 // RestorePolicy defines the specification for a Velero restore.
 type RestorePolicy struct {
 	// ResourceFilter is the filter for the resources to be restored.

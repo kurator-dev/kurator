@@ -40,6 +40,7 @@ type KeyResponse struct {
 }
 
 // copied from https://github.com/aws/amazon-eks-pod-identity-webhook/blob/master/hack/self-hosted/main.go
+// Refer to aws/amazon-eks-pod-identity-webhook
 func NewCert() (*Cert, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

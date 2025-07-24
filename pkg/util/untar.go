@@ -17,7 +17,6 @@ import (
 )
 
 // Copied from golang.org/x/build/internal/untar/untar.go as it can not be imported
-
 // Untar reads the gzip-compressed tar file from r and writes it into dir.
 func Untar(r io.Reader, dir string) error {
 	return untar(r, dir)

@@ -143,7 +143,8 @@ func (c *Client) UpdateResource(obj interface{}) error {
 	return err
 }
 
-// Copied from karmada, because we do not want to build the controller-runtime client.
+// Note: partly copied from https://github.com/karmada-io/karmada/blob/592fa3224d48e5b5f60f9202bd5547df53ef4588/pkg/util/membercluster_client.go
+// Refer to: karmada-io/karmada
 func (c *Client) memberClusterConfig(clusterName string) (*rest.Config, error) {
 	cluster, err := c.karmada.ClusterV1alpha1().Clusters().Get(context.TODO(), clusterName, metav1.GetOptions{})
 	if err != nil {

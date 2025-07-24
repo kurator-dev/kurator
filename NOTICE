@@ -1,3 +1,91 @@
+OPEN SOURCE SOFTWARE NOTICE
+
+Please note we provide an open source software notice for the third party open source software along with this software and/or this software component (in the following just “this SOFTWARE”). The open source software licenses are granted by the respective right holders.
+
+Warranty Disclaimer
+THE OPEN SOURCE SOFTWARE IN THIS PRODUCT IS DISTRIBUTED IN THE HOPE THAT IT WILL BE USEFUL, BUT WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. SEE THE APPLICABLE LICENSES FOR MORE DETAILS.
+
+Copyright Notice and License Texts
+---------------
+File: cmd/cluster-operator/aws/aws.go
+      cmd/cluster-operator/options/aws.go
+      cmd/cluster-operator/options/options.go
+      cmd/cluster-operator/scheme/aws.go
+Refer to: kubernetes-sigs/cluster-api-provider-aws
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+License: Apache-2.0 license
+---------------
+File: cmd/cluster-operator/capi/capi.go
+      cmd/cluster-operator/scheme/capi.go
+Refer to: kubernetes-sigs/cluster-api
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+License: Apache-2.0 license
+---------------
+File: pkg/apis/apps/v1alpha1/helm_release.go
+Refer to: fluxcd/helm-controller
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+License: Apache-2.0 license
+---------------
+File: pkg/apis/apps/v1alpha1/kustomization.go
+Refer to: fluxcd/kustomize-controller
+Copyright 2018 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+	http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+License: Apache-2.0 license
+---------------
+File pkg/util/untar.go
+Refer to: golang/build
+Copyright 2017 The Go Authors. All rights reserved.
+Use of this source code is governed by a BSD-style
+license that can be found in the LICENSE file.
+License: BSD 3-Clause "New" or "Revised" License
+
 %% Kurator NOTICE
 ===========================================
 Copyright Kurator Authors.

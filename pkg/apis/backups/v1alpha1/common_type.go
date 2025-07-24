@@ -35,6 +35,7 @@ type Destination struct {
 }
 
 // Note: partly copied from https://github.com/vmware-tanzu/velero/blob/v1.11.1/pkg/apis/velero/v1/backup_types.go
+// Refer to: vmware-tanzu/velero
 type ResourceFilter struct {
 	// IncludedNamespaces is a list of namespace names to include objects from.
 	// If empty, all namespaces are included.
