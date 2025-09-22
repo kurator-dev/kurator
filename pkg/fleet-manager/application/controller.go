@@ -153,7 +153,7 @@ func (a *ApplicationManager) Reconcile(ctx context.Context, req ctrl.Request) (_
 
 	// Handle deletion reconciliation loop.
 	if app.DeletionTimestamp != nil {
-		return a.reconcileDelete(ctx, app, fleet)
+		return a.reconcileDelete(ctx, app)
 	}
 
 	// Handle normal loop.
@@ -317,9 +317,27 @@ func (a *ApplicationManager) reconcileSyncStatus(ctx context.Context, app *appli
 	return ctrl.Result{RequeueAfter: StatusSyncInterval}, nil
 }
 
-func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application, fleet *fleetapi.Fleet) (ctrl.Result, error) {
-	if err := a.deleteResourcesInMemberClusters(ctx, app, fleet); err != nil {
-		return ctrl.Result{}, errors.Wrapf(err, "failed to delete rollout resource in cluster")
+// Handling Application Deletion Based on Fleet Availability.
+// When deleting an application, the approach taken depends on whether the managing fleet can be retrieved
+// If the fleet is available:
+// Application will be removed
+// Resources related to the application will then be deleted from fleet clusters
+// If the fleet cannot be retrieved:
+// Only the application object itself will be removed
+// Related resources in any cluster will be left intact
+func (a *ApplicationManager) reconcileDelete(ctx context.Context, app *applicationapi.Application) (ctrl.Result, error) {
+	log := ctrl.LoggerFrom(ctx)
+	fleetKey := generateFleetKey(app)
+	fleet := &fleetapi.Fleet{}
+	if err := a.Client.Get(ctx, fleetKey, fleet); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Info("fleet does not exist", "fleet", fleetKey)
+		}
+		log.Info("failed to get fleet", "fleet", fleetKey, "error", err)
+	} else {
+		if deleteErr := a.deleteResourcesInMemberClusters(ctx, app, fleet); deleteErr != nil {
+			return ctrl.Result{}, errors.Wrapf(deleteErr, "failed to delete rollout resource in member clusters")
+		}
 	}
 
 	controllerutil.RemoveFinalizer(app, ApplicationFinalizer)
