@@ -11,7 +11,7 @@ JB="${REPO_ROOT}/.tools/jb"
 PROM_OUT_PATH=${REPO_ROOT}/out/prom
 PROM_JSONNET_FILE=${REPO_ROOT}/$1
 PROM_MANIFESTS_PATH=${REPO_ROOT}/${2}
-KUBE_PROM_VER=${KUBE_PROM_VER:-v0.12.0}
+KUBE_PROM_VER=${KUBE_PROM_VER:-v0.13.0}
 
 echo 'begin to generate prom manifests'
 echo "jsonnet: ${PROM_JSONNET_FILE}"
